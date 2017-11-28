@@ -28,5 +28,10 @@ def test_ggnn_preprocessor():
     assert adjs.ndim == 3
     assert adjs.dtype == numpy.float32
 
+
+def test_nfp_preprocessor_assert_raises():
+    with pytest.raises(ValueError):
+        pp = GGNNPreprocessor(max_atoms=3, out_size=2)
+
 if __name__ == '__main__':
     pytest.main()
