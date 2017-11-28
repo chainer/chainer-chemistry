@@ -45,6 +45,9 @@ class NumpyTupleDataset(object):
     def __len__(self):
         return self._length
 
+    def get_datasets(self):
+        return self._datasets
+
     @property
     def features(self):
         """Extract features according to the specified index.
