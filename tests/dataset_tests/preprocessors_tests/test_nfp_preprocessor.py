@@ -20,7 +20,7 @@ def pp():
 
 
 def test_nfp_preprocessor(mol, pp):
-    ret = pp.get_descriptor(mol)
+    ret = pp.get_input_features(mol)
     assert len(ret) == 2
     actual_atom_array, actual_adj_array = ret
 

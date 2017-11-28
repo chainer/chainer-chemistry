@@ -1,8 +1,7 @@
 import os
-import numpy
 import pytest
 
-from chainerchem.datasets import qm9
+from chainerchem.datasets import qm9, tox21
 
 
 @pytest.mark.slow

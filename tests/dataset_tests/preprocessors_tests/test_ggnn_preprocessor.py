@@ -3,8 +3,8 @@ import numpy
 import pytest
 
 from chainerchem.dataset.parsers import SDFFileParser
-from chainerchem.dataset.preprocessors import NFPPreprocessor, GGNNPreprocessor
-from chainerchem.datasets import tox21, get_tox21_filepath
+from chainerchem.dataset.preprocessors import GGNNPreprocessor
+from chainerchem.datasets import get_tox21_filepath
 
 
 @pytest.mark.slow

@@ -39,10 +39,10 @@ def test_sdf_file_parser(sdf_file, mols):
 
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.
-    expect = preprocessor.get_descriptor(mols[0])
+    expect = preprocessor.get_input_features(mols[0])
     check_descriptor(dataset[0], expect)
 
-    expect = preprocessor.get_descriptor(mols[1])
+    expect = preprocessor.get_input_features(mols[1])
     check_descriptor(dataset[1], expect)
 
 

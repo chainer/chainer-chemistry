@@ -5,7 +5,7 @@ import numpy
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
-from chainerchem.dataset.preprocessors.common import get_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
@@ -66,7 +66,7 @@ class SchNetPreprocessor(MolPreprocessor):
         self.max_atoms = max_atoms
         self.zero_padding = zero_padding
 
-    def get_descriptor(self, mol):
+    def get_input_features(self, mol):
         """get descriptor
 
         Args:
@@ -76,7 +76,7 @@ class SchNetPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = get_atomic_numbers(mol, self.max_atoms)
+        atom_array = construct_atomic_numbers(mol, self.max_atoms)
         dist_array = construct_distance_matrix(mol, self.zero_padding,
                                                num_max_atoms=self.max_atoms)
         return atom_array, dist_array

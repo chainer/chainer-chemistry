@@ -44,8 +44,8 @@ class CSVFileParser(BaseFileParser):
     def parse(self, filepath, retain_smiles=False):
         """parse csv file using `preprocessor`
 
-        Label is extracted from `labels` columns and descriptor is extracted
-        from smiles information in `smiles` column.
+        Label is extracted from `labels` columns and input features are
+        extracted from smiles information in `smiles` column.
 
         Args:
             filepath (str): file path to be parsed.
@@ -83,13 +83,13 @@ class CSVFileParser(BaseFileParser):
                         continue
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
-                    # smiles order does not contradict with descriptor's
+                    # smiles order does not contradict with input_features'
                     # order.
                     # Here, `smiles` and `standardized_smiles` expresses
                     # same molecule, but the expression may be different!
                     standardized_smiles = Chem.MolToSmiles(mol)
                     mol = Chem.MolFromSmiles(standardized_smiles)
-                    descriptor = pp.get_descriptor(mol)
+                    input_features = pp.get_input_features(mol)
 
                     # Extract label
                     if self.postprocess_label is not None:
@@ -114,19 +114,19 @@ class CSVFileParser(BaseFileParser):
                     continue
                 # Initialize features: list of list
                 if features is None:
-                    if isinstance(descriptor, tuple):
-                        num_features = len(descriptor)
+                    if isinstance(input_features, tuple):
+                        num_features = len(input_features)
                     else:
                         num_features = 1
                     if self.labels is not None:
                         num_features += 1
                     features = [[] for _ in range(num_features)]
 
-                if isinstance(descriptor, tuple):
-                    for i in range(len(descriptor)):
-                        features[i].append(descriptor[i])
+                if isinstance(input_features, tuple):
+                    for i in range(len(input_features)):
+                        features[i].append(input_features[i])
                 else:
-                    features[0].append(descriptor)
+                    features[0].append(input_features)
                 if self.labels is not None:
                     features[len(features) - 1].append(labels)
                 success_count += 1

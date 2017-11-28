@@ -1,8 +1,6 @@
 from chainer import cuda
-from chainer.testing import condition
 from chainer import gradient_check
 import numpy
-import unittest
 import pytest
 
 from chainerchem import links

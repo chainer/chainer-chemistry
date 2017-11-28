@@ -1,4 +1,4 @@
-from chainerchem.dataset.preprocessors.common import get_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
@@ -18,8 +18,8 @@ class AtomicNumberPreprocessor(MolPreprocessor):
         super(AtomicNumberPreprocessor, self).__init__()
         self.max_atoms = max_atoms
 
-    def get_descriptor(self, mol):
-        """get descriptor
+    def get_input_features(self, mol):
+        """get input features
 
         Args:
             mol (Mol):
@@ -28,5 +28,5 @@ class AtomicNumberPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = get_atomic_numbers(mol, self.max_atoms)
+        atom_array = construct_atomic_numbers(mol, self.max_atoms)
         return atom_array

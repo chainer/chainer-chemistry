@@ -28,7 +28,7 @@ def type_check_num_atoms(mol, num_max_atoms=-1):
 
 
 # --- Atom preprocessing ---
-def get_atomic_numbers(mol, out_size=-1):
+def construct_atomic_numbers(mol, out_size=-1):
     """Returns atomic numbers of atoms consisting a molecule.
 
     Args:
@@ -63,7 +63,7 @@ def get_atomic_numbers(mol, out_size=-1):
 
 
 # --- Adjacency matrix preprocessing ---
-def get_adj_matrix(mol, out_size=-1):
+def construct_adj_matrix(mol, out_size=-1):
     """Returns the adjacent matrix of the given molecule.
 
     This function returns the adjacent matrix of the given molecule.
@@ -90,9 +90,9 @@ def get_adj_matrix(mol, out_size=-1):
     adj = rdmolops.GetAdjacencyMatrix(mol)
     s0, s1 = adj.shape
     if s0 != s1:
-        raise VaulueError('The adjacent matrix of the input molecule'
-                          'has an invalid shape: ({}, {}). '
-                          'It must be square.'.format(s0, s1))
+        raise ValueError('The adjacent matrix of the input molecule'
+                         'has an invalid shape: ({}, {}). '
+                         'It must be square.'.format(s0, s1))
 
     adj = adj + numpy.eye(s0)
     if out_size < 0:

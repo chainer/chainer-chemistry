@@ -1,7 +1,5 @@
-import numpy
-
-from chainerchem.dataset.preprocessors.common import get_adj_matrix
-from chainerchem.dataset.preprocessors.common import get_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_adj_matrix
+from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
@@ -21,7 +19,7 @@ class NFPPreprocessor(MolPreprocessor):
         super(NFPPreprocessor, self).__init__()
         self.max_atoms = max_atoms
 
-    def get_descriptor(self, mol):
+    def get_input_features(self, mol):
         """get descriptor
 
         Args:
@@ -31,6 +29,6 @@ class NFPPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = get_atomic_numbers(mol, self.max_atoms)
-        adj_array = get_adj_matrix(mol, self.max_atoms)
+        atom_array = construct_atomic_numbers(mol, self.max_atoms)
+        adj_array = construct_adj_matrix(mol, self.max_atoms)
         return atom_array, adj_array
