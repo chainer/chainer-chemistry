@@ -67,7 +67,7 @@ class SchNetPreprocessor(MolPreprocessor):
         self.zero_padding = zero_padding
 
     def get_input_features(self, mol):
-        """get descriptor
+        """get input features
 
         Args:
             mol (Mol):

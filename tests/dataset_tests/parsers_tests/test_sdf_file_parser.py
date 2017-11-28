@@ -25,7 +25,7 @@ def sdf_file(tmpdir, mols):
     return fname
 
 
-def check_descriptor(actual, expect):
+def check_input_features(actual, expect):
     assert len(actual) == len(expect)
     for d, e in six.moves.zip(actual, expect):
         numpy.testing.assert_array_equal(d, e)
@@ -40,10 +40,10 @@ def test_sdf_file_parser(sdf_file, mols):
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.
     expect = preprocessor.get_input_features(mols[0])
-    check_descriptor(dataset[0], expect)
+    check_input_features(dataset[0], expect)
 
     expect = preprocessor.get_input_features(mols[1])
-    check_descriptor(dataset[1], expect)
+    check_input_features(dataset[1], expect)
 
 
 # TODO(oono)

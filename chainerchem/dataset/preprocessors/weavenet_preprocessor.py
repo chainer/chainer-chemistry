@@ -95,7 +95,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
         self.zero_padding = zero_padding
 
     def get_input_features(self, mol):
-        """get descriptor for WeaveNet
+        """get input features for WeaveNet
 
         WeaveNetPreprocessor automatically add `H` to `mol`
 
