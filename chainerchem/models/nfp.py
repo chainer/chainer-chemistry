@@ -17,7 +17,7 @@ class NFPUpdate(chainer.Chain):
         super(NFPUpdate, self).__init__()
         num_degree_type = max_degree + 1
         with self.init_scope():
-            self.hidden_weights = chainer.ChainList(
+            self.graph_linears = chainer.ChainList(
                 *[chainerchem.links.GraphLinear(hidden_dim, hidden_dim)
                   for _ in range(num_degree_type)]
             )
@@ -26,15 +26,15 @@ class NFPUpdate(chainer.Chain):
         self.out_dim = out_dim
 
     def __call__(self, h, adj, deg_conds):
-        # h    (mb, ch, atom)
-        # h is used for keep each atom's info for next step -> hidden_dim
-        # adjs (mb, edge_type, atom, atom)
+        # h    (minibatch, atom, ch)
+        # h encodes each atom's info in ch axis of size hidden_dim
+        # adjs (minibatch, atom, atom)
 
         # --- Message part ---
         # Take sum along adjacent atoms
 
-        # fv   (mb, ch, atom)
-        fv = chainerchem.functions.matmul(h, adj)
+        # fv   (minibatch, atom, ch)
+        fv = chainerchem.functions.matmul(adj, h)
 
         # --- Update part ---
         # s0, s1, s2 = fv.shape
@@ -46,8 +46,8 @@ class NFPUpdate(chainer.Chain):
         fvds = [functions.where(cond, fv, zero_array) for cond in deg_conds]
 
         out_h = 0
-        for hidden_weight, fvd in zip(self.hidden_weights, fvds):
-            out_h = out_h + hidden_weight(fvd)
+        for graph_linear, fvd in zip(self.graph_linears, fvds):
+            out_h = out_h + graph_linear(fvd)
 
         # out_x shape (minibatch, max_num_atoms, hidden_dim)
         out_h = functions.sigmoid(out_h)
@@ -65,13 +65,13 @@ class NFPReadout(chainer.Chain):
         self.out_dim = out_dim
 
     def __call__(self, h):
-        # input  h shape (mb, ch, atom)
-        # return i shape (mb, ch)
+        # input  h shape (minibatch, atom, ch)
+        # return i shape (minibatch, ch)
 
         # --- Readout part ---
         i = self.output_weight(h)
         i = functions.softmax(i)
-        i = functions.sum(i, axis=2)  # sum along atom's axis
+        i = functions.sum(i, axis=1)  # sum along atom's axis
         return i
 
 
@@ -95,7 +95,7 @@ class NFP(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.embed = chainerchem.links.EmbedAtomID(
-                n_atom_types, hidden_dim)
+                in_size=n_atom_types, out_size=hidden_dim)
             self.layers = chainer.ChainList(
                 *[NFPUpdate(max_degree, hidden_dim, out_dim)
                   for _ in range(n_layers)])
@@ -130,14 +130,14 @@ class NFP(chainer.Chain):
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array
-        # x: (minibatch, hidden_dim, max_num_atoms)
+        # h: (minibatch, max_num_atoms, hidden_dim)
         g = 0
 
         # --- NFP update & readout ---
         # degree_mat: (minibatch, max_num_atoms)
         degree_mat = functions.sum(adj, axis=1)
         deg_conds = [self.xp.broadcast_to(
-            ((degree_mat - degree).data == 0)[:, None, :], h.shape)
+            ((degree_mat - degree).data == 0)[:, :, None], h.shape)
             for degree in range(1, self.num_degree_type + 1)]
         g_list = []
         for update, readout in zip(self.layers, self.read_out_layers):

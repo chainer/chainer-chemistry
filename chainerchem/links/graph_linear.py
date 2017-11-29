@@ -5,10 +5,7 @@ class GraphLinear(chainer.links.Linear):
     """Graph Linear layer.
 
     This function assumes its input is 3-dimensional.
-    First it transposes the second and third axes, leaving
-    the first axis (or the minibatch axis) unchanged.
-    Then, it apples affine transformation in a minibatch manner.
-    Finally it transposes the second and third axes, again.
+    It apples affine transformation on only third axis of input `x`,
 
     .. seealso:: :class:`chainer.links.Linear`
     """
@@ -30,10 +27,10 @@ class GraphLinear(chainer.links.Linear):
                 A 3-dimeisional array.
         
         """
-        h = chainer.functions.transpose(x, (0, 2, 1))
+        h = x
+        # (minibatch, atom, ch)
         s0, s1, s2 = h.shape
         h = chainer.functions.reshape(h, (s0 * s1, s2))
         h = super(GraphLinear, self).__call__(h)
         h = chainer.functions.reshape(h, (s0, s1, self.out_size))
-        h = chainer.functions.transpose(h, (0, 2, 1))
         return h
