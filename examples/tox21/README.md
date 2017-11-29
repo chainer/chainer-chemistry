@@ -22,3 +22,50 @@ With GPU:
 ```angular2html
 python train_tox21.py -g 0
 ```
+
+This script trains the model with the tox21 dataset
+and outputs trained parameters and other information to a specified directory.
+We specify an ID of GPU in use by `-g` or `--gpu` option.
+Negative value indicate running the code with CPU.
+The output directory can be specified by `-o` option.
+Its default value is `result`.
+The Tox21 dataset consists of several assays.
+Some molecules can have more than one types of assay results.
+We can specify which assay to use by specifying an assay name with `-l` option.
+Assay names are available by running the script with `-h` or `--help`
+or execute the following command:
+
+```
+python -c import chainerchem; chainerchem.datasets.get_tox21_label_names()
+```
+
+If `-l` option is not specified, this script conducts multitask learning with all labels.
+
+The full options available including `-g` and `-o` are found
+by running the following command:
+
+```
+python train_tox21.py -h
+```
+
+### Inference with a trained model
+
+With CPU:
+```
+python inference_tox21.py [-i /path/to/training/result/directory]
+```
+
+With GPU:t
+```
+python inference_tox21.py -g 0 [-i /path/to/training/result/directory]
+```
+
+This script loads trained parameters of a model and
+makes a prediction for the test dataset of Tox21 with the model.
+It loads parameters and other configurations from directory specified by `-i` option,
+whose default value is same as that of `-o` option of `train_tox21.py`.
+The prediction results are saved in the current directory as a `npy` file.
+As with training, we can specify GPU/CPU to use by `-g` option.
+
+The full options available including `-g` and `-i` are found
+by running the following command `python inference_tox21.py -h`.

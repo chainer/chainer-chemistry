@@ -23,13 +23,12 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
 
     if out_size < 0:
         size = N
+    elif out_size >= N:
+        size = out_size
     else:
-        if out_size >= N:
-            size = out_size
-        else:
-            raise MolFeatureExtractFailure('out_size {} is smaller than number '
-                                           'of atoms in mol {}'
-                                           .format(out_size, N))
+        raise MolFeatureExtractFailure('out_size {} is smaller than number '
+                                       'of atoms in mol {}'
+                                       .format(out_size, N))
 
     adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
     for i in range(N):
