@@ -12,6 +12,7 @@ Welcome to ChainerChem's documentation!
 
    install
    reference
+   tutorial
 
 
 
