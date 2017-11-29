@@ -46,5 +46,10 @@ def test_atomic_number_preprocessor_with_tox21():
     assert atoms.dtype == numpy.int32
 
 
+def test_atomic_number_preprocessor_assert_raises():
+    with pytest.raises(ValueError):
+        pp = AtomicNumberPreprocessor(max_atoms=3, out_size=2)
+
+
 if __name__ == '__main__':
     pytest.main()
