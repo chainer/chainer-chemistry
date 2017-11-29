@@ -85,7 +85,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
     """
 
     def __init__(self, max_atoms=DEFAULT_NUM_MAX_ATOMS):
-        super(WeaveNetPreprocessor, self).__init__()
+        super(WeaveNetPreprocessor, self).__init__(add_Hs=True)
         zero_padding = True
         if zero_padding and max_atoms <= 0:
             raise ValueError('max_atoms must be set to positive value when '
@@ -103,7 +103,6 @@ class WeaveNetPreprocessor(MolPreprocessor):
             mol (Mol):
 
         """
-        mol = Chem.AddHs(mol)
         type_check_num_atoms(mol, self.max_atoms)
         # TODO(Nakago): support original paper feature extraction
         # currently only embed id is supported.

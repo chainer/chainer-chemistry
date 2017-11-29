@@ -1,4 +1,6 @@
-from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor
+from rdkit import Chem
+
+from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor  # NOQA
 
 
 class MolFeatureExtractFailure(Exception):
@@ -8,8 +10,30 @@ class MolFeatureExtractFailure(Exception):
 class MolPreprocessor(BasePreprocessor):
     """preprocessor class specified for rdkit mol instance"""
 
-    def __init__(self):
+    def __init__(self, add_Hs=False):
         super(MolPreprocessor, self).__init__()
+        self.add_Hs = add_Hs
+
+    def get_smiles_and_mol(self, mol):
+        """Prepare `smiles` and `mol` used in following preprocessing.
+
+        This method may be overriden to support custom `smile`/`mol` extraction
+        
+        Args:
+            mol (mol): mol instance
+
+        Returns (tuple): (`smiles`, `mol`)
+        """
+        # Note that smiles expression is not unique.
+        # we should re-obtain smiles from `mol`, so that the
+        # smiles order does not contradict with input_features'
+        # order.
+        smiles = Chem.MolToSmiles(mol)
+        mol = Chem.MolFromSmiles(smiles)
+        if self.add_Hs:
+            mol = Chem.AddHs(mol)
+            smiles = Chem.MolToSmiles(mol)
+        return smiles, mol
 
     def get_label(self, mol, label_names=None):
         """Extracts label information from a molecule.
