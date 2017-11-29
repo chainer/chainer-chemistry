@@ -23,7 +23,7 @@ class NFPPreprocessor(MolPreprocessor):
     def __init__(self, max_atoms=-1, out_size=-1):
         super(NFPPreprocessor, self).__init__()
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
-            raise ValueError('max_atoms {} must be equal to or larget than '
+            raise ValueError('max_atoms {} must be equal to or larger than '
                              'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
         self.out_size = out_size
