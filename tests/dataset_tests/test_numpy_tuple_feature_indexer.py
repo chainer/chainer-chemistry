@@ -2,8 +2,8 @@ import numpy
 import pytest
 
 
-from chainerchem.datasets import NumpyTupleDataset
-from chainerchem.dataset.indexers import NumpyTupleDatasetFeatureIndexer
+from chainerchem.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
+from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 @pytest.fixture
@@ -35,4 +35,4 @@ class TestNumpyTupleDatasetFeatureIndexer(object):
 
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-v'])

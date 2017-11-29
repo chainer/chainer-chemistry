@@ -1,5 +1,4 @@
 from chainerchem.dataset.indexer import BaseFeatureIndexer
-from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 class NumpyTupleDatasetFeatureIndexer(BaseFeatureIndexer):
