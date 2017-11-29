@@ -1,7 +1,7 @@
 import numpy
 from rdkit import Chem
 
-from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
@@ -107,7 +107,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
         type_check_num_atoms(mol, self.max_atoms)
         # TODO(Nakago): support original paper feature extraction
         # currently only embed id is supported.
-        atom_array = construct_atomic_numbers(mol, self.max_atoms)
+        atom_array = construct_atomic_number_array(mol, self.max_atoms)
         pair_feature = construct_pair_feature(mol,
                                               num_max_atoms=self.max_atoms)
         return atom_array, pair_feature
