@@ -92,6 +92,7 @@ class NFP(chainer.Chain):
     def __init__(self, hidden_dim, out_dim, n_layers, max_degree=6,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False):
         super(NFP, self).__init__()
+        print('nfp v3')
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.embed = chainerchem.links.EmbedAtomID(
@@ -127,15 +128,17 @@ class NFP(chainer.Chain):
         # TODO(Nakago): update implementation
         if atom_array.dtype == numpy.int32 or \
                 atom_array.dtype == cuda.cupy.int32:
-            h = self.embed(atom_array)  # (minibatch, max_num_atoms)
+            # atom_array: (minibatch, atom)
+            h = self.embed(atom_array)
         else:
             h = atom_array
-        # h: (minibatch, max_num_atoms, hidden_dim)
+        # h: (minibatch, atom, ch)
         g = 0
 
         # --- NFP update & readout ---
         # degree_mat: (minibatch, max_num_atoms)
         degree_mat = functions.sum(adj, axis=1)
+        # deg_condst: (minibatch, atom, ch)
         deg_conds = [self.xp.broadcast_to(
             ((degree_mat - degree).data == 0)[:, :, None], h.shape)
             for degree in range(1, self.num_degree_type + 1)]
