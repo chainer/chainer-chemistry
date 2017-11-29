@@ -19,7 +19,7 @@ def pp():
 
 
 def test_atomic_number_preprocessor(mol, pp):
-    ret = pp.get_descriptor(mol)
+    ret = pp.get_input_features(mol)
     print(ret, type(ret), ret.shape, ret.dtype)
     # assert len(ret) == 1
     actual_atom_array = ret

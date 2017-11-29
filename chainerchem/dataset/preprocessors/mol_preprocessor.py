@@ -1,8 +1,3 @@
-from logging import getLogger
-
-import numpy
-from rdkit.Chem import rdMolDescriptors
-
 from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor
 
 
@@ -58,7 +53,7 @@ class MolPreprocessor(BasePreprocessor):
 
         return label_list
 
-    def get_descriptor(self, mol):
+    def get_input_features(self, mol):
         """get molecule's feature representation, descriptor.
 
         Each subclass must override this method.
@@ -71,22 +66,3 @@ class MolPreprocessor(BasePreprocessor):
     def process(self, filepath):
         # Not used now...
         pass
-
-
-class ECFPPreprocessor(MolPreprocessor):
-
-    def __init__(self, radius=2):
-        super(ECFPPreprocessor, self).__init__()
-        self.radius = radius
-
-    def get_descriptor(self, mol):
-        try:
-            fp = rdMolDescriptors.GetMorganFingerprintAsBitVect(mol,
-                                                                self.radius)
-        except Exception as e:
-            logger = getLogger(__name__)
-            logger.debug('exception caught at ECFPPreprocessor:', e)
-            # Extracting feature failed
-            raise MolFeatureExtractFailure
-        # TODO(Nakago): Test it.
-        return numpy.asarray(fp, numpy.float32)

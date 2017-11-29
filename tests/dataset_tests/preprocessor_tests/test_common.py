@@ -13,14 +13,14 @@ def sample_molecule():
 class TestGetAtomicNumbers(object):
     
     def test_normal(self, sample_molecule):
-        actual = common.get_atomic_numbers(sample_molecule)
+        actual = common.construct_atomic_numbers(sample_molecule)
 
         assert actual.shape == (4,)
         expect = numpy.array([6, 7, 6, 8], dtype=numpy.int32)
         numpy.testing.assert_equal(actual, expect)
 
     def test_padding(self, sample_molecule):
-        actual = common.get_atomic_numbers(sample_molecule, 5)
+        actual = common.construct_atomic_numbers(sample_molecule, 5)
 
         assert actual.shape == (5,)
         expect = numpy.array([6, 7, 6, 8, 0], dtype=numpy.int32)
@@ -29,7 +29,7 @@ class TestGetAtomicNumbers(object):
 
     def test_normal_truncated(self, sample_molecule):
         with pytest.raises(ValueError):
-            adj = common.get_atomic_numbers(sample_molecule, 3)
+            adj = common.construct_atomic_numbers(sample_molecule, 3)
         
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def sample_molecule_2():
 class TestGetAdjMatrix(object):
 
     def test_normal(self, sample_molecule_2):
-        adj = common.get_adj_matrix(sample_molecule_2)
+        adj = common.construct_adj_matrix(sample_molecule_2)
 
         assert adj.shape == (7, 7)
         expect = numpy.array(
@@ -55,7 +55,7 @@ class TestGetAdjMatrix(object):
         numpy.testing.assert_equal(adj, expect)
 
     def test_normal_padding(self, sample_molecule_2):
-        adj = common.get_adj_matrix(sample_molecule_2, 8)
+        adj = common.construct_adj_matrix(sample_molecule_2, 8)
 
         assert adj.shape == (8, 8)
         expect = numpy.array(
@@ -72,5 +72,5 @@ class TestGetAdjMatrix(object):
 
     def test_normal_truncated(self, sample_molecule_2):
         with pytest.raises(ValueError):
-            adj = common.get_adj_matrix(sample_molecule_2, 6)
-        
+            adj = common.construct_adj_matrix(sample_molecule_2, 6)
+

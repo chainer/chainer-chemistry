@@ -68,7 +68,7 @@ class SDFFileParser(BaseFileParser):
 
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
-                    # smiles order does not contradict with descriptor's
+                    # smiles order does not contradict with input_features'
                     # order.
                     # Here, `smiles` and `standardized_smiles` expresses
                     # same molecule, but the expression may be different!
@@ -76,12 +76,12 @@ class SDFFileParser(BaseFileParser):
                     mol = Chem.MolFromSmiles(smiles)
                     standardized_smiles = Chem.MolToSmiles(mol)
                     mol = Chem.MolFromSmiles(standardized_smiles)
-                    descriptor = pp.get_descriptor(mol)
+                    input_features = pp.get_input_features(mol)
 
                     # Initialize features: list of list
                     if features is None:
-                        if isinstance(descriptor, tuple):
-                            num_features = len(descriptor)
+                        if isinstance(input_features, tuple):
+                            num_features = len(input_features)
                         else:
                             num_features = 1
                         if self.labels is not None:
@@ -102,11 +102,11 @@ class SDFFileParser(BaseFileParser):
                                    .format(type(e).__name__, e.args))
                     continue
 
-                if isinstance(descriptor, tuple):
-                    for i in range(len(descriptor)):
-                        features[i].append(descriptor[i])
+                if isinstance(input_features, tuple):
+                    for i in range(len(input_features)):
+                        features[i].append(input_features[i])
                 else:
-                    features[0].append(descriptor)
+                    features[0].append(input_features)
                 if self.labels is not None:
                     features[len(features) - 1].append(label)
                 success_count += 1
