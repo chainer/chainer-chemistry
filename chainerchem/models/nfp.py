@@ -3,7 +3,7 @@ Implementation of Neural Fingerprint
 
 """
 import chainer
-from chainer import cuda
+from chainer import cuda, Variable
 from chainer import functions
 import numpy
 
@@ -18,7 +18,7 @@ class NFPUpdate(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.graph_linears = chainer.ChainList(
-                *[chainerchem.links.GraphLinear(hidden_dim, hidden_dim)
+                *[chainerchem.links.GraphLinear(hidden_dim, out_dim)
                   for _ in range(num_degree_type)]
             )
         self.max_degree = max_degree
@@ -96,9 +96,9 @@ class NFP(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.embed = chainerchem.links.EmbedAtomID(
-                out_size=hidden_dim, in_size=n_atom_types)
+                in_size=n_atom_types, out_size=hidden_dim)
             self.layers = chainer.ChainList(
-                *[NFPUpdate(max_degree, hidden_dim, out_dim)
+                *[NFPUpdate(max_degree, hidden_dim, hidden_dim)
                   for _ in range(n_layers)])
             self.read_out_layers = chainer.ChainList(
                 *[NFPReadout(hidden_dim, out_dim)
@@ -137,10 +137,13 @@ class NFP(chainer.Chain):
 
         # --- NFP update & readout ---
         # degree_mat: (minibatch, max_num_atoms)
-        degree_mat = functions.sum(adj, axis=1)
+        # degree_mat = functions.sum(adj, axis=1)
+        if isinstance(adj, Variable):
+            adj = adj.data
+        degree_mat = self.xp.sum(adj, axis=1)
         # deg_condst: (minibatch, atom, ch)
         deg_conds = [self.xp.broadcast_to(
-            ((degree_mat - degree).data == 0)[:, :, None], h.shape)
+            ((degree_mat - degree) == 0)[:, :, None], h.shape)
             for degree in range(1, self.num_degree_type + 1)]
         g_list = []
         for update, readout in zip(self.layers, self.read_out_layers):
@@ -151,6 +154,6 @@ class NFP(chainer.Chain):
                 g_list.append(g)
 
         if self.concat_hidden:
-            return functions.concat(g_list, axis=1)
+            return functions.concat(g_list, axis=2)
         else:
             return g
