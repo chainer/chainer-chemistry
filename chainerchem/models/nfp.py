@@ -70,8 +70,9 @@ class NFPReadout(chainer.Chain):
 
         # --- Readout part ---
         i = self.output_weight(h)
+        functions.transpose(i, (0, 2, 1))
         i = functions.softmax(i)
-        i = functions.sum(i, axis=1)  # sum along atom's axis
+        i = functions.sum(i, axis=2)  # sum along atom's axis
         return i
 
 
@@ -92,7 +93,7 @@ class NFP(chainer.Chain):
     def __init__(self, hidden_dim, out_dim, n_layers, max_degree=6,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False):
         super(NFP, self).__init__()
-        print('nfp v3')
+        print('nfp v33')
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.embed = chainerchem.links.EmbedAtomID(
