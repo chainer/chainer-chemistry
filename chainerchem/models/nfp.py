@@ -95,7 +95,7 @@ class NFP(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.embed = chainerchem.links.EmbedAtomID(
-                in_size=n_atom_types, out_size=hidden_dim)
+                out_size=hidden_dim, in_size=n_atom_types)
             self.layers = chainer.ChainList(
                 *[NFPUpdate(max_degree, hidden_dim, out_dim)
                   for _ in range(n_layers)])
