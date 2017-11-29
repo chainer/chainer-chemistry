@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from chainerchem.datasets import qm9, tox21
+from chainerchem.datasets import qm9
 
 
 @pytest.mark.slow
@@ -10,7 +10,7 @@ def test_get_qm9_filepath_without_download():
     if os.path.exists(filepath):
         os.remove(filepath)  # ensure a cache file does not exist.
 
-    filepath = tox21.get_tox21_filepath(dataset_type, download_if_not_exist=False)
+    filepath = qm9.get_qm9_filepath(dataset_type, download_if_not_exist=False)
     assert isinstance(filepath, str)
     assert not os.path.exists(filepath)
 
