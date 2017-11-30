@@ -1,17 +1,17 @@
-import os
-import six
-
-import numpy
-
 from chainerchem.dataset.indexer import BaseFeatureIndexer
 
 
 class NumpyTupleDatasetFeatureIndexer(BaseFeatureIndexer):
-    """FeatureIndexer for NumpyTupleDataset"""
+    """FeatureIndexer for NumpyTupleDataset
+
+    Args:
+        dataset (NumpyTupleDataset): dataset instance
+
+    """
 
     def __init__(self, dataset):
         super(NumpyTupleDatasetFeatureIndexer, self).__init__(dataset)
-        self.datasets = dataset._datasets
+        self.datasets = dataset.get_datasets()
 
     def features_length(self):
         return len(self.datasets)

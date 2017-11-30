@@ -65,6 +65,13 @@ class TestNumpyTupleDataset(object):
         for a, d in six.moves.zip(dataset._datasets, load_dataset._datasets):
             numpy.testing.assert_array_equal(a, d)
 
+    def test_get_datasets(self, data):
+        dataset = NumpyTupleDataset(*data)
+        datasets = dataset.get_datasets()
+        assert len(datasets) == len(data)
+        for i in range(len(datasets)):
+            numpy.testing.assert_array_equal(datasets[i], data[i])
+
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-v'])
