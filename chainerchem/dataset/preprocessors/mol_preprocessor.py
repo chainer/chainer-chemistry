@@ -1,10 +1,6 @@
 from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor
 
 
-class MolFeatureExtractFailure(Exception):
-    pass
-
-
 class MolPreprocessor(BasePreprocessor):
     """preprocessor class specified for rdkit mol instance"""
 
@@ -49,7 +45,7 @@ class MolPreprocessor(BasePreprocessor):
 
                 # Failed to GetProp for label, skip this case.
                 # print('no label')
-                # raise MolFeatureExtractFailure
+                # raise MolFeatureExtractionError
 
         return label_list
 

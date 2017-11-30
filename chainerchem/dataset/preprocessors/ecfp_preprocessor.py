@@ -3,7 +3,7 @@ from logging import getLogger
 import numpy
 from rdkit.Chem import rdMolDescriptors
 
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
@@ -21,6 +21,6 @@ class ECFPPreprocessor(MolPreprocessor):
             logger = getLogger(__name__)
             logger.debug('exception caught at ECFPPreprocessor:', e)
             # Extracting feature failed
-            raise MolFeatureExtractFailure
+            raise MolFeatureExtractionError
         # TODO(Nakago): Test it.
         return numpy.asarray(fp, numpy.float32)

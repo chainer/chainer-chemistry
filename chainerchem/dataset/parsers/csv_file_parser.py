@@ -6,7 +6,7 @@ from rdkit import Chem
 from tqdm import tqdm
 
 from chainerchem.dataset.parsers.base_parser import BaseFileParser
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
@@ -100,7 +100,7 @@ class CSVFileParser(BaseFileParser):
                         self.smiles.append(standardized_smiles)
                         # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
                         #              .format(smiles, standardized_smiles))
-                except MolFeatureExtractFailure as e:
+                except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1

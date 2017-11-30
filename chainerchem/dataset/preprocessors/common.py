@@ -3,7 +3,9 @@
 import numpy
 from rdkit.Chem import rdmolops
 
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
+
+class MolFeatureExtractionError(Exception):
+    pass
 
 
 # --- Type check ---
@@ -11,7 +13,7 @@ def type_check_num_atoms(mol, num_max_atoms=-1):
     """Check number of atoms in `mol` does not exceed `num_max_atoms`
 
     If number of atoms in `mol` exceeds the number `num_max_atoms`, it will
-    raise `MolFeatureExtractFailure` exception.
+    raise `MolFeatureExtractionError` exception.
 
     Args:
         mol (Mol):
@@ -22,7 +24,7 @@ def type_check_num_atoms(mol, num_max_atoms=-1):
     num_atoms = mol.GetNumAtoms()
     if num_max_atoms >= 0 and num_atoms > num_max_atoms:
         # Skip extracting feature. ignore this case.
-        raise MolFeatureExtractFailure(
+        raise MolFeatureExtractionError(
             'Number of atoms in mol {} exceeds num_max_atoms {}'
             .format(num_atoms, num_max_atoms))
 

@@ -6,8 +6,8 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
 from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
 
@@ -23,7 +23,7 @@ def construct_distance_matrix(mol, zero_padding=False, num_max_atoms=-1):
 
     """
     if mol is None:
-        raise MolFeatureExtractFailure('mol is None')
+        raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
     size = num_max_atoms if zero_padding else N
     confid = AllChem.EmbedMolecule(mol)
@@ -34,7 +34,7 @@ def construct_distance_matrix(mol, zero_padding=False, num_max_atoms=-1):
         logger.info('construct_distance_matrix failed, type: {}, {}'
                     .format(type(e).__name__, e.args))
         logger.debug(traceback.format_exc())
-        raise MolFeatureExtractFailure
+        raise MolFeatureExtractionError
 
     if zero_padding:
         dists = numpy.zeros((size, size), dtype=numpy.float32)
