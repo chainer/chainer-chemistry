@@ -12,18 +12,25 @@ from chainerchem.config import MAX_ATOMIC_NUM
 
 
 class NFPUpdate(chainer.Chain):
+    """NFP sub module for update part
 
-    def __init__(self, max_degree, hidden_dim, out_dim):
+    Args:
+        max_degree (int): max degree of edge
+        in_channels (int): input channel dimension
+        out_channels (int): output channel dimension
+    """
+
+    def __init__(self, max_degree, in_channels, out_channels):
         super(NFPUpdate, self).__init__()
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.graph_linears = chainer.ChainList(
-                *[chainerchem.links.GraphLinear(hidden_dim, out_dim)
+                *[chainerchem.links.GraphLinear(in_channels, out_channels)
                   for _ in range(num_degree_type)]
             )
         self.max_degree = max_degree
-        self.hidden_dim = hidden_dim
-        self.out_dim = out_dim
+        self.in_channels = in_channels
+        self.out_channels = out_channels
 
     def __call__(self, h, adj, deg_conds):
         # h    (minibatch, atom, ch)
