@@ -3,7 +3,7 @@ import pytest
 from rdkit import Chem
 
 from chainerchem.dataset.parsers import SDFFileParser
-from chainerchem.dataset.preprocessors import NFPPreprocessor
+from chainerchem.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
 from chainerchem.datasets import get_tox21_filepath
 
 
@@ -15,10 +15,10 @@ def mol():
 
 @pytest.fixture
 def pp():
-    return NFPPreprocessor()
+    return SchNetPreprocessor()
 
 
-def test_nfp_preprocessor(mol, pp):
+def test_schnet_preprocessor(mol, pp):
     ret = pp.get_input_features(mol)
     assert len(ret) == 2
     actual_atom_array, actual_adj_array = ret
@@ -26,21 +26,18 @@ def test_nfp_preprocessor(mol, pp):
     expect_atom_array = numpy.array([6, 7, 6, 8], dtype=numpy.int32)
     numpy.testing.assert_array_equal(actual_atom_array, expect_atom_array)
 
-    expect_adj_array = numpy.array([[1, 1, 0, 0],
-                                    [1, 1, 1, 0],
-                                    [0, 1, 1, 1],
-                                    [0, 0, 1, 1]], dtype=numpy.float32)
-    numpy.testing.assert_array_equal(actual_adj_array, expect_adj_array)
-
-
-# TODO (Oono)
-# Test non-default max_atom and non-default zero_padding options, respectively
-# after the discussion of the issue #60.
+    # TODO(nakago): write test for adj matrix.
+    # print(actual_adj_array)
+    # expect_adj_array = numpy.array([[1, 1, 0, 0],
+    #                                 [1, 1, 1, 0],
+    #                                 [0, 1, 1, 1],
+    #                                 [0, 0, 1, 1]], dtype=numpy.float32)
+    # numpy.testing.assert_array_equal(actual_adj_array, expect_adj_array)
 
 
 @pytest.mark.slow
-def test_nfp_preprocessor_with_tox21():
-    preprocessor = NFPPreprocessor()
+def test_schnet_preprocessor_with_tox21():
+    preprocessor = SchNetPreprocessor()
 
     dataset = SDFFileParser(preprocessor, postprocess_label=None
                             ).parse(get_tox21_filepath('train'))
@@ -55,10 +52,10 @@ def test_nfp_preprocessor_with_tox21():
     assert adjs.dtype == numpy.float32
 
 
-def test_nfp_preprocessor_assert_raises():
+def test_schnet_preprocessor_assert_raises():
     with pytest.raises(ValueError):
-        pp = NFPPreprocessor(max_atoms=3, out_size=2)
+        pp = SchNetPreprocessor(max_atoms=3, out_size=2)
 
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-v'])

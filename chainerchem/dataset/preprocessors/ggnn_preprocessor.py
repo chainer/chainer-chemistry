@@ -6,14 +6,12 @@ from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
 
-def construct_discrete_edge_matrix(mol, zero_padding=False,
-                                   num_max_atoms=-1):
+def construct_discrete_edge_matrix(mol, out_size=-1):
     """construct discrete edge matrix
 
     Args:
         mol (Chem.Mol):
-        zero_padding (bool):
-        num_max_atoms (int):
+        out_size (int):
 
     Returns (numpy.ndarray):
 
@@ -22,9 +20,16 @@ def construct_discrete_edge_matrix(mol, zero_padding=False,
     if mol is None:
         raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
-    # adj = Chem.rdmolops.GetAdjacencyMatrix(mol)
-    # size = adj.shape[0]
-    size = num_max_atoms if zero_padding else N
+
+    if out_size < 0:
+        size = N
+    elif out_size >= N:
+        size = out_size
+    else:
+        raise MolFeatureExtractFailure('out_size {} is smaller than number '
+                                       'of atoms in mol {}'
+                                       .format(out_size, N))
+
     adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
     for i in range(N):
         for j in range(N):
@@ -50,21 +55,24 @@ class GGNNPreprocessor(MolPreprocessor):
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
-        number
-        of atoms is more than this value, this data is simply ignored.
-        Setting negative value indicates no limit for max atoms.
-        zero_padding (bool): True
+            number of atoms is more than this value, this data is simply
+            ignored.
+            Setting negative value indicates no limit for max atoms.
+        out_size (int): It specifies the size of array returned by 
+            `get_input_features`.
+            If the number of atoms in the molecule is less than this value,
+            the returned arrays is padded to have fixed size.
+            Setting negative value indicates do not pad returned array.
 
     """
 
-    def __init__(self, max_atoms=-1, zero_padding=False):
+    def __init__(self, max_atoms=-1, out_size=-1):
         super(GGNNPreprocessor, self).__init__()
-        if zero_padding and max_atoms <= 0:
-            raise ValueError('max_atoms must be set to positive value when '
-                             'zero_padding is True')
-
+        if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
+            raise ValueError('max_atoms {} must be equal to or larget than '
+                             'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
-        self.zero_padding = zero_padding
+        self.out_size = out_size
 
     def get_input_features(self, mol):
         """get input features
@@ -76,7 +84,6 @@ class GGNNPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = construct_atomic_numbers(mol, self.max_atoms)
-        adj_array = construct_discrete_edge_matrix(
-            mol, self.zero_padding, num_max_atoms=self.max_atoms)
+        atom_array = construct_atomic_numbers(mol, out_size=self.out_size)
+        adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
         return atom_array, adj_array
