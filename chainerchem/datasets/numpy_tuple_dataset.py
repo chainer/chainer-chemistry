@@ -3,7 +3,7 @@ import six
 
 import numpy
 
-from chainerchem.dataset.indexers import NumpyTupleDatasetFeatureIndexer
+from chainerchem.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
 
 
 class NumpyTupleDataset(object):
@@ -44,6 +44,9 @@ class NumpyTupleDataset(object):
 
     def __len__(self):
         return self._length
+
+    def get_datasets(self):
+        return self._datasets
 
     @property
     def features(self):

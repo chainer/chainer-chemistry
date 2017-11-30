@@ -6,8 +6,8 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
 from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
 
@@ -22,7 +22,7 @@ def construct_distance_matrix(mol, out_size=-1):
 
     """
     if mol is None:
-        raise MolFeatureExtractFailure('mol is None')
+        raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
 
     if out_size < 0:
@@ -30,9 +30,9 @@ def construct_distance_matrix(mol, out_size=-1):
     elif out_size >= N:
         size = out_size
     else:
-        raise MolFeatureExtractFailure('out_size {} is smaller than number '
-                                       'of atoms in mol {}'
-                                       .format(out_size, N))
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
 
     confid = AllChem.EmbedMolecule(mol)
     try:
@@ -42,7 +42,7 @@ def construct_distance_matrix(mol, out_size=-1):
         logger.info('construct_distance_matrix failed, type: {}, {}'
                     .format(type(e).__name__, e.args))
         logger.debug(traceback.format_exc())
-        raise MolFeatureExtractFailure
+        raise MolFeatureExtractionError
 
     if size > N:
         dists = numpy.zeros((size, size), dtype=numpy.float32)
@@ -74,8 +74,8 @@ class SchNetPreprocessor(MolPreprocessor):
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1):
-        super(SchNetPreprocessor, self).__init__()
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
+        super(SchNetPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be equal to or larget than '
                              'out_size {}'.format(max_atoms, out_size))
