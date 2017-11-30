@@ -148,7 +148,7 @@ class NFP(chainer.Chain):
         degree_mat = self.xp.sum(adj, axis=1)
         # deg_condst: (minibatch, atom, ch)
         deg_conds = [self.xp.broadcast_to(
-            ((degree_mat - degree) == 0)[:, :, None], h.shape)
+            ((degree_mat - degree) == 0)[None], h.shape)
             for degree in range(1, self.num_degree_type + 1)]
         g_list = []
         for update, readout in zip(self.layers, self.read_out_layers):
