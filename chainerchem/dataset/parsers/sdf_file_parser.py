@@ -74,7 +74,7 @@ class SDFFileParser(BaseFileParser):
                     # same molecule, but the expression may be different!
                     smiles = Chem.MolToSmiles(mol)
                     mol = Chem.MolFromSmiles(smiles)
-                    standardized_smiles, mol = pp.get_smiles_and_mol(mol)
+                    standardized_smiles, mol = pp.prepare_smiles_and_mol(mol)
                     input_features = pp.get_input_features(mol)
 
                     # Initialize features: list of list
