@@ -1,4 +1,5 @@
 import chainer
+from chainerchem.config import MAX_ATOMIC_NUM
 
 
 class EmbedAtomID(chainer.links.EmbedID):
@@ -10,11 +11,17 @@ class EmbedAtomID(chainer.links.EmbedID):
     The operation is done in a minibatch manner, as most chains do.
 
     The forward propagation of link consists of ID embedding,
-    followed by transposition of second (axis=1) and third
-    (axis=2) dimension.
+    which converts the input `x` into vector embedding `h` where
+    its shape represents (minibatch, atom, channel) 
 
     .. seealso:: :class:`chainer.links.EmbedID`
     """
+
+    def __init__(self, out_size, in_size=MAX_ATOMIC_NUM, initialW=None,
+                 ignore_label=None):
+        super(EmbedAtomID, self).__init__(
+            in_size=in_size, out_size=out_size, initialW=initialW,
+            ignore_label=ignore_label)
 
     def __call__(self, x):
         """Forward propagaion.
@@ -32,9 +39,10 @@ class EmbedAtomID(chainer.links.EmbedID):
 
         Returns:
             :class:`chainer.Variable`:
-                A 3-dimensional array consisting of embedded vectors of atoms.
+                A 3-dimensional array consisting of embedded vectors of atoms,
+                representing (minibatch, atom, channel).
 
         """
 
         h = super(EmbedAtomID, self).__call__(x)
-        return chainer.functions.transpose(h, (0, 2, 1))
+        return h

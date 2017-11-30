@@ -33,7 +33,7 @@ class GGNN(chainer.Chain):
         n_message_layer = 1 if weight_tying else n_layers
         with self.init_scope():
             # Update
-            self.embed = EmbedAtomID(n_atom_types, hidden_dim)
+            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.message_layers = chainer.ChainList(
                 *[GraphLinear(hidden_dim, self.NUM_EDGE_TYPE * hidden_dim)
                   for _ in range(n_message_layer)]
@@ -56,49 +56,49 @@ class GGNN(chainer.Chain):
 
     def update(self, h, adj, step=0):
         # --- Message & Update part ---
-        # (mb, ch, atom)
-        mb, ch, atom = h.shape
+        # (minibatch, atom, ch)
+        mb, atom, ch = h.shape
         out_ch = ch
         message_layer_index = 0 if self.weight_tying else step
-        m = functions.reshape(self.message_layers[message_layer_index](
-            h), (mb, out_ch, atom, self.NUM_EDGE_TYPE))
-        # (mb, ch, atom, edge_type)
+        m = functions.reshape(self.message_layers[message_layer_index](h),
+                              (mb, atom, out_ch, self.NUM_EDGE_TYPE))
+        # m: (minibatch, ch, atom, edge_type)
         # Transpose
-        m = functions.transpose(m, (0, 3, 1, 2))
-        # (mb, edge_type, ch, atom)
+        m = functions.transpose(m, (0, 3, 2, 1))
+        # m: (minibatch, edge_type, atom, ch)
 
         adj = functions.reshape(adj, (mb * self.NUM_EDGE_TYPE, atom, atom))
-        # (mb * edge_type, out_ch, atom)
-        m = functions.reshape(m, (mb * self.NUM_EDGE_TYPE, out_ch, atom))
+        # (minibatch * edge_type, atom, out_ch)
+        m = functions.reshape(m, (mb * self.NUM_EDGE_TYPE, atom, out_ch))
 
-        m = chainerchem.functions.matmul(m, adj)
+        m = chainerchem.functions.matmul(adj, m)
 
-        # (mb * edge_type, out_ch, atom)
-        m = functions.reshape(m, (mb, self.NUM_EDGE_TYPE, out_ch, atom))
+        # (minibatch * edge_type, atom, out_ch)
+        m = functions.reshape(m, (mb, self.NUM_EDGE_TYPE, atom, out_ch))
         # Take sum
         m = functions.sum(m, axis=1)
-        # (mb, out_ch, atom)
+        # (minibatch, atom, out_ch)
 
         # --- Update part ---
         # Contraction
-        h = functions.reshape(functions.transpose(h, (0, 2, 1)),
-                              (mb * atom, ch))
+        h = functions.reshape(h, (mb * atom, ch))
+
         # Contraction
-        m = functions.reshape(functions.transpose(m, (0, 2, 1)),
-                              (mb * atom, ch))
+        m = functions.reshape(m, (mb * atom, ch))
+
         out_h = self.update_layer(functions.concat((h, m), axis=1))
         # Expansion
-        out_h = functions.transpose(functions.reshape(out_h, (mb, atom, ch)),
-                                    (0, 2, 1))
+        out_h = functions.reshape(out_h, (mb, atom, ch))
         return out_h
 
     def readout(self, h, h0, step=0):
         # --- Readout part ---
         index = step if self.concat_hidden else 0
+        # h, h0: (minibatch, atom, ch)
         g = functions.sigmoid(
-            self.i_layers[index](functions.concat((h, h0), axis=1))) \
+            self.i_layers[index](functions.concat((h, h0), axis=2))) \
             * self.j_layers[index](h)
-        g = functions.sum(g, axis=2)  # sum along atom's axis
+        g = functions.sum(g, axis=1)  # sum along atom's axis
         return g
 
     def __call__(self, atom_array, adj):
@@ -131,7 +131,7 @@ class GGNN(chainer.Chain):
                 g_list.append(g)
 
         if self.concat_hidden:
-            return functions.concat(g_list, axis=1)
+            return functions.concat(g_list, axis=2)
         else:
             g = self.readout(h, h0, 0)
             return g
