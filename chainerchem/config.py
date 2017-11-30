@@ -1,9 +1,4 @@
-import logging
-
 # --- Configuration ---
-DEBUG = True
-if DEBUG:
-    logging.basicConfig(level=logging.WARNING)
 
 
 # --- Constant definitions ---
