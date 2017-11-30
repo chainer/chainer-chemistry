@@ -26,8 +26,8 @@ class CFConvLayer(chainer.Chain):
         self.gamma = gamma
 
     def __call__(self, x, r):
-        """
-        
+        """Forward propagaion
+
         Args:
             x (numpy.ndarray): axis 0 represents minibatch index,
                 axis 1 represents atom_index and axis 2 represents feature

@@ -9,7 +9,7 @@ class EmbedAtomID(chainer.links.EmbedID):
     an atom, represented by a sequence of molecule IDs,
     to a sequence of embedding vectors of molecules.
     The operation is done in a minibatch manner, as most chains do.
-    
+
     The forward propagation of link consists of ID embedding,
     which converts the input `x` into vector embedding `h` where
     its shape represents (minibatch, atom, channel) 
@@ -27,12 +27,15 @@ class EmbedAtomID(chainer.links.EmbedID):
         """Forward propagaion.
 
         Args:
-            x (:class:`chainer.Variable`, or :class:`numpy.ndarray` or :class:`cupy.ndarray`):
-                Input array that should be an integer array whose ``ndim`` is 2.
-                This method treats the array as a minibatch of atoms, each of which consists
+            x (:class:`chainer.Variable`, or :class:`numpy.ndarray` \
+            or :class:`cupy.ndarray`):
+                Input array that should be an integer array
+                whose ``ndim`` is 2. This method treats the array
+                as a minibatch of atoms, each of which consists
                 of a sequence of molecules represented by integer IDs.
                 The first axis should be an index of atoms
-                (i.e. minibatch dimension) and the second one be an index of molecules.
+                (i.e. minibatch dimension) and the second one be an
+                index of molecules.
 
         Returns:
             :class:`chainer.Variable`:
@@ -40,6 +43,6 @@ class EmbedAtomID(chainer.links.EmbedID):
                 representing (minibatch, atom, channel).
 
         """
-        
+
         h = super(EmbedAtomID, self).__call__(x)
         return h
