@@ -1,6 +1,6 @@
 import numpy
 
-from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
 from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
@@ -26,9 +26,9 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
     elif out_size >= N:
         size = out_size
     else:
-        raise MolFeatureExtractFailure('out_size {} is smaller than number '
-                                       'of atoms in mol {}'
-                                       .format(out_size, N))
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
 
     adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
     for i in range(N):
@@ -84,6 +84,6 @@ class GGNNPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = construct_atomic_numbers(mol, out_size=self.out_size)
+        atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
         return atom_array, adj_array

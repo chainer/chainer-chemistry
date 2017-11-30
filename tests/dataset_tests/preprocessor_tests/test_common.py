@@ -13,14 +13,14 @@ def sample_molecule():
 class TestGetAtomicNumbers(object):
     
     def test_normal(self, sample_molecule):
-        actual = common.construct_atomic_numbers(sample_molecule)
+        actual = common.construct_atomic_number_array(sample_molecule)
 
         assert actual.shape == (4,)
         expect = numpy.array([6, 7, 6, 8], dtype=numpy.int32)
         numpy.testing.assert_equal(actual, expect)
 
     def test_padding(self, sample_molecule):
-        actual = common.construct_atomic_numbers(sample_molecule, 5)
+        actual = common.construct_atomic_number_array(sample_molecule, 5)
 
         assert actual.shape == (5,)
         expect = numpy.array([6, 7, 6, 8, 0], dtype=numpy.int32)
@@ -29,7 +29,7 @@ class TestGetAtomicNumbers(object):
 
     def test_normal_truncated(self, sample_molecule):
         with pytest.raises(ValueError):
-            adj = common.construct_atomic_numbers(sample_molecule, 3)
+            adj = common.construct_atomic_number_array(sample_molecule, 3)
         
 
 @pytest.fixture

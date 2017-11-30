@@ -30,7 +30,7 @@ def type_check_num_atoms(mol, num_max_atoms=-1):
 
 
 # --- Atom preprocessing ---
-def construct_atomic_numbers(mol, out_size=-1):
+def construct_atomic_number_array(mol, out_size=-1):
     """Returns atomic numbers of atoms consisting a molecule.
 
     Args:

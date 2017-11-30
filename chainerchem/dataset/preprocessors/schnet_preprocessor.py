@@ -5,7 +5,7 @@ import numpy
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
-from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
 from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
@@ -30,9 +30,9 @@ def construct_distance_matrix(mol, out_size=-1):
     elif out_size >= N:
         size = out_size
     else:
-        raise MolFeatureExtractFailure('out_size {} is smaller than number '
-                                       'of atoms in mol {}'
-                                       .format(out_size, N))
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
 
     confid = AllChem.EmbedMolecule(mol)
     try:
@@ -92,6 +92,6 @@ class SchNetPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = construct_atomic_numbers(mol, out_size=self.out_size)
+        atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         dist_array = construct_distance_matrix(mol, out_size=self.out_size)
         return atom_array, dist_array
