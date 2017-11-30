@@ -10,9 +10,9 @@ for chemical molecule property prediction.
 
 ## Quick start
 
-### 1. Install `chainerchem`
+### 1. Install
 
-It can be easily installed by `pip` command.
+This library can be installed by `pip` command.
 
 Note that it uses [rdkit](https://github.com/rdkit/rdkit),
 Open-Source Cheminformatics Software.
@@ -26,12 +26,20 @@ conda install -c rdkit rdkit
 
 ### 2. Run example training code
 
-Training tox21 dataset with Neural Fingerprint network.
+[The official repository](https://github.com/pfnet/chainerchem) provides examples
+several graph convolution networks with the Tox21 and QM9 datasets
+(the Tox21 example has inference code as well). You can obtain the code by cloning
+the repository:
 
 ```bash
+git clone https://github.com/pfnet/chainerchem.git
+```
+
+The following code is how to train Neural Fingerprint (NFP) with the Tox21 dataset on CPU:
+
+```
 cd chainerchem/examples/tox21
-# set --gpu=0 if you have GPU
-python train_tox21.py --method=nfp  --gpu=-1
+python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU
 ```
 
 ## Installation
@@ -52,16 +60,16 @@ pip install -e chainerchem
 
 ## Dependencies
 
-Following packages are automatically installed when you install `chainerchem`
-by `pip` command.
+Following packages are required to install this library and are automatically
+installed when you install the library by `pip` command.
 
- - `chainer`
- - `pandas`
- - `tqdm`
+ - [`chainer`](https://docs.chainer.org/en/stable/index.html)
+ - [`pandas`](https://pandas.pydata.org)
+ - [`tqdm`](https://pypi.python.org/pypi/tqdm)
 
 Also, it uses following library, you need to manually install it.
 
- - `rdkit`
+ - [`rdkit`](https://github.com/rdkit/rdkit)
  
 See the [official document](http://www.rdkit.org/docs/Install.html) 
 for installation.
