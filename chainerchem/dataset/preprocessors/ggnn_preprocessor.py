@@ -66,8 +66,8 @@ class GGNNPreprocessor(MolPreprocessor):
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1):
-        super(GGNNPreprocessor, self).__init__()
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
+        super(GGNNPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be equal to or larget than '
                              'out_size {}'.format(max_atoms, out_size))

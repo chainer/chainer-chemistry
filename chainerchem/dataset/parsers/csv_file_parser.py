@@ -83,12 +83,11 @@ class CSVFileParser(BaseFileParser):
                         continue
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
-                    # smiles order does not contradict with input_features'
+                    # smiles order does not contradict with input features'
                     # order.
                     # Here, `smiles` and `standardized_smiles` expresses
                     # same molecule, but the expression may be different!
-                    standardized_smiles = Chem.MolToSmiles(mol)
-                    mol = Chem.MolFromSmiles(standardized_smiles)
+                    standardized_smiles, mol = pp.prepare_smiles_and_mol(mol)
                     input_features = pp.get_input_features(mol)
 
                     # Extract label
