@@ -5,7 +5,8 @@ import numpy
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
-from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
+from chainerchem.dataset.preprocessors.common \
+    import construct_atomic_number_array
 from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
@@ -66,7 +67,7 @@ class SchNetPreprocessor(MolPreprocessor):
             number of atoms is more than this value, this data is simply
             ignored.
             Setting negative value indicates no limit for max atoms.
-        out_size (int): It specifies the size of array returned by 
+        out_size (int): It specifies the size of array returned by
             `get_input_features`.
             If the number of atoms in the molecule is less than this value,
             the returned arrays is padded to have fixed size.
