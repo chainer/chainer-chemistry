@@ -1,8 +1,8 @@
 import numpy
 
 from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
 
@@ -18,7 +18,7 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
     """
 
     if mol is None:
-        raise MolFeatureExtractFailure('mol is None')
+        raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
 
     if out_size < 0:
