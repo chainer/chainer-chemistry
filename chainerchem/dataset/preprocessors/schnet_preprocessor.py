@@ -5,9 +5,9 @@ import numpy
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdmolops
 
-from chainerchem.dataset.preprocessors.common import construct_atomic_numbers
+from chainerchem.dataset.preprocessors.common import construct_atomic_number_array
+from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainerchem.dataset.preprocessors.common import type_check_num_atoms
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolFeatureExtractFailure  # NOQA
 from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor
 
 
@@ -22,18 +22,17 @@ def construct_distance_matrix(mol, out_size=-1):
 
     """
     if mol is None:
-        raise MolFeatureExtractFailure('mol is None')
+        raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
 
     if out_size < 0:
         size = N
+    elif out_size >= N:
+        size = out_size
     else:
-        if out_size >= N:
-            size = out_size
-        else:
-            raise MolFeatureExtractFailure('out_size {} is smaller than number '
-                                           'of atoms in mol {}'
-                                           .format(out_size, N))
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
 
     confid = AllChem.EmbedMolecule(mol)
     try:
@@ -43,7 +42,7 @@ def construct_distance_matrix(mol, out_size=-1):
         logger.info('construct_distance_matrix failed, type: {}, {}'
                     .format(type(e).__name__, e.args))
         logger.debug(traceback.format_exc())
-        raise MolFeatureExtractFailure
+        raise MolFeatureExtractionError
 
     if size > N:
         dists = numpy.zeros((size, size), dtype=numpy.float32)
@@ -93,6 +92,6 @@ class SchNetPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_array = construct_atomic_numbers(mol, out_size=self.out_size)
+        atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         dist_array = construct_distance_matrix(mol, out_size=self.out_size)
         return atom_array, dist_array

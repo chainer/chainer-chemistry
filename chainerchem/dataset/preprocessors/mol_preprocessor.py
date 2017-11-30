@@ -3,10 +3,6 @@ from rdkit import Chem
 from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor  # NOQA
 
 
-class MolFeatureExtractFailure(Exception):
-    pass
-
-
 class MolPreprocessor(BasePreprocessor):
     """preprocessor class specified for rdkit mol instance"""
 
@@ -14,9 +10,11 @@ class MolPreprocessor(BasePreprocessor):
         super(MolPreprocessor, self).__init__()
         self.add_Hs = add_Hs
 
-    def get_smiles_and_mol(self, mol):
+    def prepare_smiles_and_mol(self, mol):
         """Prepare `smiles` and `mol` used in following preprocessing.
 
+        This method is called before `get_input_features` is called, by parser 
+        class.
         This method may be overriden to support custom `smile`/`mol` extraction
         
         Args:
@@ -73,7 +71,7 @@ class MolPreprocessor(BasePreprocessor):
 
                 # Failed to GetProp for label, skip this case.
                 # print('no label')
-                # raise MolFeatureExtractFailure
+                # raise MolFeatureExtractionError
 
         return label_list
 
@@ -83,7 +81,8 @@ class MolPreprocessor(BasePreprocessor):
         Each subclass must override this method.
 
         Args:
-            mol (Mol): molecule whose feature to be extracted
+            mol (Mol): molecule whose feature to be extracted.
+                `mol` is prepared by the method `prepare_smiles_and_mol`.
         """
         raise NotImplementedError
 
