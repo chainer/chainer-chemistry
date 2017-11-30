@@ -28,7 +28,6 @@ def check_forward(model, x_data):
     def forward(W, x):
         y = W[x]
         return y
-        # return numpy.transpose(y, (0, 2, 1))
 
     y_expect = forward(cuda.to_cpu(model.W.data),
                        cuda.to_cpu(x_data))
