@@ -58,7 +58,7 @@ git clone https://github.com/pfnet/chainerchem.git
 pip install -e chainerchem
 ```
 
-## Dependencies
+### Dependencies
 
 Following packages are required to install this library and are automatically
 installed when you install the library by `pip` command.
