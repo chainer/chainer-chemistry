@@ -49,7 +49,7 @@ Usual users can install this library via PyPI:
 pip install chainerchem
 ```
 
-The software is still beta version and in experimental development.
+The software is still in experimental development.
 If you would like to use latest sources.
 please install master branch with the command:
 
