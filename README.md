@@ -11,7 +11,7 @@ for chemical molecule property prediction.
 
 This repository is currently under construction.
 There is no guarantee that example programs work correctly and tests pass.
-Plase use it at your own risk.
+Please use it at your own risk.
 
 ## Quick start
 
