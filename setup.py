@@ -13,7 +13,6 @@ setup(name='chainerchem',
       version='0.0.1',
       description='Deep learning library for chemistry.',
       packages=find_packages(),
-      url='TBD',
       license='MIT',
       setup_requires=setup_requires,
       install_requires=install_requires
