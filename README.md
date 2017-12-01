@@ -7,6 +7,11 @@ It supports various state-of-the-art deep learning neural network models
 (especially Graph Convolution Neural Network) 
 for chemical molecule property prediction.
 
+### Notes
+
+This repository is currently under construction.
+There is no guarantee that example programs work correctly and tests pass.
+Plase use it at your own risk.
 
 ## Quick start
 
@@ -57,6 +62,9 @@ please install master branch with the command:
 git clone https://github.com/pfnet/chainerchem.git
 pip install -e chainerchem
 ```
+
+#### Note:
+You can install this library via pip after v0.1.0 release.
 
 ### Dependencies
 
