@@ -106,7 +106,6 @@ class AtomwiseLinear(chainer.Chain):
 
 
 class SchNet(chainer.Chain):
-
     """SchNet
 
     Args:

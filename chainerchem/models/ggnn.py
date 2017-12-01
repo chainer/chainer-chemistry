@@ -11,7 +11,11 @@ from chainerchem.links import GraphLinear
 
 
 class GGNN(chainer.Chain):
-    """Gated Graph Neural Networks (GG-NN) Li et al.
+    """Gated Graph Neural Networks (GGNN)
+
+    See: Li, Y., Tarlow, D., Brockschmidt, M., & Zemel, R. (2015).\
+        Gated graph sequence neural networks. \
+        `arXiv:1511.05493 <https://arxiv.org/abs/1511.05493>`_
 
     Args:
         hidden_dim (int): dimension of feature vector
@@ -22,6 +26,7 @@ class GGNN(chainer.Chain):
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         weight_tying (bool): enable weight_tying or not
+
     """
     NUM_EDGE_TYPE = 4
 

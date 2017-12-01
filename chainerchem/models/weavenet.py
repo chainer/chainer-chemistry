@@ -142,22 +142,22 @@ class WeaveModule(chainer.Chain):
 
 
 class WeaveNet(chainer.Chain):
+    """WeaveNet implementation
+
+    Args:
+        n_output (int): output dim
+        n_atom (int): number of atom of input array
+        weave_channels (list): list of int, out_dim for each weave module
+        fully_channels (list): list of int, out_dim for each linear layer
+        n_sub_layer (int): number of layer for each AtomToPair, PairToAtom
+            layer
+        n_atom_types (int): number of atom id
+        readout_mode (str): 'sum' or 'max' or 'summax'
+    """
 
     def __init__(self, n_output, n_atom, weave_channels, fully_channels,
                  n_sub_layer, n_atom_types=MAX_ATOMIC_NUM, readout_mode='sum'):
-        """WeaveNet implementatoin
 
-        Args:
-            n_output (int): output dim
-            n_atom (int): number of atom of input array
-            weave_channels (list): list of int, out_dim for each weave module
-            fully_channels (list): list of int, out_dim for each linear layer
-            n_sub_layer (int): number of layer for each AtomToPair, PairToAtom
-                layer
-            n_atom_types (int): number of atom id
-            readout_mode (str): 'sum' or 'max' or 'summax'
-
-        """
         weave_module = [
             WeaveModule(n_atom, c, n_sub_layer, readout_mode=readout_mode)
             for c in weave_channels
