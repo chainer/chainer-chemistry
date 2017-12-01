@@ -42,5 +42,4 @@ You can use ``setup.py`` to install Chainer from the tarball::
 Install from the latest source from the master branch::
 
    $ git clone https://github.com/pfnet/chainerchem.git
-   $ cd chainerchem
-   $ python setup.py install
+   $ pip install -e chainerchem

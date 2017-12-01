@@ -44,13 +44,13 @@ python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU
 
 ## Installation
 
-For usual user, `chainerchem` can be installed via PyPI:
+Usual users can install this library via PyPI:
 ```
 pip install chainerchem
 ```
 
 The software is still beta version and in experimental development.
-If you would like to use latest sources or develop `chainerchem`, 
+If you would like to use latest sources.
 please install master branch with the command:
 
 ```
