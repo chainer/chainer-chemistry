@@ -100,7 +100,7 @@ Currently, following graph convolutional neural networks are implemented.
 Currently, following dataset is supported.
 
 - QM9 [7, 8]
-- tox21
+- Tox21 [9]
 
 ## License
 
@@ -130,3 +130,5 @@ arXiv preprint arXiv:1706.08566
 [7] L. Ruddigkeit, R. van Deursen, L. C. Blum, J.-L. Reymond, Enumeration of 166 billion organic small molecules in the chemical universe database GDB-17, J. Chem. Inf. Model. 52, 2864–2875, 2012.
 
 [8] R. Ramakrishnan, P. O. Dral, M. Rupp, O. A. von Lilienfeld, Quantum chemistry structures and properties of 134 kilo molecules, Scientific Data 1, 140022, 2014.
+
+[9] Huang R, Xia M, Nguyen D-T, Zhao T, Sakamuru S, Zhao J, Shahane SA, Rossoshek A and Simeonov A (2016) Tox21Challenge to Build Predictive Models of Nuclear Receptor and Stress Response Pathways as Mediated by Exposure to Environmental Chemicals and Drugs. Front. Environ. Sci. 3:85. doi: 10.3389/fenvs.2015.00085
