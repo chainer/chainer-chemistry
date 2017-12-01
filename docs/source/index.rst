@@ -19,6 +19,7 @@ Features
    quick_start
    install
    reference
+   tutorial
 
 Indices and tables
 ==================
