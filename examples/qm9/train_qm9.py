@@ -155,18 +155,14 @@ def main():
         print('Train WeaveNet model...')
         n_unit = args.unit_num
         n_atom = 20
-        n_layer = args.conv_layers
-        # n_layer = 1
         n_sub_layer = 1
-        weave_channels = [50] * n_layer
+        weave_channels = [50] * args.conv_layers
         model = GraphConvPredictor(
             WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
                      n_sub_layer=n_sub_layer, n_atom=n_atom),
             MLP(out_dim=class_num, hidden_dim=n_unit))
-
     else:
-        print('[ERROR] Invalid mode')
-        exit()
+        raise ValueError('[ERROR] Invalid method {}'.format(method))
 
     train_iter = I.SerialIterator(train, args.batchsize)
     val_iter = I.SerialIterator(val, args.batchsize,
