@@ -15,12 +15,12 @@ class NFPUpdate(chainer.Chain):
     """NFP sub module for update part
 
     Args:
-        max_degree (int): max degree of edge
         in_channels (int): input channel dimension
         out_channels (int): output channel dimension
+        max_degree (int): max degree of edge
     """
 
-    def __init__(self, max_degree, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, max_degree=6):
         super(NFPUpdate, self).__init__()
         num_degree_type = max_degree + 1
         with self.init_scope():
@@ -62,14 +62,22 @@ class NFPUpdate(chainer.Chain):
 
 
 class NFPReadout(chainer.Chain):
+    """NFP sub module for readout part
 
-    def __init__(self, hidden_dim, out_dim):
+    Args:
+        in_channels (int): dimension of feature vector associated to each
+            atom (node)
+        out_size (int): output dimension of feature vector associated to each
+            molecule (graph)
+    """
+
+    def __init__(self, in_channels, out_size):
         super(NFPReadout, self).__init__()
         with self.init_scope():
             self.output_weight = chainerchem.links.GraphLinear(
-                hidden_dim, out_dim)
-        self.hidden_dim = hidden_dim
-        self.out_dim = out_dim
+                in_channels, out_size)
+        self.in_channels = in_channels
+        self.out_size = out_size
 
     def __call__(self, h):
         # input  h shape (minibatch, atom, ch)
@@ -87,16 +95,16 @@ class NFP(chainer.Chain):
     """Neural Finger Print (NFP)
 
     Args:
+        out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        out_dim (int): dimension of output feature vector
         max_degree (int): max degree of atoms
             when molecules are regarded as graphs
         n_atom_types (int): number of types of atoms
         n_layer (int): number of layers
     """
 
-    def __init__(self, hidden_dim, out_dim, n_layers, max_degree=6,
+    def __init__(self, out_dim, hidden_dim=16, n_layers=4, max_degree=6,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False):
         super(NFP, self).__init__()
         num_degree_type = max_degree + 1
@@ -104,7 +112,7 @@ class NFP(chainer.Chain):
             self.embed = chainerchem.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
             self.layers = chainer.ChainList(
-                *[NFPUpdate(max_degree, hidden_dim, hidden_dim)
+                *[NFPUpdate(hidden_dim, hidden_dim, max_degree=max_degree)
                   for _ in range(n_layers)])
             self.read_out_layers = chainer.ChainList(
                 *[NFPReadout(hidden_dim, out_dim)
