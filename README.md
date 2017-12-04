@@ -31,13 +31,13 @@ conda install -c rdkit rdkit
 
 ### 2. Run example training code
 
-[The official repository](https://github.com/pfnet/chainerchem) provides examples
+[The official repository](https://github.com/pfnet-research/chainerchem) provides examples
 several graph convolution networks with the Tox21 and QM9 datasets
 (the Tox21 example has inference code as well). You can obtain the code by cloning
 the repository:
 
 ```bash
-git clone https://github.com/pfnet/chainerchem.git
+git clone https://github.com/pfnet-research/chainerchem.git
 ```
 
 The following code is how to train Neural Fingerprint (NFP) with the Tox21 dataset on CPU:
@@ -59,7 +59,7 @@ If you would like to use latest sources.
 please install master branch with the command:
 
 ```
-git clone https://github.com/pfnet/chainerchem.git
+git clone https://github.com/pfnet-research/chainerchem.git
 pip install -e chainerchem
 ```
 

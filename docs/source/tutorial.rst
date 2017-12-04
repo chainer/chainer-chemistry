@@ -36,7 +36,7 @@ because the network should approximate both calculating the Hamiltonian matrix a
 HOMO prediction by NFP
 ========================
 
-At first you should clone the library repository from `GitHub <https://github.com/pfnet/chainerchem>`_.
+At first you should clone the library repository from `GitHub <https://github.com/pfnet-research/chainerchem>`_.
 There is a Python script ``examples/qm9/train_qm9.py`` in the repository.
 It executes a whole training procedure, that is, downloads QM9 dataset, preprocess it, define an NFP model and run trainning on them.
 
@@ -44,7 +44,7 @@ Execute the following commands on a machine satisfying the tested environment in
 
 .. code-block:: shell
 
-    ~$ git clone git@github.com:pfnet/chainerchem.git
+    ~$ git clone git@github.com:pfnet-research/chainerchem.git
     ~$ cd chainerchem/examples/qm9/
 
 Hereafter all shell commands should be executed in this directory.
