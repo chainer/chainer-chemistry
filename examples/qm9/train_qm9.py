@@ -82,6 +82,7 @@ def main():
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
+    scale_list = ['standardize', 'none']
 
     parser = argparse.ArgumentParser(
         description='Regression with QM9.')
@@ -91,8 +92,8 @@ def main():
                         default='', help='target label for regression, '
                                          'empty string means to predict all '
                                          'property at once')
-    parser.add_argument('--scale', type=str, default='standardize',
-                        help='Label scaling method')
+    parser.add_argument('--scale', type=str, choices=scale_list,
+                        default='standardize', help='Label scaling method')
     parser.add_argument('--conv_layers', '-c', type=int, default=4)
     parser.add_argument('--batchsize', '-b', type=int, default=128)
     parser.add_argument('--gpu', '-g', type=int, default=-1)
@@ -176,9 +177,13 @@ def main():
             x0 = cuda.to_cpu(x0.data)
         if isinstance(x1, Variable):
             x1 = cuda.to_cpu(x1.data)
-        scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-        scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-        return numpy.mean(numpy.absolute(scaled_x0 - scaled_x1), axis=0)[0]
+        if args.scale == 'standardize':
+            scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        elif args.scale == 'none':
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.mean(numpy.absolute(diff), axis=0)[0]
 
     classifier = L.Classifier(model, lossfun=F.mean_squared_error,
                               accfun=scaled_abs_error)
