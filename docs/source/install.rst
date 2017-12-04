@@ -43,3 +43,15 @@ Install from the latest source from the master branch::
 
    $ git clone https://github.com/pfnet-research/chainerchem.git
    $ pip install -e chainerchem
+
+Run example training code
+========================
+`The official repository <https://github.com/pfnet-research/chainerchem>`_ provides examples
+of training several graph convolution networks. The code can be obtained by cloning the repository::
+
+   $ git clone https://github.com/pfnet-research/chainerchem.git
+
+The following code is how to train Neural Fingerprint (NFP) with the Tox21 dataset on CPU::
+
+   $ cd chainerchem/examples/tox21
+   $ python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU

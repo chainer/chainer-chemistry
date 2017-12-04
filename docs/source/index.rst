@@ -16,10 +16,9 @@ Features
    :maxdepth: 1
    :caption: Contents
 
-   quick_start
    install
-   reference
    tutorial
+   reference
 
 Indices and tables
 ==================
