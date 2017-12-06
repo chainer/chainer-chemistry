@@ -126,6 +126,18 @@ def construct_aromaticity_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
 
 
 def construct_atom_feature(mol, add_Hs, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+    """construct atom feature
+
+    Args:
+        mol (Mol): mol instance
+        add_Hs (bool): if the `mol` instance was added Hs, set True.
+        num_max_atoms (int): number of max atoms
+
+    Returns (numpy.ndarray): 2 dimensional array. First axis size is 
+        `num_max_atoms`, representing each atom index.
+        Second axis for feature.
+
+    """
     atom_type_vector = construct_atom_type_vector(mol, num_max_atoms)
     # TODO(nakago): Chilarity
     formal_charge_vec = construct_formal_charge_vec(mol)
@@ -191,6 +203,17 @@ def construct_ring_feature(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
 
 
 def construct_pair_feature(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+    """construct pair feature
+
+    Args:
+        mol (Mol): mol instance
+        num_max_atoms (int): number of max atoms
+
+    Returns (numpy.ndarray): 2 dimensional array. First axis size is 
+        `num_max_atoms` ** 2, representing index of each atom pair.
+        Second axis for feature.
+
+    """
     n_atom = mol.GetNumAtoms()
     distance_matrix = Chem.GetDistanceMatrix(mol)
     distance_feature = numpy.zeros((num_max_atoms ** 2, MAX_DISTANCE,),
