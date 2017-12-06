@@ -152,8 +152,10 @@ class NFP(chainer.Chain):
         # --- NFP update & readout ---
         # degree_mat: (minibatch, max_num_atoms)
         if isinstance(adj, Variable):
-            adj = adj.data
-        degree_mat = self.xp.sum(adj, axis=1)
+            adj_array = adj.data
+        else:
+            adj_array = adj
+        degree_mat = self.xp.sum(adj_array, axis=1)
         # deg_condst: (minibatch, atom, ch)
         deg_conds = [self.xp.broadcast_to(
             ((degree_mat - degree) == 0)[:, :, None], h.shape)
