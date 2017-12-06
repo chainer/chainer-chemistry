@@ -1,0 +1,27 @@
+sudo: false
+language: python
+
+os: linux
+dist: trusty
+python: 3.6
+
+env:
+  - PATH=$HOME/miniconda/bin:$PATH
+
+before_install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - hash -r
+  - conda config --set always_yes yes
+  - conda update -q conda
+  - conda info -a
+  - pip install -U pip
+
+install
+  - conda install -c rdkit rdkit
+  - pip install pytest
+  - python setup.py develop
+
+script:
+  - cd tests
+  - pytest -m "not (gpu or slow)"
