@@ -108,11 +108,11 @@ Currently, following dataset is supported.
 
 MIT License. 
 
-PFN provides no warranty or support for this implementation. 
+We provide no warranty or support for this implementation.
 Each model performance is not guaranteed, and may not achieve the score reported in each paper.
 Use it at your own risk.
 
-Please see the LICENSE file for details.
+Please see the [LICENSE](https://github.com/pfnet-research/chainerchem/blob/master/LICENSE) file for details.
 
 ## Reference
 
