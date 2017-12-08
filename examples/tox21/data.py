@@ -34,7 +34,7 @@ class _CacheNamePolicy(object):
 
     def create_cache_directory(self):
         try:
-            os.makedirs(self.cache_dir)
+            os.makedirs(self.cache_dir, exist_ok=True)
         except OSError:
             if not os.path.isdir(self.cache_dir):
                 raise

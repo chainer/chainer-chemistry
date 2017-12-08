@@ -123,7 +123,7 @@ def main():
         print('preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
         dataset = D.get_qm9(preprocessor, labels=labels)
-        os.makedirs(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
         NumpyTupleDataset.save(os.path.join(cache_dir, 'data.npz'), dataset)
 
     if args.scale == 'standardize':

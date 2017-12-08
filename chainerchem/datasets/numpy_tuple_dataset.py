@@ -1,4 +1,6 @@
 import os
+from logging import getLogger
+
 import six
 
 import numpy
@@ -88,6 +90,8 @@ class NumpyTupleDataset(object):
     @classmethod
     def load(cls, filepath):
         if not os.path.exists(filepath):
+            logger = getLogger(__name__)
+            logger.warning('{} not found, return None'.format(filepath))
             return None
         load_data = numpy.load(filepath)
         result = []
