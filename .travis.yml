@@ -17,7 +17,7 @@ before_install:
   - conda info -a
   - pip install -U pip
 
-install
+install:
   - conda install -c rdkit rdkit
   - pip install pytest
   - python setup.py develop
