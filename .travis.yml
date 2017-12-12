@@ -15,13 +15,11 @@ before_install:
   - conda config --set always_yes yes
   - conda update -q conda
   - conda info -a
-  - pip install -U pip
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - conda create -q -n test-environment -c rdkit python=$TRAVIS_PYTHON_VERSION rdkit
   - source activate test-environment
+  - pip install -U pip
 
 install:
-  - conda install -c rdkit rdkit
-  - pip install pytest
   - python setup.py develop
 
 script:
