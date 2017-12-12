@@ -16,6 +16,8 @@ before_install:
   - conda update -q conda
   - conda info -a
   - pip install -U pip
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
 
 install:
   - conda install -c rdkit rdkit
