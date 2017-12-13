@@ -7,7 +7,7 @@ It supports various state-of-the-art deep learning neural network models
 (especially Graph Convolution Neural Network) 
 for chemical molecule property prediction.
 
-For more information, you can refer to [documentation](http://chainerchem.readthedocs.io/en/latest/index.html).
+For more information, you can refer to [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
 
 ### Notes
 
