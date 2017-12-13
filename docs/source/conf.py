@@ -57,7 +57,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = ''
+project = 'Chainer Chemistry'
 copyright = '2017, Preferred Networks, Inc.'
 author = 'Preferred Networks, Inc.'
 
