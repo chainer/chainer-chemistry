@@ -36,7 +36,7 @@ because the network should approximate both calculating the Hamiltonian matrix a
 HOMO prediction by NFP
 ========================
 
-At first you should clone the library repository from `GitHub <https://github.com/pfnet-research/chainerchem>`_.
+At first you should clone the library repository from `GitHub <https://github.com/pfnet-research/chainer-chemistry>`_.
 There is a Python script ``examples/qm9/train_qm9.py`` in the repository.
 It executes a whole training procedure, that is, downloads QM9 dataset, preprocess it, define an NFP model and run trainning on them.
 
@@ -44,8 +44,8 @@ Execute the following commands on a machine satisfying the tested environment in
 
 .. code-block:: shell
 
-    ~$ git clone git@github.com:pfnet-research/chainerchem.git
-    ~$ cd chainerchem/examples/qm9/
+    ~$ git clone git@github.com:pfnet-research/chainer-chemistry.git
+    ~$ cd chainer-chemistry/examples/qm9/
 
 Hereafter all shell commands should be executed in this directory.
 
@@ -160,7 +160,7 @@ In most cases, calculation with GPU is much faster than that only with CPU.
 
 .. code-block:: shell
 
-    ~/chainerchem/examples/qm9$ python train_qm9.py --method nfp --label homo --gpu 0  # If GPU is unavailable, set --gpu -1
+    ~/chainer-chemistry/examples/qm9$ python train_qm9.py --method nfp --label homo --gpu 0  # If GPU is unavailable, set --gpu -1
 
     Train NFP model...
     epoch       main/loss   main/accuracy  validation/main/loss  validation/main/accuracy  elapsed_time
