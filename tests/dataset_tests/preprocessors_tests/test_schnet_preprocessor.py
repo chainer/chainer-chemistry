@@ -2,9 +2,9 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainerchem.dataset.parsers import SDFFileParser
-from chainerchem.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
-from chainerchem.datasets import get_tox21_filepath
+from chainer_chemistry.dataset.parsers import SDFFileParser
+from chainer_chemistry.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
+from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.fixture

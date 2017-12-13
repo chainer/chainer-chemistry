@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from chainerchem.datasets import qm9
+from chainer_chemistry.datasets import qm9
 
 
 @pytest.mark.slow

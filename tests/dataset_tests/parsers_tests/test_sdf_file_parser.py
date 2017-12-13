@@ -4,8 +4,8 @@ import pytest
 from rdkit import Chem
 import six
 
-from chainerchem.dataset.parsers import SDFFileParser
-from chainerchem.dataset.preprocessors import NFPPreprocessor
+from chainer_chemistry.dataset.parsers import SDFFileParser
+from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
 
 
 @pytest.fixture

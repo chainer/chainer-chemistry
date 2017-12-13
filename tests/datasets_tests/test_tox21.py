@@ -2,7 +2,7 @@ import os
 import numpy
 import pytest
 
-from chainerchem.datasets import tox21
+from chainer_chemistry.datasets import tox21
 
 
 dataset_types = [

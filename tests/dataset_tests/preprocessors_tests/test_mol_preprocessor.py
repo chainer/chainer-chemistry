@@ -1,7 +1,7 @@
 import pytest
 from rdkit import Chem
 
-from chainerchem.dataset.preprocessors import MolPreprocessor
+from chainer_chemistry.dataset.preprocessors import MolPreprocessor
 
 
 @pytest.fixture
