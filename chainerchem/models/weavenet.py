@@ -179,8 +179,7 @@ class WeaveNet(chainer.Chain):
         self.readout_mode = readout_mode
 
     def __call__(self, atom_x, pair_x, train=True):
-        if atom_x.dtype == numpy.int32 or \
-                atom_x.dtype == cuda.cupy.int32:
+        if atom_x.dtype == self.xp.int32:
             # atom_array: (minibatch, atom)
             atom_x = self.embed(atom_x)
 

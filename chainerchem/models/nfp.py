@@ -139,9 +139,7 @@ class NFP(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
-        # TODO(Nakago): update implementation
-        if atom_array.dtype == numpy.int32 or \
-                atom_array.dtype == cuda.cupy.int32:
+        if atom_array.dtype == self.xp.int32:
             # atom_array: (minibatch, atom)
             h = self.embed(atom_array)
         else:

@@ -122,8 +122,7 @@ class GGNN(chainer.Chain):
         """
         # reset state
         self.update_layer.reset_state()
-        if atom_array.dtype == numpy.int32 \
-                or atom_array.dtype == cuda.cupy.int32:
+        if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array
