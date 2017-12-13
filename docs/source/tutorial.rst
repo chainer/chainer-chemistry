@@ -69,9 +69,9 @@ The following Python script downloads and saves the dataset in ``.npz`` format.
 .. code-block:: python
 
     #!/usr/bin/env python
-    from chainerchem import datasets as D
-    from chainerchem.dataset.preprocessors import preprocess_method_dict
-    from chainerchem.datasets import NumpyTupleDataset
+    from chainer_chemistry import datasets as D
+    from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+    from chainer_chemistry.datasets import NumpyTupleDataset
 
     preprocessor = preprocess_method_dict['nfp']()
     dataset = D.get_qm9(preprocessor, labels='homo')
@@ -87,9 +87,9 @@ The following Python script read the dataset from the saved ``.npz`` file and sp
 
     #!/usr/bin/env python
     from chainer.datasets import split_dataset_random
-    from chainerchem import datasets as D
-    from chainerchem.dataset.preprocessors import preprocess_method_dict
-    from chainerchem.datasets import NumpyTupleDataset
+    from chainer_chemistry import datasets as D
+    from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+    from chainer_chemistry.datasets import NumpyTupleDataset
 
     cache_dir = 'input/nfp_homo/'
     dataset = NumpyTupleDataset.load(cache_dir + 'data.npz')
@@ -120,7 +120,7 @@ Execute the following Python script and check you can define such a class.
 
     #!/usr/bin/env python
     import chainer
-    from chainerchem.models import MLP, NFP
+    from chainer_chemistry.models import MLP, NFP
 
     class GraphConvPredictor(chainer.Chain):
 

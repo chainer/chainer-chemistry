@@ -10,7 +10,7 @@ Converters
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.dataset.converters.concat_mols
+   chainer_chemistry.dataset.converters.concat_mols
 
 
 Indexers
@@ -20,9 +20,9 @@ Indexers
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.dataset.indexer.BaseIndexer
-   chainerchem.dataset.indexer.BaseFeatureIndexer
-   chainerchem.dataset.indexers.NumpyTupleDatasetFeatureIndexer
+   chainer_chemistry.dataset.indexer.BaseIndexer
+   chainer_chemistry.dataset.indexer.BaseFeatureIndexer
+   chainer_chemistry.dataset.indexers.NumpyTupleDatasetFeatureIndexer
 
 
 Parsers
@@ -32,9 +32,9 @@ Parsers
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.dataset.parsers.BaseParser
-   chainerchem.dataset.parsers.CSVFileParser
-   chainerchem.dataset.parsers.SDFFileParser
+   chainer_chemistry.dataset.parsers.BaseParser
+   chainer_chemistry.dataset.parsers.CSVFileParser
+   chainer_chemistry.dataset.parsers.SDFFileParser
 
 
 Preprocessors
@@ -48,8 +48,8 @@ Base preprocessors
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.dataset.preprocessors.BasePreprocessor
-   chainerchem.dataset.preprocessors.MolPreprocessor
+   chainer_chemistry.dataset.preprocessors.BasePreprocessor
+   chainer_chemistry.dataset.preprocessors.MolPreprocessor
 
 Concrete preprocessors
 ----------------------
@@ -59,12 +59,12 @@ Concrete preprocessors
    :nosignatures:
 
 
-   chainerchem.dataset.preprocessors.AtomicNumberPreprocessor
-   chainerchem.dataset.preprocessors.ECFPPreprocessor
-   chainerchem.dataset.preprocessors.GGNNPreprocessor
-   chainerchem.dataset.preprocessors.NFPPreprocessor
-   chainerchem.dataset.preprocessors.SchNetPreprocessor
-   chainerchem.dataset.preprocessors.WeaveNetPreprocessor
+   chainer_chemistry.dataset.preprocessors.AtomicNumberPreprocessor
+   chainer_chemistry.dataset.preprocessors.ECFPPreprocessor
+   chainer_chemistry.dataset.preprocessors.GGNNPreprocessor
+   chainer_chemistry.dataset.preprocessors.NFPPreprocessor
+   chainer_chemistry.dataset.preprocessors.SchNetPreprocessor
+   chainer_chemistry.dataset.preprocessors.WeaveNetPreprocessor
 
 Utilities
 ---------
@@ -73,7 +73,7 @@ Utilities
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.dataset.preprocessors.MolFeatureExtractionError
-   chainerchem.dataset.preprocessors.type_check_num_atoms
-   chainerchem.dataset.preprocessors.construct_atomic_number_array
-   chainerchem.dataset.preprocessors.construct_adj_matrix
+   chainer_chemistry.dataset.preprocessors.MolFeatureExtractionError
+   chainer_chemistry.dataset.preprocessors.type_check_num_atoms
+   chainer_chemistry.dataset.preprocessors.construct_atomic_number_array
+   chainer_chemistry.dataset.preprocessors.construct_adj_matrix
