@@ -36,7 +36,7 @@ Assay names are available by running the script with `-h` or `--help`
 or execute the following command:
 
 ```
-python -c import chainerchem; chainerchem.datasets.get_tox21_label_names()
+python -c import chainer_chemistry; chainer_chemistry.datasets.get_tox21_label_names()
 ```
 
 If `-l` option is not specified, this script conducts multitask learning with all labels.

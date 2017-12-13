@@ -1,8 +1,8 @@
 import os
 
-from chainerchem.dataset.preprocessors import preprocess_method_dict
-from chainerchem import datasets as D
-from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry import datasets as D
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 class _CacheNamePolicy(object):
