@@ -1,6 +1,6 @@
 from rdkit import Chem
 
-from chainerchem.dataset.preprocessors.base_preprocessor import BasePreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.base_preprocessor import BasePreprocessor  # NOQA
 
 
 class MolPreprocessor(BasePreprocessor):

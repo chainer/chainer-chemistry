@@ -6,8 +6,8 @@ import zipfile
 from chainer.dataset import download
 import numpy
 
-from chainerchem.dataset.parsers.sdf_file_parser import SDFFileParser
-from chainerchem.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
+from chainer_chemistry.dataset.parsers.sdf_file_parser import SDFFileParser
+from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 
 
 _config = {

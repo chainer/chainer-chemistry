@@ -3,8 +3,8 @@ from logging import getLogger
 import numpy
 from rdkit.Chem import rdMolDescriptors
 
-from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
 class ECFPPreprocessor(MolPreprocessor):

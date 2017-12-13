@@ -1,2 +1,2 @@
-from chainerchem.dataset.indexer import BaseFeatureIndexer  # NOQA
-from chainerchem.dataset.indexer import BaseIndexer  # NOQA
+from chainer_chemistry.dataset.indexer import BaseFeatureIndexer  # NOQA
+from chainer_chemistry.dataset.indexer import BaseIndexer  # NOQA

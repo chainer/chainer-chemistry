@@ -3,7 +3,7 @@ import six
 
 import numpy
 
-from chainerchem.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
+from chainer_chemistry.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
 
 
 class NumpyTupleDataset(object):
@@ -58,7 +58,7 @@ class NumpyTupleDataset(object):
         .. admonition:: Example
 
            >>> import numpy
-           >>> from chainerchem.datasets import NumpyTupleDataset
+           >>> from chainer_chemistry.datasets import NumpyTupleDataset
            >>> x = numpy.array([0, 1, 2], dtype=numpy.float32)
            >>> t = x * x
            >>> numpy_tuple_dataset = NumpyTupleDataset(x, t)

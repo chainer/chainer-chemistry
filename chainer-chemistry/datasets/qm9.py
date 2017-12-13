@@ -9,8 +9,8 @@ from chainer.dataset import download
 import numpy
 import pandas
 
-from chainerchem.dataset.parsers.csv_file_parser import CSVFileParser
-from chainerchem.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
+from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
+from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 
 download_url = 'https://ndownloader.figshare.com/files/3195389'
 file_name = 'qm9.csv'

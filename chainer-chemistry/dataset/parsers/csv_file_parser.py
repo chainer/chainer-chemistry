@@ -5,10 +5,10 @@ import pandas
 from rdkit import Chem
 from tqdm import tqdm
 
-from chainerchem.dataset.parsers.base_parser import BaseFileParser
-from chainerchem.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
-from chainerchem.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
-from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
+from chainer_chemistry.dataset.parsers.base_parser import BaseFileParser
+from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 import traceback
 

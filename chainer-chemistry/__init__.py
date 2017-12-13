@@ -1,8 +1,8 @@
-from chainerchem import dataset  # NOQA
-from chainerchem import datasets  # NOQA
-from chainerchem import functions  # NOQA
-from chainerchem import links  # NOQA
-from chainerchem import models  # NOQA
+from chainer_chemistry import dataset  # NOQA
+from chainer_chemistry import datasets  # NOQA
+from chainer_chemistry import functions  # NOQA
+from chainer_chemistry import links  # NOQA
+from chainer_chemistry import models  # NOQA
 
 # --- config variable definitions ---
-from chainerchem.config import *  # NOQA
+from chainer_chemistry.config import *  # NOQA

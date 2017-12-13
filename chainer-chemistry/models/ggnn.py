@@ -4,10 +4,10 @@ from chainer import functions
 from chainer import links
 import numpy
 
-import chainerchem
-from chainerchem.config import MAX_ATOMIC_NUM
-from chainerchem.links import EmbedAtomID
-from chainerchem.links import GraphLinear
+import chainer_chemistry
+from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.links import EmbedAtomID
+from chainer_chemistry.links import GraphLinear
 
 
 class GGNN(chainer.Chain):
@@ -76,7 +76,7 @@ class GGNN(chainer.Chain):
         # (minibatch * edge_type, atom, out_ch)
         m = functions.reshape(m, (mb * self.NUM_EDGE_TYPE, atom, out_ch))
 
-        m = chainerchem.functions.matmul(adj, m)
+        m = chainer_chemistry.functions.matmul(adj, m)
 
         # (minibatch * edge_type, atom, out_ch)
         m = functions.reshape(m, (mb, self.NUM_EDGE_TYPE, atom, out_ch))

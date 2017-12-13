@@ -2,7 +2,7 @@ import chainer
 from chainer import functions
 from chainer import links
 
-from chainerchem.config import MAX_ATOMIC_NUM
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 
 def readout(a, mode='sum', axis=1):
