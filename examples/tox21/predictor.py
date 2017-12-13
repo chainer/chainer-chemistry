@@ -30,7 +30,6 @@ def build_predictor(method, n_unit, conv_layers, class_num):
     elif method == 'weavenet':
         print('Use WeaveNet predictor...')
         n_atom = 20
-        # n_layer = 1
         n_sub_layer = 1
         weave_channels = [50] * conv_layers
         predictor = GraphConvPredictor(
