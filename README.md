@@ -1,4 +1,4 @@
-# A Library for Deep Learning in Biology and Chemistry
+# Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
 This library is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
@@ -7,7 +7,7 @@ It supports various state-of-the-art deep learning neural network models
 (especially Graph Convolution Neural Network) 
 for chemical molecule property prediction.
 
-For more information, you can refer to [documentation](http://chainerchem.readthedocs.io/en/latest/index.html).
+For more information, you can refer to [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
 
 ### Notes
 
