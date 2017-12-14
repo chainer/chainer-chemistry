@@ -69,7 +69,6 @@ class GraphConvPredictor(chainer.Chain):
         data = args[0]
         y_list = []
         for i in range(0, len(data), batchsize):
-            #adj, atom_types = concat_examples(data[i:i + batchsize], device=device)
             atoms, adjs = concat_mols(data[i:i + batchsize], device=device)[:2]
             y = self._predict(atoms, adjs)
             y_list.append(cuda.to_cpu(y.data))
@@ -131,8 +130,8 @@ def main():
     if args.scale == 'standardize':
         # Standard Scaler for labels
         ss = StandardScaler()
-        labels = ss.fit_transform(dataset._datasets[-1])
-        dataset = NumpyTupleDataset(*dataset._datasets[:-1], labels)
+        labels = ss.fit_transform(dataset.get_datasets()[-1])
+        dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
@@ -141,32 +140,30 @@ def main():
     if method == 'nfp':
         print('Train NFP model...')
         n_unit = args.unit_num
-        model = GraphConvPredictor(NFP(n_unit, n_unit, args.conv_layers),
-                                   MLP(n_unit, class_num))
+        model = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
+                                       n_layers=args.conv_layers),
+                                   MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'ggnn':
         print('Train GGNN model...')
         n_unit = args.unit_num
-        model = GraphConvPredictor(GGNN(n_unit, n_unit, args.conv_layers),
-                                   MLP(n_unit, class_num))
+        model = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
+                                        n_layers=args.conv_layers),
+                                   MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'schnet':
         print('Train SchNet model...')
         model = SchNet(out_dim=class_num)
     elif method == 'weavenet':
         print('Train WeaveNet model...')
-        # TODO: Review default parameter
         n_unit = args.unit_num
         n_atom = 20
-        k_unit = 10
-        n_layer = 1
         n_sub_layer = 1
-        fully_channels = [5]
-        n_output = class_num
-        model = GraphConvPredictor(WeaveNet(n_output, n_atom, [k_unit]*n_layer,
-                                            fully_channels, n_sub_layer),
-                                   MLP(n_unit, class_num))
+        weave_channels = [50] * args.conv_layers
+        model = GraphConvPredictor(
+            WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
+                     n_sub_layer=n_sub_layer, n_atom=n_atom),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
-        print('[ERROR] Invalid mode')
-        exit()
+        raise ValueError('[ERROR] Invalid method {}'.format(method))
 
     train_iter = I.SerialIterator(train, args.batchsize)
     val_iter = I.SerialIterator(val, args.batchsize,

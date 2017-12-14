@@ -4,6 +4,8 @@ from __future__ import print_function
 
 import os
 
+import logging
+
 try:
     import matplotlib
     matplotlib.use('Agg')
@@ -31,11 +33,13 @@ import predictor
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
+# show INFO level log from `chainerchem`
+logging.basicConfig(level=logging.INFO)
 
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet']
     label_names = D.get_tox21_label_names()
 
     parser = argparse.ArgumentParser(
