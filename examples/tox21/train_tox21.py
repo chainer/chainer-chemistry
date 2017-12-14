@@ -33,7 +33,7 @@ import predictor
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
-# show INFO level log from `chainerchem`
+# show INFO level log from chainer chemistry
 logging.basicConfig(level=logging.INFO)
 
 
