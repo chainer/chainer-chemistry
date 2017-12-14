@@ -96,6 +96,9 @@ def construct_atom_ring_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
 
 
 def construct_hydrogen_bonding(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+    # TODO (Oono)
+    # Can we enhance preprocessing speed by making factory once
+    # prior to calling this function many times?
     fdefName = os.path.join(RDConfig.RDDataDir, 'BaseFeatures.fdef')
     factory = ChemicalFeatures.BuildFeatureFactory(fdefName)
     feats = factory.GetFeaturesForMol(mol)
