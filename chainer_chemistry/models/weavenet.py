@@ -2,10 +2,10 @@ import chainer
 import numpy
 from chainer import functions, cuda
 from chainer import links
-from chainerchem.links.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.embed_atom_id import EmbedAtomID
 
-from chainerchem.config import MAX_ATOMIC_NUM
-from chainerchem.dataset.preprocessors.weavenet_preprocessor import \
+from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.dataset.preprocessors.weavenet_preprocessor import \
     DEFAULT_NUM_MAX_ATOMS
 
 

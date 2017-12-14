@@ -7,8 +7,8 @@ from chainer import cuda, Variable
 from chainer import functions
 import numpy
 
-import chainerchem
-from chainerchem.config import MAX_ATOMIC_NUM
+import chainer_chemistry
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 
 class NFPUpdate(chainer.Chain):
@@ -25,7 +25,7 @@ class NFPUpdate(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.graph_linears = chainer.ChainList(
-                *[chainerchem.links.GraphLinear(in_channels, out_channels)
+                *[chainer_chemistry.links.GraphLinear(in_channels, out_channels)
                   for _ in range(num_degree_type)]
             )
         self.max_degree = max_degree
@@ -41,7 +41,7 @@ class NFPUpdate(chainer.Chain):
         # Take sum along adjacent atoms
 
         # fv   (minibatch, atom, ch)
-        fv = chainerchem.functions.matmul(adj, h)
+        fv = chainer_chemistry.functions.matmul(adj, h)
 
         # --- Update part ---
         # s0, s1, s2 = fv.shape
@@ -74,7 +74,7 @@ class NFPReadout(chainer.Chain):
     def __init__(self, in_channels, out_size):
         super(NFPReadout, self).__init__()
         with self.init_scope():
-            self.output_weight = chainerchem.links.GraphLinear(
+            self.output_weight = chainer_chemistry.links.GraphLinear(
                 in_channels, out_size)
         self.in_channels = in_channels
         self.out_size = out_size
@@ -109,7 +109,7 @@ class NFP(chainer.Chain):
         super(NFP, self).__init__()
         num_degree_type = max_degree + 1
         with self.init_scope():
-            self.embed = chainerchem.links.EmbedAtomID(
+            self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
             self.layers = chainer.ChainList(
                 *[NFPUpdate(hidden_dim, hidden_dim, max_degree=max_degree)
