@@ -54,6 +54,9 @@ def construct_formal_charge_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
 
 
 def construct_hybridization_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+    # TODO (Oono)
+    # Can we enhance preprocessing speed by making factory once
+    # prior to calling this function many times?
     n_atom = mol.GetNumAtoms()
     hybridization_vec = numpy.zeros((num_max_atoms, 3), dtype=numpy.float32)
     for i in range(n_atom):
