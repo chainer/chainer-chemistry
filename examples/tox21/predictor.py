@@ -4,12 +4,12 @@ from chainer import functions as F
 from chainer import iterators as I
 import numpy as np
 
-from chainerchem.dataset.converters import concat_mols
-from chainerchem.models import GGNN
-from chainerchem.models import MLP
-from chainerchem.models import NFP
-from chainerchem.models import SchNet
-from chainerchem.models import WeaveNet
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.models import GGNN
+from chainer_chemistry.models import MLP
+from chainer_chemistry.models import NFP
+from chainer_chemistry.models import SchNet
+from chainer_chemistry.models import WeaveNet
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):

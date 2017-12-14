@@ -1,4 +1,4 @@
-# ChainerChem examples
+# Chainer Chemistry examples
 
 These examples are implemented to train the model.
 

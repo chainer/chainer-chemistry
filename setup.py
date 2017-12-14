@@ -9,7 +9,7 @@ install_requires = [
     'tqdm',
 ]
 
-setup(name='chainerchem',
+setup(name='chainer-chemistry',
       version='0.0.1',
       description='A Library for Deep Learning in Biology and Chemistry',
       author='Kosuke Nakago',

@@ -3,7 +3,7 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainerchem import links
+from chainer_chemistry import links
 
 in_size = 3
 atom_size = 5

@@ -2,8 +2,8 @@ import numpy
 import pytest
 
 
-from chainerchem.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
-from chainerchem.datasets.numpy_tuple_dataset import NumpyTupleDataset
+from chainer_chemistry.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 @pytest.fixture

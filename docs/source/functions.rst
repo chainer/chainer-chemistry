@@ -10,4 +10,4 @@ Function implementations
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.functions.matmul
+   chainer_chemistry.functions.matmul

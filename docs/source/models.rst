@@ -9,8 +9,8 @@ Model implementations
    :toctree: generated/
    :nosignatures:
 
-   chainerchem.models.NFP
-   chainerchem.models.GGNN
-   chainerchem.models.MLP
-   chainerchem.models.SchNet
-   chainerchem.models.WeaveNet
+   chainer_chemistry.models.NFP
+   chainer_chemistry.models.GGNN
+   chainer_chemistry.models.MLP
+   chainer_chemistry.models.SchNet
+   chainer_chemistry.models.WeaveNet

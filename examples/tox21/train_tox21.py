@@ -23,8 +23,8 @@ from chainer.training import extensions as E
 import json
 from rdkit import RDLogger
 
-from chainerchem.dataset.converters import concat_mols
-from chainerchem import datasets as D
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry import datasets as D
 
 import data
 import predictor

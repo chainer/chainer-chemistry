@@ -1,6 +1,6 @@
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
-This library is a collection of tools to train and run neural networks for 
+Chainer Chemistry is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
 
 It supports various state-of-the-art deep learning neural network models 
@@ -17,9 +17,9 @@ Please use it at your own risk.
 
 ## Quick start
 
-### 1. Install
+### 1. Installation
 
-This library can be installed by `pip` command.
+Chainer Chemistry can be installed by `pip` command.
 
 Note that it uses [rdkit](https://github.com/rdkit/rdkit),
 Open-Source Cheminformatics Software.
@@ -27,25 +27,25 @@ Below code is an example to install `rdkit` by `conda` command provided by
 [anaconda](https://www.anaconda.com/what-is-anaconda/).
 
 ```bash
-pip install chainerchem
+pip install chainer-chemistry
 conda install -c rdkit rdkit
 ```
 
 ### 2. Run example training code
 
-[The official repository](https://github.com/pfnet-research/chainerchem) provides examples
+[The official repository](https://github.com/pfnet-research/chainer-chemistry) provides examples
 several graph convolution networks with the Tox21 and QM9 datasets
 (the Tox21 example has inference code as well). You can obtain the code by cloning
 the repository:
 
 ```bash
-git clone https://github.com/pfnet-research/chainerchem.git
+git clone https://github.com/pfnet-research/chainer-chemistry.git
 ```
 
 The following code is how to train Neural Fingerprint (NFP) with the Tox21 dataset on CPU:
 
 ```
-cd chainerchem/examples/tox21
+cd chainer-chemistry/examples/tox21
 python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU
 ```
 
@@ -53,16 +53,16 @@ python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU
 
 Usual users can install this library via PyPI:
 ```
-pip install chainerchem
+pip install chainer-chemistry
 ```
 
-The software is still in experimental development.
+Chainer Chemistry is still in experimental development.
 If you would like to use latest sources.
 please install master branch with the command:
 
 ```
-git clone https://github.com/pfnet-research/chainerchem.git
-pip install -e chainerchem
+git clone https://github.com/pfnet-research/chainer-chemistry.git
+pip install -e chainer-chemistry
 ```
 
 #### Note:
@@ -70,8 +70,8 @@ You can install this library via pip after v0.1.0 release.
 
 ### Dependencies
 
-Following packages are required to install this library and are automatically
-installed when you install the library by `pip` command.
+Following packages are required to install Chainer Chemistry and are automatically
+installed when you install it by `pip` command.
 
  - [`chainer`](https://docs.chainer.org/en/stable/index.html)
  - [`pandas`](https://pandas.pydata.org)
@@ -112,7 +112,7 @@ We provide no warranty or support for this implementation.
 Each model performance is not guaranteed, and may not achieve the score reported in each paper.
 Use it at your own risk.
 
-Please see the [LICENSE](https://github.com/pfnet-research/chainerchem/blob/master/LICENSE) file for details.
+Please see the [LICENSE](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE) file for details.
 
 ## Reference
 
