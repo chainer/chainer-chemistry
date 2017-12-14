@@ -10,7 +10,7 @@ import chainer
 from chainer import functions
 from chainer import links
 
-from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainerchem.config import MAX_ATOMIC_NUM
 
 
 class CFConvLayer(chainer.Chain):
@@ -120,7 +120,7 @@ class SchNet(chainer.Chain):
             and the result is concatenated
     """
 
-    def __init__(self, hidden_dim=64, out_dim=1, n_layers=3,
+    def __init__(self, out_dim=1, hidden_dim=64, n_layers=3,
                  readout_hidden_dim=32, n_atom_types=MAX_ATOMIC_NUM,
                  concat_hidden=False):
         super(SchNet, self).__init__()
