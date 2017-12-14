@@ -27,11 +27,11 @@ from chainer.datasets import split_dataset_random
 from chainer.training import extensions as E
 import numpy
 
-from chainerchem import datasets as D
-from chainerchem.models import MLP, NFP, GGNN, SchNet, WeaveNet
-from chainerchem.dataset.converters import concat_mols
-from chainerchem.dataset.preprocessors import preprocess_method_dict
-from chainerchem.datasets import NumpyTupleDataset
+from chainer_chemistry import datasets as D
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry.datasets import NumpyTupleDataset
 
 
 class GraphConvPredictor(chainer.Chain):
