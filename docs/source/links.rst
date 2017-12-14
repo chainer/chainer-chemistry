@@ -10,5 +10,5 @@ Link implementations
 	:toctree: generated/
         :nosignatures:
 
-	chainerchem.links.EmbedAtomID
-	chainerchem.links.GraphLinear
+	chainer_chemistry.links.EmbedAtomID
+	chainer_chemistry.links.GraphLinear

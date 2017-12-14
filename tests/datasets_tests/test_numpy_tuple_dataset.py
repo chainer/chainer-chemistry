@@ -5,7 +5,7 @@ import numpy
 import pytest
 import six
 
-from chainerchem.datasets import NumpyTupleDataset
+from chainer_chemistry.datasets import NumpyTupleDataset
 
 
 @pytest.fixture

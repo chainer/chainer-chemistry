@@ -4,7 +4,7 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXPROJ    = ChainerChem
+SPHINXPROJ    = Chainer-Chemistry
 SOURCEDIR     = source
 BUILDDIR      = build
 

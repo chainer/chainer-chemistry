@@ -2,7 +2,7 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainerchem.dataset.preprocessors import common
+from chainer_chemistry.dataset.preprocessors import common
 
 
 @pytest.fixture

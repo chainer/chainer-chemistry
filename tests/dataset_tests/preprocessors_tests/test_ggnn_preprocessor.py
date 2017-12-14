@@ -2,9 +2,9 @@ import os
 import numpy
 import pytest
 
-from chainerchem.dataset.parsers import SDFFileParser
-from chainerchem.dataset.preprocessors import GGNNPreprocessor
-from chainerchem.datasets import get_tox21_filepath
+from chainer_chemistry.dataset.parsers import SDFFileParser
+from chainer_chemistry.dataset.preprocessors import GGNNPreprocessor
+from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.mark.slow

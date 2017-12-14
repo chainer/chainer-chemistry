@@ -9,7 +9,7 @@ Dataset implementations
 	:toctree: generated/
         :nosignatures:
 
-	chainerchem.datasets.NumpyTupleDataset
+	chainer_chemistry.datasets.NumpyTupleDataset
 
 
 Dataset loaders
@@ -20,5 +20,5 @@ Dataset loaders
         :nosignatures:
 
 
-	chainerchem.datasets.tox21.get_tox21
-	chainerchem.datasets.qm9.get_qm9
+	chainer_chemistry.datasets.tox21.get_tox21
+	chainer_chemistry.datasets.qm9.get_qm9

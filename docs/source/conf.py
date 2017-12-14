@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# ChainerChem documentation build configuration file, created by
-# sphinx-quickstart on Mon Nov  6 11:45:20 2017.
-#
 # This file is execfile()d with the current directory set to its
 # containing dir.
 #
@@ -57,7 +54,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'ChainerChem'
+project = 'Chainer Chemistry'
 copyright = '2017, Preferred Networks, Inc.'
 author = 'Preferred Networks, Inc.'
 
@@ -127,7 +124,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ChainerChemdoc'
+htmlhelp_basename = 'Chainer-Chemistrydoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -154,7 +151,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'ChainerChem.tex', 'ChainerChem Documentation',
+    (master_doc, 'Chainer-Chemistry.tex', 'Chainer Chemistry Documentation',
      'Preferred Networks, Inc.', 'manual'),
 ]
 
@@ -164,7 +161,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'chainerchem', 'ChainerChem Documentation',
+    (master_doc, 'chainer-chemistry', 'Chainer Chemistry Documentation',
      [author], 1)
 ]
 
@@ -175,8 +172,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'ChainerChem', 'ChainerChem Documentation',
-     author, 'ChainerChem', 'One line description of project.',
+    (master_doc, 'Chainer Chemistry', 'Chainer Chemistry Documentation',
+     author, 'Chainer Chemistry', 'One line description of project.',
      'Miscellaneous'),
 ]
 

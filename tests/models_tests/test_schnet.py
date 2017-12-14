@@ -3,8 +3,8 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainerchem.config import MAX_ATOMIC_NUM
-from chainerchem.models.schnet import SchNet
+from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.models.schnet import SchNet
 
 atom_size = 5
 out_dim = 4

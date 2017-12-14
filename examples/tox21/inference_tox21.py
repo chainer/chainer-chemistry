@@ -6,7 +6,7 @@ import json
 import numpy
 from rdkit import RDLogger
 
-from chainerchem import datasets as D
+from chainer_chemistry import datasets as D
 
 import data
 import predictor

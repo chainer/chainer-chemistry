@@ -1,7 +1,7 @@
-Chainer extension library for Biology and Chemistry
-===================================================
+Chainer Chemistry: Chainer extension library for Biology and Chemistry
+======================================================================
 
-`This library <https://github.com/pfnet/chainerchem>`_ is a collection of tools to train and run neural networks for tasks in biology and chemistry using `Chainer <https://chainer.org>`_ .
+`Chainer Chemistry <https://github.com/pfnet-research/chainer-chemistry>`_ is a collection of tools to train and run neural networks for tasks in biology and chemistry using `Chainer <https://chainer.org>`_ .
 
 Features
 --------
@@ -16,10 +16,9 @@ Features
    :maxdepth: 1
    :caption: Contents
 
-   quick_start
    install
-   reference
    tutorial
+   reference
 
 Indices and tables
 ==================

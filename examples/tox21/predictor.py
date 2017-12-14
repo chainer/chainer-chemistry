@@ -2,14 +2,14 @@ import chainer
 from chainer import cuda
 from chainer import functions as F
 from chainer import iterators as I
-import numpy
+import numpy as np
 
-from chainerchem.dataset.converters import concat_mols
-from chainerchem.models import GGNN
-from chainerchem.models import MLP
-from chainerchem.models import NFP
-from chainerchem.models import SchNet
-from chainerchem.models import WeaveNet
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.models import GGNN
+from chainer_chemistry.models import MLP
+from chainer_chemistry.models import NFP
+from chainer_chemistry.models import SchNet
+from chainer_chemistry.models import WeaveNet
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):
@@ -30,7 +30,6 @@ def build_predictor(method, n_unit, conv_layers, class_num):
     elif method == 'weavenet':
         print('Use WeaveNet predictor...')
         n_atom = 20
-        # n_layer = 1
         n_sub_layer = 1
         weave_channels = [50] * conv_layers
         predictor = GraphConvPredictor(
@@ -107,17 +106,22 @@ class InferenceLoop(object):
             x = converter(batch, device=device)
             y = self.predictor.predict(*x)
             ret.append(cuda.to_cpu(y.data))
-        return numpy.concatenate(ret, axis=0)
+        return np.concatenate(ret, axis=0)
 
     def inference(self, X):
         """Predict with given predictor to given dataset
 
-        We simplify the API of this method for easy-use.
-        This fixes a size of minibatch size, a converter for creating
-        minibatches, and a device to which minibatches are transferred.
-
-        For customized prediction, use ``GraphConvPredictor.predict_``
-        method instead.
+        We simplify the API of this method for easy-use and fixes
+        several configurations. Specifically, we fix a size of
+        minibatch size, a converter for creating minibatches.
+        Also, if the predictor ``InferenceLoop`` holds is located in
+        host memory (judged by the ``xp`` attribute), all computations are
+        done in CPU. Otherwise, i.e. it is in GPU memory,
+        minibatches are transferred to the
+        `current device <https://docs-cupy.chainer.org/en/\
+        stable/tutorial/basic.html?device#current-device>`_
+        in the sense of CuPy. For customized prediction, use
+        ``GraphConvPredictor.customized_inference`` method instead.
 
         Args:
             X: test dataset
@@ -130,9 +134,14 @@ class InferenceLoop(object):
         batchsize = 128
         data_iter = I.SerialIterator(X, batchsize, repeat=False, shuffle=False)
 
+        if self.predictor.xp is np:
+            device_id = -1
+        else:
+            device_id = cuda.cupy.cuda.get_device_id()
+
         def converter(batch, device):
             return concat_mols(batch, device)[:-1]
 
         return self.customized_inference(data_iter,
                                          converter=converter,
-                                         device=-1)
+                                         device=device_id)
