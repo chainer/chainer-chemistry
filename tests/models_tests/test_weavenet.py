@@ -3,8 +3,8 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainerchem.config import MAX_ATOMIC_NUM
-from chainerchem.models.weavenet import WeaveNet
+from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.models.weavenet import WeaveNet
 
 atom_size = 5
 weave_channels = [50, 50]
