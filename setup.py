@@ -1,4 +1,5 @@
 from distutils.core import setup
+import imp
 
 from setuptools import find_packages
 
@@ -9,8 +10,13 @@ install_requires = [
     'tqdm',
 ]
 
+
+here = os.path.abspath(os.path.dirname(__file__))
+__version__ = imp.load_source(
+    '_version', os.path.join(here, 'chainer_chemistry', '_version.py')).__version__
+
 setup(name='chainer-chemistry',
-      version='0.1.0',
+      version=__version__,
       description='Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry',
       author='Kosuke Nakago',
       author_email='nakago@preferred.jp',
