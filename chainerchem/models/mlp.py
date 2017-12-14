@@ -8,14 +8,14 @@ class MLP(chainer.Chain):
     """Basic implementation for MLP
 
     Args:
+        out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        out_dim (int): dimension of output feature vector
         n_layers (int): number of layers
         activation (chainer.functions): activation function
     """
 
-    def __init__(self, hidden_dim, out_dim, n_layers=2, activation=relu):
+    def __init__(self, out_dim, hidden_dim=16, n_layers=2, activation=relu):
         super(MLP, self).__init__()
         if n_layers <= 0:
             raise ValueError('n_layers must be positive integer, but set {}'

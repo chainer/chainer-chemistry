@@ -19,7 +19,8 @@ def construct_distance_matrix(mol, out_size=-1):
         mol (Chem.Mol):
         out_size (int):
 
-    Returns:
+    Returns (numpy.ndarray): 2 dimensional array which represents distance
+        between atoms
 
     """
     if mol is None:

@@ -18,9 +18,9 @@ class GGNN(chainer.Chain):
         `arXiv:1511.05493 <https://arxiv.org/abs/1511.05493>`_
 
     Args:
+        out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        out_dim (int): dimension of output feature vector
         n_layers (int): number of layers
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
@@ -30,8 +30,8 @@ class GGNN(chainer.Chain):
     """
     NUM_EDGE_TYPE = 4
 
-    def __init__(self, hidden_dim, out_dim,
-                 n_layers, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
+    def __init__(self, out_dim, hidden_dim=16,
+                 n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True):
         super(GGNN, self).__init__()
         n_readout_layer = 1 if concat_hidden else n_layers
@@ -122,8 +122,7 @@ class GGNN(chainer.Chain):
         """
         # reset state
         self.update_layer.reset_state()
-        if atom_array.dtype == numpy.int32 \
-                or atom_array.dtype == cuda.cupy.int32:
+        if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array

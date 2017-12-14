@@ -1,8 +1,15 @@
 import chainer
-from chainer import functions
+import numpy
+from chainer import functions, cuda
 from chainer import links
+from chainerchem.links.embed_atom_id import EmbedAtomID
 
 from chainerchem.config import MAX_ATOMIC_NUM
+from chainerchem.dataset.preprocessors.weavenet_preprocessor import \
+    DEFAULT_NUM_MAX_ATOMS
+
+
+WEAVENET_DEFAULT_WEAVE_CHANNELS = [50, ]
 
 
 def readout(a, mode='sum', axis=1):
@@ -40,7 +47,7 @@ class LinearLayer(chainer.Chain):
 
 
 class AtomToPair(chainer.Chain):
-    def __init__(self, n_atom, n_channel, n_layer):
+    def __init__(self, n_channel, n_layer, n_atom):
         super(AtomToPair, self).__init__()
         with self.init_scope():
             self.linear_layers = chainer.ChainList(
@@ -84,7 +91,7 @@ class AtomToPair(chainer.Chain):
 
 
 class PairToAtom(chainer.Chain):
-    def __init__(self, n_atom, n_channel, n_layer, mode='sum'):
+    def __init__(self, n_channel, n_layer, n_atom, mode='sum'):
         super(PairToAtom, self).__init__()
         with self.init_scope():
             self.linearLayer = chainer.ChainList(
@@ -117,8 +124,8 @@ class WeaveModule(chainer.Chain):
             self.pair_layer = LinearLayer(output_channel, n_sub_layer)
             self.atom_to_atom = LinearLayer(output_channel, n_sub_layer)
             self.pair_to_pair = LinearLayer(output_channel, n_sub_layer)
-            self.atom_to_pair = AtomToPair(n_atom, output_channel, n_sub_layer)
-            self.pair_to_atom = PairToAtom(n_atom, output_channel, n_sub_layer,
+            self.atom_to_pair = AtomToPair(output_channel, n_sub_layer, n_atom)
+            self.pair_to_atom = PairToAtom(output_channel, n_sub_layer, n_atom,
                                            mode=readout_mode)
         self.n_atom = n_atom
         self.n_channel = output_channel
@@ -145,36 +152,37 @@ class WeaveNet(chainer.Chain):
     """WeaveNet implementation
 
     Args:
-        n_output (int): output dim
+        weave_channels (list): list of int, output dimension for each weave 
+            module
+        hidden_dim (int): hidden dim
         n_atom (int): number of atom of input array
-        weave_channels (list): list of int, out_dim for each weave module
-        fully_channels (list): list of int, out_dim for each linear layer
-        n_sub_layer (int): number of layer for each AtomToPair, PairToAtom
+        n_sub_layer (int): number of layer for each `AtomToPair`, `PairToAtom`
             layer
         n_atom_types (int): number of atom id
         readout_mode (str): 'sum' or 'max' or 'summax'
     """
 
-    def __init__(self, n_output, n_atom, weave_channels, fully_channels,
-                 n_sub_layer, n_atom_types=MAX_ATOMIC_NUM, readout_mode='sum'):
-
+    def __init__(self, weave_channels=None, hidden_dim=16,
+                 n_atom=DEFAULT_NUM_MAX_ATOMS,
+                 n_sub_layer=1, n_atom_types=MAX_ATOMIC_NUM,
+                 readout_mode='sum'):
+        weave_channels = weave_channels or WEAVENET_DEFAULT_WEAVE_CHANNELS
         weave_module = [
             WeaveModule(n_atom, c, n_sub_layer, readout_mode=readout_mode)
             for c in weave_channels
         ]
-        fully_layer = [links.Linear(None, c) for c in fully_channels]
 
         super(WeaveNet, self).__init__()
         with self.init_scope():
-            self.embed = links.EmbedID(n_atom_types, 64)
+            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.weave_module = chainer.ChainList(*weave_module)
-            self.fully_layers = chainer.ChainList(*fully_layer)
-            self.last_layer = links.Linear(None, n_output)
         self.readout_mode = readout_mode
 
     def __call__(self, atom_x, pair_x, train=True):
-        # TODO(Nakago): REVIEW behavior of embed
-        atom_x = self.embed(atom_x)
+        if atom_x.dtype == self.xp.int32:
+            # atom_array: (minibatch, atom)
+            atom_x = self.embed(atom_x)
+
         for i in range(len(self.weave_module)):
             if i == len(self.weave_module) - 1:
                 # last layer, only `atom_x` is needed.
@@ -184,5 +192,4 @@ class WeaveNet(chainer.Chain):
                 # not last layer, both `atom_x` and `pair_x` are needed
                 atom_x, pair_x = self.weave_module[i].forward(atom_x, pair_x)
         x = readout(atom_x, mode=self.readout_mode, axis=1)
-        x = self.last_layer(x)
         return x

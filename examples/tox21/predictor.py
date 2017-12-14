@@ -9,24 +9,36 @@ from chainerchem.models import GGNN
 from chainerchem.models import MLP
 from chainerchem.models import NFP
 from chainerchem.models import SchNet
+from chainerchem.models import WeaveNet
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):
     if method == 'nfp':
         print('Use NFP predictor...')
-        predictorl = GraphConvPredictor(NFP(n_unit, n_unit, conv_layers),
-                                        MLP(n_unit, class_num))
+        predictor = GraphConvPredictor(
+            NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'ggnn':
         print('Use GGNN predictor...')
-        predictorl = GraphConvPredictor(GGNN(n_unit, n_unit, conv_layers),
-                                        MLP(n_unit, class_num))
+        predictor = GraphConvPredictor(
+            GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'schnet':
         print('Use SchNet predictor...')
-        predictorl = SchNet(n_unit, class_num, conv_layers, n_unit)
+        predictor = SchNet(out_dim=class_num, hidden_dim=n_unit,
+                           n_layers=conv_layers, readout_hidden_dim=n_unit)
+    elif method == 'weavenet':
+        print('Use WeaveNet predictor...')
+        n_atom = 20
+        n_sub_layer = 1
+        weave_channels = [50] * conv_layers
+        predictor = GraphConvPredictor(
+            WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
+                     n_sub_layer=n_sub_layer, n_atom=n_atom),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
-        print('[ERROR] Invalid predictorl: method={}'.format(method))
-        raise ValueError
-    return predictorl
+        raise ValueError('[ERROR] Invalid predictor: method={}'.format(method))
+    return predictor
 
 
 class GraphConvPredictor(chainer.Chain):
