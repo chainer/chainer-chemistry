@@ -5,6 +5,7 @@ import chainer
 import json
 import numpy
 from rdkit import RDLogger
+import six
 
 from chainer_chemistry import datasets as D
 
@@ -44,18 +45,29 @@ def main():
     else:
         class_num = len(label_names)
 
-    _, _, test = data.load_dataset(method, labels)
+    _, test, _ = data.load_dataset(method, labels)
+    test = test.get_datasets()
+    X_test = D.NumpyTupleDataset(*test[:-1])
+    y_test = test[-1]
 
     predictor_ = predictor.build_predictor(
         method, config['unit_num'], config['conv_layers'], class_num)
+    chainer.serializers.load_npz(os.path.join(args.in_dir, 'snapshot_iter_92'),
+                                 predictor_, 'updater/model:main/predictor/')
 
     if args.gpu >= 0:
         chainer.cuda.get_device_from_id(args.gpu).use()
         predictor_.to_gpu()
 
     inference_loop = predictor.InferenceLoop(predictor_)
+    y_pred = inference_loop.inference(X_test)
 
-    y_pred = inference_loop.inference(test)
+    for t, p in six.moves.zip(y_test.T, y_pred.T):
+        idx = t != -1
+        n_correct = (t[idx] == p[idx]).sum()
+        n_total = len(t[idx])
+        print(float(n_correct) / n_total)
+
     numpy.save('prediction.npy', y_pred)
 
 if __name__ == '__main__':

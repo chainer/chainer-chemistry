@@ -104,8 +104,10 @@ class InferenceLoop(object):
         ret = []
         for batch in iterator:
             x = converter(batch, device=device)
-            y = self.predictor.predict(*x)
-            ret.append(cuda.to_cpu(y.data))
+            y_prob = self.predictor.predict(*x)
+            y_prob = cuda.to_cpu(y_prob.data)
+            y_pred = np.where(y_prob > .5, 1, -1)
+            ret.append(y_pred)
         return np.concatenate(ret, axis=0)
 
     def inference(self, X):
@@ -140,7 +142,7 @@ class InferenceLoop(object):
             device_id = cuda.cupy.cuda.get_device_id()
 
         def converter(batch, device):
-            return concat_mols(batch, device)[:-1]
+            return concat_mols(batch, device)
 
         return self.customized_inference(data_iter,
                                          converter=converter,
