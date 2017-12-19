@@ -1,5 +1,6 @@
 from distutils.core import setup
 import imp
+import os
 
 from setuptools import find_packages
 
