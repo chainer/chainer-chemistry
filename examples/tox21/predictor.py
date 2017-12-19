@@ -141,9 +141,6 @@ class InferenceLoop(object):
         else:
             device_id = cuda.cupy.cuda.get_device_id()
 
-        def converter(batch, device):
-            return concat_mols(batch, device)
-
         return self.customized_inference(data_iter,
-                                         converter=converter,
+                                         converter=concat_mols,
                                          device=device_id)
