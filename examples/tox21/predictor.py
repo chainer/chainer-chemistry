@@ -113,8 +113,8 @@ class InferenceLoop(object):
     def inference(self, X):
         """Predict with given predictor to given dataset
 
-        We simplify the API of this method for easy-use and fixes
-        several configurations. Specifically, we fix a size of
+        We simplify the API of this method and fix several configurations
+        for easy-use. Specifically, we fix a size of
         minibatch size, a converter for creating minibatches.
         Also, if the predictor ``InferenceLoop`` holds is located in
         host memory (judged by the ``xp`` attribute), all computations are
@@ -126,7 +126,12 @@ class InferenceLoop(object):
         ``GraphConvPredictor.customized_inference`` method instead.
 
         Args:
-            X: test dataset
+            X (`chainer_chemistry.datasets.NumpyTupleDataset`):
+                A dataset of input feature vectors.
+                If the predictor is a graph convolution model
+                (e.g. :class:`chainer_chemistry.models.NFP`),
+                we can use the output of corresponding preprocessor
+                (e.g. :class:`chainer_chemistry.dataset.preprocessors.NFPPreprocessor`).
 
         Returns:
             numpy.ndarray: Prediction results
