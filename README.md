@@ -5,6 +5,10 @@
 [![travis](https://img.shields.io/travis/pfnet-research/chainer-chemistry/master.svg)](https://travis-ci.org/pfnet-research/chainer-chemistry)
 [![Read the Docs](https://readthedocs.org/projects/chainer-chemistry/badge/?version=latest)](http://chainer-chemistry.readthedocs.io/en/latest/?badge=latest)
 
+<p align="center">
+  <img src="assets/chainer-chemistry-overview.png" alt="Chainer Chemistry Overview" width="600" />
+</p>
+
 Chainer Chemistry is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
 
