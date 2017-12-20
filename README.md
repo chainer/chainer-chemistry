@@ -1,5 +1,10 @@
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
+[![PyPI](https://img.shields.io/pypi/v/chainer-chemistry.svg)](https://pypi.python.org/pypi/chainer-chemistry)
+[![GitHub license](https://img.shields.io/github/license/pfnet-research/chainer-chemistry.svg)](https://github.com/pfnet-research/chainer-chemistry)
+[![travis](https://img.shields.io/travis/pfnet-research/chainer-chemistry/master.svg)](https://travis-ci.org/pfnet-research/chainer-chemistry)
+[![Read the Docs](https://readthedocs.org/projects/chainer-chemistry/badge/?version=latest)](http://chainer-chemistry.readthedocs.io/en/latest/?badge=latest)
+
 Chainer Chemistry is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
 
