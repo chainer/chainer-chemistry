@@ -1,6 +1,8 @@
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
-![Chainer Chemistry overview](assets/chainer-chemistry-overview.png)
+<p align="center">
+  <img src="assets/chainer-chemistry-overview.png" alt="Chainer Chemistry Overview" width="600" />
+</p>
 
 Chainer Chemistry is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
