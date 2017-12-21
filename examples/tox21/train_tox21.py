@@ -56,6 +56,10 @@ def main():
                         default='serial', help='iterator type. If `balanced` '
                         'is specified, data is sampled to take same number of'
                         'positive/negative labels during training.')
+    parser.add_argument('--accfun_mode', type=int, default=1,
+                        help='Accuracy function mode. If 0, only '
+                        'binary_accuracy is calculated.'
+                        'If 1, binary_accuracy and ROC-AUC score is calculated')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=128,
@@ -103,9 +107,10 @@ def main():
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    if 0:
+    accfun_mode = args.accfun_mode
+    if accfun_mode == 0:
         accfun = F.binary_accuracy
-    else:
+    elif accfun_mode == 1:
         from sklearn import metrics
 
         def get_1d_numpy_array(v):
@@ -135,6 +140,8 @@ def main():
                 pass
             # --- calc ROC-AUC end ---
             return F.binary_accuracy(y, t)
+    else:
+        raise ValueError('Invalid accfun_mode {}'.format(accfun_mode))
 
     classifier = L.Classifier(predictor_,
                               lossfun=F.sigmoid_cross_entropy,
@@ -154,15 +161,17 @@ def main():
                                device=args.gpu, converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    if 0:
+    if accfun_mode == 0:
         trainer.extend(E.PrintReport([
             'epoch', 'main/loss', 'main/accuracy', 'validation/main/loss',
             'validation/main/accuracy', 'elapsed_time']))
-    else:
+    elif accfun_mode == 1:
         trainer.extend(E.PrintReport([
             'epoch', 'main/loss', 'main/accuracy', 'main/roc_auc',
             'validation/main/loss', 'validation/main/accuracy',
             'validation/main/roc_auc', 'elapsed_time']))
+    else:
+        raise ValueError('Invalid accfun_mode {}'.format(accfun_mode))
     trainer.extend(E.ProgressBar(update_interval=10))
     trainer.run()
 
