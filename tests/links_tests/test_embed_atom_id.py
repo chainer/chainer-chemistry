@@ -12,7 +12,9 @@ batch_size = 2
 
 @pytest.fixture
 def model():
-    return links.EmbedAtomID(in_size=in_size, out_size=out_size)
+    l = links.EmbedAtomID(in_size=in_size, out_size=out_size)
+    l.cleargrads()
+    return l
 
 
 @pytest.fixture
