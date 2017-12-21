@@ -4,3 +4,5 @@ base: docs/source
 requirements_file: docs/source/requirements.txt
 python:
   setup_py_install: true
+conda:
+  file: docs/source/environment.yml
