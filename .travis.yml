@@ -6,7 +6,7 @@ dist: trusty
 python:
   - 2.7
   - 3.6
-env
+env:
   - CHAINER_VERSION="chainer<3"
   - CHAINER_VERSION="chainer"
 
