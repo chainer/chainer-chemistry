@@ -1,0 +1,6 @@
+name: chainerchem
+type: sphinx
+base: docs/source
+requirements_file: docs/source/requirements.txt
+python:
+  setup_py_install: true
