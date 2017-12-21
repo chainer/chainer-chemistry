@@ -45,7 +45,8 @@ Install from the latest source from the master branch::
    $ pip install -e chainer-chemistry
 
 Run example training code
-========================
+=========================
+
 `The official repository <https://github.com/pfnet-research/chainer-chemistry>`_ provides examples
 of training several graph convolution networks. The code can be obtained by cloning the repository::
 
