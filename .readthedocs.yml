@@ -1,4 +1,4 @@
-name: chainerchem
+name: chainer-chemistry
 type: sphinx
 base: docs/source
 requirements_file: docs/source/requirements.txt

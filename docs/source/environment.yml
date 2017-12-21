@@ -1,5 +1,5 @@
 
-name: chainerchem
+name: chainer-chemistry
 channels: !!python/tuple
 - defaults
 dependencies:
