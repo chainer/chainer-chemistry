@@ -26,7 +26,7 @@ install:
   - conda install -c rdkit rdkit
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
       pip install --pre chainer;
-    else;
+    else
       pip install "${CHAINER_VERSION}";
     fi
   - python setup.py install
