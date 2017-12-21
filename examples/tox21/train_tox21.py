@@ -94,7 +94,7 @@ def main():
         if class_num > 1:
             raise ValueError('BalancedSerialIterator can be used with only one'
                              'label classification, please specify label to'
-                             'predict by --label option.')
+                             'be predicted by --label option.')
         train_iter = BalancedSerialIterator(
             train, args.batchsize, train.features[:, -1], ignore_labels=-1)
         train_iter.show_label_stats()
