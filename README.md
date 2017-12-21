@@ -123,6 +123,33 @@ Use it at your own risk.
 
 Please see the [LICENSE](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE) file for details.
 
+## Links
+
+Links for Chainer Chemistry:
+
+ - Document: [https://chainer-chemistry.readthedocs.io](https://chainer-chemistry.readthedocs.io)
+ - Blog: [Release Chainer Chemistry: A library for Deep Learning in Biology and Chemistry](https://preferredresearch.jp/2017/12/18/chainer-chemistry-beta-release/)
+
+Links for other Chainer projects:
+
+ - Chainer: A flexible framework of neural networks for deep learning
+   - Official page: [Website](https://chainer.org/)
+   - Github: [chainer/chainer](https://github.com/chainer/chainer)
+ - ChainerRL: Deep reinforcement learning library built on top of Chainer - [chainer/chainerrl](https://github.com/chainer/chainerrl)
+ - ChainerCV: A Library for Deep Learning in Computer Vision - [chainer/chainercv](https://github.com/chainer/chainercv)
+ - ChainerMN: Scalable distributed deep learning with Chainer - [chainer/chainermn](https://github.com/chainer/chainermn)
+ - ChainerUI: User Interface for Chainer - [chainer/chainerui](https://github.com/chainer/chainerui)
+ - PaintsChainer: Line drawing colorization using chainer
+   - Official page: [Website](https://paintschainer.preferred.tech)
+   - Github: [pfnet/PaintsChainer](https://github.com/pfnet/PaintsChainer)
+ - CuPy: NumPy-like API accelerated with CUDA
+   - Official page: [Website](https://cupy.chainer.org/)
+   - Github: [cupy/cupy](https://github.com/cupy/cupy)
+ 
+If you are new to chainer, here is a tutorial to start with:
+
+ - Chainer Notebooks: hands on tutorial - [mitmul/chainer-handson](https://github.com/mitmul/chainer-handson)
+
 ## Reference
 
 [1] Tokui, S., Oono, K., Hido, S., & Clayton, J. (2015). Chainer: a next-generation open source framework for deep learning. In Proceedings of workshop on machine learning systems (LearningSys) in the twenty-ninth annual conference on neural information processing systems (NIPS) (Vol. 5).
