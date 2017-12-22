@@ -23,9 +23,6 @@ class IndexIterator(iterator.Iterator):
     """
 
     def __init__(self, index_list, shuffle=True, num=0):
-        """
-        
-        """
         self.index_list = numpy.asarray(index_list)
         assert self.index_list.ndim == 1
         self.index_length = len(index_list)
@@ -92,11 +89,7 @@ class BalancedSerialIterator(iterator.Iterator):
     This is a implementation of :class:`~chainer.dataset.Iterator`
     that visits each example in
 
-    To avoid unintentional performance degradation, the ``shuffle`` option is
-    set to ``True`` by default. For validation, it is better to set it to
-    ``False`` when the underlying dataset supports fast slicing. If the
-    order of examples has an important meaning and the updater depends on the
-    original order, this option should be set to ``False``.
+    
 
     This iterator saves ``-1`` instead of ``None`` in snapshots since some
     serializers do not support ``None``.
@@ -104,11 +97,17 @@ class BalancedSerialIterator(iterator.Iterator):
     Args:
         dataset: Dataset to iterate.
         batch_size (int): Number of examples within each batch.
+        labels (list or numpy.ndarray): 1d array which specifies label feature 
+            of `dataset`. size must be same with `dataset` length. 
         repeat (bool): If ``True``, it infinitely loops over the dataset.
             Otherwise, it stops iteration at the end of the first epoch.
         shuffle (bool): If ``True``, the order of examples is shuffled at the
-            beginning of each epoch. Otherwise, examples are extracted in the
-            order of indexes.
+            beginning of each epoch.
+        batch_balancing (bool):  If ``True``, examples are sampled in the way
+            that each label examples are balance sampled in each minibatch.
+        ignore_labels (int or list or None): Labels to be ignored. If not None,
+            the example whose label is in `ignore_labels` are not sampled by
+            this iterator.
 
     """
 
@@ -121,9 +120,6 @@ class BalancedSerialIterator(iterator.Iterator):
             raise ValueError('dataset length {} and labels size {} must be '
                              'same!'.format(len(dataset), labels.size))
         labels = numpy.ravel(labels)
-        # if labels.ndim != 1:
-        #     raise ValueError('labels must be 1 dim, but got {} dim array'
-        #                      .format(labels.ndim))
         self.dataset = dataset
         self.batch_size = batch_size
         self.labels = labels
@@ -174,12 +170,7 @@ class BalancedSerialIterator(iterator.Iterator):
             if self._repeat:
                 rest = i_end - N
                 self._update_order()
-                # if self._order is not None:
-                #     numpy.random.shuffle(self._order)
                 if rest > 0:
-                    # if self._order is None:
-                    #     batch.extend(self.dataset[:rest])
-                    # else:
                     batch.extend([self.dataset[index]
                                   for index in self._order[:rest]])
                 self.current_position = rest
