@@ -1,8 +1,7 @@
 import numpy
-import six
 
 import chainer
-from chainer import cuda, reporter
+from chainer import cuda
 from chainer.dataset import convert
 from chainer.training.extensions import Evaluator
 from sklearn import metrics
@@ -12,8 +11,6 @@ def get_1d_numpy_array(v):
     if isinstance(v, chainer.Variable):
         v = v.data
     return cuda.to_cpu(v).ravel()
-
-import chainerex.utils as cl
 
 
 class ROCAUCEvaluator(Evaluator):
@@ -29,11 +26,8 @@ class ROCAUCEvaluator(Evaluator):
         self.predictor = predictor
 
     def evaluate(self):
-        tm = cl.TimeMeasure.get_instance()
-        tm.start()
         iterator = self._iterators['main']
         predictor = self.predictor or self._targets['main']
-        xp = predictor.xp
 
         iterator.reset()
 
@@ -55,6 +49,4 @@ class ROCAUCEvaluator(Evaluator):
         t_total = numpy.concatenate(t_total).ravel()
         y_total = numpy.concatenate(y_total).ravel()
         roc_auc = metrics.roc_auc_score(t_total, y_total)
-        # tm.update('eval roc_auc')
-        # reporter.report({'roc_auc': roc_auc}, self._targets['main'])
         return {'{}/roc_auc'.format(self.name): roc_auc}
