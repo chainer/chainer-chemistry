@@ -28,7 +28,7 @@ from chainer_chemistry import datasets as D
 
 import data
 import predictor
-
+from roc_auc_evaluator import ROCAUCEvaluator
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
@@ -56,10 +56,10 @@ def main():
                         default='serial', help='iterator type. If `balanced` '
                         'is specified, data is sampled to take same number of'
                         'positive/negative labels during training.')
-    parser.add_argument('--accfun_mode', type=int, default=1,
-                        help='Accuracy function mode. If 0, only '
-                        'binary_accuracy is calculated.'
-                        'If 1, binary_accuracy and ROC-AUC score is calculated')
+    parser.add_argument('--eval_mode', type=int, default=1,
+                        help='Evaluation mode.'
+                        '0: only binary_accuracy is calculated.'
+                        '1: binary_accuracy and ROC-AUC score is calculated')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=128,
@@ -107,45 +107,9 @@ def main():
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    accfun_mode = args.accfun_mode
-    if accfun_mode == 0:
-        accfun = F.binary_accuracy
-    elif accfun_mode == 1:
-        from sklearn import metrics
-
-        def get_1d_numpy_array(v):
-            if isinstance(v, chainer.Variable):
-                v = v.data
-            return cuda.to_cpu(v).ravel()
-
-        def accfun(y, t):
-            # -- calc & report ROC-AUC ---
-            # note that this is dirty hack implementation.
-            # roc auc is calculated per minibatch, and mean is taken to show
-            # PrintReport. This calculation is not same as total batch roc auc
-            # calculation.
-            t_data = get_1d_numpy_array(t)
-            y_data = get_1d_numpy_array(y)
-
-            y_data = y_data[t_data != -1]
-            t_data = t_data[t_data != -1]
-            try:
-                roc_auc = metrics.roc_auc_score(t_data, y_data)
-                reporter.report({'roc_auc': roc_auc}, classifier)
-            except ValueError as e:
-                # When `t_data` only contains one label (ex. only 0), roc auc
-                # cannot be calculated and ValueError is raised.
-                # This implementation just ignores this minibatch for roc auc
-                # calculation.
-                pass
-            # --- calc ROC-AUC end ---
-            return F.binary_accuracy(y, t)
-    else:
-        raise ValueError('Invalid accfun_mode {}'.format(accfun_mode))
-
     classifier = L.Classifier(predictor_,
                               lossfun=F.sigmoid_cross_entropy,
-                              accfun=accfun)
+                              accfun=F.binary_accuracy)
     if args.gpu >= 0:
         chainer.cuda.get_device_from_id(args.gpu).use()
         classifier.to_gpu()
@@ -161,17 +125,27 @@ def main():
                                device=args.gpu, converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    if accfun_mode == 0:
+
+    eval_mode = args.eval_mode
+    if eval_mode == 0:
         trainer.extend(E.PrintReport([
             'epoch', 'main/loss', 'main/accuracy', 'validation/main/loss',
             'validation/main/accuracy', 'elapsed_time']))
-    elif accfun_mode == 1:
+    elif eval_mode == 1:
+        train_eval_iter = I.SerialIterator(train, args.batchsize,
+                                           repeat=False, shuffle=False)
+        trainer.extend(ROCAUCEvaluator(
+            train_eval_iter, classifier, predictor=predictor_,
+            device=args.gpu, converter=concat_mols, name='train'))
+        trainer.extend(ROCAUCEvaluator(
+            val_iter, classifier, predictor=predictor_,
+            device=args.gpu, converter=concat_mols, name='val'))
         trainer.extend(E.PrintReport([
-            'epoch', 'main/loss', 'main/accuracy', 'main/roc_auc',
+            'epoch', 'main/loss', 'main/accuracy', 'train/roc_auc',
             'validation/main/loss', 'validation/main/accuracy',
-            'validation/main/roc_auc', 'elapsed_time']))
+            'val/roc_auc', 'elapsed_time']))
     else:
-        raise ValueError('Invalid accfun_mode {}'.format(accfun_mode))
+        raise ValueError('Invalid accfun_mode {}'.format(eval_mode))
     trainer.extend(E.ProgressBar(update_interval=10))
     trainer.run()
 
