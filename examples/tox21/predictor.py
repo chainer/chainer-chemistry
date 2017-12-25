@@ -106,7 +106,7 @@ class InferenceLoop(object):
             x = converter(batch, device=device)
             y_prob = self.predictor.predict(*x)
             y_prob = cuda.to_cpu(y_prob.data)
-            y_pred = np.where(y_prob > .5, 1, -1)
+            y_pred = np.where(y_prob > .5, 1, 0)
             ret.append(y_pred)
         return np.concatenate(ret, axis=0)
 
