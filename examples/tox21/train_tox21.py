@@ -25,6 +25,13 @@ from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
+try:
+    from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
+except ImportError:
+    print('[WARNING] If you want to use BalancedSerialIterator, please install'
+          'the library from master branch.\n          See '
+          'https://github.com/pfnet-research/chainer-chemistry#installation'
+          ' for detail.')
 
 import data
 import predictor
@@ -52,7 +59,7 @@ def main():
                         default='', help='target label for logistic '
                         'regression. Use all labels if this option '
                         'is not specified.')
-    parser.add_argument('--iterator_type', type=str, choices=iterator_type,
+    parser.add_argument('--iterator-type', type=str, choices=iterator_type,
                         default='serial', help='iterator type. If `balanced` '
                         'is specified, data is sampled to take same number of'
                         'positive/negative labels during training.')
@@ -94,7 +101,6 @@ def main():
     if iterator_type == 'serial':
         train_iter = I.SerialIterator(train, args.batchsize)
     elif iterator_type == 'balanced':
-        from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
         if class_num > 1:
             raise ValueError('BalancedSerialIterator can be used with only one'
                              'label classification, please specify label to'
