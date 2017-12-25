@@ -32,11 +32,11 @@ def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
 
     Args:
         preprocesssor (BasePreprocessor): Preprocessor.
-            This should be chosen based on the network to be trained.
-            If it is None, default `AtomicNumberPreprocessor` is used.
+        This should be chosen based on the network to be trained.
+        If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         retain_smiles (bool): If set to ``True``,
-            smiles list is also returned.
+        smiles list is also returned.
 
     Returns:
         dataset, which is composed of `features`, which depends on

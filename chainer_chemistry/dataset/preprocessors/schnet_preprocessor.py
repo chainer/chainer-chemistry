@@ -65,14 +65,14 @@ class SchNetPreprocessor(MolPreprocessor):
         Setting negative value indicates no limit for max atoms.
         zero_padding (bool): True
         max_atoms (int): Max number of atoms for each molecule, if the
-            number of atoms is more than this value, this data is simply
-            ignored.
-            Setting negative value indicates no limit for max atoms.
+        number of atoms is more than this value, this data is simply
+        ignored.
+        Setting negative value indicates no limit for max atoms.
         out_size (int): It specifies the size of array returned by
-            `get_input_features`.
-            If the number of atoms in the molecule is less than this value,
-            the returned arrays is padded to have fixed size.
-            Setting negative value indicates do not pad returned array.
+        `get_input_features`.
+        If the number of atoms in the molecule is less than this value,
+        the returned arrays is padded to have fixed size.
+        Setting negative value indicates do not pad returned array.
 
     """
 

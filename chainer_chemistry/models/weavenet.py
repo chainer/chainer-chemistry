@@ -153,13 +153,14 @@ class WeaveNet(chainer.Chain):
 
     Args:
         weave_channels (list): list of int, output dimension for each weave 
-            module
+        module
         hidden_dim (int): hidden dim
         n_atom (int): number of atom of input array
         n_sub_layer (int): number of layer for each `AtomToPair`, `PairToAtom`
-            layer
+        layer
         n_atom_types (int): number of atom id
         readout_mode (str): 'sum' or 'max' or 'summax'
+
     """
 
     def __init__(self, weave_channels=None, hidden_dim=16,

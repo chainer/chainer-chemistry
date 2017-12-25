@@ -30,10 +30,10 @@ class CFConvLayer(chainer.Chain):
 
         Args:
             x (numpy.ndarray): axis 0 represents minibatch index,
-                axis 1 represents atom_index and axis 2 represents feature
-                dimension.
+            axis 1 represents atom_index and axis 2 represents feature
+            dimension.
             r (numpy.ndarray): axis 0 represents minibatch index,
-                axis 1 and 2 represent distance between atoms.
+            axis 1 and 2 represent distance between atoms.
 
         """
         # s0 minibatch, s1 atom (from), s2 atom (to)
@@ -111,13 +111,14 @@ class SchNet(chainer.Chain):
     Args:
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
-            associated to each atom
+        associated to each atom
         n_layers (int): number of layers
         readout_hidden_dim (int): dimension of feature vector
-            associated to each molecule
+        associated to each molecule
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
-            and the result is concatenated
+        and the result is concatenated
+
     """
 
     def __init__(self, out_dim=1, hidden_dim=64, n_layers=3,

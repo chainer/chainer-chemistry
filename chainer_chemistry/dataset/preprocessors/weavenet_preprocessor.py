@@ -266,20 +266,21 @@ class WeaveNetPreprocessor(MolPreprocessor):
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
-            number of atoms is more than this value, this data is simply
-            ignored.
-            Setting negative value indicates no limit for max atoms.
+        number of atoms is more than this value, this data is simply
+        ignored.
+        Setting negative value indicates no limit for max atoms.
         add_Hs (bool): If True, implicit Hs are added.
         use_fixed_atom_feature (bool):
-            If True, atom feature is extracted used in original paper.
-            If it is False, atomic number is used instead.
+        If True, atom feature is extracted used in original paper.
+        If it is False, atomic number is used instead.
         atom_list (list): list of atoms to extract feature. If None, default
-            `ATOM` is used as `atom_list`
+        `ATOM` is used as `atom_list`
         include_unknown_atom (bool): If False, when the `mol` includes atom
-            which is not in `atom_list`, it will raise 
-            `MolFeatureExtractionError`. 
-            If True, even the atom is not in `atom_list`, `atom_type` is set
-            as "unknown" atom.
+        which is not in `atom_list`, it will raise 
+        `MolFeatureExtractionError`. 
+        If True, even the atom is not in `atom_list`, `atom_type` is set
+        as "unknown" atom.
+
     """
 
     def __init__(self, max_atoms=DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
