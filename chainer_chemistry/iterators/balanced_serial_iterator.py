@@ -68,8 +68,14 @@ class IndexIterator(iterator.Iterator):
         else:
             indices.append(self.current_index_list[self.current_pos:])
             num -= (self.index_length - self.current_pos)
+            # When `num` is twice bigger than `self.index_length`, `index_list`
+            # is repeated `q` times to get desired length of `indices`.
             q, r = divmod(num, self.index_length)
-            indices.append(numpy.tile(self.index_list, q))
+            if self.shuffle:
+                for _ in range(q):
+                    indices.append(numpy.random.permutation(self.index_list))
+            else:
+                indices.append(numpy.tile(self.index_list, q))
             self.update_current_index_list()
             indices.append(self.current_index_list[:r])
             self.current_pos = r
@@ -221,6 +227,9 @@ class BalancedSerialIterator(iterator.Iterator):
                 self.max_label_count))
 
         if self._batch_balancing:
+            # `indices_list` contains same number of indices of each label.
+            # we can `transpose` and `ravel` it to get each label's index in
+            # sequence, which guarantees that label in each batch is balanced.
             indices = numpy.array(indices_list).transpose().ravel()
             self._order = indices
         else:
