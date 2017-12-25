@@ -1,5 +1,14 @@
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
+[![PyPI](https://img.shields.io/pypi/v/chainer-chemistry.svg)](https://pypi.python.org/pypi/chainer-chemistry)
+[![GitHub license](https://img.shields.io/github/license/pfnet-research/chainer-chemistry.svg)](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE)
+[![travis](https://img.shields.io/travis/pfnet-research/chainer-chemistry/master.svg)](https://travis-ci.org/pfnet-research/chainer-chemistry)
+[![Read the Docs](https://readthedocs.org/projects/chainer-chemistry/badge/?version=latest)](http://chainer-chemistry.readthedocs.io/en/latest/?badge=latest)
+
+<p align="center">
+  <img src="assets/chainer-chemistry-overview.png" alt="Chainer Chemistry Overview" width="600" />
+</p>
+
 Chainer Chemistry is a collection of tools to train and run neural networks for 
 tasks in biology and chemistry using Chainer[1].
 
@@ -114,23 +123,49 @@ Use it at your own risk.
 
 Please see the [LICENSE](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE) file for details.
 
+## Links
+
+Links for Chainer Chemistry:
+
+ - Document: [https://chainer-chemistry.readthedocs.io](https://chainer-chemistry.readthedocs.io)
+ - Blog: [Release Chainer Chemistry: A library for Deep Learning in Biology and Chemistry](https://preferredresearch.jp/2017/12/18/chainer-chemistry-beta-release/)
+
+Links for other Chainer projects:
+
+ - Chainer: A flexible framework of neural networks for deep learning
+   - Official page: [Website](https://chainer.org/)
+   - Github: [chainer/chainer](https://github.com/chainer/chainer)
+ - ChainerRL: Deep reinforcement learning library built on top of Chainer - [chainer/chainerrl](https://github.com/chainer/chainerrl)
+ - ChainerCV: A Library for Deep Learning in Computer Vision - [chainer/chainercv](https://github.com/chainer/chainercv)
+ - ChainerMN: Scalable distributed deep learning with Chainer - [chainer/chainermn](https://github.com/chainer/chainermn)
+ - ChainerUI: User Interface for Chainer - [chainer/chainerui](https://github.com/chainer/chainerui)
+ - PaintsChainer: Line drawing colorization using chainer
+   - Official page: [Website](https://paintschainer.preferred.tech)
+   - Github: [pfnet/PaintsChainer](https://github.com/pfnet/PaintsChainer)
+ - CuPy: NumPy-like API accelerated with CUDA
+   - Official page: [Website](https://cupy.chainer.org/)
+   - Github: [cupy/cupy](https://github.com/cupy/cupy)
+ 
+If you are new to chainer, here is a tutorial to start with:
+
+ - Chainer Notebooks: hands on tutorial - [mitmul/chainer-handson](https://github.com/mitmul/chainer-handson)
+
 ## Reference
 
-[1] Tokui, S., Oono, K., Hido, S., & Clayton, J. (2015). Chainer: a next-generation open source framework for deep learning. In Proceedings of workshop on machine learning systems (LearningSys) in the twenty-ninth annual conference on neural information processing systems (NIPS) (Vol. 5).
+[1] Seiya Tokui, Kenta Oono, Shohei Hido, and Justin Clayton. Chainer: a next-generation open source framework for deep learning. In *Proceedings of Workshop on Machine Learning Systems (LearningSys) in Advances in Neural Information Processing System (NIPS) 28*, 2015.
 
-[2] Duvenaud, D. K., Maclaurin, D., Iparraguirre, J., Bombarell, R., Hirzel, T., Aspuru-Guzik, A., & Adams, R. P. (2015). Convolutional networks on graphs for learning molecular fingerprints. In Advances in neural information processing systems (pp. 2224-2232).
+[2] David K Duvenaud, Dougal Maclaurin, Jorge Iparraguirre, Rafael Bombarell, Timothy Hirzel, Alan Aspuru-Guzik, and Ryan P Adams. Convolutional networks on graphs for learning molecular fingerprints. In C. Cortes, N. D. Lawrence, D. D. Lee, M. Sugiyama, and R. Garnett, editors, *Advances in Neural Information Processing Systems (NIPS) 28*, pages 2224–2232. Curran Asso- ciates, Inc., 2015.
 
-[3] Gilmer, J., Schoenholz, S. S., Riley, P. F., Vinyals, O., & Dahl, G. E. (2017). Neural message passing for quantum chemistry. arXiv preprint arXiv:1704.01212.
+[3] Justin Gilmer, Samuel S Schoenholz, Patrick F Riley, Oriol Vinyals, and George E Dahl. Neural message passing for quantum chemistry. *arXiv preprint arXiv:1704.01212*, 2017.
 
-[4] Li, Y., Tarlow, D., Brockschmidt, M., & Zemel, R. (2015). Gated graph sequence neural networks. arXiv preprint arXiv:1511.05493.
+[4] Yujia Li, Daniel Tarlow, Marc Brockschmidt, and Richard Zemel. Gated graph sequence neural networks. *arXiv preprint arXiv:1511.05493*, 2015.
 
-[5] Kearnes, S., McCloskey, K., Berndl, M., Pande, V., & Riley, P. (2016). Molecular graph convolutions: moving beyond fingerprints. Journal of computer-aided molecular design, 30(8), 595-608.
+[5] Steven Kearnes, Kevin McCloskey, Marc Berndl, Vijay Pande, and Patrick Riley. Molecular graph convolutions: moving beyond fingerprints. *Journal of computer-aided molecular design*, 30(8):595–608, 2016.
 
-[6] Kristof T. Schütt, Pieter-Jan Kindermans, Huziel E. Sauceda, Stefan Chmiela, Alexandre Tkatchenko, Klaus-Robert Müller (2017). SchNet: A continuous-filter convolutional neural network for modeling quantum interactions.
-arXiv preprint arXiv:1706.08566
+[6] Kristof Schütt, Pieter-Jan Kindermans, Huziel Enoc Sauceda Felix, Stefan Chmiela, Alexandre Tkatchenko, and Klaus-Rober Müller Schnet: A continuous-filter convolutional neural network for mod eling quantum interactions. In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, *Advances in Neural Information Processing Systems (NIPS) 30*, pages 992–1002. Curran Associates, Inc., 2017.
 
-[7] L. Ruddigkeit, R. van Deursen, L. C. Blum, J.-L. Reymond, Enumeration of 166 billion organic small molecules in the chemical universe database GDB-17, J. Chem. Inf. Model. 52, 2864–2875, 2012.
+[7] Lars Ruddigkeit, Ruud Van Deursen, Lorenz C Blum, and Jean-Louis Reymond. Enumeration of 166 billion organic small molecules in the chemical universe database gdb-17. *Journal of chemical information and modeling*, 52(11):2864–2875, 2012.
 
-[8] R. Ramakrishnan, P. O. Dral, M. Rupp, O. A. von Lilienfeld, Quantum chemistry structures and properties of 134 kilo molecules, Scientific Data 1, 140022, 2014.
+[8] Raghunathan Ramakrishnan, Pavlo O Dral, Matthias Rupp, and O Anatole Von Lilienfeld. Quantum chemistry structures and properties of 134 kilo molecules. *Scientific data*, 1:140022, 2014.
 
-[9] Huang R, Xia M, Nguyen D-T, Zhao T, Sakamuru S, Zhao J, Shahane SA, Rossoshek A and Simeonov A (2016) Tox21Challenge to Build Predictive Models of Nuclear Receptor and Stress Response Pathways as Mediated by Exposure to Environmental Chemicals and Drugs. Front. Environ. Sci. 3:85. doi: 10.3389/fenvs.2015.00085
+[9] Ruili Huang, Menghang Xia, Dac-Trung Nguyen, Tongan Zhao, Srilatha Sakamuru, Jinghua Zhao, Sampada A Shahane, Anna Rossoshek, and Anton Simeonov. Tox21challenge to build predictive models of nuclear receptor and stress response pathways as mediated by exposure to environmental chemicals and drugs. *Frontiers in Environmental Science*, 3:85, 2016.

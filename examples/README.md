@@ -13,7 +13,7 @@ To test code in this directory, run
 
 ```
 bash -x example_test_cpu.sh  # for CPU
-bash -x example_test_cpu.sh  # for GPU
+bash -x example_test_gpu.sh  # for GPU
 ```
 
 If you encounter errors, please report them to
