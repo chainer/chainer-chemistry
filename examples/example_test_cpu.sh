@@ -17,7 +17,7 @@ do
     if [ "${method}" !=  "schnet" ]
     then
     	python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu}
-	snapshot=`ls ${out_dir}/snapshot_iter_*`  # Assume there is only one snapshot file.
+	snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
 	python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
     fi
 
@@ -26,7 +26,7 @@ do
     if [ "${method}" !=  "schnet" ]
     then
     	python inference_tox21.py --in-dir ${out_dir}
-	snapshot=`ls ${out_dir}/snapshot_iter_*`  # Assume there is only one snapshot file.
+	snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
 	python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
     fi
     cd ../
