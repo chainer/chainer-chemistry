@@ -117,9 +117,9 @@ def main():
         print('task{:>2} {:>8} {:>8} {:>8.4f}'
               .format(idx, n_correct, n_total, accuracy))
 
-    prediction_result_file = 'prediction.npy'
+    prediction_result_file = 'prediction.npz'
     print('Save prediction result to {}'.format(prediction_result_file))
-    numpy.save(prediction_result_file, y_pred)
+    numpy.savez_compressed(prediction_result_file, y_pred)
 
 if __name__ == '__main__':
     main()
