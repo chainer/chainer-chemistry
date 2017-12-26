@@ -80,9 +80,12 @@ def main():
     X_test = D.NumpyTupleDataset(*test[:-1])
     y_test = test[-1]
 
+    # Load pretrained model
     predictor_ = predictor.build_predictor(
         method, config['unit_num'], config['conv_layers'], class_num)
-    snapshot_file = _find_latest_snapshot(args.in_dir)
+    snapshot_file = args.trainer_snapshot
+    if not snapshot_file:
+        snapshot_file = _find_latest_snapshot(args.in_dir)
     print('Loading pretrained model parameters from {}'.format(snapshot_file))
     chainer.serializers.load_npz(snapshot_file,
                                  predictor_, 'updater/model:main/predictor/')
@@ -120,6 +123,7 @@ def main():
     prediction_result_file = 'prediction.npz'
     print('Save prediction result to {}'.format(prediction_result_file))
     numpy.savez_compressed(prediction_result_file, y_pred)
+
 
 if __name__ == '__main__':
     main()
