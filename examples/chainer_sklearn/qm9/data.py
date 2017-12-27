@@ -15,32 +15,20 @@ from chainer_chemistry.datasets.qm9 import get_qm9_label_names, get_qm9
 def prepare_qm9_dataset(method, labels=None, train_data_ratio=0.7,
                         seed=777, scale='standardize', retain_smiles=False):
     if labels:
-        cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
         class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        labels = None
-        cache_dir = os.path.join('input', '{}_all'.format(method))
         class_num = len(get_qm9_label_names())
 
     # Dataset preparation
-    dataset = None
+    print('preprocessing dataset...')
+    preprocessor = preprocess_method_dict[method]()
+    if retain_smiles:
+        dataset, smiles = get_qm9(preprocessor, labels=labels,
+                                  retain_smiles=retain_smiles)
+    else:
+        dataset = get_qm9(preprocessor, labels=labels)
 
-    #cache_dir = os.path.join('input', '{}'.format(method))
-    if os.path.exists(cache_dir):
-        print('load from cache {}'.format(cache_dir))
-        dataset = NumpyTupleDataset.load(os.path.join(cache_dir, 'data.npz'))
-    if dataset is None:
-        print('preprocessing dataset...')
-        preprocessor = preprocess_method_dict[method]()
-        if retain_smiles:
-            dataset, smiles = get_qm9(preprocessor, labels=labels,
-                                      retain_smiles=retain_smiles)
-        else:
-            dataset = get_qm9(preprocessor, labels=labels)
-
-        os.makedirs(cache_dir)
-        NumpyTupleDataset.save(os.path.join(cache_dir, 'data.npz'), dataset)
-
+    # train validation data split
     test_size = 1 - train_data_ratio
     train_idx, val_idx = train_test_split(numpy.arange(len(dataset)),
                                           test_size=test_size,
@@ -63,6 +51,7 @@ def prepare_qm9_dataset(method, labels=None, train_data_ratio=0.7,
         val = NumpyTupleDataset(*dataset.features[val_idx, :])
 
     if retain_smiles:
+        smiles = numpy.asarray(smiles)
         train_smiles = smiles[train_idx]
         val_smiles = smiles[val_idx]
         return train, val, train_smiles, val_smiles, class_num, ss

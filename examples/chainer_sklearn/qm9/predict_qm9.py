@@ -94,7 +94,8 @@ def main():
     serializers.load_npz(load_path, classifier)
 
     # --- predict ---
-    val_predict = classifier.predict(val)
+    print('predicting {} validation dataset...'.format(len(val)))
+    val_predict = classifier.predict(val, converter=concat_mols)
     val_predict = ss.inverse_transform(val_predict)
     val_actual_values = ss.inverse_transform(val.features[:, -1])
 

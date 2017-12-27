@@ -89,11 +89,12 @@ def main():
                                          accfun=scaled_abs_error,
                                          device=args.gpu)
     classifier.fit(train,
-                   # test=val,
+                   test=val,
                    batchsize=args.batchsize,
                    converter=concat_mols,
                    iterator_class=chainer.iterators.SerialIterator,
                    optimizer=chainer.optimizers.Adam(),
+                   device=args.gpu,
                    epoch=args.epoch,
                    out=args.out,
                    snapshot_frequency=10,
