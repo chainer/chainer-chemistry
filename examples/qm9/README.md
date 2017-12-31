@@ -2,6 +2,12 @@
 
 QM9 dataset regression
 
+## Dependency
+
+This example depends on the following package as well as Chainer Chemistry and its dependent packages:
+
+- [`scikit-learn`](http://scikit-learn.org/stable/)
+
 ## How to run the code
 
 ### Train the model with qm9 dataset
