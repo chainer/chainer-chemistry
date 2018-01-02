@@ -22,7 +22,7 @@ install:
   - conda info -a
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
-  - conda install pip pytest
+  - conda install pip pytest pytest-cov
   - conda install -c rdkit rdkit
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
       pip install --pre chainer;
