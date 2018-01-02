@@ -33,4 +33,7 @@ install:
 
 script:
   - cd tests
-  - pytest -m "not (gpu or slow)"
+  - pytest --cov ./ -m "not (gpu or slow)"
+
+after_success:
+  - codecov
