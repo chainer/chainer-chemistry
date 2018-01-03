@@ -30,7 +30,7 @@ install:
     else
       pip install "${CHAINER_VERSION}";
     fi
-  - python setup.py install
+  - pip install --no-cache-dir -e .
 
 script:
   - pytest --cov=./ -m "not (gpu or slow)" tests
