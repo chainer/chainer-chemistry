@@ -33,8 +33,7 @@ install:
   - python setup.py install
 
 script:
-  - cd tests
-  - pytest --cov=./ -m "not (gpu or slow)"
+  - pytest --cov=./ -m "not (gpu or slow)" tests
 
 after_success:
   - codecov
