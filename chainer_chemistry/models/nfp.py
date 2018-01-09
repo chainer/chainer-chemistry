@@ -18,6 +18,7 @@ class NFPUpdate(chainer.Chain):
         in_channels (int): input channel dimension
         out_channels (int): output channel dimension
         max_degree (int): max degree of edge
+
     """
 
     def __init__(self, in_channels, out_channels, max_degree=6):
@@ -66,9 +67,10 @@ class NFPReadout(chainer.Chain):
 
     Args:
         in_channels (int): dimension of feature vector associated to each
-            atom (node)
+        atom (node)
         out_size (int): output dimension of feature vector associated to each
-            molecule (graph)
+        molecule (graph)
+
     """
 
     def __init__(self, in_channels, out_size):
@@ -97,11 +99,12 @@ class NFP(chainer.Chain):
     Args:
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
-            associated to each atom
+        associated to each atom
         max_degree (int): max degree of atoms
-            when molecules are regarded as graphs
+        when molecules are regarded as graphs
         n_atom_types (int): number of types of atoms
         n_layer (int): number of layers
+
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4, max_degree=6,

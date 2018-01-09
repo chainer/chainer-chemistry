@@ -18,7 +18,7 @@ def type_check_num_atoms(mol, num_max_atoms=-1):
     Args:
         mol (Mol):
         num_max_atoms (int): If negative value is set, not check number of
-            atoms.
+        atoms.
 
     """
     num_atoms = mol.GetNumAtoms()
@@ -36,14 +36,14 @@ def construct_atomic_number_array(mol, out_size=-1):
     Args:
         mol (rdkit.Chem.Mol): Input molecule.
         out_size (int): The size of returned array.
-            If this option is negative, it does not take any effect.
-            Otherwise, it must be larger than the number of atoms
-            in the input molecules. In that case, the tail of
-            the array is padded with zeros.
+        If this option is negative, it does not take any effect.
+        Otherwise, it must be larger than the number of atoms
+        in the input molecules. In that case, the tail of
+        the array is padded with zeros.
 
     Returns:
         numpy.ndarray: an array consisting of atomic numbers
-            of atoms in the molecule.
+        of atoms in the molecule.
     """
 
     atom_list = [a.GetAtomicNum() for a in mol.GetAtoms()]
@@ -76,17 +76,17 @@ def construct_adj_matrix(mol, out_size=-1):
     Args:
         mol (rdkit.Chem.Mol): Input molecule.
         out_size (int): The size of the returned matrix.
-            If this option is negative, it does not take any effect.
-            Otherwise, it must be larger than the number of atoms
-            in the input molecules. In that case, the adjacent
-            matrix is expanded and zeros are padded to right
-            columns and bottom rows.
+        If this option is negative, it does not take any effect.
+        Otherwise, it must be larger than the number of atoms
+        in the input molecules. In that case, the adjacent
+        matrix is expanded and zeros are padded to right
+        columns and bottom rows.
 
     Returns:
         numpy.ndarray: the adjcent matrix of the input molecule.
-            If ``out_size`` is non-negative, the returned
-            its size is equal to that value. Otherwise,
-            it is equal to the number of atoms in the the molecule.
+        If ``out_size`` is non-negative, the returned
+        its size is equal to that value. Otherwise,
+        it is equal to the number of atoms in the the molecule.
     """
 
     adj = rdmolops.GetAdjacencyMatrix(mol)
