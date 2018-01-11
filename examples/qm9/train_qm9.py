@@ -7,7 +7,7 @@ import os
 try:
     from sklearn.preprocessing import StandardScaler
 except ImportError:
-    print('You need to install scikit-learn to run this example,'
+    print('You need to install scikit-learn to run this example,\n'
           'please run `pip install -U scikit-learn`')
 
 try:
