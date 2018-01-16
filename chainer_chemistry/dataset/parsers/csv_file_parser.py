@@ -64,11 +64,21 @@ class CSVFileParser(BaseFileParser):
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
-            df = pandas.DataFrame.from_csv(filepath)
+            try:
+                # It is recommended to use `read_csv` method in pandas version
+                # after 0.18.x
+                df = pandas.read_csv(filepath)
+            except AttributeError as e:
+                # It is deprecated in newer versions of pandas, but we use
+                # this method for older version of pandas.
+                df = pandas.DataFrame.from_csv(filepath)
 
             features = None
             smiles_index = df.columns.get_loc(self.smiles_col)
-            labels_index = [df.columns.get_loc(c) for c in self.labels]
+            if self.labels is None:
+                labels_index = []  # dummy list
+            else:
+                labels_index = [df.columns.get_loc(c) for c in self.labels]
 
             total_count = df.shape[0]
             fail_count = 0
