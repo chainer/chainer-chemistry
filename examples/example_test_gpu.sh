@@ -9,7 +9,7 @@ do
     # Tox21
     cd tox21
     if [ ! -f "input" ]; then
-    rm -rf input
+        rm -rf input
     fi
 
     out_dir=nr_ar_${method}
@@ -17,8 +17,8 @@ do
     if [ "${method}" !=  "schnet" ]
     then
         python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu}
-    snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
-    python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
+        snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
+        python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
     fi
 
     out_dir=all_${method}
@@ -26,15 +26,15 @@ do
     if [ "${method}" !=  "schnet" ]
     then
         python inference_tox21.py --in-dir ${out_dir}
-    snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
-    python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
+        snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
+        python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
     fi
     cd ../
 
     # QM9
     cd qm9
     if [ ! -f "input" ]; then
-    rm -rf input
+        rm -rf input
     fi
 
     python train_qm9.py --method ${method} --label A --conv_layers 1 --gpu ${gpu} --epoch 1 --unit_num 10
