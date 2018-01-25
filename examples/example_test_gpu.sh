@@ -41,4 +41,5 @@ done
 # BalancedSerialIterator test for Tox21
 cd tox21
 python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type balanced
+python inference_tox21.py --in-dir nr_ar_nfp_balanced --gpu ${gpu}
 cd ..
