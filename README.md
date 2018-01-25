@@ -18,12 +18,6 @@ for chemical molecule property prediction.
 
 For more information, you can refer to [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
 
-### Notes
-
-This repository is currently under construction.
-There is no guarantee that example programs work correctly and tests pass.
-Please use it at your own risk.
-
 ## Quick start
 
 ### 1. Installation
@@ -73,9 +67,6 @@ please install master branch with the command:
 git clone https://github.com/pfnet-research/chainer-chemistry.git
 pip install -e chainer-chemistry
 ```
-
-#### Note:
-You can install this library via pip after v0.1.0 release.
 
 ### Dependencies
 

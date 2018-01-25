@@ -22,15 +22,18 @@ install:
   - conda info -a
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
-  - conda install pip pytest
+  - pip install codecov
+  - conda install pip pytest pytest-cov
   - conda install -c rdkit rdkit
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
       pip install --pre chainer;
     else
       pip install "${CHAINER_VERSION}";
     fi
-  - python setup.py install
+  - pip install --no-cache-dir -e .
 
 script:
-  - cd tests
-  - pytest -m "not (gpu or slow)"
+  - pytest --cov=./ -m "not (gpu or slow)" tests
+
+after_success:
+  - codecov
