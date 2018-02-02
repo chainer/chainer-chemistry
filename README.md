@@ -75,6 +75,7 @@ installed when you install it by `pip` command.
 
  - [`chainer`](https://docs.chainer.org/en/stable/index.html)
  - [`pandas`](https://pandas.pydata.org)
+ - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
 
 Also, it uses following library, you need to manually install it.
