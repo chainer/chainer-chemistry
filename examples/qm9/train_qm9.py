@@ -4,11 +4,7 @@ from __future__ import print_function
 import argparse
 import os
 
-try:
-    from sklearn.preprocessing import StandardScaler
-except ImportError:
-    print('You need to install scikit-learn to run this example,'
-          'please run `pip install -U scikit-learn`')
+from sklearn.preprocessing import StandardScaler
 
 try:
     import matplotlib

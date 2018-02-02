@@ -8,6 +8,7 @@ setup_requires = []
 install_requires = [
     'chainer>=2.0',
     'pandas',
+    'scikit-learn',
     'tqdm',
 ]
 
