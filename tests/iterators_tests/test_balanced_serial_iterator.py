@@ -1,9 +1,26 @@
 import numpy
 import pytest
+
+from chainer import serializer
+
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
 from chainer_chemistry.iterators.balanced_serial_iterator import IndexIterator  # NOQA
+
+
+class DummySerializer(serializer.Serializer):
+
+    def __init__(self, target):
+        super(DummySerializer, self).__init__()
+        self.target = target
+
+    def __getitem__(self, key):
+        raise NotImplementedError
+
+    def __call__(self, key, value):
+        self.target[key] = value
+        return self.target[key]
 
 
 def test_index_iterator():
@@ -38,6 +55,13 @@ def _test_index_iterator_no_shuffle():
     assert indices3[0] == index_list[1]
     assert indices3[1] == index_list[2]
 
+    target = dict()
+    ii.serialize(DummySerializer(target))
+    assert isinstance(ii.current_index_list, numpy.ndarray)
+    assert len(ii.current_index_list) == len(index_list)
+    assert numpy.array_equal(ii.current_index_list, numpy.asarray(index_list))
+    assert ii.current_pos == (3 + 6) % len(index_list) + 2
+
 
 def _test_index_iterator_with_shuffle():
     index_list = [1, 3, 5, 10]
@@ -57,6 +81,12 @@ def _test_index_iterator_with_shuffle():
     for indices in [indices1, indices2, indices3]:
         for index in indices:
             assert index in index_list
+
+    target = dict()
+    ii.serialize(DummySerializer(target))
+    for index in ii.current_index_list:
+        assert index in index_list
+    assert ii.current_pos == (3 + 6) % len(index_list) + 2
 
 
 def test_balanced_serial_iterator():
@@ -88,6 +118,10 @@ def _test_balanced_serial_iterator_no_batch_balancing():
     assert numpy.sum(labels_batch == 1) == 3
     assert numpy.sum(labels_batch == 2) == 3
 
+    # This does not work!
+    # target = dict()
+    # iterator.serialize(DummySerializer(target))
+
 
 def _test_balanced_serial_iterator_with_batch_balancing():
     x = numpy.arange(8)
@@ -108,6 +142,10 @@ def _test_balanced_serial_iterator_with_batch_balancing():
         assert numpy.sum(labels_batch == 0) == 1
         assert numpy.sum(labels_batch == 1) == 1
         assert numpy.sum(labels_batch == 2) == 1
+
+    # This does not work!
+    # target = dict()
+    # iterator.serialize(DummySerializer(target))
 
 
 if __name__ == '__main__':
