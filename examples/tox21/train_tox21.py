@@ -95,7 +95,7 @@ def main():
     # Dataset preparation
     train, val, _ = data.load_dataset(method, labels)
 
-    if method is 'gcn' or method is 'gcn_opt1':
+    if method == 'gcn' or method == 'gcn_opt1':
         print('# label_names:{}'.format(label_names))
         print('# train: size:{}'.format(len(train)))
         _natoms = [i[0].shape[0] for i in train]
