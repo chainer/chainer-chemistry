@@ -36,6 +36,8 @@ except ImportError:
 import data
 import predictor
 
+import numpy
+
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
@@ -46,7 +48,7 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'gcn', 'gcn_opt1']
     label_names = D.get_tox21_label_names()
     iterator_type = ['serial', 'balanced']
 
@@ -92,6 +94,13 @@ def main():
 
     # Dataset preparation
     train, val, _ = data.load_dataset(method, labels)
+
+    if method is 'gcn' or method is 'gcn_opt1':
+        print('# label_names:{}'.format(label_names))
+        print('# train: size:{}'.format(len(train)))
+        _natoms = [i[0].shape[0] for i in train]
+        print('# natom: min:{}, max:{}, ave:{}'.format(
+            numpy.min(_natoms), numpy.max(_natoms), numpy.sum(_natoms)/len(_natoms)))
 
     # Network
     predictor_ = predictor.build_predictor(

@@ -42,6 +42,11 @@ def build_predictor(method, n_unit, conv_layers, class_num):
         predictor = GraphConvPredictor(
             GCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'gcn_opt1':
+        print('Use GCN(opt1) predictor...')
+        predictor = GraphConvPredictor(
+            GCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers, opt_level=1),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
         raise ValueError('[ERROR] Invalid predictor: method={}'.format(method))
     return predictor
