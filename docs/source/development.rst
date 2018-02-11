@@ -52,6 +52,38 @@ Coding guideline
 
 We use upper camel case (e.g. ``FooBar``) for class names and snake case (e.g. ``foo_bar``) for function, method, variable and package names.
 
+
+Testing guideline
+=================
+
+Chainer Chemistry uses `pytest <https://docs.pytest.org/en/latest/index.html>`_  as a unit-test framework.
+All unit tests are located in ``tests/`` directory. We can run tests with normal usage of pytest.
+For example, the following command runs all unit tests::
+
+   $ pytest tests
+
+Some unit tests require GPUs, which are annotated with ``@pytest.mark.gpu``.
+Therefore, you can skip them with ``-m`` option::
+
+   $ pytest -m "not gpu" tests
+
+If a develop who write a unit test that uses GPUs, you must anotate it with ``@pytest.mark.gpu``.
+
+Similarly, some unit tests take long time to complete.
+We annotated them with ``@pytest.mark.slow`` and skip them with ``-m`` option::
+
+   $ pytest -m "not slow" tests
+
+If a develop who write a unit test that uses GPUs, you must anotate it with ``@pytest.mark.slow``.
+
+We can skip both GPU and slow tests with the following command::
+
+   $ pytest -m "not (gpu or slow)" tests
+
+
+Terminology
+===========
+
 In the context of machine learning, especially chemoinformatics, we use several terms such as feature, feature vectors, descriptor and so on
 to indicate representation of inputs. To avoid disambiguity and align naming convention within the library code, we use these terms in the following way:
 
