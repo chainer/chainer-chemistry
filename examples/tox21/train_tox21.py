@@ -25,6 +25,13 @@ from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
+try:
+    from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
+except ImportError:
+    print('[WARNING] If you want to use BalancedSerialIterator, please install'
+          'the library from master branch.\n          See '
+          'https://github.com/pfnet-research/chainer-chemistry#installation'
+          ' for detail.')
 
 import data
 import predictor
@@ -41,6 +48,7 @@ def main():
     # Supported preprocessing/network list
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet']
     label_names = D.get_tox21_label_names()
+    iterator_type = ['serial', 'balanced']
 
     parser = argparse.ArgumentParser(
         description='Multitask Learning with Tox21.')
@@ -51,6 +59,10 @@ def main():
                         default='', help='target label for logistic '
                         'regression. Use all labels if this option '
                         'is not specified.')
+    parser.add_argument('--iterator-type', type=str, choices=iterator_type,
+                        default='serial', help='iterator type. If `balanced` '
+                        'is specified, data is sampled to take same number of'
+                        'positive/negative labels during training.')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=128,
@@ -85,7 +97,19 @@ def main():
     predictor_ = predictor.build_predictor(
         method, args.unit_num, args.conv_layers, class_num)
 
-    train_iter = I.SerialIterator(train, args.batchsize)
+    iterator_type = args.iterator_type
+    if iterator_type == 'serial':
+        train_iter = I.SerialIterator(train, args.batchsize)
+    elif iterator_type == 'balanced':
+        if class_num > 1:
+            raise ValueError('BalancedSerialIterator can be used with only one'
+                             'label classification, please specify label to'
+                             'be predicted by --label option.')
+        train_iter = BalancedSerialIterator(
+            train, args.batchsize, train.features[:, -1], ignore_labels=-1)
+        train_iter.show_label_stats()
+    else:
+        raise ValueError('Invalid iterator type {}'.format(iterator_type))
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
     classifier = L.Classifier(predictor_,

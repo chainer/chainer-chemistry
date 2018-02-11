@@ -6,13 +6,13 @@ Abstract
 ========================
 
 In this tutorial, we predict Highest Occupied Molecular Orbital (HOMO) level of the molecules in `QM9 dataset <http://quantum-machine.org/datasets/>`_ [1][2] by `Neural Finger Print (NFP) <https://arxiv.org/abs/1509.09292>`_ [3][4].
-We concentrate on exaplaining library usage briefly and do not look over the detail of NFP implementation.
+We concentrate on exaplaining usage of Chainer Chemistry briefly and do not look over the detail of NFP implementation.
 
 
 .. _environment:
 Tested Environment
 ========================
-- this library >= 0.0.1 (See :doc:`install`)
+- Chainer Chemistry >= 0.0.1 (See :doc:`install`)
 - Chainer >= 2.0.2
 - CUDA == 8.0, CuPy >= 1.0.3 (Required only when using GPU)
 
@@ -61,7 +61,7 @@ If you are not interested in them, skip :ref:`dataset-preparation` and :ref:`mod
 Dataset Preparation
 ------------------------
 
-This library accepts the same dataset type with Chainer, such as ``chainer.datasets.SubDataset``.
+Chainer Chemistry accepts the same dataset type with Chainer, such as ``chainer.datasets.SubDataset``.
 In this section we learn how to download QM9 dataset and use it as a Chainer dataset.
 
 The following Python script downloads and saves the dataset in ``.npz`` format.
@@ -147,7 +147,7 @@ Run
 ------------------------
 
 You have defined the dataset and the NFP model on Chainer.
-There are no other procedures specific to this library.
+There are no other procedures specific to Chainer Chemistry.
 Hereafter you should just follow the usual procedures in Chainer to execute training.
 
 The sample script ``examples/qm9/train_qm9.py`` contains all the procedures and you can execute training just by invoking the script.

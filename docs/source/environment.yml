@@ -39,9 +39,7 @@ dependencies:
   - alabaster==0.7.10
   - argh==0.26.2
   - babel==2.5.1
-  - chainer==3.1.0
   - chardet==3.0.4
-  - cupy==2.1.0.1
   - decorator==4.1.2
   - docutils==0.14
   - fastrlock==0.3
