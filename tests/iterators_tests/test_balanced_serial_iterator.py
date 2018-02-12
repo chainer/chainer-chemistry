@@ -10,8 +10,11 @@ from chainer_chemistry.iterators.balanced_serial_iterator import IndexIterator  
 
 class DummySerializer(serializer.Serializer):
 
-    def __init__(self, path=[]):
-        self.path = path
+    def __init__(self, path=None):
+        if path is None:
+            self.path = []
+        else:
+            self.path = path
         self.called = []
 
     def __getitem__(self, key):
@@ -34,7 +37,6 @@ def _test_index_iterator_no_shuffle():
     indices1 = ii.get_next_indices(3)
     indices2 = ii.get_next_indices(6)
     indices3 = ii.__next__()
-    # print('shuffle=False, indices', indices1, indices2, indices3)
 
     assert isinstance(indices1, numpy.ndarray)
     assert len(indices1) == 3
@@ -54,12 +56,6 @@ def _test_index_iterator_no_shuffle():
     assert indices3[0] == index_list[1]
     assert indices3[1] == index_list[2]
 
-    ii.serialize(DummySerializer())
-    assert isinstance(ii.current_index_list, numpy.ndarray)
-    assert len(ii.current_index_list) == len(index_list)
-    assert numpy.array_equal(ii.current_index_list, numpy.asarray(index_list))
-    assert ii.current_pos == (3 + 6) % len(index_list) + 2
-
 
 def _test_index_iterator_with_shuffle():
     index_list = [1, 3, 5, 10]
@@ -68,7 +64,6 @@ def _test_index_iterator_with_shuffle():
     indices1 = ii.get_next_indices(3)
     indices2 = ii.get_next_indices(6)
     indices3 = ii.__next__()
-    # print('shuffle=True, indices', indices1, indices2, indices3)
 
     assert isinstance(indices1, numpy.ndarray)
     assert len(indices1) == 3
@@ -79,6 +74,35 @@ def _test_index_iterator_with_shuffle():
     for indices in [indices1, indices2, indices3]:
         for index in indices:
             assert index in index_list
+
+
+def test_index_iterator_serialization():
+    _test_index_iterator_serialization_no_shuffle()
+    _test_index_iterator_serialization_with_shuffle()
+
+
+def _test_index_iterator_serialization_no_shuffle():
+    index_list = [1, 3, 5, 10]
+    ii = IndexIterator(index_list, shuffle=False, num=2)
+
+    indices1 = ii.get_next_indices(3)
+    indices2 = ii.get_next_indices(6)
+    indices3 = ii.__next__()
+
+    ii.serialize(DummySerializer())
+    assert isinstance(ii.current_index_list, numpy.ndarray)
+    assert len(ii.current_index_list) == len(index_list)
+    assert numpy.array_equal(ii.current_index_list, numpy.asarray(index_list))
+    assert ii.current_pos == (3 + 6) % len(index_list) + 2
+
+
+def _test_index_iterator_serialization_with_shuffle():
+    index_list = [1, 3, 5, 10]
+    ii = IndexIterator(index_list, shuffle=True, num=2)
+
+    indices1 = ii.get_next_indices(3)
+    indices2 = ii.get_next_indices(6)
+    indices3 = ii.__next__()
 
     ii.serialize(DummySerializer())
     for index in ii.current_index_list:
@@ -107,21 +131,13 @@ def _test_balanced_serial_iterator_no_batch_balancing():
     # iterator.show_label_stats()  # we can show label stats
 
     batch = iterator.next()
-    # print('batch', batch)
+
     assert len(batch) == 9
     labels_batch = numpy.array([example[-1] for example in batch])
-    # print('labels_batch_labels', labels_batch)
+
     assert numpy.sum(labels_batch == 0) == 3
     assert numpy.sum(labels_batch == 1) == 3
     assert numpy.sum(labels_batch == 2) == 3
-
-    iterator.serialize(DummySerializer())
-    assert iterator.current_position == 0
-    assert iterator.epoch == 1
-    assert iterator.is_new_epoch == True
-    for order in iterator._order:
-        assert order <= 9
-    assert iterator._previous_epoch_detail == 0.0
 
 
 def _test_balanced_serial_iterator_with_batch_balancing():
@@ -136,20 +152,46 @@ def _test_balanced_serial_iterator_with_batch_balancing():
     batch2 = iterator.next()
     batch3 = iterator.next()
     for batch in [batch1, batch2, batch3]:
-        # print('batch', batch)
         assert len(batch) == 3
         labels_batch = numpy.array([example[-1] for example in batch])
-        # print('labels_batch_labels', labels_batch)
         assert numpy.sum(labels_batch == 0) == 1
         assert numpy.sum(labels_batch == 1) == 1
         assert numpy.sum(labels_batch == 2) == 1
+
+
+def test_balanced_serial_iterator_serialization():
+    _test_balanced_serial_iterator_serialization_no_batch_balancing()
+    _test_balanced_serial_iterator_serialization_with_batch_balancing()
+
+
+def _test_balanced_serial_iterator_serialization_no_batch_balancing():
+    x = numpy.arange(8)
+    t = numpy.asarray([0, 0, -1, 1, 1, 2, -1, 1])
+    iterator = BalancedSerialIterator(NumpyTupleDataset(x, t), batch_size=9,
+                                      labels=t, ignore_labels=-1,
+                                      batch_balancing=False)
+    batch = iterator.next()
 
     iterator.serialize(DummySerializer())
     assert iterator.current_position == 0
     assert iterator.epoch == 1
     assert iterator.is_new_epoch == True
-    for order in iterator._order:
-        assert order <= 9
+
+
+def _test_balanced_serial_iterator_serialization_with_batch_balancing():
+    x = numpy.arange(8)
+    t = numpy.asarray([0, 0, -1, 1, 1, 2, -1, 1])
+    iterator = BalancedSerialIterator(NumpyTupleDataset(x, t), batch_size=3,
+                                      labels=t, ignore_labels=-1,
+                                      batch_balancing=True)
+    batch1 = iterator.next()
+    batch2 = iterator.next()
+    batch3 = iterator.next()
+
+    iterator.serialize(DummySerializer())
+    assert iterator.current_position == 0
+    assert iterator.epoch == 1
+    assert iterator.is_new_epoch == True
 
 
 if __name__ == '__main__':
