@@ -19,15 +19,11 @@ class GCNUpdate(chainer.Chain):
         out_channels (int): output channel dimension
     """
 
-    def __init__(self, in_channels, out_channels, opt_level=0):
+    def __init__(self, in_channels, out_channels):
         super(GCNUpdate, self).__init__()
         with self.init_scope():
-            if opt_level == 1:
-                self.graph_conv = chainer_chemistry.links.GraphConvolution(
-                    in_channels, out_channels)
-            else:
-                self.graph_linear = chainer_chemistry.links.GraphLinear(
-                    in_channels, out_channels, nobias=True)
+            self.graph_linear = chainer_chemistry.links.GraphLinear(
+                in_channels, out_channels, nobias=True)
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.opt_level = opt_level
@@ -51,15 +47,11 @@ class GCNReadout(chainer.Chain):
         out_size (int): output dimension of feature vector associated to each graph
     """
 
-    def __init__(self, in_channels, out_size, opt_level=0):
+    def __init__(self, in_channels, out_size):
         super(GCNReadout, self).__init__()
         with self.init_scope():
-            if opt_level == 1:
-                self.output_weight = chainer_chemistry.links.GraphConvolution(
-                    in_channels, out_size)
-            else:
-                self.output_weight = chainer_chemistry.links.GraphLinear(
-                    in_channels, out_size, nobias=True)
+            self.output_weight = chainer_chemistry.links.GraphLinear(
+                in_channels, out_size, nobias=True)
         self.in_channels = in_channels
         self.out_size = out_size
 
@@ -86,22 +78,17 @@ class GCN(chainer.Chain):
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
-                 n_atom_types=MAX_ATOMIC_NUM, opt_level=0):
+                 n_atom_types=MAX_ATOMIC_NUM):
         super(GCN, self).__init__()
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
             self.gconvs = chainer.ChainList(
-                *[GCNUpdate(hidden_dim, hidden_dim, opt_level)
+                *[GCNUpdate(hidden_dim, hidden_dim)
                   for _ in range(n_layers)])
-            self.readout = GCNReadout(hidden_dim, out_dim, opt_level)
-            if opt_level == 1:
-                self.bnorms = chainer.ChainList(
-                    *[chainer.links.BatchNormalization(hidden_dim, axis=(0,1))
-                      for _ in range(n_layers)])
-            else:
-                self.bnorms = chainer.ChainList(
-                    *[chainer_chemistry.links.GraphBatchNormalization(hidden_dim)
+            self.readout = GCNReadout(hidden_dim, out_dim)
+            self.bnorms = chainer.ChainList(
+                *[chainer_chemistry.links.GraphBatchNormalization(hidden_dim)
                       for _ in range(n_layers)])
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim

@@ -19,5 +19,4 @@ preprocess_method_dict = {
     'schnet': SchNetPreprocessor,
     'weavenet': WeaveNetPreprocessor,
     'gcn': GCNPreprocessor,
-    'gcn_opt1': GCNPreprocessor,
 }
