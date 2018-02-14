@@ -28,8 +28,16 @@ class GraphBatchNormalization(chainer.links.BatchNormalization):
         """
         h = x
         # (minibatch, atom, ch)
-        s0, s1, s2 = h.shape
 
+        # The implemenataion of batch normalization for graph convolution below
+        # is rather naive. To be precise, it is necessary to consider the
+        # difference in the number of atoms for each graph. However, the
+        # implementation below does not take it into account, and assumes
+        # that all graphs have the same number of atoms, hence extra numbers
+        # of zero are included when average is computed. In other word, the
+        # results of batch normalization below is biased.
+
+        s0, s1, s2 = h.shape
         h = chainer.functions.reshape(h, (s0 * s1, s2))
         h = super(GraphBatchNormalization, self).__call__(h)
         h = chainer.functions.reshape(h, (s0, s1, s2))
