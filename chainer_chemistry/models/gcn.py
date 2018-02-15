@@ -26,16 +26,12 @@ class GCNUpdate(chainer.Chain):
                 in_channels, out_channels, nobias=True)
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.opt_level = opt_level
 
     def __call__(self, x, w_adj):
-        if self.opt_level == 1:
-            y = self.graph_conv(x, w_adj)
-        else:
-            # --- Message part ---
-            h = chainer_chemistry.functions.matmul(w_adj, x)
-            # --- Update part ---
-            y = self.graph_linear(h)
+        # --- Message part ---
+        h = chainer_chemistry.functions.matmul(w_adj, x)
+        # --- Update part ---
+        y = self.graph_linear(h)
         return y
 
 
