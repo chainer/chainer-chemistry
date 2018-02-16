@@ -36,8 +36,6 @@ except ImportError:
 import data
 import predictor
 
-import numpy
-
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()

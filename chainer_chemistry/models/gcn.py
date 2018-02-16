@@ -3,9 +3,8 @@ Implementation of Graph Convolutional Network
 (https://arxiv.org/abs/1609.02907)
 """
 import chainer
-from chainer import cuda, Variable
+from chainer import Variable
 from chainer import functions
-import numpy
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
@@ -40,7 +39,8 @@ class GCNReadout(chainer.Chain):
 
     Args:
         in_channels (int): dimension of feature vector associated to each node
-        out_size (int): output dimension of feature vector associated to each graph
+        out_size (int): output dimension of feature vector associated to each
+            graph
     """
 
     def __init__(self, in_channels, out_size):
@@ -71,10 +71,13 @@ class GCN(chainer.Chain):
             associated to each atom
         n_atom_types (int): number of types of atoms
         n_layer (int): number of layers
+        use_batch_norm (bool): If True, batch normalization is applied after
+            graph convolution.
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
-                 n_atom_types=MAX_ATOMIC_NUM):
+                 n_atom_types=MAX_ATOMIC_NUM,
+                 use_batch_norm=False):
         super(GCN, self).__init__()
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
@@ -82,10 +85,14 @@ class GCN(chainer.Chain):
             self.gconvs = chainer.ChainList(
                 *[GCNUpdate(hidden_dim, hidden_dim)
                   for _ in range(n_layers)])
-            self.readout = GCNReadout(hidden_dim, out_dim)
-            self.bnorms = chainer.ChainList(
-                *[chainer_chemistry.links.GraphBatchNormalization(hidden_dim)
+            if use_batch_norm:
+                self.bnorms = chainer.ChainList(
+                    *[chainer_chemistry.links.GraphBatchNormalization(
+                        hidden_dim)
                       for _ in range(n_layers)])
+            else:
+                self.bnorms = [None for _ in range(n_layers)]
+            self.readout = GCNReadout(hidden_dim, out_dim)
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
@@ -118,15 +125,15 @@ class GCN(chainer.Chain):
         else:
             w_adj = adj
         w_adj = Variable(w_adj, requires_grad=False)
-        
+
         for i, (gconv, bnorm) in enumerate(zip(self.gconvs,
                                                self.bnorms)):
             h = gconv(h, w_adj)
-            h = bnorm(h)
+            if bnorm is not None:
+                h = bnorm(h)
             h = functions.dropout(h)
             if i < self.n_layers - 1:
                 h = functions.relu(h)
-            
+
         y = self.readout(h)
-                
         return y
