@@ -34,31 +34,9 @@ class GCNUpdate(chainer.Chain):
         return y
 
 
-class GCNReadout(chainer.Chain):
-    """GCN sub module for readout part
-
-    Args:
-        in_channels (int): dimension of feature vector associated to each node
-        out_size (int): output dimension of feature vector associated to each
-            graph
-    """
-
-    def __init__(self, in_channels, out_size):
-        super(GCNReadout, self).__init__()
-        with self.init_scope():
-            self.output_weight = chainer_chemistry.links.GraphLinear(
-                in_channels, out_size, nobias=True)
-        self.in_channels = in_channels
-        self.out_size = out_size
-
-    def __call__(self, x):
-        # --- Readout part ---
-        h = self.output_weight(x)
-
-        #
-        h = functions.softmax(h, axis=2)  # softmax along channel axis
-        y = functions.sum(h, axis=1)  # sum along node axis
-        return y
+def _readout_sum(x):
+    y = functions.sum(x, axis=1)  # sum along node axis
+    return y
 
 
 class GCN(chainer.Chain):
@@ -73,26 +51,33 @@ class GCN(chainer.Chain):
         n_layer (int): number of layers
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
+        readout (function): readout function. If None, _readout_sum is used.
+            AFAIK, the paper of GCN model does not give any suggestion on
+            readout. So, it is up to you what function to use for readout.
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM,
-                 use_batch_norm=False):
+                 use_batch_norm=False, readout=None):
         super(GCN, self).__init__()
+        in_dims = [hidden_dim for _ in range(n_layers)]
+        out_dims = [hidden_dim for _ in range(n_layers)]
+        out_dims[n_layers - 1] = out_dim
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
             self.gconvs = chainer.ChainList(
-                *[GCNUpdate(hidden_dim, hidden_dim)
-                  for _ in range(n_layers)])
+                *[GCNUpdate(in_dims[i], out_dims[i])
+                  for i in range(n_layers)])
             if use_batch_norm:
                 self.bnorms = chainer.ChainList(
                     *[chainer_chemistry.links.GraphBatchNormalization(
-                        hidden_dim)
-                      for _ in range(n_layers)])
+                        out_dims[i]) for i in range(n_layers)])
             else:
                 self.bnorms = [None for _ in range(n_layers)]
-            self.readout = GCNReadout(hidden_dim, out_dim)
+        self.readout = readout
+        if readout is None:
+            self.readout = _readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
@@ -119,13 +104,13 @@ class GCN(chainer.Chain):
             h = graph
         # h: (minibatch, nodes, ch)
 
-        # --- GCN update & readout ---
         if isinstance(adj, Variable):
             w_adj = adj.data
         else:
             w_adj = adj
         w_adj = Variable(w_adj, requires_grad=False)
 
+        # --- GCN update ---
         for i, (gconv, bnorm) in enumerate(zip(self.gconvs,
                                                self.bnorms)):
             h = gconv(h, w_adj)
@@ -135,5 +120,6 @@ class GCN(chainer.Chain):
             if i < self.n_layers - 1:
                 h = functions.relu(h)
 
+        # --- readout ---
         y = self.readout(h)
         return y
