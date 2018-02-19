@@ -31,7 +31,8 @@ class CSVFileParser(BaseFileParser):
     def __init__(self, preprocessor,
                  labels=None,
                  smiles_col='smiles',
-                 postprocess_label=None, postprocess_fn=None):
+                 postprocess_label=None, postprocess_fn=None,
+                 logger=getLogger(__name__)):
         super(CSVFileParser, self).__init__(preprocessor)
         if isinstance(labels, str):
             labels = [labels, ]
@@ -40,6 +41,7 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.smiles = None
+        self.logger = logger
 
     def parse(self, filepath, retain_smiles=False):
         """parse csv file using `preprocessor`
@@ -55,7 +57,7 @@ class CSVFileParser(BaseFileParser):
         Returns: Dataset
 
         """
-        logger = getLogger(__name__)
+        logger = self.logger
         pp = self.preprocessor
         if retain_smiles:
             self.smiles = []  # Initialize
@@ -105,7 +107,6 @@ class CSVFileParser(BaseFileParser):
                     fail_count += 1
                     continue
                 except Exception as e:
-                    logger = getLogger(__name__)
                     logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     logger.info(traceback.format_exc())
@@ -156,3 +157,16 @@ class CSVFileParser(BaseFileParser):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
             return NumpyTupleDataset(result)
+
+    def get_smiles(self):
+        """get smiles array
+        
+        Returns (numpy.ndarray): 1-d numpy array with dtype=object (string),
+            which is a vector of smiles for each example.
+
+        """
+        if self.smiles is None:
+            self.logger.warning('smiles is None, please execute parse method '
+                                'with retrain_smiles=True.')
+            return None
+        return numpy.array(self.smiles)
