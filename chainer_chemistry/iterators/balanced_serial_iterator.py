@@ -94,16 +94,19 @@ class BalancedSerialIterator(iterator.Iterator):
 
     Args:
         dataset: Dataset to iterate.
-        batch_size (int): Number of examples within each batch.
+        batch_size (int): Number of examples within each minibatch.
         labels (list or numpy.ndarray): 1d array which specifies label feature 
-            of `dataset`. size must be same with `dataset` length. 
+            of `dataset`. Its size must be same as the length of `dataset`.
         repeat (bool): If ``True``, it infinitely loops over the dataset.
             Otherwise, it stops iteration at the end of the first epoch.
         shuffle (bool): If ``True``, the order of examples is shuffled at the
             beginning of each epoch.
+            Otherwise, the order is permanently same as that of `dataset`.
         batch_balancing (bool):  If ``True``, examples are sampled in the way
-            that each label examples are balance sampled in each minibatch.
-        ignore_labels (int or list or None): Labels to be ignored. If not None,
+            that each label examples are roughly evenly sampled in each minibatch.
+            Otherwise, the iterator only guarantees that total numbers of examples
+            are same among label features.
+        ignore_labels (int or list or None): Labels to be ignored. If not ``None``,
             the example whose label is in `ignore_labels` are not sampled by
             this iterator.
 
