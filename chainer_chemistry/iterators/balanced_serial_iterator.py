@@ -92,10 +92,6 @@ class BalancedSerialIterator(iterator.Iterator):
 
     """Dataset iterator that serially reads the examples with balancing label.
 
-
-    This iterator saves ``-1`` instead of ``None`` in snapshots since some
-    serializers do not support ``None``.
-
     Args:
         dataset: Dataset to iterate.
         batch_size (int): Number of examples within each batch.
@@ -195,6 +191,8 @@ class BalancedSerialIterator(iterator.Iterator):
 
     @property
     def previous_epoch_detail(self):
+        # This iterator saves ``-1`` as _previous_epoch_detail instead of
+        # ``None`` because some serializers do not support ``None``.
         if self._previous_epoch_detail < 0:
             return None
         return self._previous_epoch_detail
