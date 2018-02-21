@@ -143,7 +143,6 @@ class BalancedSerialIterator(iterator.Iterator):
             self.labels_iterator_dict[label] = ii
             if label in self.ignore_labels:
                 continue
-            # --- below only for included labels ---
             if max_label_count < label_count:
                 max_label_count = label_count
             include_label_count += 1
