@@ -209,7 +209,7 @@ def _test_balanced_serial_iterator_serialization_no_batch_balancing():
 
     assert iterator.current_position == 0
     assert iterator.epoch == 1
-    assert iterator.is_new_epoch == True
+    assert iterator.is_new_epoch
 
     target = dict()
     iterator.serialize(DummySerializer(target))
@@ -226,7 +226,7 @@ def _test_balanced_serial_iterator_serialization_no_batch_balancing():
     iterator.serialize(DummyDeserializer(target))
     assert iterator.current_position == 0
     assert iterator.epoch == 1
-    assert iterator.is_new_epoch == True
+    assert iterator.is_new_epoch
     for label, index_iterator in iterator.labels_iterator_dict.items():
         ii_label = 'index_iterator_{}'.format(label)
         assert numpy.array_equal(index_iterator.current_index_list,
@@ -246,7 +246,7 @@ def _test_balanced_serial_iterator_serialization_with_batch_balancing():
 
     assert iterator.current_position == 0
     assert iterator.epoch == 1
-    assert iterator.is_new_epoch == True
+    assert iterator.is_new_epoch
 
     target = dict()
     iterator.serialize(DummySerializer(target))
@@ -263,7 +263,7 @@ def _test_balanced_serial_iterator_serialization_with_batch_balancing():
     iterator.serialize(DummyDeserializer(target))
     assert iterator.current_position == 0
     assert iterator.epoch == 1
-    assert iterator.is_new_epoch == True
+    assert iterator.is_new_epoch
     for label, index_iterator in iterator.labels_iterator_dict.items():
         ii_label = 'index_iterator_{}'.format(label)
         assert numpy.array_equal(index_iterator.current_index_list,
