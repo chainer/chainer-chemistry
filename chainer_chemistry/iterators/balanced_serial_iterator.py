@@ -92,10 +92,6 @@ class BalancedSerialIterator(iterator.Iterator):
 
     """Dataset iterator that serially reads the examples with balancing label.
 
-    This is a implementation of :class:`~chainer.dataset.Iterator`
-    that visits each example in
-
-    
 
     This iterator saves ``-1`` instead of ``None`` in snapshots since some
     serializers do not support ``None``.
