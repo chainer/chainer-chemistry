@@ -32,10 +32,16 @@ except ImportError:
           'the library from master branch.\n          See '
           'https://github.com/pfnet-research/chainer-chemistry#installation'
           ' for detail.')
+try:
+    from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
+except ImportError:
+    print('[WARNING] If you want to use ROCAUCEvaluator, please install'
+          'the library from master branch.\n          See '
+          'https://github.com/pfnet-research/chainer-chemistry#installation'
+          ' for detail.')
 
 import data
 import predictor
-from roc_auc_evaluator import ROCAUCEvaluator
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
@@ -147,13 +153,15 @@ def main():
         trainer.extend(ROCAUCEvaluator(
             train_eval_iter, classifier, predictor=predictor_,
             device=args.gpu, converter=concat_mols, name='train'))
+        # extension name='validation' is already used by `Evaluator`,
+        # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(
             val_iter, classifier, predictor=predictor_,
             device=args.gpu, converter=concat_mols, name='val'))
         trainer.extend(E.PrintReport([
-            'epoch', 'main/loss', 'main/accuracy', 'train/roc_auc',
+            'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',
             'validation/main/loss', 'validation/main/accuracy',
-            'val/roc_auc', 'elapsed_time']))
+            'val/main/roc_auc', 'elapsed_time']))
     else:
         raise ValueError('Invalid accfun_mode {}'.format(eval_mode))
     trainer.extend(E.ProgressBar(update_interval=10))
