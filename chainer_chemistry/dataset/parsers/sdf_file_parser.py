@@ -133,8 +133,8 @@ class SDFFileParser(BaseFileParser):
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result), smiles_list
+            return NumpyTupleDataset(*result), np.array(smiles_list)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result), smiles_list
+            return NumpyTupleDataset(result), np.array(smiles_list)
