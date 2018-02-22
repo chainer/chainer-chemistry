@@ -41,10 +41,9 @@ class CSVFileParser(BaseFileParser):
         self.smiles_col = smiles_col
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
-        self.smiles = None
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, retain_smiles=False):
+    def parse(self, filepath, return_smiles=True):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -52,16 +51,18 @@ class CSVFileParser(BaseFileParser):
 
         Args:
             filepath (str): file path to be parsed.
-            retain_smiles (bool): If set to True, smiles list is saved to
-                `smiles` property.
+            return_smiles (bool): If set to True, this function returns
+                preprocessed dataset and smiles list.
+                If set to False, this function returns preprocessed dataset and
+                `None`.
 
-        Returns: Dataset
+        Returns (tuple): Dataset, 1-d numpy array with dtype=object(string)
+            which is a vector of smiles for each example or None.
 
         """
         logger = self.logger
         pp = self.preprocessor
-        if retain_smiles:
-            self.smiles = []  # Initialize
+        smiles_list = [] if return_smiles else None # initialize
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
@@ -107,9 +108,9 @@ class CSVFileParser(BaseFileParser):
                     if self.postprocess_label is not None:
                         labels = self.postprocess_label(labels)
 
-                    if retain_smiles:
+                    if return_smiles:
                         assert standardized_smiles == Chem.MolToSmiles(mol)
-                        self.smiles.append(standardized_smiles)
+                        smiles_list.append(standardized_smiles)
                         # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
                         #              .format(smiles, standardized_smiles))
                 except MolFeatureExtractionError as e:
@@ -163,21 +164,8 @@ class CSVFileParser(BaseFileParser):
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result)
+            return NumpyTupleDataset(*result), smiles_list
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result)
-
-    def get_smiles(self):
-        """get smiles array
-        
-        Returns (numpy.ndarray): 1-d numpy array with dtype=object (string),
-            which is a vector of smiles for each example.
-
-        """
-        if self.smiles is None:
-            self.logger.warning('smiles is None, please execute parse method '
-                                'with retrain_smiles=True.')
-            return None
-        return numpy.array(self.smiles)
+            return NumpyTupleDataset(result), smiles_list
