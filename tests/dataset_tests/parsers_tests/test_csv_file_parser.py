@@ -55,7 +55,7 @@ def check_features(actual, expect_input_features, expect_label):
 def test_csv_file_parser_not_return_smiles(csv_file, mols):
     preprocessor = NFPPreprocessor()
     parser = CSVFileParser(preprocessor, smiles_col='smiles')
-    dataset = parser.parse(csv_file, return_smiles=False)
+    dataset, smiles = parser.parse(csv_file, return_smiles=False)
     assert len(dataset) == 2
     assert smiles == None
 
