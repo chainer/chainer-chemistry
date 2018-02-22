@@ -23,6 +23,22 @@ def _get_1d_numpy_array(v):
     return cuda.to_cpu(v).ravel()
 
 
+def _to_list(a):
+    """convert value `a` to list
+    
+    Args:
+        a: value to be convert to `list`
+
+    Returns (list):
+
+    """
+    if isinstance(a, (int, float)):
+        return [a, ]
+    else:
+        # expected to be list or some iterable class
+        return a
+
+
 class ROCAUCEvaluator(Evaluator):
 
     """Evaluator which calculates ROC AUC score
@@ -46,23 +62,32 @@ class ROCAUCEvaluator(Evaluator):
             `default_name='validation'` which is defined in super class 
             `Evaluator` is used as extension name. This name affects to the
             reported key name.
+        pos_labels (int or list): labels of the positive class, other classes
+            are considered as negative.
+        ignore_labels (int or list or None): labels to be ignored.
+            `None` is used to not ignore all labels.
 
     Attributes:
         converter: Converter function.
         device: Device to which the training data is sent.
         eval_hook: Function to prepare for each evaluation process.
         eval_func: Evaluation function called at each iteration.
+        pos_labels (list): labels of the positive class
+        ignore_labels (list): labels to be ignored.
 
     """
 
     def __init__(self, iterator, target, predictor=None,
                  converter=convert.concat_examples,
-                 device=None, eval_hook=None, eval_func=None, name=None):
+                 device=None, eval_hook=None, eval_func=None, name=None,
+                 pos_labels=1, ignore_labels=-1):
         super(ROCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func)
         self.name = name
         self.predictor = predictor
+        self.pos_labels = _to_list(pos_labels)
+        self.ignore_labels = _to_list(ignore_labels)
 
     def evaluate(self):
         iterator = self._iterators['main']
@@ -80,13 +105,21 @@ class ROCAUCEvaluator(Evaluator):
             t = in_arrays[-1]
             y_data = _get_1d_numpy_array(y)
             t_data = _get_1d_numpy_array(t)
-            y_data = y_data[t_data != -1]
-            t_data = t_data[t_data != -1]
             y_total.append(y_data)
             t_total.append(t_data)
 
-        t_total = numpy.concatenate(t_total).ravel()
         y_total = numpy.concatenate(y_total).ravel()
+        t_total = numpy.concatenate(t_total).ravel()
+
+        # --- ignore labels if specified ---
+        if self.ignore_labels:
+            valid_ind = numpy.in1d(t_total, self.ignore_labels, invert=True)
+            y_total = y_total[valid_ind]
+            t_total = t_total[valid_ind]
+
+        # --- set positive labels to 1, negative labels to 0 ---
+        pos_indices = numpy.in1d(t_total, self.pos_labels)
+        t_total = numpy.where(pos_indices, 1, 0)
         roc_auc = metrics.roc_auc_score(t_total, y_total)
 
         observation = {}
