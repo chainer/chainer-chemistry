@@ -42,7 +42,7 @@ def test_nfp_preprocessor(mol, pp):
 def test_nfp_preprocessor_with_tox21():
     preprocessor = NFPPreprocessor()
 
-    dataset = SDFFileParser(preprocessor, postprocess_label=None
+    dataset, _ = SDFFileParser(preprocessor, postprocess_label=None
                             ).parse(get_tox21_filepath('train'))
 
     index = numpy.random.choice(len(dataset), None)

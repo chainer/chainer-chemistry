@@ -39,7 +39,7 @@ def test_schnet_preprocessor(mol, pp):
 def test_schnet_preprocessor_with_tox21():
     preprocessor = SchNetPreprocessor()
 
-    dataset = SDFFileParser(preprocessor, postprocess_label=None
+    dataset, _ = SDFFileParser(preprocessor, postprocess_label=None
                             ).parse(get_tox21_filepath('train'))
 
     index = numpy.random.choice(len(dataset), None)
