@@ -62,7 +62,7 @@ class CSVFileParser(BaseFileParser):
         """
         logger = self.logger
         pp = self.preprocessor
-        smiles_list = [] if return_smiles else None # initialize
+        smiles_list = []
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
@@ -161,11 +161,12 @@ class CSVFileParser(BaseFileParser):
             # Spec not finalized yet for general case
             result = pp.process(filepath)
 
+        smiles_list = numpy.array(smiles_list) if return_smiles else None
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result), numpy.array(smiles_list)
+            return NumpyTupleDataset(*result), smiles_list
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result), numpy.array(smiles_list)
+            return NumpyTupleDataset(result), smiles_list
