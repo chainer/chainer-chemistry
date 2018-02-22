@@ -21,18 +21,19 @@ class CSVFileParser(BaseFileParser):
     label column which is the target to predict.
 
     Args:
-        filepath (str) : file path of csv file
-        preprocessor (BasePreprocessor):
+        preprocessor (BasePreprocessor): preprocessor instance
         labels (str or list): labels column
         smiles_col (str): smiles column
-        mol (str):
+        postprocess_label (Callable): post processing function if necessary
+        postprocess_fn (Callable): post processing function if necessary
+        logger:
     """
 
     def __init__(self, preprocessor,
                  labels=None,
                  smiles_col='smiles',
                  postprocess_label=None, postprocess_fn=None,
-                 logger=getLogger(__name__)):
+                 logger=None):
         super(CSVFileParser, self).__init__(preprocessor)
         if isinstance(labels, str):
             labels = [labels, ]
@@ -41,7 +42,7 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.smiles = None
-        self.logger = logger
+        self.logger = logger or getLogger(__name__)
 
     def parse(self, filepath, retain_smiles=False):
         """parse csv file using `preprocessor`

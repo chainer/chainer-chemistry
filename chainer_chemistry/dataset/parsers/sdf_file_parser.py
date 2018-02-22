@@ -13,21 +13,21 @@ class SDFFileParser(BaseFileParser):
     """sdf file parser
 
     Args:
-        filepath:
-        preprocessor:
+        preprocessor (BasePreprocessor): preprocessor instance
         labels (str or list): labels column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
+        logger:
     """
 
     def __init__(self, preprocessor, labels=None, postprocess_label=None,
-                 postprocess_fn=None, logger=getLogger(__name__)):
+                 postprocess_fn=None, logger=None):
         super(SDFFileParser, self).__init__(preprocessor)
         self.labels = labels
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.smiles = None
-        self.logger = logger
+        self.logger = logger or getLogger(__name__)
 
     def parse(self, filepath, retain_smiles=False):
         """parse sdf file using `preprocessor`
