@@ -40,7 +40,7 @@ def get_tox21_label_names():
     return _label_names
 
 
-def get_tox21(preprocessor=None, labels=None, retain_smiles=False):
+def get_tox21(preprocessor=None, labels=None, return_smiles=False):
     """Downloads, caches and preprocesses Tox21 dataset.
 
     Args:
@@ -48,7 +48,7 @@ def get_tox21(preprocessor=None, labels=None, retain_smiles=False):
             This should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
-        retain_smiles (bool): If set to True, smiles array is also returned.
+        return_smiles (bool): If set to True, smiles array is also returned.
 
     Returns:
         The 3-tuple consisting of train, validation and test
@@ -72,18 +72,15 @@ def get_tox21(preprocessor=None, labels=None, retain_smiles=False):
                            postprocess_label=postprocess_label,
                            labels=labels)
 
-    if retain_smiles:
-        train = parser.parse(get_tox21_filepath('train'), retain_smiles=True)
-        train_smiles = parser.get_smiles()
-        val = parser.parse(get_tox21_filepath('val'), retain_smiles=True)
-        val_smiles = parser.get_smiles()
-        test = parser.parse(get_tox21_filepath('test'), retain_smiles=True)
-        test_smiles = parser.get_smiles()
+    if return_smiles:
+        train, train_smiles = parser.parse(get_tox21_filepath('train'))
+        val, val_smiles = parser.parse(get_tox21_filepath('val'))
+        test, test_smiles = parser.parse(get_tox21_filepath('test'))
         return train, val, test, train_smiles, val_smiles, test_smiles
     else:
-        train = parser.parse(get_tox21_filepath('train'))
-        val = parser.parse(get_tox21_filepath('val'))
-        test = parser.parse(get_tox21_filepath('test'))
+        train, _ = parser.parse(get_tox21_filepath('train'))
+        val, _ = parser.parse(get_tox21_filepath('val'))
+        test, _ = parser.parse(get_tox21_filepath('test'))
         return train, val, test
 
 
