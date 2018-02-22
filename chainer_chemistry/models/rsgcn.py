@@ -1,6 +1,10 @@
 """
-Implementation of Graph Convolutional Network
-(https://arxiv.org/abs/1609.02907)
+Implementation of Renormalized Spectral Graph Convolutional Network (RSGCN)
+
+See: Thomas N. Kipf and Max Welling, \
+    Semi-Supervised Classification with Graph Convolutional Networks. \
+    September 2016. \
+    `arXiv:1609.02907 <https://arxiv.org/abs/1609.02907>`_
 """
 import chainer
 from chainer import Variable
@@ -10,8 +14,8 @@ import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 
-class GCNUpdate(chainer.Chain):
-    """GCN sub module for update part
+class RSGCNUpdate(chainer.Chain):
+    """RSGCN sub module for message and update part
 
     Args:
         in_channels (int): input channel dimension
@@ -19,7 +23,7 @@ class GCNUpdate(chainer.Chain):
     """
 
     def __init__(self, in_channels, out_channels):
-        super(GCNUpdate, self).__init__()
+        super(RSGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear = chainer_chemistry.links.GraphLinear(
                 in_channels, out_channels, nobias=True)
@@ -39,9 +43,20 @@ def _readout_sum(x):
     return y
 
 
-class GCN(chainer.Chain):
+class RSGCN(chainer.Chain):
 
-    """Graph Convolutional Networks
+    """Renormalized Spectral Graph Convolutional Network (RSGCN)
+
+    See: Thomas N. Kipf and Max Welling, \
+        Semi-Supervised Classification with Graph Convolutional Networks. \
+        September 2016. \
+        `arXiv:1609.02907 <https://arxiv.org/abs/1609.02907>`_
+
+    The name of this model "Renormalized Spectral Graph Convolutional Network
+    (RSGCN)" is named by us rather than the authors of the paper above.
+    The authors call this model just "Graph Convolution Network (GCN)", but
+    we think that "GCN" is bit too general and may cause namespace issue.
+    That is why we did not name this model as GCN.
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -52,14 +67,14 @@ class GCN(chainer.Chain):
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
         readout (function): readout function. If None, _readout_sum is used.
-            AFAIK, the paper of GCN model does not give any suggestion on
+            AFAIK, the paper of RSGCN model does not give any suggestion on
             readout. So, it is up to you what function to use for readout.
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM,
                  use_batch_norm=False, readout=None):
-        super(GCN, self).__init__()
+        super(RSGCN, self).__init__()
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
@@ -67,7 +82,7 @@ class GCN(chainer.Chain):
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
             self.gconvs = chainer.ChainList(
-                *[GCNUpdate(in_dims[i], out_dims[i])
+                *[RSGCNUpdate(in_dims[i], out_dims[i])
                   for i in range(n_layers)])
             if use_batch_norm:
                 self.bnorms = chainer.ChainList(
@@ -110,7 +125,7 @@ class GCN(chainer.Chain):
             w_adj = adj
         w_adj = Variable(w_adj, requires_grad=False)
 
-        # --- GCN update ---
+        # --- RSGCN update ---
         for i, (gconv, bnorm) in enumerate(zip(self.gconvs,
                                                self.bnorms)):
             h = gconv(h, w_adj)

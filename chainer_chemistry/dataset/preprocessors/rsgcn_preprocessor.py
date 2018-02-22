@@ -7,8 +7,8 @@ from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreproce
 import numpy
 
 
-class GCNPreprocessor(MolPreprocessor):
-    """GCN Preprocessor
+class RSGCNPreprocessor(MolPreprocessor):
+    """RSGCN Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
@@ -24,7 +24,7 @@ class GCNPreprocessor(MolPreprocessor):
     """
 
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
-        super(GCNPreprocessor, self).__init__(add_Hs=add_Hs)
+        super(RSGCNPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be equal to or larger than '
                              'out_size {}'.format(max_atoms, out_size))
