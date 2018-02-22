@@ -26,7 +26,7 @@ def test_get_tox21_filepath_without_download(dataset_type):
 @pytest.mark.slow
 @pytest.mark.parametrize('dataset_type', dataset_types)
 def test_get_tox21_filepath_with_download(dataset_type):
-    filepath = qm9.get_qm9_filepath(download_if_not_exist=False)
+    filepath = tox21.get_tox21_filepath(dataset_type, download_if_not_exist=False)
     if os.path.exists(filepath):
         os.remove(filepath)  # ensure a cache file does not exist.
 

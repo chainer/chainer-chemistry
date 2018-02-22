@@ -104,15 +104,17 @@ class InferenceLoop(object):
         ret = []
         for batch in iterator:
             x = converter(batch, device=device)
-            y = self.predictor.predict(*x)
-            ret.append(cuda.to_cpu(y.data))
+            y_prob = self.predictor.predict(*x)
+            y_prob = cuda.to_cpu(y_prob.data)
+            y_pred = np.where(y_prob > .5, 1, 0)
+            ret.append(y_pred)
         return np.concatenate(ret, axis=0)
 
     def inference(self, X):
         """Predict with given predictor to given dataset
 
-        We simplify the API of this method for easy-use and fixes
-        several configurations. Specifically, we fix a size of
+        We simplify the API of this method and fix several configurations
+        for easy-use. Specifically, we fix a size of
         minibatch size, a converter for creating minibatches.
         Also, if the predictor ``InferenceLoop`` holds is located in
         host memory (judged by the ``xp`` attribute), all computations are
@@ -124,7 +126,12 @@ class InferenceLoop(object):
         ``GraphConvPredictor.customized_inference`` method instead.
 
         Args:
-            X: test dataset
+            X (`chainer_chemistry.datasets.NumpyTupleDataset`):
+                A dataset of input feature vectors.
+                If the predictor is a graph convolution model
+                (e.g. :class:`chainer_chemistry.models.NFP`),
+                we can use the output of corresponding preprocessor
+                (e.g. :class:`chainer_chemistry.dataset.preprocessors.NFPPreprocessor`).
 
         Returns:
             numpy.ndarray: Prediction results
@@ -139,9 +146,6 @@ class InferenceLoop(object):
         else:
             device_id = cuda.cupy.cuda.get_device_id()
 
-        def converter(batch, device):
-            return concat_mols(batch, device)[:-1]
-
         return self.customized_inference(data_iter,
-                                         converter=converter,
+                                         converter=concat_mols,
                                          device=device_id)

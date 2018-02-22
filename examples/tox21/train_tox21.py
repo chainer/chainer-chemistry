@@ -80,6 +80,10 @@ def main():
                         help='number of epochs')
     parser.add_argument('--unit-num', '-u', type=int, default=16,
                         help='number of units in one layer of the model')
+    parser.add_argument('--resume', '-r', type=str, default='',
+                        help='path to a trainer snapshot')
+    parser.add_argument('--frequency', '-f', type=int, default=-1,
+                        help='Frequency of taking a snapshot')
     args = parser.parse_args()
 
     method = args.method
@@ -153,6 +157,12 @@ def main():
     else:
         raise ValueError('Invalid accfun_mode {}'.format(eval_mode))
     trainer.extend(E.ProgressBar(update_interval=10))
+    frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
+    trainer.extend(E.snapshot(), trigger=(frequency, 'epoch'))
+
+    if args.resume:
+        chainer.serializers.load_npz(args.resume, trainer)
+
     trainer.run()
 
     config = {'method': args.method,
