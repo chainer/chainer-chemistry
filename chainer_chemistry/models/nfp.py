@@ -3,12 +3,13 @@ Implementation of Neural Fingerprint
 
 """
 import chainer
-from chainer import cuda, Variable
 from chainer import functions
+from chainer import Variable
 import numpy
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry import links
 
 
 class NFPUpdate(chainer.Chain):
@@ -25,7 +26,7 @@ class NFPUpdate(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.graph_linears = chainer.ChainList(
-                *[chainer_chemistry.links.GraphLinear(in_channels, out_channels)
+                *[links.GraphLinear(in_channels, out_channels)
                   for _ in range(num_degree_type)]
             )
         self.max_degree = max_degree
