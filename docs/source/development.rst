@@ -50,7 +50,19 @@ When a bug is found, changes for the bug should be merged to the next version (e
 Coding guideline
 ================
 
-We use upper camel case (e.g. ``FooBar``) for class names and snake case (e.g. ``foo_bar``) for function, method, variable and package names.
+We basically adopt `PEP8 <https://www.python.org/dev/peps/pep-0008/>_` as a style guide.
+You can check it with `flake8`, which we can install by::
+
+   $ pip install flake8
+
+and run with ``flake8`` command.
+
+In addition to PEP8, we use upper camel case (e.g. ``FooBar``) for class names and snake case (e.g. ``foo_bar``) for function, method, variable and package names.
+Although we recommend developers to follow these rules as well, they are not mandatory.
+
+For documents, we follow the `Google Python Style Guide <http://google.github.io/styleguide/pyguide.html#Comments>`_
+and compile it with `Napoleon <http://sphinxcontrib-napoleon.readthedocs.io/en/latest/index.html>`_,
+which is an extension of `Sphinx <http://www.sphinx-doc.org/en/stable/>`_.
 
 
 Testing guideline
