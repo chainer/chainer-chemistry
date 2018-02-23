@@ -36,7 +36,7 @@ def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         retain_smiles (bool): If set to ``True``,
-            smiles list is also returned.
+            smiles array is also returned.
 
     Returns:
         dataset, which is composed of `features`, which depends on
@@ -57,7 +57,7 @@ def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
                            labels=labels, smiles_col='SMILES1')
     dataset = parser.parse(get_qm9_filepath(), retain_smiles=retain_smiles)
     if retain_smiles:
-        return dataset, parser.smiles
+        return dataset, parser.get_smiles()
     else:
         return dataset
 

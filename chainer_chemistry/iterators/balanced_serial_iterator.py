@@ -92,26 +92,21 @@ class BalancedSerialIterator(iterator.Iterator):
 
     """Dataset iterator that serially reads the examples with balancing label.
 
-    This is a implementation of :class:`~chainer.dataset.Iterator`
-    that visits each example in
-
-    
-
-    This iterator saves ``-1`` instead of ``None`` in snapshots since some
-    serializers do not support ``None``.
-
     Args:
         dataset: Dataset to iterate.
-        batch_size (int): Number of examples within each batch.
+        batch_size (int): Number of examples within each minibatch.
         labels (list or numpy.ndarray): 1d array which specifies label feature 
-            of `dataset`. size must be same with `dataset` length. 
+            of `dataset`. Its size must be same as the length of `dataset`.
         repeat (bool): If ``True``, it infinitely loops over the dataset.
             Otherwise, it stops iteration at the end of the first epoch.
         shuffle (bool): If ``True``, the order of examples is shuffled at the
             beginning of each epoch.
+            Otherwise, the order is permanently same as that of `dataset`.
         batch_balancing (bool):  If ``True``, examples are sampled in the way
-            that each label examples are balance sampled in each minibatch.
-        ignore_labels (int or list or None): Labels to be ignored. If not None,
+            that each label examples are roughly evenly sampled in each minibatch.
+            Otherwise, the iterator only guarantees that total numbers of examples
+            are same among label features.
+        ignore_labels (int or list or None): Labels to be ignored. If not ``None``,
             the example whose label is in `ignore_labels` are not sampled by
             this iterator.
 
@@ -151,7 +146,6 @@ class BalancedSerialIterator(iterator.Iterator):
             self.labels_iterator_dict[label] = ii
             if label in self.ignore_labels:
                 continue
-            # --- below only for included labels ---
             if max_label_count < label_count:
                 max_label_count = label_count
             include_label_count += 1
@@ -199,6 +193,8 @@ class BalancedSerialIterator(iterator.Iterator):
 
     @property
     def previous_epoch_detail(self):
+        # This iterator saves ``-1`` as _previous_epoch_detail instead of
+        # ``None`` because some serializers do not support ``None``.
         if self._previous_epoch_detail < 0:
             return None
         return self._previous_epoch_detail

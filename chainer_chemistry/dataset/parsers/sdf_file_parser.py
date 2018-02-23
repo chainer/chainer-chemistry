@@ -13,20 +13,21 @@ class SDFFileParser(BaseFileParser):
     """sdf file parser
 
     Args:
-        filepath:
-        preprocessor:
+        preprocessor (BasePreprocessor): preprocessor instance
         labels (str or list): labels column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
+        logger:
     """
 
     def __init__(self, preprocessor, labels=None, postprocess_label=None,
-                 postprocess_fn=None):
+                 postprocess_fn=None, logger=None):
         super(SDFFileParser, self).__init__(preprocessor)
         self.labels = labels
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.smiles = None
+        self.logger = logger or getLogger(__name__)
 
     def parse(self, filepath, retain_smiles=False):
         """parse sdf file using `preprocessor`
@@ -41,7 +42,7 @@ class SDFFileParser(BaseFileParser):
         Returns: Dataset
 
         """
-        logger = getLogger(__name__)
+        logger = self.logger
         pp = self.preprocessor
         if retain_smiles:
             self.smiles = []  # Initialize
@@ -96,7 +97,6 @@ class SDFFileParser(BaseFileParser):
                     fail_count += 1
                     continue
                 except Exception as e:
-                    logger = getLogger(__name__)
                     logger.warning('parse() error, type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     continue
@@ -137,3 +137,16 @@ class SDFFileParser(BaseFileParser):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
             return NumpyTupleDataset(result)
+
+    def get_smiles(self):
+        """get smiles array
+
+        Returns (numpy.ndarray): 1-d numpy array with dtype=object (string),
+            which is a vector of smiles for each example.
+
+        """
+        if self.smiles is None:
+            self.logger.warning('smiles is None, please execute parse method '
+                                'with retrain_smiles=True.')
+            return None
+        return numpy.array(self.smiles)

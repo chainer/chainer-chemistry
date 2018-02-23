@@ -48,7 +48,7 @@ def get_tox21(preprocessor=None, labels=None, retain_smiles=False):
             This should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
-        retain_smiles (bool): If set to True, smiles list is also returned.
+        retain_smiles (bool): If set to True, smiles array is also returned.
 
     Returns:
         The 3-tuple consisting of train, validation and test
@@ -74,11 +74,11 @@ def get_tox21(preprocessor=None, labels=None, retain_smiles=False):
 
     if retain_smiles:
         train = parser.parse(get_tox21_filepath('train'), retain_smiles=True)
-        train_smiles = parser.smiles
+        train_smiles = parser.get_smiles()
         val = parser.parse(get_tox21_filepath('val'), retain_smiles=True)
-        val_smiles = parser.smiles
+        val_smiles = parser.get_smiles()
         test = parser.parse(get_tox21_filepath('test'), retain_smiles=True)
-        test_smiles = parser.smiles
+        test_smiles = parser.get_smiles()
         return train, val, test, train_smiles, val_smiles, test_smiles
     else:
         train = parser.parse(get_tox21_filepath('train'))
