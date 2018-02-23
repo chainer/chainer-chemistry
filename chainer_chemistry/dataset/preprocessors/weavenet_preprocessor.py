@@ -216,7 +216,8 @@ def construct_ring_feature_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     n_atom = mol.GetNumAtoms()
     # rinfo = mol.GetRingInfo()
     sssr = Chem.GetSymmSSSR(mol)
-    ring_feature_vec = numpy.zeros((num_max_atoms ** 2, 1,), dtype=numpy.float32)
+    ring_feature_vec = numpy.zeros(
+        (num_max_atoms ** 2, 1,), dtype=numpy.float32)
     for ring in sssr:
         ring = list(ring)
         n_atom_in_ring = len(ring)

@@ -171,7 +171,7 @@ class CSVFileParser(BaseFileParser):
 
     def get_smiles(self):
         """get smiles array
-        
+
         Returns (numpy.ndarray): 1-d numpy array with dtype=object (string),
             which is a vector of smiles for each example.
 
