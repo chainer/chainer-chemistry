@@ -4,7 +4,7 @@
 Development policy
 ==================
 
-In this section, we describe the development policy the core team of Chainer Chemistry follows.
+In this section, we describe the development policy that the core developers follow.
 Developers who are thinking to send PRs to the repository are encouraged to read the following sections
 before starting implementation.
 
@@ -12,7 +12,7 @@ before starting implementation.
 Versioning policy
 =================
 
-Basically, we follow the `semantic versioning v2.0.0 <https://semver.org>`_.
+Basically, we follow the `semantic versioning v2.0.0 <https://semver.org/spec/v2.0.0.html>`_.
 In Chainer Chemistry, *public APIs* in the sense of semantic versioning are ones in `the document <http://chainer-chemistry.readthedocs.io/en/latest/index.html>`_.
 
 We follow these rules about versioning during the major version zero in addition to ones described in the the semantic versioning:
@@ -30,7 +30,7 @@ Compatibiity policy
 
 As an immediate consequence of the semantic versioning, we may break compatibility of public APIs including addition, deletion, change in semantics of them anytime in the major version zero.
 Since APIs of Chainer Chemistry are still immature and unstable, introduction of new features can sometime involve compatibility break.
-If we are faced with a dilemma between cost for backward compatibility and benefit of new features, we are likely to give up the former because we want to place importance on introducing new features as early as possible. Of course, we care backward compatibility whenever it is easy and low-cost.
+If we are faced with a dilemma between cost for backward compatibility and benefit of new features, we are likely to give up the former because we want to place importance on introducing new features as soon as possible. Of course, we care backward compatibility whenever it is easy and low-cost.
 
 Like `ChainerCV <https://twitter.com>`_, Chainer Chemistry provides several off-the-shelf deep learning models (e.g. Neural Finger Print) whose papers are available in such as arXiv or conferences related to machine learning.
 Although, most of published papers reports evaluation results of the models with publicly available datasets, we do *NOT* guarantee the reproducibility of experiments in the papers.
@@ -70,11 +70,11 @@ Therefore, you can skip them with ``-m`` option::
 If a develop who write a unit test that uses GPUs, you must anotate it with ``@pytest.mark.gpu``.
 
 Similarly, some unit tests take long time to complete.
-We annotated them with ``@pytest.mark.slow`` and skip them with ``-m`` option::
+We annotated them with ``@pytest.mark.slow`` and can skip them with ``-m`` option::
 
    $ pytest -m "not slow" tests
 
-If a develop who write a unit test that uses GPUs, you must anotate it with ``@pytest.mark.slow``.
+Any unit test that uses GPUs muct be annotated with ``@pytest.mark.slow``.
 
 We can skip both GPU and slow tests with the following command::
 
@@ -101,4 +101,4 @@ Relation to Chainer
 `Chainer <https://chainer.org>`_ is a deep learning framework written in Python that features dynamic
 computational graph construction (the "define-by-run" paradigm) for flexible and intuitive model development.
 As the name indicates, Chainer Chemistry is an extension library of Chainer built on top of it.
-The core development team of Chainer and that of Chainer Chemistry work together tightly.
+The core development team members of Chainer and that of Chainer Chemistry work together tightly.
