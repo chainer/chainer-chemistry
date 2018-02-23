@@ -1,7 +1,8 @@
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
+    import MolPreprocessor
 
 
 class AtomicNumberPreprocessor(MolPreprocessor):

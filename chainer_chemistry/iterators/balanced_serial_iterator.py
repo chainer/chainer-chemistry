@@ -10,8 +10,8 @@ from chainer.dataset import iterator
 class IndexIterator(iterator.Iterator):
     """Index iterator
 
-    IndexIterator is used internally in `BalancedSerialIterator`, as each 
-    label's index iterator 
+    IndexIterator is used internally in `BalancedSerialIterator`, as each
+    label's index iterator
 
         Args:
             index_list (list): list of int which represents indices.
@@ -95,7 +95,7 @@ class BalancedSerialIterator(iterator.Iterator):
     Args:
         dataset: Dataset to iterate.
         batch_size (int): Number of examples within each minibatch.
-        labels (list or numpy.ndarray): 1d array which specifies label feature 
+        labels (list or numpy.ndarray): 1d array which specifies label feature
             of `dataset`. Its size must be same as the length of `dataset`.
         repeat (bool): If ``True``, it infinitely loops over the dataset.
             Otherwise, it stops iteration at the end of the first epoch.
@@ -103,12 +103,12 @@ class BalancedSerialIterator(iterator.Iterator):
             beginning of each epoch.
             Otherwise, the order is permanently same as that of `dataset`.
         batch_balancing (bool):  If ``True``, examples are sampled in the way
-            that each label examples are roughly evenly sampled in each minibatch.
-            Otherwise, the iterator only guarantees that total numbers of examples
-            are same among label features.
-        ignore_labels (int or list or None): Labels to be ignored. If not ``None``,
-            the example whose label is in `ignore_labels` are not sampled by
-            this iterator.
+            that each label examples are roughly evenly sampled in each
+            minibatch. Otherwise, the iterator only guarantees that total
+            numbers of examples are same among label features.
+        ignore_labels (int or list or None): Labels to be ignored.
+            If not ``None``, the example whose label is in `ignore_labels`
+            are not sampled by this iterator.
 
     """
 

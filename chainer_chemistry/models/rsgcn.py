@@ -7,8 +7,8 @@ See: Thomas N. Kipf and Max Welling, \
     `arXiv:1609.02907 <https://arxiv.org/abs/1609.02907>`_
 """
 import chainer
-from chainer import Variable
 from chainer import functions
+from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM

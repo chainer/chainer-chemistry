@@ -113,7 +113,7 @@ def download_and_extract_qm9(save_filepath):
 
         num_atom = int(data[0])
         properties = list(map(float, data[1].split('\t')[1:]))
-        smiles = data[3+num_atom].split('\t')
+        smiles = data[3 + num_atom].split('\t')
         new_ls = smiles + properties
         ls.append(new_ls)
 
