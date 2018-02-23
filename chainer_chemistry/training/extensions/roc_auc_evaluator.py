@@ -43,6 +43,8 @@ class ROCAUCEvaluator(Evaluator):
 
     """Evaluator which calculates ROC AUC score
 
+    Note that this Evaluator is only applicable to binary classification task.
+
     Args:
         iterator: Dataset iterator for the dataset to calculate ROC AUC score.
             It can also be a dictionary of iterators. If this is just an 
@@ -80,7 +82,7 @@ class ROCAUCEvaluator(Evaluator):
     def __init__(self, iterator, target, predictor=None,
                  converter=convert.concat_examples,
                  device=None, eval_hook=None, eval_func=None, name=None,
-                 pos_labels=1, ignore_labels=-1):
+                 pos_labels=1, ignore_labels=None):
         super(ROCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func)
