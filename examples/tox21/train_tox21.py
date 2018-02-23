@@ -46,7 +46,8 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn',
+                   'sparse_rsgcn']
     label_names = D.get_tox21_label_names()
     iterator_type = ['serial', 'balanced']
 
@@ -122,12 +123,19 @@ def main():
     optimizer = O.Adam()
     optimizer.setup(classifier)
 
+    padding = 0
+    if method == 'sparse_rsgcn':
+        padding = (0, 0, -1, -1, 0)  # atom, adj_data, adj_row, adj_col, label
+
+    def converter(batch, device=None):
+        return concat_mols(batch, device, padding)
+
     updater = training.StandardUpdater(
-        train_iter, optimizer, device=args.gpu, converter=concat_mols)
+        train_iter, optimizer, device=args.gpu, converter=converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
 
     trainer.extend(E.Evaluator(val_iter, classifier,
-                               device=args.gpu, converter=concat_mols))
+                               device=args.gpu, converter=converter))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
     trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/accuracy',
