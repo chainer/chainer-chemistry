@@ -152,12 +152,14 @@ def main():
                                            repeat=False, shuffle=False)
         trainer.extend(ROCAUCEvaluator(
             train_eval_iter, classifier, predictor=predictor_,
-            device=args.gpu, converter=concat_mols, name='train'))
+            device=args.gpu, converter=concat_mols, name='train',
+            pos_labels=1, ignore_labels=-1))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(
             val_iter, classifier, predictor=predictor_,
-            device=args.gpu, converter=concat_mols, name='val'))
+            device=args.gpu, converter=concat_mols, name='val',
+            pos_labels=1, ignore_labels=-1))
         trainer.extend(E.PrintReport([
             'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',
             'validation/main/loss', 'validation/main/accuracy',
