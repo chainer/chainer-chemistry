@@ -55,11 +55,12 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False):
         preprocessor = AtomicNumberPreprocessor()
     parser = CSVFileParser(preprocessor, postprocess_label=postprocess_label,
                            labels=labels, smiles_col='SMILES1')
-    dataset, smiles = parser.parse(get_qm9_filepath(), return_smiles=return_smiles)
+    result = parser.parse(get_qm9_filepath(), return_smiles=return_smiles)
+
     if return_smiles:
-        return dataset, smiles
+        return result['dataset'], result['smiles']
     else:
-        return dataset
+        return result['dataset']
 
 
 def get_qm9_filepath(download_if_not_exist=True):

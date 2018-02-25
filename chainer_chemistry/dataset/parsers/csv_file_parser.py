@@ -1,4 +1,3 @@
-from collections import namedtuple
 from logging import getLogger
 
 import numpy
@@ -57,7 +56,7 @@ class CSVFileParser(BaseFileParser):
                 If set to False, this function returns preprocessed dataset and
                 `None`.
 
-        Returns (namedtuple): Dataset, 1-d numpy array with
+        Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
             or None.
 
@@ -164,13 +163,15 @@ class CSVFileParser(BaseFileParser):
             result = pp.process(filepath)
 
         smileses = numpy.array(smiles_list) if return_smiles else None
-        Result = namedtuple("ParseResult", 'dataset,smiles')
+        parse_result = {}
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return Result(NumpyTupleDataset(*result), smileses)
+            parse_result.update({"dataset": result, "smiles": smileses})
+            return parse_result
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return Result(NumpyTupleDataset(result), smileses)
+            parse_result.update({"dataset": result, "smiles": smileses})
+            return parse_result

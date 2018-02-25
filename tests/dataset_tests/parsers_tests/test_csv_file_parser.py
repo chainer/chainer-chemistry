@@ -57,8 +57,8 @@ def test_csv_file_parser_not_return_smiles(csv_file, mols):
     parser = CSVFileParser(preprocessor, smiles_col='smiles')
     # Actually, `dataset, smiles = parser.parse(..)` is enough.
     result = parser.parse(csv_file, return_smiles=False)
-    dataset = result.dataset
-    smiles = result.smiles
+    dataset = result['dataset']
+    smiles = result['smiles']
     assert len(dataset) == 2
     assert smiles == None
 
@@ -75,10 +75,9 @@ def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
     parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    # Actually, `dataset, smiles = parser.parse(..)` is enough.
     result = parser.parse(csv_file, return_smiles=True)
-    dataset = result.dataset
-    smiles = result.smiles
+    dataset = result['dataset']
+    smiles = result['smiles']
     assert len(dataset) == 2
 
     # As we want test CSVFileParser, we assume
