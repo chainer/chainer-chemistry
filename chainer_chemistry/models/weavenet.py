@@ -1,6 +1,5 @@
 import chainer
-import numpy
-from chainer import functions, cuda
+from chainer import functions
 from chainer import links
 from chainer_chemistry.links.embed_atom_id import EmbedAtomID
 
@@ -152,7 +151,7 @@ class WeaveNet(chainer.Chain):
     """WeaveNet implementation
 
     Args:
-        weave_channels (list): list of int, output dimension for each weave 
+        weave_channels (list): list of int, output dimension for each weave
             module
         hidden_dim (int): hidden dim
         n_atom (int): number of atom of input array

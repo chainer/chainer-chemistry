@@ -1,12 +1,15 @@
+from chainer_chemistry.dataset.preprocessors.common import construct_adj_matrix
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
 
+import numpy
 
-class AtomicNumberPreprocessor(MolPreprocessor):
-    """Atomic number Preprocessor
+
+class RSGCNPreprocessor(MolPreprocessor):
+    """RSGCN Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
@@ -21,8 +24,8 @@ class AtomicNumberPreprocessor(MolPreprocessor):
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1):
-        super(AtomicNumberPreprocessor, self).__init__()
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
+        super(RSGCNPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be equal to or larger than '
                              'out_size {}'.format(max_atoms, out_size))
@@ -40,4 +43,12 @@ class AtomicNumberPreprocessor(MolPreprocessor):
         """
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        return atom_array
+        adj_array = construct_adj_matrix(mol, out_size=self.out_size)
+
+        # adjust adjacent matrix
+        degree_vec = numpy.sum(adj_array, axis=1)
+        degree_vec = numpy.sqrt(degree_vec)
+        adj_array *= numpy.broadcast_to(degree_vec[:, None], adj_array.shape)
+        adj_array *= numpy.broadcast_to(degree_vec[None, :], adj_array.shape)
+
+        return atom_array, adj_array
