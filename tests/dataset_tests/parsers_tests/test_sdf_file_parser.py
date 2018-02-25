@@ -34,7 +34,10 @@ def check_input_features(actual, expect):
 def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
-    dataset, smiles = parser.parse(sdf_file, return_smiles=False)
+    # Actually, `dataset, smiles = parser.parse(..)` is enough.
+    result = parser.parse(csv_file, return_smiles=False)
+    dataset = result.dataset
+    smiles = result.smiles
     assert len(dataset) == 2
     assert smiles == None
 
@@ -50,7 +53,10 @@ def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
 def test_sdf_file_parser_return_smiles(sdf_file, mols):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
-    dataset, smiles = parser.parse(sdf_file, return_smiles=True)
+    # Actually, `dataset, smiles = parser.parse(..)` is enough.
+    result = parser.parse(csv_file, return_smiles=True)
+    dataset = result.dataset
+    smiles = result.smiles
     assert len(dataset) == 2
 
     # As we want test SDFFileParser, we assume

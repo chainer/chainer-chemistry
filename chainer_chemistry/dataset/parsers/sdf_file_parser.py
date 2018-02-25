@@ -1,4 +1,6 @@
+from collections import namedtuple
 from logging import getLogger
+
 import numpy
 from rdkit import Chem
 from tqdm import tqdm
