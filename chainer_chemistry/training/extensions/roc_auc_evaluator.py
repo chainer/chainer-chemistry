@@ -1,3 +1,5 @@
+import copy
+
 import numpy
 
 import chainer
@@ -51,8 +53,11 @@ class ROCAUCEvaluator(Evaluator):
             iterator, the iterator is registered by the name ``'main'``.
         target: Link object or a dictionary of links to evaluate. If this is
             just a link object, the link is registered by the name ``'main'``.
-        converter: Converter function to build input arrays.
+        converter: Converter function to build input arrays and true label.
             :func:`~chainer.dataset.concat_examples` is used by default.
+            It is expected to return input arrays of the form
+            `[x_0, ..., x_n, t]`, where `x_0, ..., x_n` are the inputs to
+            the evaluation function and `t` is the true label.
         device: Device to which the training data is sent. Negative value
             indicates the host memory (CPU).
         eval_hook: Function to prepare for each evaluation process. It is
@@ -79,31 +84,36 @@ class ROCAUCEvaluator(Evaluator):
 
     """
 
-    def __init__(self, iterator, target, predictor=None,
-                 converter=convert.concat_examples,
+    def __init__(self, iterator, target, converter=convert.concat_examples,
                  device=None, eval_hook=None, eval_func=None, name=None,
                  pos_labels=1, ignore_labels=None):
         super(ROCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func)
         self.name = name
-        self.predictor = predictor
         self.pos_labels = _to_list(pos_labels)
         self.ignore_labels = _to_list(ignore_labels)
 
     def evaluate(self):
         iterator = self._iterators['main']
-        predictor = self.predictor or self._targets['main']
+        eval_func = self.eval_func or self._targets['main']
 
-        iterator.reset()
+        if self.eval_hook:
+            self.eval_hook(self)
+
+        if hasattr(iterator, 'reset'):
+            iterator.reset()
+            it = iterator
+        else:
+            it = copy.copy(iterator)
 
         y_total = []
         t_total = []
-        for batch in iterator:
+        for batch in it:
             in_arrays = self.converter(batch, self.device)
             with chainer.no_backprop_mode(), chainer.using_config('train',
                                                                   False):
-                y = predictor(*in_arrays[:-1])
+                y = eval_func(*in_arrays[:-1])
             t = in_arrays[-1]
             y_data = _get_1d_numpy_array(y)
             t_data = _get_1d_numpy_array(t)

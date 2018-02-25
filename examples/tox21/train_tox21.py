@@ -151,13 +151,13 @@ def main():
         train_eval_iter = I.SerialIterator(train, args.batchsize,
                                            repeat=False, shuffle=False)
         trainer.extend(ROCAUCEvaluator(
-            train_eval_iter, classifier, predictor=predictor_,
+            train_eval_iter, classifier, eval_func=predictor_,
             device=args.gpu, converter=concat_mols, name='train',
             pos_labels=1, ignore_labels=-1))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(
-            val_iter, classifier, predictor=predictor_,
+            val_iter, classifier, eval_func=predictor_,
             device=args.gpu, converter=concat_mols, name='val',
             pos_labels=1, ignore_labels=-1))
         trainer.extend(E.PrintReport([
