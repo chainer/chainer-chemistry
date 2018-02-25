@@ -130,12 +130,14 @@ class SDFFileParser(BaseFileParser):
             # Spec not finalized yet for general case
             result = pp.process(filepath)
 
-        smiles_list = numpy.array(smiles_list) if return_smiles else None
+        smileses = numpy.array(smiles_list) if return_smiles else None
+        Result = namedtuple("ParseResult", 'dataset,smiles')
+
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result), smiles_list
+            return Result(NumpyTupleDataset(*result), smileses)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result), smiles_list
+            return Result(NumpyTupleDataset(result), smileses)
