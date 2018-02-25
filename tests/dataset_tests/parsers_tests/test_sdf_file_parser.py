@@ -35,7 +35,7 @@ def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
     # Actually, `dataset, smiles = parser.parse(..)` is enough.
-    result = parser.parse(csv_file, return_smiles=False)
+    result = parser.parse(sdf_file, return_smiles=False)
     dataset = result.dataset
     smiles = result.smiles
     assert len(dataset) == 2
