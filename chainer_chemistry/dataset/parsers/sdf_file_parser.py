@@ -40,8 +40,9 @@ class SDFFileParser(BaseFileParser):
                 If set to False, this function returns preprocessed dataset and
                 `None`.
 
-        Returns (tuple): Dataset, 1-d numpy array with dtype=object(string)
-            which is a vector of smiles for each example or None.
+        Returns (namedtuple): Dataset, 1-d numpy array with
+            dtype=object(string) which is a vector of smiles for each example
+            or None.
 
         """
         logger = self.logger
