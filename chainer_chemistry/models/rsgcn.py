@@ -93,7 +93,6 @@ class RSGCN(chainer.Chain):
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
-        self.readout = None
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
@@ -108,7 +107,7 @@ class RSGCN(chainer.Chain):
                 self.bnorms = [None for _ in range(n_layers)]
             if isinstance(readout, chainer.Link):
                 self.readout = readout
-        if self.readout is None:
+        if not isinstance(readout, chainer.Link):
             self.readout = readout or rsgcn_readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
