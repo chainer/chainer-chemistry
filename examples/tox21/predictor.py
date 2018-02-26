@@ -64,12 +64,11 @@ class GraphConvPredictor(chainer.Chain):
         """
 
         super(GraphConvPredictor, self).__init__()
-        self.mlp = None
         with self.init_scope():
             self.graph_conv = graph_conv
             if isinstance(mlp, chainer.Link):
                 self.mlp = mlp
-        if self.mlp is None:
+        if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
 
     def __call__(self, atoms, adjs):

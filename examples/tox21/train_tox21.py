@@ -75,7 +75,7 @@ def main():
                         '1: binary_accuracy and ROC-AUC score is calculated')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
-    parser.add_argument('--batchsize', '-b', type=int, default=128,
+    parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID to use. Negative value indicates '
