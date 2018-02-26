@@ -38,8 +38,23 @@ class RSGCNUpdate(chainer.Chain):
         return y
 
 
-def _readout_sum(x):
-    y = functions.sum(x, axis=1)  # sum along node axis
+def _readout_sum(x, activation=functions.sigmoid):
+    """Default readout function
+
+    Args:
+        x (chainer.Variable): shape consists of (minibatch, atom, ch).
+        activation: activation function, default is sigmoid function.
+            You may consider taking other activations, for example `relu` or
+            `softmax` along `axis=2` (ch axis) etc.
+
+    Returns: result of readout, its shape should be (minibatch, out_ch)
+
+    """
+    if activation is not None:
+        h = activation(x)
+    else:
+        h = x
+    y = functions.sum(h, axis=1)  # sum along node axis
     return y
 
 
@@ -78,6 +93,7 @@ class RSGCN(chainer.Chain):
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
+        self.readout = None
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
@@ -90,9 +106,10 @@ class RSGCN(chainer.Chain):
                         out_dims[i]) for i in range(n_layers)])
             else:
                 self.bnorms = [None for _ in range(n_layers)]
-        self.readout = readout
-        if readout is None:
-            self.readout = _readout_sum
+            if isinstance(readout, chainer.Link):
+                self.readout = readout
+        if self.readout is None:
+            self.readout = readout or _readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
