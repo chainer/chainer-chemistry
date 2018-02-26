@@ -29,16 +29,30 @@ class SparseRSGCNUpdate(chainer.Chain):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-    def __call__(self, x, sp_w):
+    def __call__(self, x, sp_adj):
         # --- Message part ---
-        h = chainer_chemistry.functions.sparse_matmul(sp_w, x)
+        h = chainer_chemistry.functions.sparse_matmul(sp_adj, x)
         # --- Update part ---
         y = self.graph_linear(h)
         return y
 
 
-def _readout_sum(x):
-    y = functions.sum(x, axis=1)  # sum along node axis
+def rsgcn_readout_sum(x, activation=None):
+    """Default readout function for `RSGCN`
+
+    Args:
+        x (chainer.Variable): shape consists of (minibatch, atom, ch).
+        activation: activation function, default is `None`.
+            You may consider taking other activations, for example `sigmoid`,
+            `relu` or `softmax` along `axis=2` (ch axis) etc.
+    Returns: result of readout, its shape should be (minibatch, out_ch)
+
+    """
+    if activation is not None:
+        h = activation(x)
+    else:
+        h = x
+    y = functions.sum(h, axis=1)  # sum along node axis
     return y
 
 
@@ -62,12 +76,12 @@ class SparseRSGCN(chainer.Chain):
         hidden_dim (int): dimension of feature vector
             associated to each atom
         n_atom_types (int): number of types of atoms
-        n_layer (int): number of layers
+        n_layers (int): number of layers
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
-        readout (function): readout function. If None, _readout_sum is used.
-            AFAIK, the paper of RSGCN model does not give any suggestion on
-            readout. So, it is up to you what function to use for readout.
+        readout (Callable): readout function. If None, `rsgcn_readout_sum` is
+            used. To the best of our knowledge, the paper of RSGCN model does
+            not give any suggestion on readout.
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
@@ -77,6 +91,7 @@ class SparseRSGCN(chainer.Chain):
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
+        self.readout = None
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
@@ -89,14 +104,15 @@ class SparseRSGCN(chainer.Chain):
                         out_dims[i]) for i in range(n_layers)])
             else:
                 self.bnorms = [None for _ in range(n_layers)]
-        self.readout = readout
-        if readout is None:
-            self.readout = _readout_sum
+            if isinstance(readout, chainer.Link):
+                self.readout = readout
+        if self.readout is None:
+            self.readout = readout or rsgcn_readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
 
-    def __call__(self, graph, w_data, w_row, w_col):
+    def __call__(self, graph, adj_data, adj_row, adj_col):
         """Forward propagation
 
         Args:
@@ -104,9 +120,12 @@ class SparseRSGCN(chainer.Chain):
                 represented with atom IDs (representing C, O, S, ...)
                 `atom_array[mol_index, atom_index]` represents `mol_index`-th
                 molecule's `atom_index`-th atomic number
-            adj (numpy.ndarray): minibatch of adjancency matrix
-                `adj[mol_index]` represents `mol_index`-th molecule's
-                adjacency matrix
+            adj_data (numpy.ndarray): minibatch of adjacency matrix.
+            adj_row (numpy.ndarray): minibatch of adjacency matrix.
+            adj_col (numpy.ndarray): minibatch of adjacency matrix.
+                COO format is adopted as sparse matrix format. adj_data,
+                adj_row and adj_col are data, row index and column index array
+                of the matrix respectively.
 
         Returns:
             ~chainer.Variable: minibatch of fingerprint
@@ -118,14 +137,15 @@ class SparseRSGCN(chainer.Chain):
             h = graph
         # h: (minibatch, nodes, ch)
 
-        w_shape = [h.shape[1], h.shape[1]]
-        sp_w = chainer_chemistry.functions.sparse_coo_matrix(
-            w_data, w_row, w_col, w_shape)
+        adj_shape = [h.shape[1], h.shape[1]]
+        sp_adj = chainer_chemistry.functions.sparse_coo_matrix(
+            adj_data, adj_row, adj_col, adj_shape)
+        # adj_data/row/col: (minibatch, nnz)
 
         # --- Sparse RSGCN update ---
         for i, (gconv, bnorm) in enumerate(zip(self.gconvs,
                                                self.bnorms)):
-            h = gconv(h, sp_w)
+            h = gconv(h, sp_adj)
             if bnorm is not None:
                 h = bnorm(h)
             h = functions.dropout(h)

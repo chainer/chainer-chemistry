@@ -94,9 +94,11 @@ class SparseRSGCNPreprocessor(MolPreprocessor):
 
         # adjust adjacent matrix
         degree_vec = numpy.sum(adj_array, axis=1)
-        degree_vec = numpy.sqrt(degree_vec)
-        adj_array *= numpy.broadcast_to(degree_vec[:, None], adj_array.shape)
-        adj_array *= numpy.broadcast_to(degree_vec[None, :], adj_array.shape)
+        degree_sqrt_inv = 1. / numpy.sqrt(degree_vec)
+        adj_array *= numpy.broadcast_to(degree_sqrt_inv[:, None],
+                                        adj_array.shape)
+        adj_array *= numpy.broadcast_to(degree_sqrt_inv[None, :],
+                                        adj_array.shape)
 
         # make sparse matrix
         sp_adj = sparse_dense2coo(adj_array)
