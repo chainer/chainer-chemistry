@@ -29,7 +29,7 @@ class SDFFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=True):
+    def parse(self, filepath, return_smiles=False):
         """parse sdf file using `preprocessor`
 
         Note that label is extracted from preprocessor's method.

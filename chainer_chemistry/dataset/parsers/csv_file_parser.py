@@ -43,7 +43,7 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=True):
+    def parse(self, filepath, return_smiles=False):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
