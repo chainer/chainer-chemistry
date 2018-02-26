@@ -18,6 +18,8 @@ Features
 
    install
    tutorial
+   contribution
+   development
    reference
 
 Indices and tables

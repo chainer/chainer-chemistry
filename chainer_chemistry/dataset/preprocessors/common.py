@@ -65,7 +65,7 @@ def construct_atomic_number_array(mol, out_size=-1):
 
 
 # --- Adjacency matrix preprocessing ---
-def construct_adj_matrix(mol, out_size=-1):
+def construct_adj_matrix(mol, out_size=-1, self_connection=True):
     """Returns the adjacent matrix of the given molecule.
 
     This function returns the adjacent matrix of the given molecule.
@@ -81,6 +81,8 @@ def construct_adj_matrix(mol, out_size=-1):
             in the input molecules. In that case, the adjacent
             matrix is expanded and zeros are padded to right
             columns and bottom rows.
+        self_connection (bool): Add self connection or not.
+            If True, diagonal element of adjacency matrix is filled with 1.
 
     Returns:
         numpy.ndarray: the adjcent matrix of the input molecule.
@@ -96,7 +98,8 @@ def construct_adj_matrix(mol, out_size=-1):
                          'has an invalid shape: ({}, {}). '
                          'It must be square.'.format(s0, s1))
 
-    adj = adj + numpy.eye(s0)
+    if self_connection:
+        adj = adj + numpy.eye(s0)
     if out_size < 0:
         adj_array = adj.astype(numpy.float32)
     elif out_size >= s0:
