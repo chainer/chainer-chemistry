@@ -133,17 +133,13 @@ class SDFFileParser(BaseFileParser):
             result = pp.process(filepath)
 
         smileses = numpy.array(smiles_list) if return_smiles else None
-        parse_result = {}
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-                result = NumpyTupleDataset(*result)
-            parse_result.update({"dataset": result, "smiles": smileses})
-            return parse_result
+            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
                 result = NumpyTupleDataset(result)
-            parse_result.update({"dataset": result, "smiles": smileses})
-            return parse_result
+            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
