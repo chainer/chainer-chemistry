@@ -38,15 +38,14 @@ class RSGCNUpdate(chainer.Chain):
         return y
 
 
-def _readout_sum(x, activation=functions.sigmoid):
-    """Default readout function
+def rsgcn_readout_sum(x, activation=None):
+    """Default readout function for `RSGCN`
 
     Args:
         x (chainer.Variable): shape consists of (minibatch, atom, ch).
-        activation: activation function, default is sigmoid function.
-            You may consider taking other activations, for example `relu` or
-            `softmax` along `axis=2` (ch axis) etc.
-
+        activation: activation function, default is `None`.
+            You may consider taking other activations, for example `sigmoid`,
+            `relu` or `softmax` along `axis=2` (ch axis) etc.
     Returns: result of readout, its shape should be (minibatch, out_ch)
 
     """
@@ -78,12 +77,13 @@ class RSGCN(chainer.Chain):
         hidden_dim (int): dimension of feature vector
             associated to each atom
         n_atom_types (int): number of types of atoms
-        n_layer (int): number of layers
+        n_layers (int): number of layers
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
-        readout (function): readout function. If None, _readout_sum is used.
-            AFAIK, the paper of RSGCN model does not give any suggestion on
-            readout. So, it is up to you what function to use for readout.
+        readout (Callable): readout function. If None, `rsgcn_readout_sum` is
+            used. To the best of our knowledge, the paper of RSGCN model does
+            not give any suggestion on readout.
+
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
@@ -109,7 +109,7 @@ class RSGCN(chainer.Chain):
             if isinstance(readout, chainer.Link):
                 self.readout = readout
         if self.readout is None:
-            self.readout = readout or _readout_sum
+            self.readout = readout or rsgcn_readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
