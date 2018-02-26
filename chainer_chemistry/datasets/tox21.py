@@ -72,26 +72,21 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
                            postprocess_label=postprocess_label,
                            labels=labels)
 
+    train_result = parser.parse(get_tox21_filepath('train'),
+                                return_smiles=return_smiles)
+    val_result = parser.parse(get_tox21_filepath('val'),
+                                return_smiles=return_smiles)
+    test_result = parser.parse(get_tox21_filepath('test'),
+                                return_smiles=return_smiles)
+
     if return_smiles:
-        train_result = parser.parse(get_tox21_filepath('train'),\
-                                    return_smiles=True)
         train, train_smiles = train_result['dataset'], train_result['smiles']
-        val_result = parser.parse(get_tox21_filepath('val'),\
-                                    return_smiles=True)
         val, val_smiles = val_result['dataset'], val_result['smiles']
-        test_result = parser.parse(get_tox21_filepath('test'),\
-                                    return_smiles=True)
         test, test_smiles = test_result['dataset'], test_result['smiles']
         return train, val, test, train_smiles, val_smiles, test_smiles
     else:
-        train_result = parser.parse(get_tox21_filepath('train'), \
-                                    return_smiles=False)
         train = train_result['dataset']
-        val_result = parser.parse(get_tox21_filepath('val'), \
-                                    return_smiles=False)
         val = val_result['dataset']
-        test_result = parser.parse(get_tox21_filepath('test'), \
-                                    return_smiles=False)
         test = test_result['dataset']
         return train, val, test
 
