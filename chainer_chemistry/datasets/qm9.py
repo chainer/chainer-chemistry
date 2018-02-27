@@ -27,7 +27,7 @@ def get_qm9_label_names():
     return _label_names
 
 
-def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
+def get_qm9(preprocessor=None, labels=None, return_smiles=False):
     """Downloads, caches and preprocesses QM9 dataset.
 
     Args:
@@ -35,8 +35,8 @@ def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
             This should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
-        retain_smiles (bool): If set to ``True``,
-            smiles list is also returned.
+        return_smiles (bool): If set to ``True``,
+            smiles array is also returned.
 
     Returns:
         dataset, which is composed of `features`, which depends on
@@ -55,11 +55,12 @@ def get_qm9(preprocessor=None, labels=None, retain_smiles=False):
         preprocessor = AtomicNumberPreprocessor()
     parser = CSVFileParser(preprocessor, postprocess_label=postprocess_label,
                            labels=labels, smiles_col='SMILES1')
-    dataset = parser.parse(get_qm9_filepath(), retain_smiles=retain_smiles)
-    if retain_smiles:
-        return dataset, parser.smiles
+    result = parser.parse(get_qm9_filepath(), return_smiles=return_smiles)
+
+    if return_smiles:
+        return result['dataset'], result['smiles']
     else:
-        return dataset
+        return result['dataset']
 
 
 def get_qm9_filepath(download_if_not_exist=True):
@@ -113,7 +114,7 @@ def download_and_extract_qm9(save_filepath):
 
         num_atom = int(data[0])
         properties = list(map(float, data[1].split('\t')[1:]))
-        smiles = data[3+num_atom].split('\t')
+        smiles = data[3 + num_atom].split('\t')
         new_ls = smiles + properties
         ls.append(new_ls)
 

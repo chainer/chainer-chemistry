@@ -21,17 +21,19 @@ class CSVFileParser(BaseFileParser):
     label column which is the target to predict.
 
     Args:
-        filepath (str) : file path of csv file
-        preprocessor (BasePreprocessor):
+        preprocessor (BasePreprocessor): preprocessor instance
         labels (str or list): labels column
         smiles_col (str): smiles column
-        mol (str):
+        postprocess_label (Callable): post processing function if necessary
+        postprocess_fn (Callable): post processing function if necessary
+        logger:
     """
 
     def __init__(self, preprocessor,
                  labels=None,
                  smiles_col='smiles',
-                 postprocess_label=None, postprocess_fn=None):
+                 postprocess_label=None, postprocess_fn=None,
+                 logger=None):
         super(CSVFileParser, self).__init__(preprocessor)
         if isinstance(labels, str):
             labels = [labels, ]
@@ -39,9 +41,9 @@ class CSVFileParser(BaseFileParser):
         self.smiles_col = smiles_col
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
-        self.smiles = None
+        self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, retain_smiles=False):
+    def parse(self, filepath, return_smiles=False):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -49,24 +51,37 @@ class CSVFileParser(BaseFileParser):
 
         Args:
             filepath (str): file path to be parsed.
-            retain_smiles (bool): If set to True, smiles list is saved to
-                `smiles` property.
+            return_smiles (bool): If set to True, this function returns
+                preprocessed dataset and smiles list.
+                If set to False, this function returns preprocessed dataset and
+                `None`.
 
-        Returns: Dataset
+        Returns (dict): dictionary that contains Dataset, 1-d numpy array with
+            dtype=object(string) which is a vector of smiles for each example
+            or None.
 
         """
-        logger = getLogger(__name__)
+        logger = self.logger
         pp = self.preprocessor
-        if retain_smiles:
-            self.smiles = []  # Initialize
+        smiles_list = []
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
-            df = pandas.DataFrame.from_csv(filepath)
+            try:
+                # It is recommended to use `read_csv` method in pandas version
+                # after 0.18.x
+                df = pandas.read_csv(filepath)
+            except AttributeError as e:
+                # It is deprecated in newer versions of pandas, but we use
+                # this method for older version of pandas.
+                df = pandas.DataFrame.from_csv(filepath)
 
             features = None
             smiles_index = df.columns.get_loc(self.smiles_col)
-            labels_index = [df.columns.get_loc(c) for c in self.labels]
+            if self.labels is None:
+                labels_index = []  # dummy list
+            else:
+                labels_index = [df.columns.get_loc(c) for c in self.labels]
 
             total_count = df.shape[0]
             fail_count = 0
@@ -94,9 +109,9 @@ class CSVFileParser(BaseFileParser):
                     if self.postprocess_label is not None:
                         labels = self.postprocess_label(labels)
 
-                    if retain_smiles:
+                    if return_smiles:
                         assert standardized_smiles == Chem.MolToSmiles(mol)
-                        self.smiles.append(standardized_smiles)
+                        smiles_list.append(standardized_smiles)
                         # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
                         #              .format(smiles, standardized_smiles))
                 except MolFeatureExtractionError as e:
@@ -105,7 +120,6 @@ class CSVFileParser(BaseFileParser):
                     fail_count += 1
                     continue
                 except Exception as e:
-                    logger = getLogger(__name__)
                     logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     logger.info(traceback.format_exc())
@@ -148,11 +162,13 @@ class CSVFileParser(BaseFileParser):
             # Spec not finalized yet for general case
             result = pp.process(filepath)
 
+        smileses = numpy.array(smiles_list) if return_smiles else None
+
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result)
+            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result)
+            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}

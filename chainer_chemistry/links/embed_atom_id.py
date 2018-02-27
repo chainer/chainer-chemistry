@@ -12,7 +12,7 @@ class EmbedAtomID(chainer.links.EmbedID):
 
     The forward propagation of link consists of ID embedding,
     which converts the input `x` into vector embedding `h` where
-    its shape represents (minibatch, atom, channel) 
+    its shape represents (minibatch, atom, channel)
 
     .. seealso:: :class:`chainer.links.EmbedID`
     """

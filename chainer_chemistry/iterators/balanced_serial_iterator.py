@@ -3,117 +3,32 @@ from __future__ import division
 from logging import getLogger
 
 import numpy
-
 from chainer.dataset import iterator
 
-
-class IndexIterator(iterator.Iterator):
-    """Index iterator
-
-    IndexIterator is used internally in `BalancedSerialIterator`, as each 
-    label's index iterator 
-
-        Args:
-            index_list (list): list of int which represents indices.
-            shuffle (bool): shuffle flag. If True, indices specified by
-                `index_list` will be randomly shuffled.
-            num (int): number of indices to be extracted when `___next___` is
-                called.
-
-    """
-
-    def __init__(self, index_list, shuffle=True, num=0):
-        self.index_list = numpy.asarray(index_list)
-        assert self.index_list.ndim == 1
-        self.index_length = len(index_list)
-        self.current_index_list = None
-        self.current_pos = 0
-        self.shuffle = shuffle
-        self.num = num
-
-        self.update_current_index_list()
-
-    def update_current_index_list(self):
-        if self.shuffle:
-            self.current_index_list = numpy.random.permutation(self.index_list)
-        else:
-            self.current_index_list = self.index_list
-
-    def __next__(self):
-        return self.get_next_indices(self.num)
-
-    def get_next_indices(self, num):
-        """get next indices
-
-        Args:
-            num (int): number for indices to extract.
-
-        Returns (numpy.ndarray): 1d array of indices
-
-        .. admonition:: Example
-
-           >>> ii = IndexIterator([1, 3, 5, 10], shuffle=True)
-           >>> print(ii.get_next_indices(5))
-           [ 5  1 10  3 10]
-           >>> print(ii.get_next_indices(5))
-           [ 3  1  5 10  1]
-
-        """
-
-        indices = []
-        if self.current_pos + num < self.index_length:
-            indices.append(self.current_index_list[
-                           self.current_pos: self.current_pos + num])
-            self.current_pos += num
-        else:
-            indices.append(self.current_index_list[self.current_pos:])
-            num -= (self.index_length - self.current_pos)
-            # When `num` is twice bigger than `self.index_length`, `index_list`
-            # is repeated `q` times to get desired length of `indices`.
-            q, r = divmod(num, self.index_length)
-            if self.shuffle:
-                for _ in range(q):
-                    indices.append(numpy.random.permutation(self.index_list))
-            else:
-                indices.append(numpy.tile(self.index_list, q))
-            self.update_current_index_list()
-            indices.append(self.current_index_list[:r])
-            self.current_pos = r
-
-        return numpy.concatenate(indices).ravel()
-
-    def serialize(self, serializer):
-        self.current_index_list = serializer('current_index_list',
-                                             self.current_index_list)
-        self.current_pos = serializer('current_pos', self.current_pos)
+from chainer_chemistry.iterators.index_iterator import IndexIterator
 
 
 class BalancedSerialIterator(iterator.Iterator):
 
     """Dataset iterator that serially reads the examples with balancing label.
 
-    This is a implementation of :class:`~chainer.dataset.Iterator`
-    that visits each example in
-
-    
-
-    This iterator saves ``-1`` instead of ``None`` in snapshots since some
-    serializers do not support ``None``.
-
     Args:
         dataset: Dataset to iterate.
-        batch_size (int): Number of examples within each batch.
-        labels (list or numpy.ndarray): 1d array which specifies label feature 
-            of `dataset`. size must be same with `dataset` length. 
+        batch_size (int): Number of examples within each minibatch.
+        labels (list or numpy.ndarray): 1d array which specifies label feature
+            of `dataset`. Its size must be same as the length of `dataset`.
         repeat (bool): If ``True``, it infinitely loops over the dataset.
             Otherwise, it stops iteration at the end of the first epoch.
         shuffle (bool): If ``True``, the order of examples is shuffled at the
             beginning of each epoch.
+            Otherwise, the order is permanently same as that of `dataset`.
         batch_balancing (bool):  If ``True``, examples are sampled in the way
-            that each label examples are balance sampled in each minibatch.
-        ignore_labels (int or list or None): Labels to be ignored. If not None,
-            the example whose label is in `ignore_labels` are not sampled by
-            this iterator.
+            that each label examples are roughly evenly sampled in each
+            minibatch. Otherwise, the iterator only guarantees that total
+            numbers of examples are same among label features.
+        ignore_labels (int or list or None): Labels to be ignored.
+            If not ``None``, the example whose label is in `ignore_labels`
+            are not sampled by this iterator.
 
     """
 
@@ -151,7 +66,6 @@ class BalancedSerialIterator(iterator.Iterator):
             self.labels_iterator_dict[label] = ii
             if label in self.ignore_labels:
                 continue
-            # --- below only for included labels ---
             if max_label_count < label_count:
                 max_label_count = label_count
             include_label_count += 1
@@ -199,6 +113,8 @@ class BalancedSerialIterator(iterator.Iterator):
 
     @property
     def previous_epoch_detail(self):
+        # This iterator saves ``-1`` as _previous_epoch_detail instead of
+        # ``None`` because some serializers do not support ``None``.
         if self._previous_epoch_detail < 0:
             return None
         return self._previous_epoch_detail

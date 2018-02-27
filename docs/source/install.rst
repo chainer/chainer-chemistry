@@ -10,6 +10,7 @@ installed when you install the library by `pip` command.
 
 * `chainer <https://docs.chainer.org/en/stable/index.html>`_
 * `pandas <https://pandas.pydata.org>`_
+* `scikit-learn <http://scikit-learn.org/stable/>`_
 * `tqdm <https://pypi.python.org/pypi/tqdm>`_
 
 Also, it uses following library, which you need to manually install.

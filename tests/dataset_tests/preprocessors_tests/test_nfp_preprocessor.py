@@ -43,7 +43,7 @@ def test_nfp_preprocessor_with_tox21():
     preprocessor = NFPPreprocessor()
 
     dataset = SDFFileParser(preprocessor, postprocess_label=None
-                            ).parse(get_tox21_filepath('train'))
+                            ).parse(get_tox21_filepath('train'))['dataset']
 
     index = numpy.random.choice(len(dataset), None)
     atoms, adjs = dataset[index]

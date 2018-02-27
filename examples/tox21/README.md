@@ -55,7 +55,7 @@ With CPU:
 python inference_tox21.py [-i /path/to/training/result/directory]
 ```
 
-With GPU:t
+With GPU:
 ```
 python inference_tox21.py -g 0 [-i /path/to/training/result/directory]
 ```

@@ -31,11 +31,14 @@ def check_input_features(actual, expect):
         numpy.testing.assert_array_equal(d, e)
 
 
-def test_sdf_file_parser(sdf_file, mols):
+def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
-    dataset = parser.parse(sdf_file)
+    result = parser.parse(sdf_file, return_smiles=False)
+    dataset = result['dataset']
+    smiles = result['smiles']
     assert len(dataset) == 2
+    assert smiles == None
 
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.
@@ -46,9 +49,32 @@ def test_sdf_file_parser(sdf_file, mols):
     check_input_features(dataset[1], expect)
 
 
+def test_sdf_file_parser_return_smiles(sdf_file, mols):
+    preprocessor = NFPPreprocessor()
+    parser = SDFFileParser(preprocessor)
+    result = parser.parse(sdf_file, return_smiles=True)
+    dataset = result['dataset']
+    smiles = result['smiles']
+    assert len(dataset) == 2
+
+    # As we want test SDFFileParser, we assume
+    # NFPPreprocessor works as documented.
+    expect = preprocessor.get_input_features(mols[0])
+    check_input_features(dataset[0], expect)
+
+    expect = preprocessor.get_input_features(mols[1])
+    check_input_features(dataset[1], expect)
+
+    # check smiles array
+    assert type(smiles) == numpy.ndarray
+    assert smiles.ndim == 1
+    assert len(smiles) == len(dataset)
+    assert smiles[0] == 'CN=C=O'
+    assert smiles[1] == 'Cc1ccccc1'
+
 # TODO(oono)
 # test with non-default options of SDFFileParser
 
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-s', '-v'])

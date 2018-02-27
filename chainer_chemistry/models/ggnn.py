@@ -2,7 +2,6 @@ import chainer
 from chainer import cuda
 from chainer import functions
 from chainer import links
-import numpy
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
