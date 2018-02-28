@@ -8,6 +8,7 @@ import tempfile
 from chainer.dataset import download
 import numpy
 import pandas
+from tqdm import tqdm
 
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
@@ -31,7 +32,7 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False):
     """Downloads, caches and preprocesses QM9 dataset.
 
     Args:
-        preprocesssor (BasePreprocessor): Preprocessor.
+        preprocessor (BasePreprocessor): Preprocessor.
             This should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
@@ -86,7 +87,7 @@ def get_qm9_filepath(download_if_not_exist=True):
 
 
 def _get_qm9_filepath():
-    """Construct a filepath which stores tox21 dataset for config_name
+    """Construct a filepath which stores QM9 dataset in csv
 
     This method does not check if the file is already downloaded or not.
 
@@ -100,7 +101,7 @@ def _get_qm9_filepath():
 
 def download_and_extract_qm9(save_filepath):
     logger = getLogger(__name__)
-    logger.info('extracting qm9 dataset...')
+    logger.warning('Extracting QM9 dataset, it takes time...')
     download_file_path = download.cached_download(download_url)
     tf = tarfile.open(download_file_path, 'r')
     temp_dir = tempfile.mkdtemp()
@@ -108,7 +109,7 @@ def download_and_extract_qm9(save_filepath):
     file_re = os.path.join(temp_dir, '*.xyz')
     file_pathes = glob.glob(file_re)
     ls = []
-    for path in file_pathes:
+    for path in tqdm(file_pathes.sort()):
         with open(path, 'r') as f:
             data = [line.strip() for line in f]
 
