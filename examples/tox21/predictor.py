@@ -26,8 +26,10 @@ def build_predictor(method, n_unit, conv_layers, class_num):
             MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'schnet':
         print('Use SchNet predictor...')
-        predictor = SchNet(out_dim=class_num, hidden_dim=n_unit,
-                           n_layers=conv_layers, readout_hidden_dim=n_unit)
+        # MLP layer is not necessary for SchNet
+        predictor = GraphConvPredictor(
+            SchNet(out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers,
+                   readout_hidden_dim=n_unit), None)
     elif method == 'weavenet':
         print('Use WeaveNet predictor...')
         n_atom = 20
@@ -50,23 +52,29 @@ def build_predictor(method, n_unit, conv_layers, class_num):
 class GraphConvPredictor(chainer.Chain):
     """Wrapper class that combines a graph convolution and MLP."""
 
-    def __init__(self, graph_conv, mlp):
+    def __init__(self, graph_conv, mlp=None):
         """Constructor
 
         Args:
             graph_conv: graph convolution network to obtain molecule feature
                         representation
-            mlp: multi layer perceptron, used as final connected layer
+            mlp: multi layer perceptron, used as final connected layer.
+                It can be `None` if no operation is necessary after
+                `graph_conv` calculation.
         """
 
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
             self.graph_conv = graph_conv
+            if isinstance(mlp, chainer.Link):
+                self.mlp = mlp
+        if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
 
     def __call__(self, atoms, adjs):
         x = self.graph_conv(atoms, adjs)
-        x = self.mlp(x)
+        if self.mlp:
+            x = self.mlp(x)
         return x
 
     def predict(self, atoms, adjs):
@@ -78,8 +86,9 @@ class GraphConvPredictor(chainer.Chain):
 class InferenceLoop(object):
     """Wrapper for predictors that offers inference loop."""
 
-    def __init__(self, predictor):
+    def __init__(self, predictor, batchsize=128):
         self.predictor = predictor
+        self.batchsize = batchsize
 
     def customized_inference(self, iterator, converter, device):
         """Predict with given predictor to given dataset
@@ -97,7 +106,6 @@ class InferenceLoop(object):
         minibatch as feature vectors and treat the last one as labels
 
         Args:
-            predictor: A predictor.
             iterator: An iterator that runs over the dataset.
             converter: A converter for creating minibatches.
             device: A device to which minibatches are transferred.
@@ -144,8 +152,8 @@ class InferenceLoop(object):
 
         """
 
-        batchsize = 128
-        data_iter = I.SerialIterator(X, batchsize, repeat=False, shuffle=False)
+        data_iter = I.SerialIterator(X, self.batchsize,
+                                     repeat=False, shuffle=False)
 
         if self.predictor.xp is np:
             device_id = -1

@@ -69,13 +69,13 @@ def main():
                         default='serial', help='iterator type. If `balanced` '
                         'is specified, data is sampled to take same number of'
                         'positive/negative labels during training.')
-    parser.add_argument('--eval_mode', type=int, default=1,
+    parser.add_argument('--eval-mode', type=int, default=1,
                         help='Evaluation mode.'
                         '0: only binary_accuracy is calculated.'
                         '1: binary_accuracy and ROC-AUC score is calculated')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
-    parser.add_argument('--batchsize', '-b', type=int, default=128,
+    parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID to use. Negative value indicates '
@@ -139,7 +139,6 @@ def main():
 
     trainer.extend(E.Evaluator(val_iter, classifier,
                                device=args.gpu, converter=concat_mols))
-    trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
 
     eval_mode = args.eval_mode
