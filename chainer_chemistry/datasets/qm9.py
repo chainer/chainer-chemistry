@@ -108,8 +108,10 @@ def download_and_extract_qm9(save_filepath):
     tf.extractall(temp_dir)
     file_re = os.path.join(temp_dir, '*.xyz')
     file_pathes = glob.glob(file_re)
+    # Make sure the order is sorted
+    file_pathes.sort()
     ls = []
-    for path in tqdm(file_pathes.sort()):
+    for path in tqdm(file_pathes):
         with open(path, 'r') as f:
             data = [line.strip() for line in f]
 
