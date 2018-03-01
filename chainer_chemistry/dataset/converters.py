@@ -22,14 +22,26 @@ def concat_mols(batch, device=None, padding=0):
     values are the concatenated arrays.
 
     When the arrays to concatenate have different shapes, the behavior depends
-    on the ``padding`` value. If ``padding`` is ``None`` (default), it raises
-    an error. Otherwise, it builds an array of the minimum shape that the
+    on the ``padding`` value. If ``padding`` is ``None``, it raises an error.
+    Otherwise, it builds an array of the minimum shape that the
     contents of all arrays can be substituted to. The padding value is then
     used to the extra elements of the resulting arrays.
 
     The current implementation is identical to
     :func:`~chainer.dataset.concat_examples` of Chainer, except the default
     value of the ``padding`` option is changed to ``0``.
+
+    .. admonition:: Example
+
+       >>> import numpy
+       >>> from chainer_chemistry.dataset.converters import concat_mols
+       >>> x0 = numpy.array([1, 2])
+       >>> x1 = numpy.array([4, 5, 6])
+       >>> dataset = [x0, x1]
+       >>> results = concat_mols(dataset)
+       >>> print(results)
+       [[1 2 0]
+        [4 5 6]]
 
     .. seealso:: :func:`chainer.dataset.concat_examples`
 
