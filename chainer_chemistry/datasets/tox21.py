@@ -75,9 +75,9 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
     train_result = parser.parse(get_tox21_filepath('train'),
                                 return_smiles=return_smiles)
     val_result = parser.parse(get_tox21_filepath('val'),
-                                return_smiles=return_smiles)
+                              return_smiles=return_smiles)
     test_result = parser.parse(get_tox21_filepath('test'),
-                                return_smiles=return_smiles)
+                               return_smiles=return_smiles)
 
     if return_smiles:
         train, train_smiles = train_result['dataset'], train_result['smiles']
