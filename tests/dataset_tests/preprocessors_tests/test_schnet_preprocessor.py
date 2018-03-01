@@ -40,7 +40,7 @@ def test_schnet_preprocessor_with_tox21():
     preprocessor = SchNetPreprocessor()
 
     dataset, _ = SDFFileParser(preprocessor, postprocess_label=None
-                            ).parse(get_tox21_filepath('train'))['dataset']
+                               ).parse(get_tox21_filepath('train'))['dataset']
 
     index = numpy.random.choice(len(dataset), None)
     atoms, adjs = dataset[index]

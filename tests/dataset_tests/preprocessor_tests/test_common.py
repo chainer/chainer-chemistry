@@ -11,7 +11,7 @@ def sample_molecule():
 
 
 class TestGetAtomicNumbers(object):
-    
+
     def test_normal(self, sample_molecule):
         actual = common.construct_atomic_number_array(sample_molecule)
 
@@ -29,7 +29,7 @@ class TestGetAtomicNumbers(object):
     def test_normal_truncated(self, sample_molecule):
         with pytest.raises(ValueError):
             adj = common.construct_atomic_number_array(sample_molecule, 3)
-        
+
 
 @pytest.fixture
 def sample_molecule_2():
@@ -88,6 +88,7 @@ class TestGetAdjMatrix(object):
     def test_normal_truncated(self, sample_molecule_2):
         with pytest.raises(ValueError):
             adj = common.construct_adj_matrix(sample_molecule_2, 6)
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])

@@ -34,9 +34,9 @@ class GraphConvPredictor(chainer.Chain):
 
     def __init__(self, graph_conv, mlp=None):
         """
-        
+
         Args:
-            graph_conv: graph convolution network to obtain molecule feature 
+            graph_conv: graph convolution network to obtain molecule feature
                         representation
             mlp: multi layer perceptron, used as final connected layer.
                 It can be `None` if no operation is necessary after
@@ -214,6 +214,7 @@ def main():
                                   'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
+
 
 if __name__ == '__main__':
     main()

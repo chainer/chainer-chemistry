@@ -10,6 +10,7 @@ atom_size = 5
 out_size = 4
 batch_size = 2
 
+
 @pytest.fixture
 def model():
     l = links.EmbedAtomID(in_size=in_size, out_size=out_size)

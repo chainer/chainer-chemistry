@@ -14,7 +14,7 @@ except ImportError:
 
 import argparse
 import chainer
-from chainer import functions as F, reporter, cuda
+from chainer import functions as F
 from chainer import iterators as I
 from chainer import links as L
 from chainer import optimizers as O

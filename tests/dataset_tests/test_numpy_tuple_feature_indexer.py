@@ -25,7 +25,7 @@ class TestNumpyTupleDatasetFeatureIndexer(object):
 
     def test_feature_length(self, indexer):
         assert indexer.features_length() == 3
-        
+
     @pytest.mark.parametrize('slice_index', [0, 1, slice(0, 2, None)])
     @pytest.mark.parametrize('j', [0, 1])
     def test_extract_feature_by_slice(self, indexer, data, slice_index, j):

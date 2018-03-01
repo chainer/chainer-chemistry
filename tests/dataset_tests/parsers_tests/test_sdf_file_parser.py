@@ -38,7 +38,7 @@ def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 2
-    assert smiles == None
+    assert smiles is None
 
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.

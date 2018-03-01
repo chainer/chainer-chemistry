@@ -39,7 +39,7 @@ def test_atomic_number_preprocessor_with_tox21():
 
     # labels=None as default, and label information is not returned.
     dataset = SDFFileParser(preprocessor)\
-            .parse(get_tox21_filepath('train'))['dataset']
+        .parse(get_tox21_filepath('train'))['dataset']
     index = numpy.random.choice(len(dataset), None)
     atoms, = dataset[index]
 

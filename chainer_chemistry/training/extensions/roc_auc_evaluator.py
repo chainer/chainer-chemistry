@@ -12,10 +12,10 @@ from sklearn import metrics
 
 def _get_1d_numpy_array(v):
     """Convert array or Variable to 1d numpy array
-    
+
     Args:
         v (numpy.ndarray or cupy.ndarray or chainer.Variable): array to be
-            converted to 1d numpy array 
+            converted to 1d numpy array
 
     Returns (numpy.ndarray): Raveled 1d numpy array
 
@@ -27,7 +27,7 @@ def _get_1d_numpy_array(v):
 
 def _to_list(a):
     """convert value `a` to list
-    
+
     Args:
         a: value to be convert to `list`
 
@@ -49,7 +49,7 @@ class ROCAUCEvaluator(Evaluator):
 
     Args:
         iterator: Dataset iterator for the dataset to calculate ROC AUC score.
-            It can also be a dictionary of iterators. If this is just an 
+            It can also be a dictionary of iterators. If this is just an
             iterator, the iterator is registered by the name ``'main'``.
         target: Link object or a dictionary of links to evaluate. If this is
             just a link object, the link is registered by the name ``'main'``.
@@ -65,8 +65,8 @@ class ROCAUCEvaluator(Evaluator):
             object is passed at each call.
         eval_func: Evaluation function called at each iteration. The target
             link to evaluate as a callable is used by default.
-        name (str): name of this extension. When `name` is None, 
-            `default_name='validation'` which is defined in super class 
+        name (str): name of this extension. When `name` is None,
+            `default_name='validation'` which is defined in super class
             `Evaluator` is used as extension name. This name affects to the
             reported key name.
         pos_labels (int or list): labels of the positive class, other classes

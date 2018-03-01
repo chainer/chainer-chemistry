@@ -1,7 +1,7 @@
 import os
 import numpy
 import pytest
-from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import \
+from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import\
     AtomicNumberPreprocessor
 
 from chainer_chemistry.datasets import tox21

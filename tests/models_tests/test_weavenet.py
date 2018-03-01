@@ -74,8 +74,9 @@ def test_backward_cpu(model, model_processed, data):
     atom_data_processed, atom_data, adj_data, y_grad = data
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
                                   atol=1e-1, rtol=1e-1)
-    gradient_check.check_backward(model_processed, (atom_data_processed, adj_data),
-                                  y_grad, atol=1e-1, rtol=1e-1)
+    gradient_check.check_backward(model_processed, (atom_data_processed,
+                                                    adj_data), y_grad,
+                                  atol=1e-1, rtol=1e-1)
 
 
 @pytest.mark.gpu
@@ -86,8 +87,10 @@ def test_backward_gpu(model, model_processed, data):
     model_processed.to_gpu()
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
                                   atol=1e-1, rtol=1e-1)
-    gradient_check.check_backward(model_processed, (atom_data_processed, adj_data),
-                                  y_grad, atol=1e-1, rtol=1e-1)
+    gradient_check.check_backward(model_processed, (atom_data_processed,
+                                                    adj_data), y_grad,
+                                  atol=1e-1, rtol=1e-1)
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
