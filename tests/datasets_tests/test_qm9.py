@@ -11,7 +11,6 @@ QM9_NUM_LABEL = 15
 QM9_NUM_DATASET = 133885
 
 
-@pytest.mark.slow
 def test_get_qm9_filepath_without_download():
     filepath = qm9.get_qm9_filepath(download_if_not_exist=False)
     if os.path.exists(filepath):
