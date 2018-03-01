@@ -17,7 +17,7 @@ def test_ggnn_preprocessor():
         return [-1 if label is None else label for label in label_list]
 
     dataset = SDFFileParser(preprocessor, postprocess_label=postprocess_label
-                            ).parse(get_tox21_filepath('train'))
+                            ).parse(get_tox21_filepath('train'))["dataset"]
 
     index = numpy.random.choice(len(dataset), None)
     atoms, adjs = dataset[index]
@@ -34,4 +34,4 @@ def test_nfp_preprocessor_assert_raises():
         pp = GGNNPreprocessor(max_atoms=3, out_size=2)
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-v', '-s'])
