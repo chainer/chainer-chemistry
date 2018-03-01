@@ -67,5 +67,6 @@ def test_backward_gpu(model, data):
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
                                   atol=1e-3, rtol=1e-3)
 
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])

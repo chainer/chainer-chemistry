@@ -1,4 +1,3 @@
-import os
 import numpy
 import pytest
 
@@ -32,6 +31,7 @@ def test_ggnn_preprocessor():
 def test_nfp_preprocessor_assert_raises():
     with pytest.raises(ValueError):
         pp = GGNNPreprocessor(max_atoms=3, out_size=2)
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])

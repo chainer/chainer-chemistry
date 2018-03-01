@@ -145,7 +145,8 @@ class InferenceLoop(object):
                 If the predictor is a graph convolution model
                 (e.g. :class:`chainer_chemistry.models.NFP`),
                 we can use the output of corresponding preprocessor
-                (e.g. :class:`chainer_chemistry.dataset.preprocessors.NFPPreprocessor`).
+                (e.g. :class:`chainer_chemistry.dataset.preprocessors\
+                .NFPPreprocessor`).
 
         Returns:
             numpy.ndarray: Prediction results

@@ -16,11 +16,13 @@ install_requires = [
 
 here = os.path.abspath(os.path.dirname(__file__))
 __version__ = imp.load_source(
-    '_version', os.path.join(here, 'chainer_chemistry', '_version.py')).__version__
+    '_version', os.path.join(here,
+                             'chainer_chemistry', '_version.py')).__version__
 
 setup(name='chainer-chemistry',
       version=__version__,
-      description='Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry',
+      description='Chainer Chemistry: A Library for Deep Learning in Biology\
+      and Chemistry',
       author='Kosuke Nakago',
       author_email='nakago@preferred.jp',
       packages=find_packages(),

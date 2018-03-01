@@ -1,6 +1,7 @@
 """
 ROCAUCEvaluator uses `sklearn.metrics.roc_auc_score` internally.
-Refer: http://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html
+Refer: http://scikit-learn.org/stable/modules/generated/sklearn.metrics.\
+roc_auc_score.html
 """
 import numpy
 import pytest
