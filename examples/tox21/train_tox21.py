@@ -24,6 +24,7 @@ import json
 from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import concat_sparse_rsgcn
 from chainer_chemistry import datasets as D
 try:
     from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
@@ -123,12 +124,13 @@ def main():
     optimizer = O.Adam()
     optimizer.setup(classifier)
 
-    padding = 0
-    if method == 'sparse_rsgcn':
-        padding = (0, 0, -1, -1, 0)  # atom, adj_data, adj_row, adj_col, label
-
     def converter(batch, device=None):
-        return concat_mols(batch, device, padding)
+        if method == 'sparse_rsgcn':
+            # do_flatten = False
+            do_flatten = True
+            return concat_sparse_rsgcn(batch, device, do_flatten)
+        else:
+            return concat_mols(batch, device)
 
     updater = training.StandardUpdater(
         train_iter, optimizer, device=args.gpu, converter=converter)

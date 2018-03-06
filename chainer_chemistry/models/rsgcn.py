@@ -200,9 +200,15 @@ class SparseRSGCN(RSGCN):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
-        adj_shape = [graph.shape[1], graph.shape[1]]
+        adj_shape = [graph.shape[0], graph.shape[1], graph.shape[1]]
+
+        if adj_data.ndim == 1:
+            is_flatten = True
+        elif adj_data.ndim == 2:
+            is_flatten = False
+
         sp_adj = chainer_chemistry.functions.sparse_coo_matrix(
-            adj_data, adj_row, adj_col, adj_shape)
+            adj_data, adj_row, adj_col, adj_shape, is_flatten=is_flatten)
         # adj_data/row/col: (minibatch, nnz)
 
         return self._forward_core(graph, sp_adj)
