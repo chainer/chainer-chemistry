@@ -1,6 +1,6 @@
 import chainer
 from chainer.backends import cuda
-import chainer_chemistry
+import numpy
 
 
 def concat_mols(batch, device=None, padding=0):
@@ -58,25 +58,41 @@ def concat_sparse_rsgcn(batch, device=None, do_flatten=False):
         [example[i] for example in batch], padding[i])
     result.append(to_device(device, mol))
 
-    i = 1
-    adj_data = chainer.dataset.convert._concat_arrays(
-        [example[i] for example in batch], padding[i])
-    i = 2
-    adj_row = chainer.dataset.convert._concat_arrays(
-        [example[i] for example in batch], padding[i])
-    i = 3
-    adj_col = chainer.dataset.convert._concat_arrays(
-        [example[i] for example in batch], padding[i])
     if do_flatten:
-        shape = [mol.shape[0], mol.shape[1], mol.shape[1]]
-        sp_adj = chainer_chemistry.functions.sparse_coo_matrix(
-            adj_data, adj_row, adj_col, shape).flatten()
-        adj_data = sp_adj.data
-        adj_row = sp_adj.row
-        adj_col = sp_adj.col
-    result.append(to_device(device, adj_data))
-    result.append(to_device(device, adj_row))
-    result.append(to_device(device, adj_col))
+        total_nnz = 0
+        for example in batch:
+            total_nnz += example[1].shape[0]
+
+        adj_data = numpy.empty((total_nnz), dtype=batch[0][1].dtype)
+        adj_row = numpy.empty((total_nnz), dtype=batch[0][2].dtype)
+        adj_col = numpy.empty((total_nnz), dtype=batch[0][3].dtype)
+
+        head = 0
+        for i, example in enumerate(batch):
+            nnz = example[1].shape[0]
+            adj_data[head:head+nnz] = example[1]
+            adj_row[head:head+nnz] = example[2] + i * mol.shape[1]
+            adj_col[head:head+nnz] = example[3] + i * mol.shape[1]
+            head += nnz
+
+        result.append(to_device(device, adj_data))
+        result.append(to_device(device, adj_row))
+        result.append(to_device(device, adj_col))
+    else:
+        i = 1
+        adj_data = chainer.dataset.convert._concat_arrays(
+            [example[i] for example in batch], padding[i])
+        result.append(to_device(device, adj_data))
+
+        i = 2
+        adj_row = chainer.dataset.convert._concat_arrays(
+            [example[i] for example in batch], padding[i])
+        result.append(to_device(device, adj_row))
+
+        i = 3
+        adj_col = chainer.dataset.convert._concat_arrays(
+            [example[i] for example in batch], padding[i])
+        result.append(to_device(device, adj_col))
 
     i = 4
     label = chainer.dataset.convert._concat_arrays(
