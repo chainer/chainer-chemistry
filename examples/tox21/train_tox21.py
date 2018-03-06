@@ -84,6 +84,9 @@ def main():
                         help='Frequency of taking a snapshot')
     parser.add_argument('--flatten', action='store_true',
                         help='to flatten sparse matrix')
+    parser.add_argument('--multiplier', type=int, default=1,
+                        help='(debug) make the length of each molecule N '
+                        'times')
     args = parser.parse_args()
 
     method = args.method
@@ -95,7 +98,8 @@ def main():
         class_num = len(label_names)
 
     # Dataset preparation
-    train, val, _ = data.load_dataset(method, labels)
+    train, val, _ = data.load_dataset(method, labels,
+                                      multiplier=args.multiplier)
 
     # Network
     predictor_ = predictor.build_predictor(
