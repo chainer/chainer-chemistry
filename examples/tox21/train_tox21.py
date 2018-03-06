@@ -82,6 +82,8 @@ def main():
                         help='path to a trainer snapshot')
     parser.add_argument('--frequency', '-f', type=int, default=-1,
                         help='Frequency of taking a snapshot')
+    parser.add_argument('--flatten', action='store_true',
+                        help='to flatten sparse matrix')
     args = parser.parse_args()
 
     method = args.method
@@ -126,9 +128,7 @@ def main():
 
     def converter(batch, device=None):
         if method == 'sparse_rsgcn':
-            # do_flatten = False
-            do_flatten = True
-            return concat_sparse_rsgcn(batch, device, do_flatten)
+            return concat_sparse_rsgcn(batch, device, args.flatten)
         else:
             return concat_mols(batch, device)
 
