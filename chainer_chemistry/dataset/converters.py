@@ -2,6 +2,8 @@ import chainer
 from chainer.backends import cuda
 import numpy
 
+import cupy
+
 
 def concat_mols(batch, device=None, padding=0):
     """Concatenates a list of mols into array(s).
@@ -28,18 +30,24 @@ def concat_mols(batch, device=None, padding=0):
     return chainer.dataset.concat_examples(batch, device, padding=padding)
 
 
-def to_device(device, x):
+def to_device(device, x, sync=False):
     """Send an array to a given device. """
     if device is None:
         return x
     elif device < 0:
         return cuda.to_cpu(x)
     else:
-        return cuda.to_gpu(x, device)
+        with cuda.get_device_from_id(device) as _device:
+            x_gpu = cupy.ndarray(x.shape, dtype=x.dtype)
+            x_gpu.set(x)
+            if sync:
+                _device.synchronize()
+
+        return x_gpu
 
 
 def concat_sparse_rsgcn(batch, device=None, do_flatten=False):
-    """Concatenates a list of data"""
+    """Concatenator for Sparse RSGCN model"""
 
     if len(batch) == 0:
         raise ValueError('batch is empty')
@@ -97,6 +105,6 @@ def concat_sparse_rsgcn(batch, device=None, do_flatten=False):
     i = 4
     label = chainer.dataset.convert._concat_arrays(
         [example[i] for example in batch], padding[i])
-    result.append(to_device(device, label))
+    result.append(to_device(device, label, sync=True))
 
     return tuple(result)
