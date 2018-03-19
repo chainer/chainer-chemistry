@@ -22,13 +22,11 @@ from chainer.datasets import split_dataset_random
 from chainer import training
 from chainer.training import extensions as E
 import numpy
-
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-
 from rdkit import Chem
 
 
@@ -94,13 +92,12 @@ def main():
         sys.exit("Error: No target label is specified.")
 
     # Dataset preparation
-    dataset = None
 
     # Postprocess is required for regression task
     def postprocess_label(label_list):
         return numpy.asarray(label_list, dtype=numpy.float32)
 
-    print('preprocessing dataset...')
+    print('Preprocessing dataset...')
     preprocessor = preprocess_method_dict[method]()
     parser = CSVFileParser(preprocessor,
                            postprocess_label=postprocess_label,
@@ -185,6 +182,7 @@ def main():
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
+    # Note that scaled errors are reported as (validation/)main/accuracy
     trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/accuracy',
                                   'validation/main/loss',
                                   'validation/main/accuracy',
