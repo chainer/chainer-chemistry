@@ -34,6 +34,11 @@ do
     python train_qm9.py --method ${method} --label A --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10
     python train_qm9.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10
     cd ../
+
+    # Own dataset
+    cd own_dataset
+    python train.py dataset.csv --method ${method} --label value1 --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10
+    cd ../
 done
 
 cd tox21
