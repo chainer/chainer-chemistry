@@ -4,12 +4,13 @@ import chainer
 def concat_mols(batch, device=None, padding=0):
     """Concatenates a list of molecules into array(s).
 
-    This function converts "an arrays of tuples" into "a tuple of arrays".
-    Given an list of examples each of which consists of
-    multiple arrays, this function takes an array in the same "relative"
-    position within an example from each example, concatenates them along the
-    newly-inserted first axis (called `batch dimension`) into one array.
-    It does the same thing with all positions, and returns resulting arrays.
+    This function converts an "array of tuples" into a "tuple of arrays".
+    Specifically, given a list of examples each of which consists of
+    a list of elements, this function first makes an array
+    by taking the element in the same position from each example
+    and concatenates them along the newly-inserted first axis
+    (called `batch dimension`) into one array.
+    It repeats this for all positions and returns the resulting arrays.
 
     The output type depends on the type of examples in ``batch``.
     For instance, consider each example consists of two arrays ``(x, y)``.
