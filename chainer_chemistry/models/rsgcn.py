@@ -94,6 +94,7 @@ class RSGCN(chainer.Chain):
         readout (Callable): readout function. If None, `rsgcn_readout_sum` is
             used. To the best of our knowledge, the paper of RSGCN model does
             not give any suggestion on readout.
+
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
@@ -123,7 +124,7 @@ class RSGCN(chainer.Chain):
                 self.bnorms = [None for _ in range(n_layers)]
             if isinstance(readout, chainer.Link):
                 self.readout = readout
-        if self.readout is None:
+        if not isinstance(readout, chainer.Link):
             self.readout = readout or rsgcn_readout_sum
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim

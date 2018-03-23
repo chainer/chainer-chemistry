@@ -1,4 +1,5 @@
 from logging import getLogger
+
 import numpy
 from rdkit import Chem
 from tqdm import tqdm
@@ -26,26 +27,28 @@ class SDFFileParser(BaseFileParser):
         self.labels = labels
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
-        self.smiles = None
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, retain_smiles=False):
+    def parse(self, filepath, return_smiles=False):
         """parse sdf file using `preprocessor`
 
         Note that label is extracted from preprocessor's method.
 
         Args:
             filepath (str): file path to be parsed.
-            retain_smiles (bool): If set to True, smiles list is saved to
-                `smiles` property.
+            return_smiles (bool): If set to True, this function returns
+                preprocessed dataset and smiles list.
+                If set to False, this function returns preprocessed dataset and
+                `None`.
 
-        Returns: Dataset
+        Returns (dict): dictionary that contains Dataset, 1-d numpy array with
+            dtype=object(string) which is a vector of smiles for each example
+            or None.
 
         """
         logger = self.logger
         pp = self.preprocessor
-        if retain_smiles:
-            self.smiles = []  # Initialize
+        smiles_list = []
 
         if isinstance(pp, MolPreprocessor):
             mol_supplier = Chem.SDMolSupplier(filepath)
@@ -88,9 +91,9 @@ class SDFFileParser(BaseFileParser):
                             num_features += 1
                         features = [[] for _ in range(num_features)]
 
-                    if retain_smiles:
+                    if return_smiles:
                         assert standardized_smiles == Chem.MolToSmiles(mol)
-                        self.smiles.append(standardized_smiles)
+                        smiles_list.append(standardized_smiles)
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
@@ -129,24 +132,14 @@ class SDFFileParser(BaseFileParser):
             # Spec not finalized yet for general case
             result = pp.process(filepath)
 
+        smileses = numpy.array(smiles_list) if return_smiles else None
+
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return NumpyTupleDataset(*result)
+            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return NumpyTupleDataset(result)
-
-    def get_smiles(self):
-        """get smiles array
-
-        Returns (numpy.ndarray): 1-d numpy array with dtype=object (string),
-            which is a vector of smiles for each example.
-
-        """
-        if self.smiles is None:
-            self.logger.warning('smiles is None, please execute parse method '
-                                'with retrain_smiles=True.')
-            return None
-        return numpy.array(self.smiles)
+                result = NumpyTupleDataset(result)
+            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}

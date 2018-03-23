@@ -24,7 +24,7 @@ from chainer.training import extensions as E
 import numpy
 
 from chainer_chemistry import datasets as D
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -32,23 +32,29 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 
 class GraphConvPredictor(chainer.Chain):
 
-    def __init__(self, graph_conv, mlp):
+    def __init__(self, graph_conv, mlp=None):
         """
-        
+
         Args:
-            graph_conv: graph convolution network to obtain molecule feature 
+            graph_conv: graph convolution network to obtain molecule feature
                         representation
-            mlp: multi layer perceptron, used as final connected layer
+            mlp: multi layer perceptron, used as final connected layer.
+                It can be `None` if no operation is necessary after
+                `graph_conv` calculation.
         """
 
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
             self.graph_conv = graph_conv
+            if isinstance(mlp, chainer.Link):
+                self.mlp = mlp
+        if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
 
     def __call__(self, atoms, adjs):
         x = self.graph_conv(atoms, adjs)
-        x = self.mlp(x)
+        if self.mlp:
+            x = self.mlp(x)
         return x
 
     def _predict(self, atoms, adjs):
@@ -74,7 +80,7 @@ class GraphConvPredictor(chainer.Chain):
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -89,16 +95,18 @@ def main():
                                          'property at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='Label scaling method')
-    parser.add_argument('--conv_layers', '-c', type=int, default=4)
-    parser.add_argument('--batchsize', '-b', type=int, default=128)
+    parser.add_argument('--conv-layers', '-c', type=int, default=4)
+    parser.add_argument('--batchsize', '-b', type=int, default=32)
     parser.add_argument('--gpu', '-g', type=int, default=-1)
     parser.add_argument('--out', '-o', type=str, default='result')
     parser.add_argument('--epoch', '-e', type=int, default=20)
-    parser.add_argument('--unit_num', '-u', type=int, default=16)
+    parser.add_argument('--unit-num', '-u', type=int, default=16)
+    parser.add_argument('--seed', '-s', type=int, default=777)
+    parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
     args = parser.parse_args()
 
-    seed = 777
-    train_data_ratio = 0.7
+    seed = args.seed
+    train_data_ratio = args.train_data_ratio
     method = args.method
     if args.label:
         labels = args.label
@@ -112,7 +120,6 @@ def main():
     # Dataset preparation
     dataset = None
 
-    #cache_dir = os.path.join('input', '{}'.format(method))
     if os.path.exists(cache_dir):
         print('load from cache {}'.format(cache_dir))
         dataset = NumpyTupleDataset.load(os.path.join(cache_dir, 'data.npz'))
@@ -133,30 +140,36 @@ def main():
     train, val = split_dataset_random(dataset, train_data_size, seed)
 
     # Network
+    n_unit = args.unit_num
+    conv_layers = args.conv_layers
     if method == 'nfp':
         print('Train NFP model...')
-        n_unit = args.unit_num
         model = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
-                                       n_layers=args.conv_layers),
+                                       n_layers=conv_layers),
                                    MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'ggnn':
         print('Train GGNN model...')
-        n_unit = args.unit_num
         model = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
-                                        n_layers=args.conv_layers),
+                                        n_layers=conv_layers),
                                    MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'schnet':
         print('Train SchNet model...')
-        model = SchNet(out_dim=class_num)
+        model = GraphConvPredictor(
+            SchNet(out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers),
+            None)
     elif method == 'weavenet':
         print('Train WeaveNet model...')
-        n_unit = args.unit_num
         n_atom = 20
         n_sub_layer = 1
-        weave_channels = [50] * args.conv_layers
+        weave_channels = [50] * conv_layers
         model = GraphConvPredictor(
             WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
                      n_sub_layer=n_sub_layer, n_atom=n_atom),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'rsgcn':
+        print('Train RSGCN model...')
+        model = GraphConvPredictor(
+            RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
@@ -201,6 +214,7 @@ def main():
                                   'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
+
 
 if __name__ == '__main__':
     main()

@@ -4,7 +4,7 @@ set -e
 
 gpu=-1
 
-for method in nfp ggnn schnet weavenet
+for method in nfp ggnn schnet weavenet rsgcn
 do
     # Tox21
     cd tox21
@@ -13,22 +13,16 @@ do
     fi
 
     out_dir=nr_ar_${method}
-    python train_tox21.py --method ${method} --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out ${out_dir}
-    if [ "${method}" !=  "schnet" ]
-    then
-        python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu}
-        snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
-        python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
-    fi
+    python train_tox21.py --method ${method} --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out ${out_dir} --batchsize 32
+    python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu}
+    snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
+    python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
 
     out_dir=all_${method}
-    python train_tox21.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out ${out_dir}
-    if [ "${method}" !=  "schnet" ]
-    then
-        python inference_tox21.py --in-dir ${out_dir}
-        snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
-        python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
-    fi
+    python train_tox21.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out ${out_dir} --batchsize 16
+    python inference_tox21.py --in-dir ${out_dir}
+    snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
+    python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot}
     cd ../
 
     # QM9
@@ -37,13 +31,15 @@ do
         rm -rf input
     fi
 
-    python train_qm9.py --method ${method} --label A --conv_layers 1 --gpu ${gpu} --epoch 1 --unit_num 10
-    python train_qm9.py --method ${method} --conv_layers 1 --gpu ${gpu} --epoch 1 --unit_num 10
+    python train_qm9.py --method ${method} --label A --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32
+    python train_qm9.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32
     cd ../
 done
 
-# BalancedSerialIterator test for Tox21
 cd tox21
-python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type balanced
+# BalancedSerialIterator test with Tox21
+python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type balanced --eval-mode 0
 python inference_tox21.py --in-dir nr_ar_nfp_balanced --gpu ${gpu}
+# ROCAUCEvaluator test with Tox21
+python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type serial --eval-mode 1
 cd ..

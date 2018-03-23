@@ -66,9 +66,6 @@ def main():
         config = json.loads(i.read())
 
     method = config['method']
-    if method == 'schnet':
-        raise ValueError('Currently SchNet does not support prediction.')
-
     labels = config['labels']
     if labels:
         class_num = len(labels) if isinstance(labels, list) else 1

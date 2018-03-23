@@ -52,11 +52,15 @@ def check_features(actual, expect_input_features, expect_label):
     assert actual[-1] == expect_label
 
 
-def test_csv_file_parser(csv_file, mols):
+def test_csv_file_parser_not_return_smiles(csv_file, mols):
     preprocessor = NFPPreprocessor()
     parser = CSVFileParser(preprocessor, smiles_col='smiles')
-    dataset = parser.parse(csv_file)
+    # Actually, `dataset, smiles = parser.parse(..)` is enough.
+    result = parser.parse(csv_file, return_smiles=False)
+    dataset = result['dataset']
+    smiles = result['smiles']
     assert len(dataset) == 2
+    assert smiles is None
 
     # As we want test CSVFileParser, we assume
     # NFPPreprocessor works as documented.
@@ -67,12 +71,13 @@ def test_csv_file_parser(csv_file, mols):
     check_input_features(dataset[1], expect)
 
 
-def test_csv_file_parser_retain_smiles(csv_file, mols, label_a):
+def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
     parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    dataset = parser.parse(csv_file, retain_smiles=True)
-    smiles = parser.get_smiles()
+    result = parser.parse(csv_file, return_smiles=True)
+    dataset = result['dataset']
+    smiles = result['smiles']
     assert len(dataset) == 2
 
     # As we want test CSVFileParser, we assume

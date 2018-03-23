@@ -92,7 +92,7 @@ class AtomwiseLinear(chainer.Chain):
         super(AtomwiseLinear, self).__init__()
         with self.init_scope():
             self.out_dim = out_dim
-            self.l = links.Linear(self.out_dim)
+            self.linear = links.Linear(self.out_dim)
 
     def __call__(self, embeded_atom_features):
         # s0 is the minibatch axis
@@ -100,7 +100,7 @@ class AtomwiseLinear(chainer.Chain):
         # s2 is the channel (feature) axis
         s0, s1, s2 = embeded_atom_features.shape
         x = functions.reshape(embeded_atom_features, (s0 * s1, s2))
-        x = self.l(x)
+        x = self.linear(x)
         x = functions.reshape(x, (s0, s1, self.out_dim))
         return x
 
