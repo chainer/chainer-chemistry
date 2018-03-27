@@ -4,7 +4,7 @@
 python train.py dataset.csv --label value1 value2
 ```
 
-The `--label` option specifies which row in `dataset.csv` is trained.
+The `--label` option specifies which columns in `dataset.csv` are trained.
 Type `python train.py --help` to see complete options.
 
 ## Procedure

@@ -196,7 +196,7 @@ def main():
     preprocessor = preprocess_method_dict[method]()
     standardized_smiles, mol = preprocessor.prepare_smiles_and_mol(mol)
     input_features = preprocessor.get_input_features(mol)
-    atoms, adjs = concat_mols([input_features])
+    atoms, adjs = concat_mols([input_features], device=args.gpu)
     prediction = model(atoms, adjs).data[0]
     print('Prediction for {}:'.format(smiles))
     for i, label in enumerate(args.label):
