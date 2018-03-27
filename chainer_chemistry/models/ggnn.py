@@ -33,7 +33,7 @@ class GGNN(chainer.Chain):
                  n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True):
         super(GGNN, self).__init__()
-        n_readout_layer = 1 if concat_hidden else n_layers
+        n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = 1 if weight_tying else n_layers
         with self.init_scope():
             # Update
@@ -134,7 +134,7 @@ class GGNN(chainer.Chain):
                 g_list.append(g)
 
         if self.concat_hidden:
-            return functions.concat(g_list, axis=2)
+            return functions.concat(g_list, axis=1)
         else:
             g = self.readout(h, h0, 0)
             return g
