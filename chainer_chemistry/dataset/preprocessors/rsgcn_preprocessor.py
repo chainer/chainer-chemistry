@@ -4,6 +4,7 @@ from chainer_chemistry.dataset.preprocessors.common \
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
+from chainer_chemistry.functions import sparse_dense2coo
 
 import numpy
 
@@ -24,13 +25,15 @@ class RSGCNPreprocessor(MolPreprocessor):
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False, multiplier=1):
         super(RSGCNPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be equal to or larger than '
                              'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
         self.out_size = out_size
+        self.multiplier = multiplier  # for test purpose
+        print('# rsgcn_preprocessor.py: multiplier:{}'.format(multiplier))
 
     def get_input_features(self, mol):
         """get input features
@@ -53,4 +56,42 @@ class RSGCNPreprocessor(MolPreprocessor):
         adj_array *= numpy.broadcast_to(degree_sqrt_inv[None, :],
                                         adj_array.shape)
 
+        mult = self.multiplier
+        if mult > 1:
+            n_atoms = atom_array.shape[0]
+            x_atom_array = numpy.zeros((n_atoms * mult),
+                                       dtype=atom_array.dtype)
+            x_adj_array = numpy.zeros((n_atoms * mult, n_atoms * mult),
+                                      dtype=adj_array.dtype)
+            for i in range(mult):
+                x_atom_array[n_atoms*i:n_atoms*(i+1)] = atom_array
+                x_adj_array[n_atoms*i:n_atoms*(i+1),
+                            n_atoms*i:n_atoms*(i+1)] = adj_array
+            atom_array = x_atom_array
+            adj_array = x_adj_array
+
         return atom_array, adj_array
+
+
+class SparseRSGCNPreprocessor(RSGCNPreprocessor):
+    """Sparse RSGCN Preprocessor
+
+    See: RSGCN Preprocessor
+    """
+
+    def get_input_features(self, mol):
+        """get input features
+
+        Args:
+            mol (Mol):
+
+        Returns:
+
+        """
+        atom_array, adj_array = super(SparseRSGCNPreprocessor,
+                                      self).get_input_features(mol)
+
+        # make sparse matrix
+        sp_adj = sparse_dense2coo(adj_array)
+
+        return atom_array, sp_adj.data, sp_adj.row, sp_adj.col

@@ -40,7 +40,9 @@ class _CacheNamePolicy(object):
                 raise
 
 
-def load_dataset(method, labels, prefix='input'):
+def load_dataset(method, labels, prefix='input', multiplier=1):
+    if multiplier > 1:
+        prefix = '{}_x{}'.format(prefix, multiplier)
     policy = _CacheNamePolicy(method, labels, prefix)
     train_path = policy.get_train_file_path()
     val_path = policy.get_val_file_path()
@@ -55,7 +57,7 @@ def load_dataset(method, labels, prefix='input'):
         test = NumpyTupleDataset.load(test_path)
     if train is None or val is None or test is None:
         print('preprocessing dataset...')
-        preprocessor = preprocess_method_dict[method]()
+        preprocessor = preprocess_method_dict[method](multiplier=multiplier)
         train, val, test = D.get_tox21(preprocessor, labels=labels)
         # Cache dataset
         policy.create_cache_directory()

@@ -24,6 +24,7 @@ import json
 from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import concat_sparse_rsgcn
 from chainer_chemistry import datasets as D
 try:
     from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
@@ -52,7 +53,8 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn',
+                   'sparse_rsgcn']
     label_names = D.get_tox21_label_names()
     iterator_type = ['serial', 'balanced']
 
@@ -90,6 +92,11 @@ def main():
                         help='path to a trainer snapshot')
     parser.add_argument('--frequency', '-f', type=int, default=-1,
                         help='Frequency of taking a snapshot')
+    parser.add_argument('--flatten', action='store_true',
+                        help='to flatten sparse matrix')
+    parser.add_argument('--multiplier', type=int, default=1,
+                        help='(debug) make the length of each molecule N '
+                        'times')
     args = parser.parse_args()
 
     method = args.method
@@ -101,7 +108,8 @@ def main():
         class_num = len(label_names)
 
     # Dataset preparation
-    train, val, _ = data.load_dataset(method, labels)
+    train, val, _ = data.load_dataset(method, labels,
+                                      multiplier=args.multiplier)
 
     # Network
     predictor_ = predictor.build_predictor(
@@ -133,12 +141,18 @@ def main():
     optimizer = O.Adam()
     optimizer.setup(classifier)
 
+    def converter(batch, device=None):
+        if method == 'sparse_rsgcn':
+            return concat_sparse_rsgcn(batch, device, args.flatten)
+        else:
+            return concat_mols(batch, device)
+
     updater = training.StandardUpdater(
-        train_iter, optimizer, device=args.gpu, converter=concat_mols)
+        train_iter, optimizer, device=args.gpu, converter=converter)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
 
     trainer.extend(E.Evaluator(val_iter, classifier,
-                               device=args.gpu, converter=concat_mols))
+                               device=args.gpu, converter=converter))
     trainer.extend(E.LogReport())
 
     eval_mode = args.eval_mode

@@ -11,6 +11,7 @@ from chainer_chemistry.models import NFP
 from chainer_chemistry.models import SchNet
 from chainer_chemistry.models import WeaveNet
 from chainer_chemistry.models import RSGCN
+from chainer_chemistry.models import SparseRSGCN
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):
@@ -44,6 +45,12 @@ def build_predictor(method, n_unit, conv_layers, class_num):
         predictor = GraphConvPredictor(
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'sparse_rsgcn':
+        print('Use Sparse RSGCN predictor...')
+        predictor = SparseGraphConvPredictor(
+            SparseRSGCN(out_dim=n_unit, hidden_dim=n_unit,
+                        n_layers=conv_layers),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
         raise ValueError('[ERROR] Invalid predictor: method={}'.format(method))
     return predictor
@@ -75,6 +82,34 @@ class GraphConvPredictor(chainer.Chain):
         x = self.graph_conv(atoms, adjs)
         if self.mlp:
             x = self.mlp(x)
+        return x
+
+    def predict(self, atoms, adjs):
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            x = self.__call__(atoms, adjs)
+            return F.sigmoid(x)
+
+
+class SparseGraphConvPredictor(chainer.Chain):
+    """Wrapper class that combines a graph convolution and MLP."""
+
+    def __init__(self, graph_conv, mlp):
+        """Constructor
+
+        Args:
+            graph_conv: graph convolution network to obtain molecule feature
+                        representation
+            mlp: multi layer perceptron, used as final connected layer
+        """
+
+        super(SparseGraphConvPredictor, self).__init__()
+        with self.init_scope():
+            self.graph_conv = graph_conv
+            self.mlp = mlp
+
+    def __call__(self, atoms, adj_data, adj_row, adj_col):
+        x = self.graph_conv(atoms, adj_data, adj_row, adj_col)
+        x = self.mlp(x)
         return x
 
     def predict(self, atoms, adjs):
