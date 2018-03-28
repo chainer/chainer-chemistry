@@ -4,30 +4,27 @@ from __future__ import print_function
 import argparse
 import sys
 
-from sklearn.preprocessing import StandardScaler
-
+import chainer
+from chainer.datasets import split_dataset_random
+from chainer import functions as F, cuda, Variable
+from chainer import iterators as I
+from chainer import links as L
+from chainer import optimizers as O
+from chainer import training
+from chainer.training import extensions as E
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.parsers import CSVFileParser
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
 try:
     import matplotlib
     matplotlib.use('Agg')
 except ImportError:
     pass
-
-
-import chainer
-from chainer import functions as F, cuda, Variable
-from chainer import iterators as I
-from chainer import links as L
-from chainer import optimizers as O
-from chainer.datasets import split_dataset_random
-from chainer import training
-from chainer.training import extensions as E
 import numpy
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
-from chainer_chemistry.dataset.converters import concat_mols
-from chainer_chemistry.dataset.parsers import CSVFileParser
-from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry.datasets import NumpyTupleDataset
 from rdkit import Chem
+from sklearn.preprocessing import StandardScaler
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -92,7 +89,6 @@ def main():
         sys.exit("Error: No target label is specified.")
 
     # Dataset preparation
-
     # Postprocess is required for regression task
     def postprocess_label(label_list):
         return numpy.asarray(label_list, dtype=numpy.float32)
