@@ -126,6 +126,8 @@ class Classifier(link.Chain):
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
+            # Note: self.accuracy is `dict`, which is different from original
+            # chainer implementation
             self.accuracy = {key: value(self.y, t) for key, value in
                              self.accfun.items()}
             reporter.report(self.accuracy, self)
