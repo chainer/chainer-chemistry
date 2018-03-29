@@ -2,6 +2,7 @@ from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
 from chainer import link
 from chainer import reporter
+from typing import Callable
 
 
 class Classifier(link.Chain):
@@ -61,7 +62,16 @@ class Classifier(link.Chain):
 
         super(Classifier, self).__init__()
         self.lossfun = lossfun
-        self.accfun = accfun
+        if accfun is None:
+            self.compute_accuracy = False
+            self.accfun = None
+        elif isinstance(accfun, Callable):
+            self.accfun = {'accuracy': accfun}
+        elif isinstance(accfun, dict):
+            self.accfun = accfun
+        else:
+            raise TypeError('Unexpected type accfun must be None or Callable '
+                            'or dict. actual {}'.format(type(accfun)))
         self.y = None
         self.loss = None
         self.accuracy = None
@@ -92,6 +102,7 @@ class Classifier(link.Chain):
 
         """
 
+        # --- Separate `args` and `t` ---
         if isinstance(self.label_key, int):
             if not (-len(args) <= self.label_key < len(args)):
                 msg = 'Label key %d is out of bounds' % self.label_key
@@ -115,6 +126,7 @@ class Classifier(link.Chain):
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
-            self.accuracy = self.accfun(self.y, t)
-            reporter.report({'accuracy': self.accuracy}, self)
+            self.accuracy = {key: value(self.y, t) for key, value in
+                             self.accfun.items()}
+            reporter.report(self.accuracy, self)
         return self.loss
