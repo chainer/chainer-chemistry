@@ -2,15 +2,12 @@ import unittest
 
 import mock
 import numpy
-import six
 import pytest
 
 import chainer
 from chainer.backends import cuda
 from chainer import functions
 from chainer import links
-from chainer import testing
-from chainer.testing import attr
 
 from chainer_chemistry.models.prediction import Classifier
 
@@ -25,7 +22,8 @@ class AccuracyWithIgnoreLabel(object):
         return functions.accuracy(y, t, ignore_label=1)
 
 
-@pytest.mark.parametrize('accfun', [AccuracyWithIgnoreLabel(), None])
+@pytest.mark.parametrize('accfun', [AccuracyWithIgnoreLabel(), None,
+                                    {'user_key': AccuracyWithIgnoreLabel()}])
 @pytest.mark.parametrize('compute_accuracy', [True, False])
 class TestClassifier(object):
 
@@ -46,7 +44,7 @@ class TestClassifier(object):
         init_kwargs = {'label_key': label_key}
         if accfun is not None:
             init_kwargs['accfun'] = accfun
-        link = links.Classifier(chainer.Link(), **init_kwargs)
+        link = Classifier(chainer.Link(), **init_kwargs)
 
         if gpu:
             xp = cuda.cupy
@@ -144,7 +142,7 @@ class TestInvalidArgument(unittest.TestCase):
 
     @classmethod
     def setup_class(cls):
-        cls.link = links.Classifier(links.Linear(10, 3))
+        cls.link = Classifier(links.Linear(10, 3))
         cls.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
 
     def check_invalid_argument(self):
