@@ -1,8 +1,28 @@
+import chainer
+import numpy
+from chainer.dataset.convert import concat_examples
 from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
-from chainer import link
+from chainer import link, cuda
 from chainer import reporter
 from typing import Callable
+
+
+def _to_tuple(x):
+    if not isinstance(x, tuple):
+        x = (x,)
+    return x
+
+
+def _extract_numpy(x):
+    if isinstance(x, chainer.Variable):
+        x = x.data
+    return cuda.to_cpu(x)
+
+
+def _argmax(*args):
+    x = args[0]
+    return chainer.functions.argmax(x, axis=1)
 
 
 class Classifier(link.Chain):
@@ -55,7 +75,7 @@ class Classifier(link.Chain):
     def __init__(self, predictor,
                  lossfun=softmax_cross_entropy.softmax_cross_entropy,
                  accfun=accuracy.accuracy,
-                 label_key=-1):
+                 label_key=-1, device=-1):
         if not (isinstance(label_key, (int, str))):
             raise TypeError('label_key must be int or str, but is %s' %
                             type(label_key))
@@ -79,6 +99,11 @@ class Classifier(link.Chain):
 
         with self.init_scope():
             self.predictor = predictor
+
+        self.device = device
+        if device >= 0:
+            chainer.cuda.get_device_from_id(device).use()
+            self.to_gpu()  # Copy the model to the GPU
 
     def __call__(self, *args, **kwargs):
         """Computes the loss value for an input and label pair.
@@ -118,6 +143,9 @@ class Classifier(link.Chain):
                 raise ValueError(msg)
             t = kwargs[self.label_key]
             del kwargs[self.label_key]
+        else:
+            #TODO: review
+            raise TypeError('not supported...')
 
         self.y = None
         self.loss = None
@@ -132,3 +160,131 @@ class Classifier(link.Chain):
                              self.accfun.items()}
             reporter.report(self.accuracy, self)
         return self.loss
+
+    def forward_batch(self, data, fn, batchsize=16, retain_inputs=False,
+                      converter=concat_examples,
+                      preprocess_fn=None, postprocess_fn=None):
+        """forward calculation of batch
+
+        Accuracy is used for score when self.accuracy is True,
+        otherwise, `loss` is used for score calculation.
+
+        Args:
+            data: 
+            fn: callable
+            batchsize: 
+            retain_inputs: 
+            converter: 
+
+        Returns:
+
+        """
+        # data may be "train_x array" or "chainer dataset"
+
+        input_list = None
+        output_list = None
+        # total_score = 0
+        for i in range(0, len(data), batchsize):
+            inputs = converter(data[i:i + batchsize], device=self.device)
+            inputs = _to_tuple(inputs)
+
+            if preprocess_fn:
+                inputs= preprocess_fn(*inputs)
+                inputs = _to_tuple(inputs)
+            # print('forward batch inputs', len(inputs), inputs)
+            # print('forward batch inputs', len(inputs[0]))
+
+            # outputs = self._forward(*inputs, calc_score=calc_score)
+            outputs = fn(*inputs)
+            outputs = _to_tuple(outputs)
+
+            # Init
+            if retain_inputs:
+                if input_list is None:
+                    input_list = [[] for _ in range(len(inputs))]
+                for j, input in enumerate(inputs):
+                    input_list[j].append(cuda.to_cpu(input))
+            if output_list is None:
+                output_list = [[] for _ in range(len(outputs))]
+
+            if postprocess_fn:
+                outputs = postprocess_fn(*outputs)
+                outputs = _to_tuple(outputs)
+            for j, output in enumerate(outputs):
+                # print(j, 'output', type(output), output.shape)
+                output_list[j].append(_extract_numpy(output))
+            # if calc_score:
+            #     # switch accuracy or loss depends on situation.
+            #     if self.compute_accuracy:
+            #         total_score += self.accuracy * outputs[0].shape[0]
+            #     else:
+            #         total_score += self.loss * outputs[0].shape[0]
+
+        if retain_inputs:
+            self.inputs = [numpy.concatenate(input) for input in input_list]
+        # if calc_score:
+        #     self.total_score = cuda.to_cpu(total_score.data) / len(data)
+
+        result = [numpy.concatenate(output) for output in output_list]
+        if len(result) == 1:
+            return result[0]
+        else:
+            return result
+
+    # def _forward(self, *args, preprocess_fn=None, postprocess_fn=None):
+    #     if preprocess_fn:
+    #         args = preprocess_fn(*args)
+    #         args = _to_tuple(args)
+    #     y = self.predictor(*args)
+    #     if postprocess_fn:
+    #         y = postprocess_fn(y)
+    #     return y
+
+    def forward(self, data, fn, batchsize=32,
+                converter=concat_examples,
+                preprocess_fn=None,
+                postprocess_fn=None,
+                retain_inputs=False):
+        """
+        
+        Args:
+            data: 
+            fn: 
+            batchsize: 
+            converter: 
+            preprocess_fn: Its input is numpy.ndarray or cupy.ndarray, it can
+                return either Variable, cupy.ndarray or numpy.ndarray
+            postprocess_fn: Its input argument is Variable, but this method may
+                return either Variable, cupy.ndarray or numpy.ndarray
+            retain_inputs: 
+
+        Returns:
+
+        """
+
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            y_array = self.forward_batch(
+                data, fn=fn, batchsize=batchsize,
+                retain_inputs=retain_inputs,
+                converter=converter, preprocess_fn=preprocess_fn,
+                postprocess_fn=postprocess_fn)
+        return y_array
+
+    def predict_proba(self, data, batchsize=32,
+                      converter=concat_examples,
+                      preprocess_fn=None,
+                      postprocess_fn=chainer.functions.softmax):
+        proba = self.forward(
+            data, fn=self.predictor, batchsize=batchsize,
+            converter=converter, preprocess_fn=preprocess_fn,
+            postprocess_fn=postprocess_fn)
+        return proba
+
+    def predict(self, data, batchsize=32,
+                converter=concat_examples, preprocess_fn=None,
+                postprocess_fn=_argmax):
+        predict_labels = self.forward(
+            data, fn=self.predictor, batchsize=batchsize,
+            converter=converter, preprocess_fn=preprocess_fn,
+            postprocess_fn=postprocess_fn)
+        return predict_labels
