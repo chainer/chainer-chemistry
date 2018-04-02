@@ -190,6 +190,11 @@ You can also train other type models like GGNN, SchNet or WeaveNet, and other ta
 See output of ``python train_qm9.py --help``.
 
 
+Using your own dataset
+========================
+You can use your own dataset in Chainer Chemistry.
+`example/own_dataset <https://github.com/pfnet-research/chainer-chemistry/tree/master/examples/own_dataset/>`_ shows an example.
+
 Reference
 ========================
 [1] L. Ruddigkeit, R. van Deursen, L. C. Blum, J.-L. Reymond, Enumeration of 166 billion organic small molecules in the chemical universe database GDB-17, J. Chem. Inf. Model. 52, 2864–2875, 2012.
