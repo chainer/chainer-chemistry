@@ -105,7 +105,7 @@ def main():
     from chainer_chemistry.dataset.converters import concat_mols
     clf = Classifier(predictor=predictor_, device=args.gpu,
                      lossfun=F.sigmoid_cross_entropy,
-                     accfun={'binary_accuracy': F.binary_accuracy})
+                     metrics_fun={'binary_accuracy': F.binary_accuracy})
 
     # ---- predict ---
     print('Predicting...')
