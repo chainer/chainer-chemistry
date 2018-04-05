@@ -1,3 +1,5 @@
+import warnings
+
 import chainer
 import numpy
 from chainer.dataset.convert import concat_examples
@@ -5,6 +7,7 @@ from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
 from chainer import link, cuda
 from chainer import reporter
+from chainer.iterators import SerialIterator
 from typing import Callable
 
 
@@ -43,7 +46,8 @@ class Classifier(link.Chain):
     Attributes:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
-        accfun (function): Function that computes accuracy.
+        accfun (function): DEPRECATED. Please use `metrics_fun` instead.
+        metrics_fun (function or dict or None): Function that computes metrics.
         y (~chainer.Variable): Prediction for the last minibatch.
         loss (~chainer.Variable): Loss value for the last minibatch.
         accuracy (~chainer.Variable): Accuracy for the last minibatch.
@@ -70,31 +74,37 @@ class Classifier(link.Chain):
 
     """
 
-    compute_accuracy = True
+    compute_metrics = True
 
     def __init__(self, predictor,
                  lossfun=softmax_cross_entropy.softmax_cross_entropy,
-                 accfun=accuracy.accuracy,
+                 accfun=None, metrics_fun=accuracy.accuracy,
                  label_key=-1, device=-1):
         if not (isinstance(label_key, (int, str))):
             raise TypeError('label_key must be int or str, but is %s' %
                             type(label_key))
+        if accfun is not None:
+            warnings.warn(
+                'accfun is deprecated, please use metrics_fun instead')
+            warnings.warn('overriding metrics by accfun...')
+            # override metrics by accfun
+            metrics_fun = accfun
 
         super(Classifier, self).__init__()
         self.lossfun = lossfun
-        if accfun is None:
-            self.compute_accuracy = False
-            self.accfun = None
-        elif isinstance(accfun, Callable):
-            self.accfun = {'accuracy': accfun}
-        elif isinstance(accfun, dict):
-            self.accfun = accfun
+        if metrics_fun is None:
+            self.compute_metrics = False
+            self.metrics_fun = None
+        elif isinstance(metrics_fun, Callable):
+            self.metrics_fun = {'accuracy': metrics_fun}
+        elif isinstance(metrics_fun, dict):
+            self.metrics_fun = metrics_fun
         else:
-            raise TypeError('Unexpected type accfun must be None or Callable '
-                            'or dict. actual {}'.format(type(accfun)))
+            raise TypeError('Unexpected type metrics_fun must be None or '
+                            'Callable or dict. actual {}'.format(type(accfun)))
         self.y = None
         self.loss = None
-        self.accuracy = None
+        self.metrics = None
         self.label_key = label_key
 
         with self.init_scope():
@@ -144,57 +154,59 @@ class Classifier(link.Chain):
             t = kwargs[self.label_key]
             del kwargs[self.label_key]
         else:
-            #TODO: review
-            raise TypeError('not supported...')
+            raise TypeError('Label key type {} not supported'
+                            .format(type(self.label_key)))
 
         self.y = None
         self.loss = None
-        self.accuracy = None
+        self.metrics = None
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
             # Note: self.accuracy is `dict`, which is different from original
             # chainer implementation
-            self.accuracy = {key: value(self.y, t) for key, value in
-                             self.accfun.items()}
-            reporter.report(self.accuracy, self)
+            self.metrics = {key: value(self.y, t) for key, value in
+                            self.metrics_fun.items()}
+            reporter.report(self.metrics, self)
         return self.loss
 
-    def forward_batch(self, data, fn, batchsize=16, retain_inputs=False,
-                      converter=concat_examples,
-                      preprocess_fn=None, postprocess_fn=None):
-        """forward calculation of batch
-
-        Accuracy is used for score when self.accuracy is True,
-        otherwise, `loss` is used for score calculation.
+    def _forward(self, data, fn, batchsize=16,
+                 converter=concat_examples, retain_inputs=False,
+                 preprocess_fn=None, postprocess_fn=None):
+        """Forward data by iterating with batch
 
         Args:
-            data: 
-            fn: callable
-            batchsize: 
-            retain_inputs: 
-            converter: 
+            data: "train_x array" or "chainer dataset"
+            fn (Callable): Main function to forward. Its input argument is
+                either Variable, cupy.ndarray or numpy.ndarray, and returns
+                Variable.
+            batchsize (int): batch size
+            converter (Callable): convert from `data` to `inputs`
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
+            preprocess_fn (Callable): Its input is numpy.ndarray or 
+                cupy.ndarray, it can return either Variable, cupy.ndarray or
+                numpy.ndarray
+            postprocess_fn (Callable): Its input argument is Variable,
+                but this method may return either Variable, cupy.ndarray or
+                numpy.ndarray.
 
-        Returns:
+        Returns (tuple or numpy.ndarray): forward result
 
         """
-        # data may be "train_x array" or "chainer dataset"
-
         input_list = None
         output_list = None
-        # total_score = 0
-        for i in range(0, len(data), batchsize):
-            inputs = converter(data[i:i + batchsize], device=self.device)
+        it = SerialIterator(data, batch_size=batchsize, repeat=False,
+                            shuffle=False)
+        for batch in it:
+            inputs = converter(batch, self.device)
             inputs = _to_tuple(inputs)
 
             if preprocess_fn:
-                inputs= preprocess_fn(*inputs)
+                inputs = preprocess_fn(*inputs)
                 inputs = _to_tuple(inputs)
-            # print('forward batch inputs', len(inputs), inputs)
-            # print('forward batch inputs', len(inputs[0]))
 
-            # outputs = self._forward(*inputs, calc_score=calc_score)
             outputs = fn(*inputs)
             outputs = _to_tuple(outputs)
 
@@ -211,19 +223,10 @@ class Classifier(link.Chain):
                 outputs = postprocess_fn(*outputs)
                 outputs = _to_tuple(outputs)
             for j, output in enumerate(outputs):
-                # print(j, 'output', type(output), output.shape)
                 output_list[j].append(_extract_numpy(output))
-            # if calc_score:
-            #     # switch accuracy or loss depends on situation.
-            #     if self.compute_accuracy:
-            #         total_score += self.accuracy * outputs[0].shape[0]
-            #     else:
-            #         total_score += self.loss * outputs[0].shape[0]
 
         if retain_inputs:
-            self.inputs = [numpy.concatenate(input) for input in input_list]
-        # if calc_score:
-        #     self.total_score = cuda.to_cpu(total_score.data) / len(data)
+            self.inputs = [numpy.concatenate(in_array) for in_array in input_list]
 
         result = [numpy.concatenate(output) for output in output_list]
         if len(result) == 1:
@@ -231,60 +234,103 @@ class Classifier(link.Chain):
         else:
             return result
 
-    # def _forward(self, *args, preprocess_fn=None, postprocess_fn=None):
-    #     if preprocess_fn:
-    #         args = preprocess_fn(*args)
-    #         args = _to_tuple(args)
-    #     y = self.predictor(*args)
-    #     if postprocess_fn:
-    #         y = postprocess_fn(y)
-    #     return y
+    def predict_proba(
+            self, data, batchsize=16, converter=concat_examples,
+            retain_inputs=False, preprocess_fn=None,
+            postprocess_fn=chainer.functions.softmax):
+        """Calculate probability of each category.
 
-    def forward(self, data, fn, batchsize=32,
-                converter=concat_examples,
-                preprocess_fn=None,
-                postprocess_fn=None,
-                retain_inputs=False):
-        """
-        
         Args:
-            data: 
-            fn: 
-            batchsize: 
-            converter: 
-            preprocess_fn: Its input is numpy.ndarray or cupy.ndarray, it can
-                return either Variable, cupy.ndarray or numpy.ndarray
-            postprocess_fn: Its input argument is Variable, but this method may
-                return either Variable, cupy.ndarray or numpy.ndarray
-            retain_inputs: 
+            data: "train_x array" or "chainer dataset"
+            fn (Callable): Main function to forward. Its input argument is
+                either Variable, cupy.ndarray or numpy.ndarray, and returns
+                Variable.
+            batchsize (int): batch size
+            converter (Callable): convert from `data` to `inputs`
+            preprocess_fn (Callable): Its input is numpy.ndarray or 
+                cupy.ndarray, it can return either Variable, cupy.ndarray or
+                numpy.ndarray
+            postprocess_fn (Callable): Its input argument is Variable,
+                but this method may return either Variable, cupy.ndarray or
+                numpy.ndarray.
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
 
-        Returns:
+        Returns (tuple or numpy.ndarray): Typically, it is 2-dimensional float
+            array with shape (batchsize, number of category) which represents
+            each examples probability to be each category.
 
         """
-
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            y_array = self.forward_batch(
-                data, fn=fn, batchsize=batchsize,
-                retain_inputs=retain_inputs,
-                converter=converter, preprocess_fn=preprocess_fn,
-                postprocess_fn=postprocess_fn)
-        return y_array
-
-    def predict_proba(self, data, batchsize=32,
-                      converter=concat_examples,
-                      preprocess_fn=None,
-                      postprocess_fn=chainer.functions.softmax):
-        proba = self.forward(
-            data, fn=self.predictor, batchsize=batchsize,
-            converter=converter, preprocess_fn=preprocess_fn,
-            postprocess_fn=postprocess_fn)
+            proba = self._forward(
+                data, fn=self.predictor, batchsize=batchsize,
+                converter=converter, retain_inputs=retain_inputs,
+                preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return proba
 
-    def predict(self, data, batchsize=32,
-                converter=concat_examples, preprocess_fn=None,
-                postprocess_fn=_argmax):
-        predict_labels = self.forward(
-            data, fn=self.predictor, batchsize=batchsize,
-            converter=converter, preprocess_fn=preprocess_fn,
-            postprocess_fn=postprocess_fn)
+    def predict(
+            self, data, batchsize=16, converter=concat_examples,
+            retain_inputs=False, preprocess_fn=None, postprocess_fn=_argmax):
+        """Predict label of each category by taking .
+
+        Args:
+            data: 
+            batchsize (int): batch size
+            converter (Callable): convert from `data` to `inputs`
+            preprocess_fn (Callable): Its input is numpy.ndarray or 
+                cupy.ndarray, it can return either Variable, cupy.ndarray or
+                numpy.ndarray
+            postprocess_fn (Callable): Its input argument is Variable,
+                but this method may return either Variable, cupy.ndarray or
+                numpy.ndarray.
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
+
+        Returns (tuple or numpy.ndarray): Typically, it is 1-dimensional int
+            array with shape (batchsize, ) which represents each examples
+            category prediction.
+
+        """
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            predict_labels = self._forward(
+                data, fn=self.predictor, batchsize=batchsize,
+                converter=converter, retain_inputs=retain_inputs,
+                preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return predict_labels
+
+    # --- For backward compatibility ---
+    @property
+    def compute_accuracy(self):
+        warnings.warn('compute_accuracy is deprecated,'
+                      'please use compute_metrics instead')
+        return self.compute_metrics
+
+    @compute_accuracy.setter
+    def compute_accuracy(self, value):
+        warnings.warn('compute_accuracy is deprecated,'
+                      'please use compute_metrics instead')
+        self.compute_metrics = value
+
+    @property
+    def accuracy(self):
+        warnings.warn('accuracy is deprecated,'
+                      'please use metrics instead')
+        return self.metrics
+
+    @accuracy.setter
+    def accuracy(self, value):
+        warnings.warn('accuracy is deprecated,'
+                      'please use metrics instead')
+        self.metrics = value
+
+    @property
+    def accfun(self):
+        warnings.warn('accfun is deprecated,'
+                      'please use metrics_fun instead')
+        return self.metrics_fun
+
+    @accfun.setter
+    def accfun(self, value):
+        warnings.warn('accfun is deprecated,'
+                      'please use metrics_fun instead')
+        self.metrics_fun = value
