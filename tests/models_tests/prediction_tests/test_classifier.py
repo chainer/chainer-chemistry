@@ -1,5 +1,4 @@
-import unittest
-from collections import Callable
+from typing import Callable
 
 import mock
 import numpy
@@ -164,7 +163,7 @@ class TestClassifier(object):
             assert set(['target/loss']) == actual_keys
 
 
-class TestInvalidArgument(unittest.TestCase):
+class TestInvalidArgument(object):
 
     @classmethod
     def setup_class(cls):

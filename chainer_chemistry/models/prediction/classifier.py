@@ -1,13 +1,13 @@
 import warnings
 
 import chainer
-import numpy
 from chainer.dataset.convert import concat_examples
 from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
 from chainer import link, cuda
 from chainer import reporter
 from chainer.iterators import SerialIterator
+import numpy
 from typing import Callable
 
 
