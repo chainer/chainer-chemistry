@@ -1,4 +1,5 @@
 import unittest
+from collections import Callable
 
 import mock
 import numpy
@@ -6,7 +7,7 @@ import pytest
 
 import chainer
 from chainer.backends import cuda
-from chainer import functions
+from chainer import functions, reporter
 from chainer import links
 
 from chainer_chemistry.models.prediction import Classifier
@@ -27,27 +28,23 @@ class DummyPredictor(chainer.Chain):
         return x
 
 
-@pytest.mark.parametrize('accfun', [AccuracyWithIgnoreLabel(), None,
-                                    {'user_key': AccuracyWithIgnoreLabel()}])
-@pytest.mark.parametrize('compute_accuracy', [True, False])
+@pytest.mark.parametrize('metrics_fun',
+                         [AccuracyWithIgnoreLabel(), None,
+                         {'user_key': AccuracyWithIgnoreLabel()}])
+@pytest.mark.parametrize('compute_metrics', [True, False])
 class TestClassifier(object):
 
-    @classmethod
-    def setup_class(cls):
-        cls.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
-        cls.t = numpy.random.randint(3, size=5).astype(numpy.int32)
-        cls.y = numpy.random.uniform(-1, 1, (5, 7)).astype(numpy.float32)
-        # cls.accfun = accfun
-        # cls.compute_accuracy = compute_accuracy
-        cls.accfun = None
-        cls.compute_accuracy = False
+    def setup_method(self, method):
+        self.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
+        self.t = numpy.random.randint(3, size=5).astype(numpy.int32)
+        self.y = numpy.random.uniform(-1, 1, (5, 7)).astype(numpy.float32)
 
     def check_call(
             self, gpu, label_key, args, kwargs, model_args, model_kwargs,
-            accfun, compute_accuracy):
+            metrics_fun, compute_metrics):
         init_kwargs = {'label_key': label_key}
-        if accfun is not None:
-            init_kwargs['accfun'] = accfun
+        if metrics_fun is not None:
+            init_kwargs['metrics_fun'] = metrics_fun
         link = Classifier(chainer.Link(), **init_kwargs)
 
         if gpu:
@@ -56,7 +53,7 @@ class TestClassifier(object):
         else:
             xp = numpy
 
-        link.compute_accuracy = compute_accuracy
+        link.compute_metrics = compute_metrics
 
         y = chainer.Variable(self.y)
         link.predictor = mock.MagicMock(return_value=y)
@@ -70,76 +67,101 @@ class TestClassifier(object):
         assert hasattr(link, 'loss')
         xp.testing.assert_allclose(link.loss.data, loss.data)
 
-        assert hasattr(link, 'accuracy')
-        if compute_accuracy:
+        assert hasattr(link, 'metrics')
+        if compute_metrics:
             assert link.metrics is not None
         else:
             assert link.metrics is None
 
-    def test_call_cpu(self, accfun, compute_accuracy):
+    def test_call_cpu(self, metrics_fun, compute_metrics):
         self.check_call(
             False, -1, (self.x, self.t), {}, (self.x,), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
-
-    def test_call_three_args_cpu(self, accfun, compute_accuracy):
+    def test_call_three_args_cpu(self, metrics_fun, compute_metrics):
         self.check_call(
             False, -1, (self.x, self.x, self.t), {}, (self.x, self.x), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
-    def test_call_positive_cpu(self, accfun, compute_accuracy):
+    def test_call_positive_cpu(self, metrics_fun, compute_metrics):
         self.check_call(
             False, 2, (self.x, self.x, self.t), {}, (self.x, self.x), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
-    def test_call_kwargs_cpu(self, accfun, compute_accuracy):
+    def test_call_kwargs_cpu(self, metrics_fun, compute_metrics):
         self.check_call(
             False, 't', (self.x,), {'t': self.t}, (self.x,), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
-    def test_call_no_arg_cpu(self, accfun, compute_accuracy):
+    def test_call_no_arg_cpu(self, metrics_fun, compute_metrics):
         self.check_call(
             False, 0, (self.t,), {}, (), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
     @pytest.mark.gpu
-    def test_call_gpu(self, accfun, compute_accuracy):
+    def test_call_gpu(self, metrics_fun, compute_metrics):
         self.to_gpu()
         self.check_call(
             True, -1, (self.x, self.t), {}, (self.x,), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
     @pytest.mark.gpu
-    def test_call_three_args_gpu(self, accfun, compute_accuracy):
+    def test_call_three_args_gpu(self, metrics_fun, compute_metrics):
         self.to_gpu()
         self.check_call(
             True, -1, (self.x, self.x, self.t), {}, (self.x, self.x), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
     @pytest.mark.gpu
-    def test_call_positive_gpu(self, accfun, compute_accuracy):
+    def test_call_positive_gpu(self, metrics_fun, compute_metrics):
         self.to_gpu()
         self.check_call(
             True, 2, (self.x, self.x, self.t), {}, (self.x, self.x), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
     @pytest.mark.gpu
-    def test_call_kwargs_gpu(self, accfun, compute_accuracy):
+    def test_call_kwargs_gpu(self, metrics_fun, compute_metrics):
         self.to_gpu()
         self.check_call(
             True, 't', (self.x,), {'t': self.t}, (self.x,), {},
-            accfun, compute_accuracy)
+            metrics_fun, compute_metrics)
 
     @pytest.mark.gpu
-    def test_call_no_arg_gpu(self, accfun, compute_accuracy):
+    def test_call_no_arg_gpu(self, metrics_fun, compute_metrics):
         self.to_gpu()
         self.check_call(
-            True, 0, (self.t,), {}, (), {}, accfun, compute_accuracy)
+            True, 0, (self.t,), {}, (), {}, metrics_fun, compute_metrics)
 
     def to_gpu(self):
         self.x = cuda.to_gpu(self.x)
         self.t = cuda.to_gpu(self.t)
         self.y = cuda.to_gpu(self.y)
+
+    def test_report_key(self, metrics_fun, compute_metrics):
+        repo = chainer.Reporter()
+
+        link = Classifier(predictor=DummyPredictor(),
+                          metrics_fun=metrics_fun)
+        link.compute_metrics = compute_metrics
+        repo.add_observer('target', link)
+        with repo:
+            observation = {}
+            with reporter.report_scope(observation):
+                link(self.x, self.t)
+
+        # print('observation ', observation)
+        actual_keys = set(observation.keys())
+        if compute_metrics:
+            if metrics_fun is None:
+                assert set(['target/loss']) == actual_keys
+            elif isinstance(metrics_fun, dict):
+                assert set(['target/loss', 'target/user_key']) == actual_keys
+            elif isinstance(metrics_fun, Callable):
+                assert set(['target/loss', 'target/accuracy']) == actual_keys
+            else:
+                raise TypeError()
+        else:
+            assert set(['target/loss']) == actual_keys
 
 
 class TestInvalidArgument(unittest.TestCase):

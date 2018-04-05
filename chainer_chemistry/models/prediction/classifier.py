@@ -96,7 +96,7 @@ class Classifier(link.Chain):
         self.lossfun = lossfun
         if metrics_fun is None:
             self.compute_metrics = False
-            self.metrics_fun = None
+            self.metrics_fun = {}
         elif isinstance(metrics_fun, Callable):
             self.metrics_fun = {'accuracy': metrics_fun}
         elif isinstance(metrics_fun, dict):
