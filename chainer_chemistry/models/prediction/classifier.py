@@ -5,6 +5,7 @@ from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
 from chainer import link, cuda
 from chainer import reporter
+from chainer.iterators import SerialIterator
 from typing import Callable
 
 
@@ -192,9 +193,10 @@ class Classifier(link.Chain):
 
         input_list = None
         output_list = None
-        # total_score = 0
-        for i in range(0, len(data), batchsize):
-            inputs = converter(data[i:i + batchsize], device=self.device)
+        it = SerialIterator(data, batch_size=batchsize, repeat=False,
+                            shuffle=False)
+        for batch in it:
+            inputs = converter(batch, self.device)
             inputs = _to_tuple(inputs)
 
             if preprocess_fn:
