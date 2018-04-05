@@ -68,9 +68,9 @@ class TestClassifier(object):
 
         assert hasattr(link, 'accuracy')
         if compute_accuracy:
-            assert link.accuracy is not None
+            assert link.metrics is not None
         else:
-            assert link.accuracy is None
+            assert link.metrics is None
 
     def test_call_cpu(self, accfun, compute_accuracy):
         self.check_call(

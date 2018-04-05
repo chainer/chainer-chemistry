@@ -1,3 +1,5 @@
+import warnings
+
 import chainer
 import numpy
 from chainer.dataset.convert import concat_examples
@@ -44,7 +46,8 @@ class Classifier(link.Chain):
     Attributes:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
-        accfun (function): Function that computes accuracy.
+        accfun (function): DEPRECATED. Please use `metrics_fun` instead.
+        metrics_fun (function or dict or None): Function that computes metrics.
         y (~chainer.Variable): Prediction for the last minibatch.
         loss (~chainer.Variable): Loss value for the last minibatch.
         accuracy (~chainer.Variable): Accuracy for the last minibatch.
@@ -71,31 +74,37 @@ class Classifier(link.Chain):
 
     """
 
-    compute_accuracy = True
+    compute_metrics = True
 
     def __init__(self, predictor,
                  lossfun=softmax_cross_entropy.softmax_cross_entropy,
-                 accfun=accuracy.accuracy,
+                 accfun=None, metrics_fun=accuracy.accuracy,
                  label_key=-1, device=-1):
         if not (isinstance(label_key, (int, str))):
             raise TypeError('label_key must be int or str, but is %s' %
                             type(label_key))
+        if accfun is not None:
+            warnings.warn(
+                'accfun is deprecated, please use metrics_fun instead')
+            warnings.warn('overriding metrics by accfun...')
+            # override metrics by accfun
+            metrics_fun = accfun
 
         super(Classifier, self).__init__()
         self.lossfun = lossfun
-        if accfun is None:
-            self.compute_accuracy = False
-            self.accfun = None
-        elif isinstance(accfun, Callable):
-            self.accfun = {'accuracy': accfun}
-        elif isinstance(accfun, dict):
-            self.accfun = accfun
+        if metrics_fun is None:
+            self.compute_metrics = False
+            self.metrics_fun = None
+        elif isinstance(metrics_fun, Callable):
+            self.metrics_fun = {'accuracy': metrics_fun}
+        elif isinstance(metrics_fun, dict):
+            self.metrics_fun = metrics_fun
         else:
-            raise TypeError('Unexpected type accfun must be None or Callable '
-                            'or dict. actual {}'.format(type(accfun)))
+            raise TypeError('Unexpected type metrics_fun must be None or '
+                            'Callable or dict. actual {}'.format(type(accfun)))
         self.y = None
         self.loss = None
-        self.accuracy = None
+        self.metrics = None
         self.label_key = label_key
 
         with self.init_scope():
@@ -150,16 +159,16 @@ class Classifier(link.Chain):
 
         self.y = None
         self.loss = None
-        self.accuracy = None
+        self.metrics = None
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
         if self.compute_accuracy:
             # Note: self.accuracy is `dict`, which is different from original
             # chainer implementation
-            self.accuracy = {key: value(self.y, t) for key, value in
-                             self.accfun.items()}
-            reporter.report(self.accuracy, self)
+            self.metrics = {key: value(self.y, t) for key, value in
+                            self.metrics_fun.items()}
+            reporter.report(self.metrics, self)
         return self.loss
 
     def _forward(self, data, fn, batchsize=16,
@@ -288,3 +297,40 @@ class Classifier(link.Chain):
                 converter=converter, retain_inputs=retain_inputs,
                 preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return predict_labels
+
+    # --- For backward compatibility ---
+    @property
+    def compute_accuracy(self):
+        warnings.warn('compute_accuracy is deprecated,'
+                      'please use compute_metrics instead')
+        return self.compute_metrics
+
+    @compute_accuracy.setter
+    def compute_accuracy(self, value):
+        warnings.warn('compute_accuracy is deprecated,'
+                      'please use compute_metrics instead')
+        self.compute_metrics = value
+
+    @property
+    def accuracy(self):
+        warnings.warn('accuracy is deprecated,'
+                      'please use metrics instead')
+        return self.metrics
+
+    @accuracy.setter
+    def accuracy(self, value):
+        warnings.warn('accuracy is deprecated,'
+                      'please use metrics instead')
+        self.metrics = value
+
+    @property
+    def accfun(self):
+        warnings.warn('accfun is deprecated,'
+                      'please use metrics_fun instead')
+        return self.metrics_fun
+
+    @accfun.setter
+    def accfun(self, value):
+        warnings.warn('accfun is deprecated,'
+                      'please use metrics_fun instead')
+        self.metrics_fun = value
