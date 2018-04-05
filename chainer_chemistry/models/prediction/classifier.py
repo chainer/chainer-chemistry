@@ -38,20 +38,22 @@ class Classifier(link.Chain):
     Args:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
-        accfun (function): Function that computes accuracy.
+        accfun (function): DEPRECATED. Please use `metrics_fun` instead.
+        metrics_fun (function or dict or None): Function that computes metrics.
         label_key (int or str): Key to specify label variable from arguments.
             When it is ``int``, a variable in positional arguments is used.
             And when it is ``str``, a variable in keyword arguments is used.
+        device (int): GPU device id of this Classifier to be used.
+            -1 indicates to use in CPU.
 
     Attributes:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
         accfun (function): DEPRECATED. Please use `metrics_fun` instead.
-        metrics_fun (function or dict or None): Function that computes metrics.
         y (~chainer.Variable): Prediction for the last minibatch.
         loss (~chainer.Variable): Loss value for the last minibatch.
-        accuracy (~chainer.Variable): Accuracy for the last minibatch.
-        compute_accuracy (bool): If ``True``, compute accuracy on the forward
+        metrics (dict): Metrics computed in last minibatch
+        compute_metrics (bool): If ``True``, compute metrics on the forward
             computation. The default value is ``True``.
 
     .. note::
@@ -163,7 +165,7 @@ class Classifier(link.Chain):
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
-        if self.compute_accuracy:
+        if self.compute_metrics:
             # Note: self.accuracy is `dict`, which is different from original
             # chainer implementation
             self.metrics = {key: value(self.y, t) for key, value in

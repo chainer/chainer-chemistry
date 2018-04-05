@@ -22,6 +22,11 @@ class AccuracyWithIgnoreLabel(object):
         return functions.accuracy(y, t, ignore_label=1)
 
 
+class DummyPredictor(chainer.Chain):
+    def __call__(self, x):
+        return x
+
+
 @pytest.mark.parametrize('accfun', [AccuracyWithIgnoreLabel(), None,
                                     {'user_key': AccuracyWithIgnoreLabel()}])
 @pytest.mark.parametrize('compute_accuracy', [True, False])
@@ -29,7 +34,6 @@ class TestClassifier(object):
 
     @classmethod
     def setup_class(cls):
-        print('setup class...')
         cls.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
         cls.t = numpy.random.randint(3, size=5).astype(numpy.int32)
         cls.y = numpy.random.uniform(-1, 1, (5, 7)).astype(numpy.float32)
@@ -199,6 +203,47 @@ class TestInvalidLabelKey(object):
     @pytest.mark.gpu
     def test_invalid_str_key_gpu(self):
         self.check_invalid_key(True, 't')
+
+
+class TestClassifierPrediction(object):
+
+    @classmethod
+    def setup_class(cls):
+        cls.predictor = DummyPredictor()
+        cls.x = numpy.array([[0., 1.], [-1., -2.], [4., 0.]],
+                            dtype=numpy.float32)
+        cls.t = numpy.array([1, 0, 0], dtype=numpy.int32)
+
+    def test_predict_cpu(self):
+        clf = Classifier(self.predictor)
+        actual_t = clf.predict(self.x)
+        assert actual_t.shape == (3,)
+        assert actual_t.dtype == numpy.int32
+        assert numpy.alltrue(actual_t == self.t)
+
+    @pytest.mark.gpu
+    def test_predict_gpu(self):
+        clf = Classifier(self.predictor, device=0)
+        actual_t = clf.predict(self.x)
+        assert numpy.alltrue(actual_t == self.t)
+
+    def check_predict_proba(self, device):
+        clf = Classifier(self.predictor, device=device)
+        actual_y = clf.predict_proba(self.x)
+        assert actual_y.shape == (3, 2)
+        assert actual_y.dtype == numpy.float32
+        assert numpy.alltrue(0 <= actual_y)
+        assert numpy.alltrue(actual_y <= 1.)
+
+        actual_t = numpy.argmax(actual_y, axis=1)
+        assert numpy.alltrue(actual_t == self.t)
+
+    def test_predict_proba_cpu(self):
+        self.check_predict_proba(-1)
+
+    @pytest.mark.gpu
+    def test_predict_proba_cpu(self):
+        self.check_predict_proba(0)
 
 
 if __name__ == '__main__':
