@@ -162,35 +162,30 @@ class Classifier(link.Chain):
             reporter.report(self.accuracy, self)
         return self.loss
 
-    def _forward(self, data, fn, batchsize=16, retain_inputs=False,
-                 converter=concat_examples, preprocess_fn=None,
-                 postprocess_fn=None):
+    def _forward(self, data, fn, batchsize=16,
+                 converter=concat_examples, retain_inputs=False,
+                 preprocess_fn=None, postprocess_fn=None):
         """Forward data by iterating with batch
 
-        Accuracy is used for score when self.accuracy is True,
-        otherwise, `loss` is used for score calculation.
-
         Args:
-            data: 
+            data: "train_x array" or "chainer dataset"
             fn (Callable): Main function to forward. Its input argument is
                 either Variable, cupy.ndarray or numpy.ndarray, and returns
                 Variable.
             batchsize (int): batch size
             converter (Callable): convert from `data` to `inputs`
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
             preprocess_fn (Callable): Its input is numpy.ndarray or 
                 cupy.ndarray, it can return either Variable, cupy.ndarray or
                 numpy.ndarray
             postprocess_fn (Callable): Its input argument is Variable,
                 but this method may return either Variable, cupy.ndarray or
                 numpy.ndarray.
-            retain_inputs (bool): If True, this instance keeps inputs in 
-                `self.inputs` or not.
 
-        Returns:
+        Returns (tuple or numpy.ndarray): forward result
 
         """
-        # data may be "train_x array" or "chainer dataset"
-
         input_list = None
         output_list = None
         it = SerialIterator(data, batch_size=batchsize, repeat=False,
@@ -224,28 +219,72 @@ class Classifier(link.Chain):
         if retain_inputs:
             self.inputs = [numpy.concatenate(in_array) for in_array in input_list]
 
-        result = [numpy.concatenate(out_array) for out_array in output_list]
+        result = [numpy.concatenate(output) for output in output_list]
         if len(result) == 1:
             return result[0]
         else:
             return result
 
     def predict_proba(
-            self, data, batchsize=32, converter=concat_examples,
-            preprocess_fn=None, postprocess_fn=chainer.functions.softmax):
+            self, data, batchsize=16, converter=concat_examples,
+            retain_inputs=False, preprocess_fn=None,
+            postprocess_fn=chainer.functions.softmax):
+        """Calculate probability of each category.
+
+        Args:
+            data: "train_x array" or "chainer dataset"
+            fn (Callable): Main function to forward. Its input argument is
+                either Variable, cupy.ndarray or numpy.ndarray, and returns
+                Variable.
+            batchsize (int): batch size
+            converter (Callable): convert from `data` to `inputs`
+            preprocess_fn (Callable): Its input is numpy.ndarray or 
+                cupy.ndarray, it can return either Variable, cupy.ndarray or
+                numpy.ndarray
+            postprocess_fn (Callable): Its input argument is Variable,
+                but this method may return either Variable, cupy.ndarray or
+                numpy.ndarray.
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
+
+        Returns (tuple or numpy.ndarray): Typically, it is 2-dimensional float
+            array with shape (batchsize, number of category) which represents
+            each examples probability to be each category.
+
+        """
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             proba = self._forward(
                 data, fn=self.predictor, batchsize=batchsize,
-                converter=converter, preprocess_fn=preprocess_fn,
-                postprocess_fn=postprocess_fn)
+                converter=converter, retain_inputs=retain_inputs,
+                preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return proba
 
     def predict(
-            self, data, batchsize=32, converter=concat_examples,
-            preprocess_fn=None, postprocess_fn=_argmax):
+            self, data, batchsize=16, converter=concat_examples,
+            retain_inputs=False, preprocess_fn=None, postprocess_fn=_argmax):
+        """Predict label of each category by taking .
+
+        Args:
+            data: 
+            batchsize (int): batch size
+            converter (Callable): convert from `data` to `inputs`
+            preprocess_fn (Callable): Its input is numpy.ndarray or 
+                cupy.ndarray, it can return either Variable, cupy.ndarray or
+                numpy.ndarray
+            postprocess_fn (Callable): Its input argument is Variable,
+                but this method may return either Variable, cupy.ndarray or
+                numpy.ndarray.
+            retain_inputs (bool): If True, this instance keeps inputs in 
+                `self.inputs` or not.
+
+        Returns (tuple or numpy.ndarray): Typically, it is 1-dimensional int
+            array with shape (batchsize, ) which represents each examples
+            category prediction.
+
+        """
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             predict_labels = self._forward(
                 data, fn=self.predictor, batchsize=batchsize,
-                converter=converter, preprocess_fn=preprocess_fn,
-                postprocess_fn=postprocess_fn)
+                converter=converter, retain_inputs=retain_inputs,
+                preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return predict_labels
