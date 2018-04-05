@@ -222,9 +222,9 @@ class Classifier(link.Chain):
                 output_list[j].append(_extract_numpy(output))
 
         if retain_inputs:
-            self.inputs = [numpy.concatenate(input) for input in input_list]
+            self.inputs = [numpy.concatenate(in_array) for in_array in input_list]
 
-        result = [numpy.concatenate(output) for output in output_list]
+        result = [numpy.concatenate(out_array) for out_array in output_list]
         if len(result) == 1:
             return result[0]
         else:
