@@ -1,11 +1,9 @@
-from typing import Callable
-
 import mock
 import numpy
 import pytest
 
 import chainer
-from chainer.backends import cuda
+from chainer import cuda
 from chainer import functions, reporter
 from chainer import links
 
@@ -155,7 +153,7 @@ class TestClassifier(object):
                 assert set(['target/loss']) == actual_keys
             elif isinstance(metrics_fun, dict):
                 assert set(['target/loss', 'target/user_key']) == actual_keys
-            elif isinstance(metrics_fun, Callable):
+            elif callable(metrics_fun):
                 assert set(['target/loss', 'target/accuracy']) == actual_keys
             else:
                 raise TypeError()

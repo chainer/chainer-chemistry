@@ -8,7 +8,6 @@ from chainer import link, cuda
 from chainer import reporter
 from chainer.iterators import SerialIterator
 import numpy
-from typing import Callable
 
 
 def _to_tuple(x):
@@ -97,7 +96,7 @@ class Classifier(link.Chain):
         if metrics_fun is None:
             self.compute_metrics = False
             self.metrics_fun = {}
-        elif isinstance(metrics_fun, Callable):
+        elif callable(metrics_fun):
             self.metrics_fun = {'accuracy': metrics_fun}
         elif isinstance(metrics_fun, dict):
             self.metrics_fun = metrics_fun
