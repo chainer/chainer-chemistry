@@ -1,5 +1,6 @@
 import inspect
 import os
+import pickle
 from abc import abstractmethod, ABCMeta
 from collections import OrderedDict
 
@@ -62,9 +63,18 @@ class ArgsSerializer(BaseArgsSerializer):
         if isinstance(v, InitSerializableChain):
             init_args_list = v.serialize_args(dirpath, self)
             result = {'method': 'init_args_list', 'value': init_args_list}
+        elif isinstance(v, (int, float, str)):
+            result = {'method': 'raw', 'value': v}
         else:
             # TODO(nakago): check case where we cannot serialize directly
-            result = {'method': 'raw', 'value': v}
+            import uuid
+            u4 = str(uuid.uuid4())
+            filename = '{}_{}.pickle'.format(k, u4)
+            with open(os.path.join(dirpath, filename), mode='wb') as f:
+                pickle.dump(v, f)
+            result = {'method': 'pickle', 'value': filename}
+        # TODO(nakago): save numpy array in npz format...
+
         return result
 
 
@@ -96,6 +106,11 @@ class ArgsDeserializer(BaseArgsDeserializer):
             #     dirpath, model_filename).replace('\\', '/')
             # serializers.load_npz(model_path, v)
             return v
+        elif method == 'pickle':
+            filename = item['value']
+            with open(os.path.join(dirpath, filename), mode='rb') as f:
+                v = pickle.load(f)
+            return v
         else:
             raise ValueError('Unsupported method {}'.format(method))
 
@@ -120,6 +135,12 @@ class InitSerializableChain(Chain):
         pass
 
     def serialize_args(self, dirpath, args_serializer):
+        if not hasattr(self, '_init_args_dict'):
+            raise AttributeError(
+                '_init_args_dict not found. Please use @retain_args decorator '
+                'to `__init__` method to define the class {}'
+                .format(self.__name__))
+
         init_args_list = []
         skip_self = True
         for k, v in self._init_args_dict.items():
