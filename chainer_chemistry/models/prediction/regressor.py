@@ -1,9 +1,5 @@
-import warnings
-
 import chainer
 from chainer.dataset.convert import concat_examples
-from chainer.functions.evaluation import accuracy
-from chainer.functions.loss import softmax_cross_entropy
 from chainer import link, cuda
 from chainer import reporter
 from chainer.iterators import SerialIterator
@@ -27,17 +23,16 @@ def _argmax(*args):
     return chainer.functions.argmax(x, axis=1)
 
 
-class Classifier(link.Chain):
+class Regressor(link.Chain):
 
-    """A simple classifier model.
+    """A simple regressor model.
 
     This is an example of chain that wraps another chain. It computes the
-    loss and accuracy based on a given input/label pair.
+    loss and metrics based on a given input/label pair.
 
     Args:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
-        accfun (function): DEPRECATED. Please use `metrics_fun` instead.
         metrics_fun (function or dict or None): Function that computes metrics.
         label_key (int or str): Key to specify label variable from arguments.
             When it is ``int``, a variable in positional arguments is used.
@@ -48,61 +43,33 @@ class Classifier(link.Chain):
     Attributes:
         predictor (~chainer.Link): Predictor network.
         lossfun (function): Loss function.
-        accfun (function): DEPRECATED. Please use `metrics_fun` instead.
         y (~chainer.Variable): Prediction for the last minibatch.
         loss (~chainer.Variable): Loss value for the last minibatch.
         metrics (dict): Metrics computed in last minibatch
         compute_metrics (bool): If ``True``, compute metrics on the forward
             computation. The default value is ``True``.
 
-    .. note::
-        This link uses :func:`chainer.softmax_cross_entropy` with
-        default arguments as a loss function (specified by ``lossfun``),
-        if users do not explicitly change it. In particular, the loss function
-        does not support double backpropagation.
-        If you need second or higher order differentiation, you need to turn
-        it on with ``enable_double_backprop=True``:
-
-          >>> import chainer.functions as F
-          >>> import chainer.links as L
-          >>>
-          >>> def lossfun(x, t):
-          ...     return F.softmax_cross_entropy(
-          ...         x, t, enable_double_backprop=True)
-          >>>
-          >>> predictor = L.Linear(10)
-          >>> model = L.Classifier(predictor, lossfun=lossfun)
-
     """
 
-    compute_metrics = True
-
     def __init__(self, predictor,
-                 lossfun=softmax_cross_entropy.softmax_cross_entropy,
-                 accfun=None, metrics_fun=accuracy.accuracy,
-                 label_key=-1, device=-1):
+                 lossfun=chainer.functions.mean_squared_error,
+                 metrics_fun=None, label_key=-1, device=-1):
         if not (isinstance(label_key, (int, str))):
             raise TypeError('label_key must be int or str, but is %s' %
                             type(label_key))
-        if accfun is not None:
-            warnings.warn(
-                'accfun is deprecated, please use metrics_fun instead')
-            warnings.warn('overriding metrics by accfun...')
-            # override metrics by accfun
-            metrics_fun = accfun
-
-        super(Classifier, self).__init__()
+        super(Regressor, self).__init__()
         self.lossfun = lossfun
         if metrics_fun is None:
             self.compute_metrics = False
             self.metrics_fun = {}
         elif callable(metrics_fun):
-            self.metrics_fun = {'accuracy': metrics_fun}
+            self.metrics_fun = {'metrics': metrics_fun}
         elif isinstance(metrics_fun, dict):
             self.metrics_fun = metrics_fun
         else:
             raise TypeError('Unexpected type metrics_fun must be None or '
-                            'Callable or dict. actual {}'.format(type(accfun)))
+                            'Callable or dict. actual {}'
+                            .format(type(metrics_fun)))
         self.y = None
         self.loss = None
         self.metrics = None
@@ -119,7 +86,7 @@ class Classifier(link.Chain):
     def __call__(self, *args, **kwargs):
         """Computes the loss value for an input and label pair.
 
-        It also computes accuracy and stores it to the attribute.
+        It also computes metrics and stores it to the attribute.
 
         Args:
             args (list of ~chainer.Variable): Input minibatch.
@@ -164,12 +131,12 @@ class Classifier(link.Chain):
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
-        if self.compute_metrics:
-            # Note: self.accuracy is `dict`, which is different from original
-            # chainer implementation
-            self.metrics = {key: value(self.y, t) for key, value in
-                            self.metrics_fun.items()}
-            reporter.report(self.metrics, self)
+
+        # Note: self.metrics_fun is `dict`, which is different from original
+        # chainer implementation
+        self.metrics = {key: value(self.y, t) for key, value in
+                        self.metrics_fun.items()}
+        reporter.report(self.metrics, self)
         return self.loss
 
     def _forward(self, data, fn, batchsize=16,
@@ -235,43 +202,9 @@ class Classifier(link.Chain):
         else:
             return result
 
-    def predict_proba(
-            self, data, batchsize=16, converter=concat_examples,
-            retain_inputs=False, preprocess_fn=None,
-            postprocess_fn=chainer.functions.softmax):
-        """Calculate probability of each category.
-
-        Args:
-            data: "train_x array" or "chainer dataset"
-            fn (Callable): Main function to forward. Its input argument is
-                either Variable, cupy.ndarray or numpy.ndarray, and returns
-                Variable.
-            batchsize (int): batch size
-            converter (Callable): convert from `data` to `inputs`
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
-                cupy.ndarray, it can return either Variable, cupy.ndarray or
-                numpy.ndarray
-            postprocess_fn (Callable): Its input argument is Variable,
-                but this method may return either Variable, cupy.ndarray or
-                numpy.ndarray.
-            retain_inputs (bool): If True, this instance keeps inputs in 
-                `self.inputs` or not.
-
-        Returns (tuple or numpy.ndarray): Typically, it is 2-dimensional float
-            array with shape (batchsize, number of category) which represents
-            each examples probability to be each category.
-
-        """
-        with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            proba = self._forward(
-                data, fn=self.predictor, batchsize=batchsize,
-                converter=converter, retain_inputs=retain_inputs,
-                preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
-        return proba
-
     def predict(
             self, data, batchsize=16, converter=concat_examples,
-            retain_inputs=False, preprocess_fn=None, postprocess_fn=_argmax):
+            retain_inputs=False, preprocess_fn=None, postprocess_fn=None):
         """Predict label of each category by taking .
 
         Args:
@@ -298,40 +231,3 @@ class Classifier(link.Chain):
                 converter=converter, retain_inputs=retain_inputs,
                 preprocess_fn=preprocess_fn, postprocess_fn=postprocess_fn)
         return predict_labels
-
-    # --- For backward compatibility ---
-    @property
-    def compute_accuracy(self):
-        warnings.warn('compute_accuracy is deprecated,'
-                      'please use compute_metrics instead')
-        return self.compute_metrics
-
-    @compute_accuracy.setter
-    def compute_accuracy(self, value):
-        warnings.warn('compute_accuracy is deprecated,'
-                      'please use compute_metrics instead')
-        self.compute_metrics = value
-
-    @property
-    def accuracy(self):
-        warnings.warn('accuracy is deprecated,'
-                      'please use metrics instead')
-        return self.metrics
-
-    @accuracy.setter
-    def accuracy(self, value):
-        warnings.warn('accuracy is deprecated,'
-                      'please use metrics instead')
-        self.metrics = value
-
-    @property
-    def accfun(self):
-        warnings.warn('accfun is deprecated,'
-                      'please use metrics_fun instead')
-        return self.metrics_fun
-
-    @accfun.setter
-    def accfun(self, value):
-        warnings.warn('accfun is deprecated,'
-                      'please use metrics_fun instead')
-        self.metrics_fun = value
