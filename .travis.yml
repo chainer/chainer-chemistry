@@ -23,6 +23,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
   - source activate test-environment
   - pip install codecov
+  - pip install mock
   - conda install pip pytest pytest-cov
   - conda install -c rdkit rdkit
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
