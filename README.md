@@ -17,7 +17,7 @@ It supports various state-of-the-art deep learning neural network models
 for chemical molecule property prediction.
 
 For more information, you can refer to [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
-Also, here is a gentle introduction to deep learning for molecules and Chainer Chemistry ([Google Slides]https://docs.google.com/presentation/d/1oNGaB1fdF2TGpU9PZIkxnQVyzuUl4umudLMA96d5F_s/]).
+Also, here is a gentle introduction to deep learning for molecules and Chainer Chemistry ([Google Slides](https://docs.google.com/presentation/d/1oNGaB1fdF2TGpU9PZIkxnQVyzuUl4umudLMA96d5F_s/)).
 
 ## Quick start
 
