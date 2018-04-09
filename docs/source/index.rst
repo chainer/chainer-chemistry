@@ -12,7 +12,7 @@ Features
 * Loaders for several well-known datasets (QM9, Tox21 etc.)
 
 
-Introductory to deep learning for molecules and Chainer Chemistry is also available `here (Google Slides) <https://docs.google.com/presentation/d/1oNGaB1fdF2TGpU9PZIkxnQVyzuUl4umudLMA96d5F_s/>`_.
+Introductory to deep learning for molecules and Chainer Chemistry is also available `here (SlideShare) <https://www.slideshare.net/KentaOono/deep-learning-for-molecules-introduction-to-chainer-chemistry>`_.
 
 .. toctree::
    :maxdepth: 1
