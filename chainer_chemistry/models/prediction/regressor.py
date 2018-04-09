@@ -51,6 +51,8 @@ class Regressor(link.Chain):
 
     """
 
+    compute_metrics = True
+
     def __init__(self, predictor,
                  lossfun=chainer.functions.mean_squared_error,
                  metrics_fun=None, label_key=-1, device=-1):
@@ -132,11 +134,12 @@ class Regressor(link.Chain):
         self.loss = self.lossfun(self.y, t)
         reporter.report({'loss': self.loss}, self)
 
-        # Note: self.metrics_fun is `dict`, which is different from original
-        # chainer implementation
-        self.metrics = {key: value(self.y, t) for key, value in
-                        self.metrics_fun.items()}
-        reporter.report(self.metrics, self)
+        if self.compute_metrics:
+            # Note: self.metrics_fun is `dict`, which is different from original
+            # chainer implementation
+            self.metrics = {key: value(self.y, t) for key, value in
+                            self.metrics_fun.items()}
+            reporter.report(self.metrics, self)
         return self.loss
 
     def _forward(self, data, fn, batchsize=16,
