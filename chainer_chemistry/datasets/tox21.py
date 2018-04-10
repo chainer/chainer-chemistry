@@ -40,7 +40,9 @@ def get_tox21_label_names():
     return _label_names
 
 
-def get_tox21(preprocessor=None, labels=None, return_smiles=False):
+def get_tox21(preprocessor=None, labels=None, return_smiles=False,
+              train_target_index=None, val_target_index=None,
+              test_target_index=None):
     """Downloads, caches and preprocesses Tox21 dataset.
 
     Args:
@@ -49,6 +51,12 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         return_smiles (bool): If set to True, smiles array is also returned.
+        train_target_index (list or None): target index list to partially
+            extract train dataset. If None (default), all examples are parsed.
+        val_target_index (list or None): target index list to partially
+            extract val dataset. If None (default), all examples are parsed.
+        test_target_index (list or None): target index list to partially
+            extract test dataset. If None (default), all examples are parsed.
 
     Returns:
         The 3-tuple consisting of train, validation and test
@@ -72,12 +80,19 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
                            postprocess_label=postprocess_label,
                            labels=labels)
 
-    train_result = parser.parse(get_tox21_filepath('train'),
-                                return_smiles=return_smiles)
-    val_result = parser.parse(get_tox21_filepath('val'),
-                              return_smiles=return_smiles)
-    test_result = parser.parse(get_tox21_filepath('test'),
-                               return_smiles=return_smiles)
+    train_result = parser.parse(
+        get_tox21_filepath('train'), return_smiles=return_smiles,
+        target_index=train_target_index
+    )
+    val_result = parser.parse(
+        get_tox21_filepath('val'), return_smiles=return_smiles,
+        target_index=val_target_index
+    )
+
+    test_result = parser.parse(
+        get_tox21_filepath('test'), return_smiles=return_smiles,
+        target_index=test_target_index
+    )
 
     if return_smiles:
         train, train_smiles = train_result['dataset'], train_result['smiles']
