@@ -43,7 +43,7 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False):
+    def parse(self, filepath, return_smiles=False, target_index=None):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -55,6 +55,8 @@ class CSVFileParser(BaseFileParser):
                 preprocessed dataset and smiles list.
                 If set to False, this function returns preprocessed dataset and
                 `None`.
+            target_index (list or None): target index list to partially extract
+                dataset. If None (default), all examples are parsed.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -75,6 +77,9 @@ class CSVFileParser(BaseFileParser):
                 # It is deprecated in newer versions of pandas, but we use
                 # this method for older version of pandas.
                 df = pandas.DataFrame.from_csv(filepath)
+
+            if target_index is not None:
+                df = df.iloc[target_index]
 
             features = None
             smiles_index = df.columns.get_loc(self.smiles_col)
