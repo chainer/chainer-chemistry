@@ -28,7 +28,8 @@ def get_qm9_label_names():
     return _label_names
 
 
-def get_qm9(preprocessor=None, labels=None, return_smiles=False):
+def get_qm9(preprocessor=None, labels=None, return_smiles=False,
+            target_index=None):
     """Downloads, caches and preprocesses QM9 dataset.
 
     Args:
@@ -38,6 +39,8 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False):
         labels (str or list): List of target labels.
         return_smiles (bool): If set to ``True``,
             smiles array is also returned.
+        target_index (list or None): target index list to partially extract
+            dataset. If None (default), all examples are parsed.
 
     Returns:
         dataset, which is composed of `features`, which depends on
@@ -56,7 +59,8 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False):
         preprocessor = AtomicNumberPreprocessor()
     parser = CSVFileParser(preprocessor, postprocess_label=postprocess_label,
                            labels=labels, smiles_col='SMILES1')
-    result = parser.parse(get_qm9_filepath(), return_smiles=return_smiles)
+    result = parser.parse(get_qm9_filepath(), return_smiles=return_smiles,
+                          target_index=target_index)
 
     if return_smiles:
         return result['dataset'], result['smiles']
