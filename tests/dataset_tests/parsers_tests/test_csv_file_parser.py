@@ -119,5 +119,12 @@ def test_csv_file_parser_target_index(csv_file, mols, label_a):
     assert smiles[1] == 'CC1=CC2CC(CC1)O2'
 
 
+def test_csv_file_parser_extract_total_num(csv_file):
+    preprocessor = NFPPreprocessor()
+    parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
+    num = parser.extract_total_num(csv_file)
+    assert num == 3
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-s', '-v'])
