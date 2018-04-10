@@ -29,7 +29,7 @@ class SDFFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False):
+    def parse(self, filepath, return_smiles=False, target_index=None):
         """parse sdf file using `preprocessor`
 
         Note that label is extracted from preprocessor's method.
@@ -40,6 +40,8 @@ class SDFFileParser(BaseFileParser):
                 preprocessed dataset and smiles list.
                 If set to False, this function returns preprocessed dataset and
                 `None`.
+            target_index (list or None): target index list to partially extract
+                dataset. If None (default), all examples are parsed.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -53,12 +55,19 @@ class SDFFileParser(BaseFileParser):
         if isinstance(pp, MolPreprocessor):
             mol_supplier = Chem.SDMolSupplier(filepath)
 
+            if target_index is None:
+                target_index = numpy.arange(len(mol_supplier))
+
             features = None
 
             total_count = len(mol_supplier)
             fail_count = 0
             success_count = 0
-            for mol in tqdm(mol_supplier):
+            # for mol in tqdm(mol_supplier):
+            for index in tqdm(target_index):
+                # `mol_supplier` does not accept numpy.integer, we must use int
+                mol = mol_supplier[int(index)]
+
                 if mol is None:
                     total_count -= 1
                     continue
@@ -143,3 +152,7 @@ class SDFFileParser(BaseFileParser):
                 result = self.postprocess_fn(result)
                 result = NumpyTupleDataset(result)
             return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
+
+    def extract_total_num(self, filepath):
+        mol_supplier = Chem.SDMolSupplier(filepath)
+        return len(mol_supplier)
