@@ -9,19 +9,20 @@ from chainer import cuda
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 import chainer.functions as F
-from chainer_chemistry.training.extensions.roc_auc_evaluator import \
-    ROCAUCEvaluator
 from rdkit import RDLogger
 import six
 
 from chainer_chemistry import datasets as D
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.models.prediction import Classifier
+from chainer_chemistry.training.extensions.roc_auc_evaluator import \
+    ROCAUCEvaluator
 
 import data
 import predictor
 
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
-from chainer_chemistry.models.prediction import Classifier
 
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
@@ -49,7 +50,7 @@ def main():
     label_names = D.get_tox21_label_names()
 
     parser = argparse.ArgumentParser(
-        description='Inference with a trained model.')
+        description='Predict with a trained model.')
     parser.add_argument('--in-dir', '-i', type=str, default='result',
                         help='Path to the result directory of the training '
                         'script.')
@@ -81,8 +82,6 @@ def main():
         class_num = len(label_names)
 
     _, test, _ = data.load_dataset(method, labels)
-    # test = test.get_datasets()
-    X_test = D.NumpyTupleDataset(*test.get_datasets()[:-1])
     y_test = test.get_datasets()[-1]
 
     # Load pretrained model
@@ -95,30 +94,30 @@ def main():
     chainer.serializers.load_npz(snapshot_file,
                                  predictor_, 'updater/model:main/predictor/')
 
-    # if args.gpu >= 0:
-    #     chainer.cuda.get_device_from_id(args.gpu).use()
-    #     predictor_.to_gpu()
-
-    # inference_loop = predictor.InferenceLoop(predictor_)
-    # y_pred = inference_loop.inference(X_test)
-
-    from chainer_chemistry.dataset.converters import concat_mols
     clf = Classifier(predictor=predictor_, device=args.gpu,
                      lossfun=F.sigmoid_cross_entropy,
-                     metrics_fun={'binary_accuracy': F.binary_accuracy})
+                     metrics_fun=F.binary_accuracy)
 
     # ---- predict ---
     print('Predicting...')
 
+    def extract_inputs(batch, device=None):
+        return concat_mols(batch, device=device)[:-1]
+
     def postprocess_pred(x):
         x_array = cuda.to_cpu(x.data)
         return numpy.where(x_array > 0, 1, 0)
-    y_pred = clf.predict(X_test, converter=concat_mols,
+    y_pred = clf.predict(test, converter=extract_inputs,
                          postprocess_fn=postprocess_pred)
-    y_proba = clf.predict_proba(X_test, converter=concat_mols,
+    y_proba = clf.predict_proba(test, converter=extract_inputs,
                                 postprocess_fn=F.sigmoid)
-    print('y_pred[:5]', y_pred[:5, 0])
-    print('y_proba[:5]', y_proba[:5, 0])
+
+    # `predict` method returns the prediction label (0: non-toxic, 1:toxic)
+    print('y_pread.shape = {}, y_pred[:5, 0] = {}'
+          .format(y_pred.shape, y_pred[:5, 0]))
+    # `predict_proba` method returns the probability to be toxic
+    print('y_proba.shape = {}, y_proba[:5, 0] = {}'
+          .format(y_proba.shape, y_proba[:5, 0]))
     # --- predict end ---
 
     if y_pred.ndim == 1:
@@ -164,20 +163,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-"""
-python train_tox21.py --method nfp --label NR-AR --conv-layers 3 --gpu 0 --epoch 10 --unit-num 32 --out nfp_predict
-python inference_tox21.py --in-dir nfp_predict --gpu 0
-
-python predict_tox21.py --in-dir nfp_predict --gpu 0
-
-    Predicting...
-    y_pred[:5] [0 0 0 0 0]
-    y_proba[:5] [0.01780733 0.18086143 0.05626253 0.02249673 0.01841126]
-    TaskID  Correct    Total Accuracy
-    task 0      284      291   0.9759
-    Save prediction result to prediction.npz
-    Evaluating...
-    Evaluation result:  {'main/loss': array(0.12492516, dtype=float32), 'main/binary_accuracy': array(0.9725251, dtype=float32)}
-    ROCAUC Evaluation result:  {'test/main/roc_auc': 0.33796296296296297}
-"""
