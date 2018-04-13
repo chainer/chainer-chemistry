@@ -56,14 +56,13 @@ class SDFFileParser(BaseFileParser):
             mol_supplier = Chem.SDMolSupplier(filepath)
 
             if target_index is None:
-                target_index = numpy.arange(len(mol_supplier))
+                target_index = list(range(len(mol_supplier)))
 
             features = None
 
             total_count = len(mol_supplier)
             fail_count = 0
             success_count = 0
-            # for mol in tqdm(mol_supplier):
             for index in tqdm(target_index):
                 # `mol_supplier` does not accept numpy.integer, we must use int
                 mol = mol_supplier[int(index)]
@@ -154,5 +153,19 @@ class SDFFileParser(BaseFileParser):
             return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
 
     def extract_total_num(self, filepath):
+        """Extracts total number of data which can be parsed
+
+        This method is to determine the value fed to `target_index` option of
+        `parse` method. For example, if we want to extract input feature from
+        10% of whole dataset, we need to know how many samples are in a file.
+        The returned value of thid method need not to be same as the final
+        dataset size.
+
+        Args:
+            filepath (str): file path of to check the total number.
+
+        Returns (int): total number of dataset can be parsed.
+
+        """
         mol_supplier = Chem.SDMolSupplier(filepath)
         return len(mol_supplier)
