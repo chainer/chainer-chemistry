@@ -13,18 +13,6 @@ from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 import traceback
 
 
-def _read_csv(filepath):
-    try:
-        # It is recommended to use `read_csv` method in pandas version
-        # after 0.18.x
-        df = pandas.read_csv(filepath)
-    except AttributeError as e:
-        # It is deprecated in newer versions of pandas, but we use
-        # this method for older version of pandas.
-        df = pandas.DataFrame.from_csv(filepath)
-    return df
-
-
 class CSVFileParser(BaseFileParser):
     """csv file parser
 
@@ -81,7 +69,7 @@ class CSVFileParser(BaseFileParser):
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
-            df = _read_csv(filepath)
+            df = pandas.read_csv(filepath)
 
             if target_index is not None:
                 df = df.iloc[target_index]
@@ -184,5 +172,19 @@ class CSVFileParser(BaseFileParser):
             return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
 
     def extract_total_num(self, filepath):
-        df = _read_csv(filepath)
+        """Extracts total number of data which can be parsed
+
+        This method is to determine the value fed to `target_index` option of
+        `parse` method. For example, if we want to extract input feature from
+        10% of whole dataset, we need to know how many samples are in a file.
+        The returned value of thid method need not to be same as the final
+        dataset size.
+
+        Args:
+            filepath (str): file path of to check the total number.
+
+        Returns (int): total number of dataset can be parsed.
+
+        """
+        df = pandas.read_csv(filepath)
         return len(df)
