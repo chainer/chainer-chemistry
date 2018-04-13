@@ -286,7 +286,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
             as "unknown" atom.
     """
 
-    def __init__(self, max_atoms=DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
+    def __init__(self, max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
                  include_unknown_atom=False):
         super(WeaveNetPreprocessor, self).__init__(add_Hs=add_Hs)
