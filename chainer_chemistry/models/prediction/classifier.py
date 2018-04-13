@@ -4,22 +4,9 @@ import chainer
 from chainer.dataset.convert import concat_examples
 from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
-from chainer import link, cuda
 from chainer import reporter
-from chainer.iterators import SerialIterator
-import numpy
 
-
-def _to_tuple(x):
-    if not isinstance(x, tuple):
-        x = (x,)
-    return x
-
-
-def _extract_numpy(x):
-    if isinstance(x, chainer.Variable):
-        x = x.data
-    return cuda.to_cpu(x)
+from chainer_chemistry.models.prediction.base import BaseForwardModel
 
 
 def _argmax(*args):
@@ -27,7 +14,7 @@ def _argmax(*args):
     return chainer.functions.argmax(x, axis=1)
 
 
-class Classifier(link.Chain):
+class Classifier(BaseForwardModel):
 
     """A simple classifier model.
 
@@ -54,6 +41,15 @@ class Classifier(link.Chain):
         metrics (dict): Metrics computed in last minibatch
         compute_metrics (bool): If ``True``, compute metrics on the forward
             computation. The default value is ``True``.
+
+    .. note::
+        The differences between original `Classifier` class in chainer and
+        chainer chemistry are as follows.
+        1. `predict` and `predict_proba` methods are supported.
+        2. `device` can be managed internally by the `Classifier`
+        3. `accfun` is deprecated, `metrics_fun` is used instead.
+        4. `metrics_fun` can be `dict` which specifies the metrics name as key
+           and function as value.
 
     .. note::
         This link uses :func:`chainer.softmax_cross_entropy` with
@@ -111,10 +107,7 @@ class Classifier(link.Chain):
         with self.init_scope():
             self.predictor = predictor
 
-        self.device = device
-        if device >= 0:
-            chainer.cuda.get_device_from_id(device).use()
-            self.to_gpu()  # Copy the model to the GPU
+        self.initialize(device)
 
     def __call__(self, *args, **kwargs):
         """Computes the loss value for an input and label pair.
@@ -171,69 +164,6 @@ class Classifier(link.Chain):
                             self.metrics_fun.items()}
             reporter.report(self.metrics, self)
         return self.loss
-
-    def _forward(self, data, fn, batchsize=16,
-                 converter=concat_examples, retain_inputs=False,
-                 preprocess_fn=None, postprocess_fn=None):
-        """Forward data by iterating with batch
-
-        Args:
-            data: "train_x array" or "chainer dataset"
-            fn (Callable): Main function to forward. Its input argument is
-                either Variable, cupy.ndarray or numpy.ndarray, and returns
-                Variable.
-            batchsize (int): batch size
-            converter (Callable): convert from `data` to `inputs`
-            retain_inputs (bool): If True, this instance keeps inputs in 
-                `self.inputs` or not.
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
-                cupy.ndarray, it can return either Variable, cupy.ndarray or
-                numpy.ndarray
-            postprocess_fn (Callable): Its input argument is Variable,
-                but this method may return either Variable, cupy.ndarray or
-                numpy.ndarray.
-
-        Returns (tuple or numpy.ndarray): forward result
-
-        """
-        input_list = None
-        output_list = None
-        it = SerialIterator(data, batch_size=batchsize, repeat=False,
-                            shuffle=False)
-        for batch in it:
-            inputs = converter(batch, self.device)
-            inputs = _to_tuple(inputs)
-
-            if preprocess_fn:
-                inputs = preprocess_fn(*inputs)
-                inputs = _to_tuple(inputs)
-
-            outputs = fn(*inputs)
-            outputs = _to_tuple(outputs)
-
-            # Init
-            if retain_inputs:
-                if input_list is None:
-                    input_list = [[] for _ in range(len(inputs))]
-                for j, input in enumerate(inputs):
-                    input_list[j].append(cuda.to_cpu(input))
-            if output_list is None:
-                output_list = [[] for _ in range(len(outputs))]
-
-            if postprocess_fn:
-                outputs = postprocess_fn(*outputs)
-                outputs = _to_tuple(outputs)
-            for j, output in enumerate(outputs):
-                output_list[j].append(_extract_numpy(output))
-
-        if retain_inputs:
-            self.inputs = [numpy.concatenate(in_array) for in_array in input_list]
-
-        result = [numpy.concatenate(output) for output in output_list]
-        if len(result) == 1:
-            return result[0]
-        else:
-            return result
 
     def predict_proba(
             self, data, batchsize=16, converter=concat_examples,
