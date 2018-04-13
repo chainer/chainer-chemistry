@@ -107,6 +107,7 @@ class Classifier(BaseForwardModel):
         with self.init_scope():
             self.predictor = predictor
 
+        # `initialize` must be called after `init_scope`.
         self.initialize(device)
 
     def __call__(self, *args, **kwargs):
