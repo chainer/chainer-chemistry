@@ -3,7 +3,7 @@ from chainer import functions
 from chainer import links
 from chainer_chemistry.links.embed_atom_id import EmbedAtomID
 
-from chainer_chemistry.config import DEFAULT_NUM_MAX_ATOMS
+from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 
@@ -161,7 +161,7 @@ class WeaveNet(chainer.Chain):
     """
 
     def __init__(self, weave_channels=None, hidden_dim=16,
-                 n_atom=DEFAULT_NUM_MAX_ATOMS,
+                 n_atom=WEAVE_DEFAULT_NUM_MAX_ATOMS,
                  n_sub_layer=1, n_atom_types=MAX_ATOMIC_NUM,
                  readout_mode='sum'):
         weave_channels = weave_channels or WEAVENET_DEFAULT_WEAVE_CHANNELS
