@@ -7,7 +7,8 @@ import pickle
 
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-# from sklearn.preprocessing import StandardScaler
+import pandas
+from sklearn.preprocessing import StandardScaler
 
 try:
     import matplotlib
@@ -15,19 +16,11 @@ try:
 except ImportError:
     pass
 
-
-# import chainer
-# from chainer import functions as F, cuda, Variable
 from chainer import cuda, Variable
-# from chainer import iterators as I
-# from chainer import optimizers as O
-# from chainer import training
 from chainer.datasets import split_dataset_random
-# from chainer.training import extensions as E
 import numpy
 
 from chainer_chemistry import datasets as D
-# from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
 try:
     from chainer_chemistry.models.prediction import Regressor
 except ImportError:
@@ -62,16 +55,11 @@ def main():
                                          'property at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='Label scaling method')
-    # parser.add_argument('--conv-layers', '-c', type=int, default=4)
     parser.add_argument('--batchsize', '-b', type=int, default=32)
     parser.add_argument('--gpu', '-g', type=int, default=-1)
-    # parser.add_argument('--out', '-o', type=str, default='result')
     parser.add_argument('--in-dir', '-i', type=str, default='result')
-    # parser.add_argument('--epoch', '-e', type=int, default=20)
-    # parser.add_argument('--unit-num', '-u', type=int, default=16)
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
-    # parser.add_argument('--protocol', type=int, default=2)
     args = parser.parse_args()
 
     seed = args.seed
@@ -80,11 +68,11 @@ def main():
     if args.label:
         labels = args.label
         cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
-        class_num = len(labels) if isinstance(labels, list) else 1
+        # class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        labels = None
+        labels = D.get_qm9_label_names()
         cache_dir = os.path.join('input', '{}_all'.format(method))
-        class_num = len(D.get_qm9_label_names())
+        # class_num = len(labels)
 
     # Dataset preparation
     dataset = None
@@ -105,67 +93,13 @@ def main():
             ss = pickle.load(f)
     else:
         ss = None
-        # ss = StandardScaler()
-        # labels = ss.fit_transform(dataset.get_datasets()[-1])
-        # dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
 
-    # Network
-    # n_unit = args.unit_num
-    # conv_layers = args.conv_layers
-    # if method == 'nfp':
-    #     print('Train NFP model...')
-    #     model = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
-    #                                    n_layers=conv_layers),
-    #                                MLP(out_dim=class_num, hidden_dim=n_unit))
-    # elif method == 'ggnn':
-    #     print('Train GGNN model...')
-    #     model = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
-    #                                     n_layers=conv_layers),
-    #                                MLP(out_dim=class_num, hidden_dim=n_unit))
-    # elif method == 'schnet':
-    #     print('Train SchNet model...')
-    #     model = GraphConvPredictor(
-    #         SchNet(out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers),
-    #         None)
-    # elif method == 'weavenet':
-    #     print('Train WeaveNet model...')
-    #     n_atom = 20
-    #     n_sub_layer = 1
-    #     weave_channels = [50] * conv_layers
-    #     model = GraphConvPredictor(
-    #         WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
-    #                  n_sub_layer=n_sub_layer, n_atom=n_atom),
-    #         MLP(out_dim=class_num, hidden_dim=n_unit))
-    # elif method == 'rsgcn':
-    #     print('Train RSGCN model...')
-    #     model = GraphConvPredictor(
-    #         RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
-    #         MLP(out_dim=class_num, hidden_dim=n_unit))
-    # else:
-    #     raise ValueError('[ERROR] Invalid method {}'.format(method))
     regressor = Regressor.load_pickle(
         os.path.join(args.in_dir, 'regressor.pkl'),
         device=args.gpu)  # type: Regressor
-
-    # train_iter = I.SerialIterator(train, args.batchsize)
-    # val_iter = I.SerialIterator(val, args.batchsize,
-    #                             repeat=False, shuffle=False)
-
-    def scaled_abs_error(x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if args.scale == 'standardize':
-            scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        elif args.scale == 'none':
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
 
     # We need to feed only input features `x` to `predict`/`predict_proba`.
     # This converter extracts only inputs (x1, x2, ...) from the features which
@@ -184,23 +118,33 @@ def main():
         else:
             return x
 
+    print('Predicting...')
     y_pred = regressor.predict(val, converter=extract_inputs,
                                postprocess_fn=postprocess_fn)
 
     print('y_pred.shape = {}, y_pred[:5, 0] = {}'
           .format(y_pred.shape, y_pred[:5, 0]))
 
-    # t = val.features[:, -1]
     t = concat_mols(val, device=-1)[-1]
-    import IPython; IPython.embed()
-
-
-    target_label = 0
     n_eval = 10
-    for i in range(n_eval):
-        print('i = {}, y_pred = {}, t = {}, diff = {}'
-              .format(i, y_pred[i, target_label], t[i, target_label],
-                      y_pred[i, target_label] - t[i, target_label]))
+
+    # Construct dataframe
+    df_dict = {}
+    for i, l in enumerate(labels):
+        df_dict.update({
+            'y_pred_{}'.format(l): y_pred[:, i],
+            't_{}'.format(l): t[:, i],
+        })
+    df = pandas.DataFrame(df_dict)
+
+    # Show random 5 example's prediction/ground truth table
+    print(df.sample(5))
+
+    for target_label in range(y_pred.shape[1]):
+        print('target_label = {}, y_pred = {}, t = {}, diff = {}'
+              .format(target_label, y_pred[:n_eval, target_label],
+                      t[:n_eval, target_label],
+                      y_pred[:n_eval, target_label] - t[:n_eval, target_label]))
 
     # --- evaluate ---
     # To calc loss/accuracy, we can use `Evaluator`, `ROCAUCEvaluator`
@@ -209,28 +153,6 @@ def main():
     eval_result = Evaluator(
         val_iterator, regressor, converter=concat_mols, device=args.gpu)()
     print('Evaluation result: ', eval_result)
-
-    # regressor = Regressor(
-    #     model, lossfun=F.mean_squared_error,
-    #     metrics_fun={'abs_error': scaled_abs_error}, device=args.gpu)
-
-    # optimizer = O.Adam()
-    # optimizer.setup(regressor)
-
-    # updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
-    #                                    converter=concat_mols)
-    # trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    # trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
-    #                            converter=concat_mols))
-    # trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
-    # trainer.extend(E.LogReport())
-    # trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
-    #                               'validation/main/loss',
-    #                               'validation/main/abs_error',
-    #                               'elapsed_time']))
-    # trainer.extend(E.ProgressBar())
-    # trainer.run()
-    import IPython; IPython.embed()
 
 
 if __name__ == '__main__':
