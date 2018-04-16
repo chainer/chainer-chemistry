@@ -3,6 +3,7 @@
 from __future__ import print_function
 import argparse
 import os
+import pickle
 
 from sklearn.preprocessing import StandardScaler
 
@@ -16,7 +17,6 @@ except ImportError:
 import chainer
 from chainer import functions as F, cuda, Variable
 from chainer import iterators as I
-from chainer import links as L
 from chainer import optimizers as O
 from chainer import training
 from chainer.datasets import split_dataset_random
@@ -25,6 +25,14 @@ import numpy
 
 from chainer_chemistry import datasets as D
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
+try:
+    from chainer_chemistry.models.prediction import Regressor
+except ImportError:
+    print('[ERROR] This example uses newly implemented `Regressor` class.\n'
+          'Please install the library from master branch.\n See '
+          'https://github.com/pfnet-research/chainer-chemistry#installation'
+          ' for detail.')
+    exit()
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -57,25 +65,41 @@ class GraphConvPredictor(chainer.Chain):
             x = self.mlp(x)
         return x
 
-    def _predict(self, atoms, adjs):
-        with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            x = self.__call__(atoms, adjs)
-            return F.sigmoid(x)
 
-    def predict(self, *args, batchsize=32, device=-1):
-        if device >= 0:
-            chainer.cuda.get_device_from_id(device).use()
-            self.to_gpu()  # Copy the model to the GPU
+class ScaledAbsError(object):
 
-        # TODO: Not test yet, check behavior
-        data = args[0]
-        y_list = []
-        for i in range(0, len(data), batchsize):
-            atoms, adjs = concat_mols(data[i:i + batchsize], device=device)[:2]
-            y = self._predict(atoms, adjs)
-            y_list.append(cuda.to_cpu(y.data))
-        y_array = numpy.concatenate(y_list, axis=0)
-        return y_array
+    def __init__(self, scale='standardize', ss=None):
+        self.scale = scale
+        self.ss = ss
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scale == 'standardize':
+            scaled_x0 = self.ss.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.ss.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        elif self.scale == 'none':
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+
+
+# def scaled_abs_error(scale='standardize', ss=None):
+#     def scaled_abs_error_fun(x0, x1):
+#         if isinstance(x0, Variable):
+#             x0 = cuda.to_cpu(x0.data)
+#         if isinstance(x1, Variable):
+#             x1 = cuda.to_cpu(x1.data)
+#         if scale == 'standardize':
+#             scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
+#             scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
+#             diff = scaled_x0 - scaled_x1
+#         elif scale == 'none':
+#             diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+#         return numpy.mean(numpy.absolute(diff), axis=0)[0]
+#     return scaled_abs_error_fun
 
 
 def main():
@@ -103,6 +127,7 @@ def main():
     parser.add_argument('--unit-num', '-u', type=int, default=16)
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
+    parser.add_argument('--protocol', type=int, default=2)
     args = parser.parse_args()
 
     seed = args.seed
@@ -135,6 +160,8 @@ def main():
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
+    else:
+        ss = None
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
@@ -178,42 +205,36 @@ def main():
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    def scaled_abs_error(x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if args.scale == 'standardize':
-            scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        elif args.scale == 'none':
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
-
-    classifier = L.Classifier(model, lossfun=F.mean_squared_error,
-                              accfun=scaled_abs_error)
-
-    if args.gpu >= 0:
-        chainer.cuda.get_device_from_id(args.gpu).use()
-        classifier.to_gpu()
+    regressor = Regressor(
+        model, lossfun=F.mean_squared_error,
+        # metrics_fun={'abs_error': scaled_abs_error(scale=args.scale, ss=ss)},
+        metrics_fun={'abs_error': ScaledAbsError(scale=args.scale, ss=ss)},
+        device=args.gpu)
 
     optimizer = O.Adam()
-    optimizer.setup(classifier)
+    optimizer.setup(regressor)
 
     updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
                                        converter=concat_mols)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, classifier, device=args.gpu,
+    trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/accuracy',
+    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
                                   'validation/main/loss',
-                                  'validation/main/accuracy',
+                                  'validation/main/abs_error',
                                   'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
+
+    # --- save regressor & standardscaler ---
+    protocol = args.protocol
+    regressor.save_pickle(os.path.join(args.out, 'regressor.pkl'),
+                          protocol=protocol)
+    if args.scale == 'standardize':
+        with open(os.path.join(args.out, 'ss.pkl'), mode='wb') as f:
+            pickle.dump(ss, f, protocol=protocol)
 
 
 if __name__ == '__main__':
