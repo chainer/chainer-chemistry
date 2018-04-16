@@ -1,3 +1,5 @@
+import pickle
+
 import chainer
 from chainer.dataset.convert import concat_examples
 from chainer import link, cuda
@@ -19,9 +21,9 @@ def _extract_numpy(x):
 
 class BaseForwardModel(link.Chain):
 
-    """A base model which supports _forward functionality.
+    """A base model which supports forward functionality.
 
-    It also supports `device` id management.
+    It also supports `device` id management and pickle save/load functionality.
 
     Args:
         device (int): GPU device id of this model to be used.
@@ -127,3 +129,43 @@ class BaseForwardModel(link.Chain):
             return result[0]
         else:
             return result
+
+    def save_pickle(self, filepath, protocol=None):
+        """Save the model to `filepath` as a pickle file
+
+        Args:
+            filepath (str): file path of pickle file.
+            protocol (int or None): protocol version used in `pickle`.
+                Use 2 if you need python2/python3 compatibility.
+                3 or higher is used for python3.
+
+        """
+        current_device = self.get_device()
+
+        # --- Move the model to CPU for saving ---
+        self.update_device(-1)
+        with open(filepath, mode='wb') as f:
+            pickle.dump(self, f, protocol=protocol)
+
+        # --- Revert the model to original device ---
+        self.update_device(current_device)
+
+    @staticmethod
+    def load_pickle(filepath, device=-1):
+        """Load the model from `filepath` of pickle file, and send to `device`
+
+        Args:
+            filepath (str): file path of pickle file.
+            device (int): GPU device id of this model to be used.
+                -1 indicates to use in CPU.
+
+        """
+        with open(filepath, mode='rb') as f:
+            model = pickle.load(f)
+
+        if not isinstance(model, BaseForwardModel):
+            raise TypeError('Unexpected type {}'.format(type(model)))
+
+        # --- Revert the model to specified device ---
+        model.initialize(device)
+        return model
