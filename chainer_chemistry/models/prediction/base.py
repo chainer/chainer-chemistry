@@ -79,9 +79,9 @@ class BaseForwardModel(link.Chain):
                 Variable.
             batchsize (int): batch size
             converter (Callable): convert from `data` to `inputs`
-            retain_inputs (bool): If True, this instance keeps inputs in 
+            retain_inputs (bool): If True, this instance keeps inputs in
                 `self.inputs` or not.
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
+            preprocess_fn (Callable): Its input is numpy.ndarray or
                 cupy.ndarray, it can return either Variable, cupy.ndarray or
                 numpy.ndarray
             postprocess_fn (Callable): Its input argument is Variable,
@@ -122,7 +122,8 @@ class BaseForwardModel(link.Chain):
                 output_list[j].append(_extract_numpy(output))
 
         if retain_inputs:
-            self.inputs = [numpy.concatenate(in_array) for in_array in input_list]
+            self.inputs = [numpy.concatenate(
+                in_array) for in_array in input_list]
 
         result = [numpy.concatenate(output) for output in output_list]
         if len(result) == 1:
@@ -138,8 +139,10 @@ class BaseForwardModel(link.Chain):
             protocol (int or None): protocol version used in `pickle`.
                 Use 2 if you need python2/python3 compatibility.
                 3 or higher is used for python3.
+                Please refer the official document [1] for more details.
+                [1]: https://docs.python.org/3.6/library/pickle.html#module-interface
 
-        """
+        """  # NOQA
         current_device = self.get_device()
 
         # --- Move the model to CPU for saving ---
