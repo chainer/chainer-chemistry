@@ -4,7 +4,6 @@ import chainer
 from chainer import cuda
 import numpy
 import pytest
-import tempfile
 
 from chainer_chemistry.models.prediction.base import BaseForwardModel
 
@@ -24,12 +23,12 @@ class DummyForwardModel(BaseForwardModel):
 
 
 # test `_forward` is done by `Classifier` and `Regressor` concrete class.
-def _test_save_load_pickle(device):
+def _test_save_load_pickle(device, tmpdir):
     model = DummyForwardModel(device=device, dummy_str='hoge')
-    with tempfile.TemporaryDirectory() as dirpath:
-        filepath = os.path.join(dirpath, 'model.pkl')
-        model.save_pickle(filepath)
-        model_load = DummyForwardModel.load_pickle(filepath, device=device)
+
+    filepath = os.path.join(str(tmpdir), 'model.pkl')
+    model.save_pickle(filepath)
+    model_load = DummyForwardModel.load_pickle(filepath, device=device)
 
     # --- check model class ---
     assert isinstance(model_load, DummyForwardModel)
@@ -48,12 +47,13 @@ def _test_save_load_pickle(device):
         assert numpy.allclose(cuda.to_cpu(v.data), cuda.to_cpu(v_load.data))
 
 
-def test_save_load_pickle_cpu():
-    _test_save_load_pickle(device=-1)
+def test_save_load_pickle_cpu(tmpdir):
+    _test_save_load_pickle(device=-1, tmpdir=tmpdir)
+
 
 @pytest.mark.gpu
-def test_save_load_pickle_gpu():
-    _test_save_load_pickle(device=0)
+def test_save_load_pickle_gpu(tmpdir):
+    _test_save_load_pickle(device=0, tmpdir=tmpdir)
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
