@@ -86,22 +86,6 @@ class ScaledAbsError(object):
         return numpy.mean(numpy.absolute(diff), axis=0)[0]
 
 
-# def scaled_abs_error(scale='standardize', ss=None):
-#     def scaled_abs_error_fun(x0, x1):
-#         if isinstance(x0, Variable):
-#             x0 = cuda.to_cpu(x0.data)
-#         if isinstance(x1, Variable):
-#             x1 = cuda.to_cpu(x1.data)
-#         if scale == 'standardize':
-#             scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-#             scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-#             diff = scaled_x0 - scaled_x1
-#         elif scale == 'none':
-#             diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-#         return numpy.mean(numpy.absolute(diff), axis=0)[0]
-#     return scaled_abs_error_fun
-
-
 def main():
     # Supported preprocessing/network list
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
