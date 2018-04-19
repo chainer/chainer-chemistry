@@ -43,7 +43,7 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False):
+    def parse(self, filepath, return_smiles=False, target_index=None):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -55,6 +55,8 @@ class CSVFileParser(BaseFileParser):
                 preprocessed dataset and smiles list.
                 If set to False, this function returns preprocessed dataset and
                 `None`.
+            target_index (list or None): target index list to partially extract
+                dataset. If None (default), all examples are parsed.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -67,14 +69,10 @@ class CSVFileParser(BaseFileParser):
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
-            try:
-                # It is recommended to use `read_csv` method in pandas version
-                # after 0.18.x
-                df = pandas.read_csv(filepath)
-            except AttributeError as e:
-                # It is deprecated in newer versions of pandas, but we use
-                # this method for older version of pandas.
-                df = pandas.DataFrame.from_csv(filepath)
+            df = pandas.read_csv(filepath)
+
+            if target_index is not None:
+                df = df.iloc[target_index]
 
             features = None
             smiles_index = df.columns.get_loc(self.smiles_col)
@@ -172,3 +170,21 @@ class CSVFileParser(BaseFileParser):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
             return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
+
+    def extract_total_num(self, filepath):
+        """Extracts total number of data which can be parsed
+
+        We can use this method to determine the value fed to `target_index`
+        option of `parse` method. For example, if we want to extract input
+        feature from 10% of whole dataset, we need to know how many samples
+        are in a file. The returned value of this method may not to be same as
+        the final dataset size.
+
+        Args:
+            filepath (str): file path of to check the total number.
+
+        Returns (int): total number of dataset can be parsed.
+
+        """
+        df = pandas.read_csv(filepath)
+        return len(df)
