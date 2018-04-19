@@ -6,6 +6,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import ChemicalFeatures
 from rdkit import RDConfig
 
+from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array
 from chainer_chemistry.dataset.preprocessors.common \
@@ -17,11 +18,10 @@ from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
 
 ATOM = ['H', 'C', 'N', 'O', 'S', 'Cl', 'Br', 'F', 'P', 'I']
 MAX_DISTANCE = 2  # 7
-DEFAULT_NUM_MAX_ATOMS = 20  # 60  # paper
 
 
 # --- Atom feature extraction ---
-def construct_atom_type_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS,
+def construct_atom_type_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS,
                             atom_list=None, include_unknown_atom=False):
     atom_list = atom_list or ATOM
     if include_unknown_atom:
@@ -46,7 +46,8 @@ def construct_atom_type_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS,
     return atom_type_vec
 
 
-def construct_formal_charge_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_formal_charge_vec(mol,
+                                num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     n_atom = mol.GetNumAtoms()
     formal_charge_vec = numpy.zeros((num_max_atoms, 1), dtype=numpy.float32)
     for i in range(n_atom):
@@ -55,7 +56,8 @@ def construct_formal_charge_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return formal_charge_vec
 
 
-def construct_hybridization_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_hybridization_vec(mol,
+                                num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     # TODO(Oono)
     # Can we enhance preprocessing speed by making factory once
     # prior to calling this function many times?
@@ -75,7 +77,7 @@ def construct_hybridization_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return hybridization_vec
 
 
-def construct_partial_charge_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_partial_charge_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     AllChem.ComputeGasteigerCharges(mol)
     n = mol.GetNumAtoms()
     partial_charge_vec = numpy.zeros((num_max_atoms, 1), dtype=numpy.float32)
@@ -85,7 +87,7 @@ def construct_partial_charge_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return partial_charge_vec
 
 
-def construct_atom_ring_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_atom_ring_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     nAtom = mol.GetNumAtoms()
     sssr = Chem.GetSymmSSSR(mol)
     ring_feature = numpy.zeros((num_max_atoms, 6,), dtype=numpy.float32)
@@ -99,7 +101,7 @@ def construct_atom_ring_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return ring_feature
 
 
-def construct_hydrogen_bonding(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_hydrogen_bonding(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     fdefName = os.path.join(RDConfig.RDDataDir, 'BaseFeatures.fdef')
     factory = ChemicalFeatures.BuildFeatureFactory(fdefName)
     feats = factory.GetFeaturesForMol(mol)
@@ -114,7 +116,8 @@ def construct_hydrogen_bonding(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return hydrogen_bonding_vec
 
 
-def construct_num_hydrogens_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_num_hydrogens_vec(mol,
+                                num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     n_hydrogen_vec = numpy.zeros((num_max_atoms, 1), dtype=numpy.float32)
     n_atom = mol.GetNumAtoms()
     for i in range(n_atom):
@@ -132,7 +135,7 @@ def construct_num_hydrogens_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return n_hydrogen_vec
 
 
-def construct_aromaticity_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_aromaticity_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     aromaticity_vec = numpy.zeros((num_max_atoms, 1), dtype=numpy.float32)
     aromatix_atoms = mol.GetAromaticAtoms()
     for a in aromatix_atoms:
@@ -141,7 +144,8 @@ def construct_aromaticity_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return aromaticity_vec
 
 
-def construct_atom_feature(mol, add_Hs, num_max_atoms=DEFAULT_NUM_MAX_ATOMS,
+def construct_atom_feature(mol, add_Hs,
+                           num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS,
                            atom_list=None, include_unknown_atom=False):
     """construct atom feature
 
@@ -212,7 +216,7 @@ def construct_distance_vec(distance_matrix, i, j):
     return distance_feature
 
 
-def construct_ring_feature_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_ring_feature_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     n_atom = mol.GetNumAtoms()
     sssr = Chem.GetSymmSSSR(mol)
     ring_feature_vec = numpy.zeros(
@@ -228,7 +232,7 @@ def construct_ring_feature_vec(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
     return ring_feature_vec
 
 
-def construct_pair_feature(mol, num_max_atoms=DEFAULT_NUM_MAX_ATOMS):
+def construct_pair_feature(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     """construct pair feature
 
     Args:
@@ -282,7 +286,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
             as "unknown" atom.
     """
 
-    def __init__(self, max_atoms=DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
+    def __init__(self, max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
                  include_unknown_atom=False):
         super(WeaveNetPreprocessor, self).__init__(add_Hs=add_Hs)
