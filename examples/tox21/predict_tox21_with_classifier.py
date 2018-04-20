@@ -14,7 +14,13 @@ import six
 
 from chainer_chemistry import datasets as D
 from chainer_chemistry.dataset.converters import concat_mols
-from chainer_chemistry.models.prediction import Classifier
+try:
+    from chainer_chemistry.models.prediction import Classifier
+except ImportError:
+    print('[WARNING] If you want to use Classifier in Chainer Chemistry, '
+          'please install the library from master branch.\n See '
+          'https://github.com/pfnet-research/chainer-chemistry#installation'
+          ' for detail.')
 from chainer_chemistry.training.extensions.roc_auc_evaluator import \
     ROCAUCEvaluator
 
@@ -23,7 +29,6 @@ import predictor
 
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
-
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 
@@ -101,6 +106,9 @@ def main():
     # ---- predict ---
     print('Predicting...')
 
+    # We need to feed only input features `x` to `predict`/`predict_proba`.
+    # This converter extracts only inputs (x1, x2, ...) from the features which
+    # consist of input `x` and label `t` (x1, x2, ..., t).
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 
