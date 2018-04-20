@@ -62,7 +62,7 @@ class GraphConvPredictor(chainer.Chain):
             x = self.__call__(atoms, adjs)
             return F.sigmoid(x)
 
-    def predict(self, *args, batchsize=32, device=-1):
+    def predict(self, batchsize=32, device=-1, *args):
         if device >= 0:
             chainer.cuda.get_device_from_id(device).use()
             self.to_gpu()  # Copy the model to the GPU
@@ -134,7 +134,7 @@ def main():
         # Standard Scaler for labels
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)

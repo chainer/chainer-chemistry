@@ -104,7 +104,7 @@ def main():
         # Standard Scaler for labels
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
