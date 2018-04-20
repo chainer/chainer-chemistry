@@ -68,5 +68,10 @@ def test_get_tox21_label_names():
         assert isinstance(label, str)
 
 
+def test_get_tox21_filepath_assert_raises():
+    with pytest.raises(ValueError):
+        cache_filepath = tox21.get_tox21_filepath('other')
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])

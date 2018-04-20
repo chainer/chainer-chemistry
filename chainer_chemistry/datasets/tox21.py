@@ -107,20 +107,24 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False,
 
 
 def _get_tox21_filepath(dataset_type):
-    """Returns a filepath in which the tox21 dataset is cached.
+    """Returns a file path in which the tox21 dataset is cached.
 
-    Thie function returns a filepath in which `dataset_type`
+    This function returns a file path in which `dataset_type`
     of the tox21 dataset is cached.
-    Not that this function does not check if the dataset actually
-    has been downloaded or not.
+    Note that this function does not check if the dataset has actually
+    been downloaded or not.
 
     Args:
         dataset_type(str): Name of the target dataset type.
             Either 'train', 'val', or 'test'.
 
-    Returns (str): filepath for the tox21 dataset
+    Returns (str): file path for the tox21 dataset
 
     """
+    if dataset_type not in _config.keys():
+        raise ValueError("Invalid dataset type '{}'. Accepted values are "
+                         "'train', 'val' or 'test'.".format(dataset_type))
+
     c = _config[dataset_type]
     sdffile = c['filename']
 
@@ -130,9 +134,9 @@ def _get_tox21_filepath(dataset_type):
 
 
 def get_tox21_filepath(dataset_type, download_if_not_exist=True):
-    """Returns a filepath in which the tox21 dataset is cached.
+    """Returns a file path in which the tox21 dataset is cached.
 
-    Thie function returns a filepath in which `dataset_type`
+    This function returns a file path in which `dataset_type`
     of the tox21 dataset is or will be cached.
 
     If the dataset is not cached and if ``download_if_not_exist``
@@ -142,7 +146,7 @@ def get_tox21_filepath(dataset_type, download_if_not_exist=True):
         dataset_type: Name of the target dataset type.
             Either 'train', 'val', or 'test'
 
-    Returns (str): filepath for tox21 dataset
+    Returns (str): file path for tox21 dataset
 
     """
     cache_filepath = _get_tox21_filepath(dataset_type)
