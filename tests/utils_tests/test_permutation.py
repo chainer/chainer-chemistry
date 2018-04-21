@@ -62,5 +62,35 @@ def test_permute_adj(adj):
                 adj[..., perm[i], perm[j]], adj_perm[..., i, j])
 
 
+@pytest.mark.parametrize('adj', [
+    numpy.random.randint(10, size=(batchsize, num_node, num_node, ch),
+                         dtype=numpy.int32)
+])
+def test_permute_adj_axis12(adj):
+    perm = numpy.random.permutation(num_node)
+    adj_perm = permute_adj(adj, perm, axis=[1, 2])
+
+    assert adj.shape == adj_perm.shape
+    # print('perm', perm)
+    # print('adj, adj_perm', adj, adj_perm)
+    for i in range(num_node):
+        for j in range(num_node):
+            assert numpy.allclose(
+                adj[:, perm[i], perm[j], :], adj_perm[:, i, j, :])
+
+
+@pytest.mark.parametrize('adj', [
+    numpy.random.randint(10, size=(batchsize, ch, num_node, num_node),
+                         dtype=numpy.int32)
+])
+def test_permute_adj_error(adj):
+    perm = numpy.random.permutation(num_node)
+    with pytest.raises(TypeError):
+        permute_adj(adj, perm, axis=1)
+
+    with pytest.raises(ValueError):
+        permute_adj(adj, perm, axis=[1, 2, 3])
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
