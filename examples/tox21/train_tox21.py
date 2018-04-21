@@ -6,12 +6,6 @@ import os
 
 import logging
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
 import argparse
 import chainer
 from chainer import functions as F

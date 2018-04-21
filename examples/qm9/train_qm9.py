@@ -6,13 +6,6 @@ import os
 
 from sklearn.preprocessing import StandardScaler
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
-
 import chainer
 from chainer import functions as F, cuda, Variable
 from chainer import iterators as I

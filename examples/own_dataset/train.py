@@ -17,11 +17,6 @@ from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
 import numpy
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
