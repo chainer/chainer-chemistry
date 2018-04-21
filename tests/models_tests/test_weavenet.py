@@ -5,6 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.weavenet import WeaveNet
+from chainer_chemistry.utils.permutation import permute_adj, permute_node
 
 atom_size = 5
 weave_channels = [50, 50]
@@ -85,11 +86,52 @@ def test_backward_gpu(model, model_processed, data):
         [cuda.to_gpu(d) for d in data]
     model.to_gpu()
     model_processed.to_gpu()
-    gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
-                                  atol=1e-1, rtol=1e-1)
-    gradient_check.check_backward(model_processed, (atom_data_processed,
-                                                    adj_data), y_grad,
-                                  atol=1e-1, rtol=1e-1)
+    gradient_check.check_backward(
+        model, (atom_data, adj_data), y_grad, atol=1e-1, rtol=1e-1)
+    gradient_check.check_backward(
+        model_processed, (atom_data_processed, adj_data), y_grad,
+        atol=1e-1, rtol=1e-1)
+
+
+def test_forward_cpu_graph_invariant(model, data):
+    atom_data, adj_data = data[1], data[2]
+    y_actual = cuda.to_cpu(model(atom_data, adj_data).data)
+
+    permutation_index = numpy.random.permutation(atom_size)
+    permute_atom_data = permute_node(atom_data, permutation_index)
+    permute_adj_data = adj_data.reshape(
+        batch_size, atom_size, atom_size, pair_feature_dim
+    ).astype(numpy.float32)
+    permute_adj_data = permute_adj(
+        permute_adj_data, permutation_index, axis=[1, 2])
+    permute_adj_data = permute_adj_data.reshape(
+        batch_size, atom_size * atom_size, pair_feature_dim
+    ).astype(numpy.float32)
+    permute_y_actual = cuda.to_cpu(model(
+        permute_atom_data, permute_adj_data).data)
+    assert numpy.allclose(y_actual, permute_y_actual)
+
+
+def test_forward_cpu_processed_graph_invariant(model_processed, data):
+    atom_data_processed, adj_data = data[0], data[2]
+
+    permutation_index = numpy.random.permutation(atom_size)
+    permute_atom_data_processed = permute_node(
+        atom_data_processed, permutation_index, axis=1)
+
+    permute_adj_data = adj_data.reshape(
+        batch_size, atom_size, atom_size, pair_feature_dim
+    ).astype(numpy.float32)
+    permute_adj_data = permute_adj(
+        permute_adj_data, permutation_index, axis=[1, 2])
+    permute_adj_data = permute_adj_data.reshape(
+        batch_size, atom_size * atom_size, pair_feature_dim
+    ).astype(numpy.float32)
+    y_processed_actual = cuda.to_cpu(
+        model_processed(atom_data_processed, adj_data).data)
+    permute_y_processed_actual = cuda.to_cpu(model_processed(
+        permute_atom_data_processed, permute_adj_data).data)
+    assert numpy.allclose(y_processed_actual, permute_y_processed_actual)
 
 
 if __name__ == '__main__':
