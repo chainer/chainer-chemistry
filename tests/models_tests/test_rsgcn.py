@@ -68,12 +68,8 @@ def test_backward_cpu(model_no_dropout, data):
     atom_data, adj_data, y_grad = data
     gradient_check.check_backward(
         model_no_dropout, (atom_data, adj_data), y_grad,
-        params=(model_no_dropout.embed.W, ),
+        params=tuple(model_no_dropout.params()),
         atol=1e-1, rtol=1e-1, no_grads=[True, True])
-
-    gradient_check.check_backward(
-        model_no_dropout, (model_no_dropout.embed(atom_data).data, adj_data),
-        y_grad, atol=1e-1, rtol=1e-1, no_grads=[False, True])
 
 
 # TODO(nakago): check why tolerance is high
@@ -83,11 +79,8 @@ def test_backward_gpu(model_no_dropout, data):
     model_no_dropout.to_gpu()
     gradient_check.check_backward(
         model_no_dropout, (atom_data, adj_data), y_grad,
-        params=(model_no_dropout.embed.W, ),
+        params=tuple(model_no_dropout.params()),
         atol=1e-1, rtol=1e-1, no_grads=[True, True])
-    gradient_check.check_backward(
-        model_no_dropout, (model_no_dropout.embed(atom_data).data, adj_data),
-        y_grad, atol=1e-1, rtol=1e-1, no_grads=[False, True])
 
 
 def test_forward_cpu_graph_invariant(model, data):
