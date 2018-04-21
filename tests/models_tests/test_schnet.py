@@ -5,6 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.schnet import SchNet
+from chainer_chemistry.utils.permutation import permute_node, permute_adj
 
 atom_size = 5
 out_dim = 4
@@ -61,6 +62,18 @@ def test_backward_gpu(model, data):
     model.to_gpu()
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
                                   atol=1e-1, rtol=1e-1)
+
+
+def test_forward_cpu_graph_invariant(model, data):
+    atom_data, adj_data = data[0], data[1]
+    y_actual = cuda.to_cpu(model(atom_data, adj_data).data)
+
+    permutation_index = numpy.random.permutation(atom_size)
+    permute_atom_data = permute_node(atom_data, permutation_index)
+    permute_adj_data = permute_adj(adj_data, permutation_index)
+    permute_y_actual = cuda.to_cpu(model(
+        permute_atom_data, permute_adj_data).data)
+    assert numpy.allclose(y_actual, permute_y_actual)
 
 
 if __name__ == '__main__':
