@@ -109,7 +109,7 @@ def test_forward_cpu_graph_invariant(model, data):
     ).astype(numpy.float32)
     permute_y_actual = cuda.to_cpu(model(
         permute_atom_data, permute_adj_data).data)
-    assert numpy.allclose(y_actual, permute_y_actual)
+    assert numpy.allclose(y_actual, permute_y_actual, rtol=1.e-4, atol=1.e-6)
 
 
 def test_forward_cpu_processed_graph_invariant(model_processed, data):
@@ -131,7 +131,8 @@ def test_forward_cpu_processed_graph_invariant(model_processed, data):
         model_processed(atom_data_processed, adj_data).data)
     permute_y_processed_actual = cuda.to_cpu(model_processed(
         permute_atom_data_processed, permute_adj_data).data)
-    assert numpy.allclose(y_processed_actual, permute_y_processed_actual)
+    assert numpy.allclose(y_processed_actual, permute_y_processed_actual,
+                          rtol=1.e-5, atol=1.e-6)
 
 
 if __name__ == '__main__':
