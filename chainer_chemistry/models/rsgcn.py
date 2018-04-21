@@ -83,12 +83,14 @@ class RSGCN(chainer.Chain):
         readout (Callable): readout function. If None, `rsgcn_readout_sum` is
             used. To the best of our knowledge, the paper of RSGCN model does
             not give any suggestion on readout.
+        dropout_ratio (float): ratio used in dropout function.
+            If 0 or negative value is set, dropout function is skipped.
 
     """
 
     def __init__(self, out_dim, hidden_dim=32, n_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM,
-                 use_batch_norm=False, readout=None):
+                 use_batch_norm=False, readout=None, dropout_ratio=0.5):
         super(RSGCN, self).__init__()
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
@@ -112,6 +114,7 @@ class RSGCN(chainer.Chain):
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
+        self.dropout_ratio = dropout_ratio
 
     def __call__(self, graph, adj):
         """Forward propagation
@@ -147,7 +150,8 @@ class RSGCN(chainer.Chain):
             h = gconv(h, w_adj)
             if bnorm is not None:
                 h = bnorm(h)
-            h = functions.dropout(h)
+            if self.dropout_ratio > 0.:
+                h = functions.dropout(h, ratio=self.dropout_ratio)
             if i < self.n_layers - 1:
                 h = functions.relu(h)
 
