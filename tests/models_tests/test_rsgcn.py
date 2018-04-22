@@ -102,7 +102,7 @@ def test_forward_cpu_graph_invariant(model, data):
     with chainer.using_config('train', False):
         permute_y_actual = cuda.to_cpu(model(
             permute_atom_data, permute_adj_data).data)
-    assert numpy.allclose(y_actual, permute_y_actual)
+    assert numpy.allclose(y_actual, permute_y_actual, rtol=1.e-5, atol=1.e-6)
 
 
 if __name__ == '__main__':
