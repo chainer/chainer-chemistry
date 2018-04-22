@@ -36,11 +36,11 @@ def data():
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)
-    # adj_data is symmetric along pair of atoms
     adj_data = numpy.random.uniform(
         0, high=1, size=(batch_size, pair_feature_dim, atom_size, atom_size)
     ).astype(numpy.float32)
-    adj_data = adj_data + adj_data.swapaxes(-1, -2)
+    # adj_data is symmetric along pair of atoms
+    # adj_data = adj_data + adj_data.swapaxes(-1, -2)
     adj_data = adj_data.transpose((0, 3, 2, 1)).reshape(
         batch_size, atom_size * atom_size, pair_feature_dim
     ).astype(numpy.float32)
