@@ -40,7 +40,9 @@ def get_tox21_label_names():
     return _label_names
 
 
-def get_tox21(preprocessor=None, labels=None, return_smiles=False):
+def get_tox21(preprocessor=None, labels=None, return_smiles=False,
+              train_target_index=None, val_target_index=None,
+              test_target_index=None):
     """Downloads, caches and preprocesses Tox21 dataset.
 
     Args:
@@ -49,6 +51,12 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         return_smiles (bool): If set to True, smiles array is also returned.
+        train_target_index (list or None): target index list to partially
+            extract train dataset. If None (default), all examples are parsed.
+        val_target_index (list or None): target index list to partially
+            extract val dataset. If None (default), all examples are parsed.
+        test_target_index (list or None): target index list to partially
+            extract test dataset. If None (default), all examples are parsed.
 
     Returns:
         The 3-tuple consisting of train, validation and test
@@ -72,12 +80,19 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
                            postprocess_label=postprocess_label,
                            labels=labels)
 
-    train_result = parser.parse(get_tox21_filepath('train'),
-                                return_smiles=return_smiles)
-    val_result = parser.parse(get_tox21_filepath('val'),
-                              return_smiles=return_smiles)
-    test_result = parser.parse(get_tox21_filepath('test'),
-                               return_smiles=return_smiles)
+    train_result = parser.parse(
+        get_tox21_filepath('train'), return_smiles=return_smiles,
+        target_index=train_target_index
+    )
+    val_result = parser.parse(
+        get_tox21_filepath('val'), return_smiles=return_smiles,
+        target_index=val_target_index
+    )
+
+    test_result = parser.parse(
+        get_tox21_filepath('test'), return_smiles=return_smiles,
+        target_index=test_target_index
+    )
 
     if return_smiles:
         train, train_smiles = train_result['dataset'], train_result['smiles']
@@ -92,20 +107,24 @@ def get_tox21(preprocessor=None, labels=None, return_smiles=False):
 
 
 def _get_tox21_filepath(dataset_type):
-    """Returns a filepath in which the tox21 dataset is cached.
+    """Returns a file path in which the tox21 dataset is cached.
 
-    Thie function returns a filepath in which `dataset_type`
+    This function returns a file path in which `dataset_type`
     of the tox21 dataset is cached.
-    Not that this function does not check if the dataset actually
-    has been downloaded or not.
+    Note that this function does not check if the dataset has actually
+    been downloaded or not.
 
     Args:
         dataset_type(str): Name of the target dataset type.
             Either 'train', 'val', or 'test'.
 
-    Returns (str): filepath for the tox21 dataset
+    Returns (str): file path for the tox21 dataset
 
     """
+    if dataset_type not in _config.keys():
+        raise ValueError("Invalid dataset type '{}'. Accepted values are "
+                         "'train', 'val' or 'test'.".format(dataset_type))
+
     c = _config[dataset_type]
     sdffile = c['filename']
 
@@ -115,9 +134,9 @@ def _get_tox21_filepath(dataset_type):
 
 
 def get_tox21_filepath(dataset_type, download_if_not_exist=True):
-    """Returns a filepath in which the tox21 dataset is cached.
+    """Returns a file path in which the tox21 dataset is cached.
 
-    Thie function returns a filepath in which `dataset_type`
+    This function returns a file path in which `dataset_type`
     of the tox21 dataset is or will be cached.
 
     If the dataset is not cached and if ``download_if_not_exist``
@@ -127,7 +146,7 @@ def get_tox21_filepath(dataset_type, download_if_not_exist=True):
         dataset_type: Name of the target dataset type.
             Either 'train', 'val', or 'test'
 
-    Returns (str): filepath for tox21 dataset
+    Returns (str): file path for tox21 dataset
 
     """
     cache_filepath = _get_tox21_filepath(dataset_type)

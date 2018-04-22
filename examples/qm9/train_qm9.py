@@ -7,24 +7,19 @@ import pickle
 
 from sklearn.preprocessing import StandardScaler
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
-
 import chainer
-from chainer import functions as F, cuda, Variable
+from chainer import cuda
+from chainer.datasets import split_dataset_random
+from chainer import functions as F
 from chainer import iterators as I
 from chainer import optimizers as O
 from chainer import training
-from chainer.datasets import split_dataset_random
 from chainer.training import extensions as E
+from chainer import Variable
 import numpy
 
 from chainer_chemistry import datasets as D
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
 try:
     from chainer_chemistry.models.prediction import Regressor
 except ImportError:
@@ -41,7 +36,12 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 class GraphConvPredictor(chainer.Chain):
 
     def __init__(self, graph_conv, mlp=None):
-        """
+        """Graph Convolution Predictor
+
+        It sequentially combines graph convolution network and multi layer
+        perceptron.
+        `graph_conv` gathers the each node's feature to extract graph feature,
+        `mlp` processed the extracted graph feature to calculate final output.
 
         Args:
             graph_conv: graph convolution network to obtain molecule feature
@@ -113,6 +113,9 @@ def main():
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
     parser.add_argument('--protocol', type=int, default=2)
     parser.add_argument('--model-filename', type=str, default='regressor.pkl')
+    parser.add_argument('--num-data', type=int, default=-1,
+                        help='Number of data to be parsed from parser.'
+                             '-1 indicates to parse all data.')
     args = parser.parse_args()
 
     seed = args.seed
@@ -130,23 +133,35 @@ def main():
     # Dataset preparation
     dataset = None
 
-    if os.path.exists(cache_dir):
-        print('load from cache {}'.format(cache_dir))
-        dataset = NumpyTupleDataset.load(os.path.join(cache_dir, 'data.npz'))
+    num_data = args.num_data
+    if num_data >= 0:
+        dataset_filename = 'data_{}.npz'.format(num_data)
+    else:
+        dataset_filename = 'data.npz'
+    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
+    if os.path.exists(dataset_cache_path):
+        print('load from cache {}'.format(dataset_cache_path))
+        dataset = NumpyTupleDataset.load(dataset_cache_path)
     if dataset is None:
         print('preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
-        dataset = D.get_qm9(preprocessor, labels=labels)
+        if num_data >= 0:
+            # only use first 100 for debug
+            target_index = numpy.arange(num_data)
+            dataset = D.get_qm9(preprocessor, labels=labels,
+                                target_index=target_index)
+        else:
+            dataset = D.get_qm9(preprocessor, labels=labels)
         os.makedirs(cache_dir)
-        NumpyTupleDataset.save(os.path.join(cache_dir, 'data.npz'), dataset)
+        NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     if args.scale == 'standardize':
         # Standard Scaler for labels
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
     else:
         ss = None
+    dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)

@@ -6,12 +6,6 @@ import os
 
 import logging
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
 import argparse
 import chainer
 from chainer import functions as F
@@ -90,6 +84,9 @@ def main():
                         help='path to a trainer snapshot')
     parser.add_argument('--frequency', '-f', type=int, default=-1,
                         help='Frequency of taking a snapshot')
+    parser.add_argument('--num-data', type=int, default=-1,
+                        help='Number of data to be parsed from parser.'
+                             '-1 indicates to parse all data.')
     args = parser.parse_args()
 
     method = args.method
@@ -101,7 +98,7 @@ def main():
         class_num = len(label_names)
 
     # Dataset preparation
-    train, val, _ = data.load_dataset(method, labels)
+    train, val, _ = data.load_dataset(method, labels, num_data=args.num_data)
 
     # Network
     predictor_ = predictor.build_predictor(

@@ -17,11 +17,6 @@ from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
 import numpy
 from rdkit import Chem
 from sklearn.preprocessing import StandardScaler
@@ -104,7 +99,7 @@ def main():
         # Standard Scaler for labels
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*dataset.get_datasets()[:-1], labels)
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
