@@ -134,6 +134,38 @@ class BaseForwardModel(link.Chain):
     def save_pickle(self, filepath, protocol=None):
         """Save the model to `filepath` as a pickle file
 
+        This function send the parameters to CPU before saving the model so
+        that the pickled file can be loaded with in CPU-only environment. 
+
+        Saved pickle file can be loaded with `load_pickle` static method.
+
+        Note that the transportability of the saved file follows the
+        specification of `pickle` module, namely serialized data depends on the
+        specific class or attribute structure when saved. The file may not be
+        loaded in different environment (python version is different or
+        different version of library), or after large refactoring of the
+        pickled object class.
+        If you want to avoid it, use `chainer.serializers.save_npz`
+        method instead to save only model parameters.
+
+    .. admonition:: Example
+
+       >>> from chainer_chemistry.models import BaseForwardModel
+       >>> class DummyForwardModel(BaseForwardModel):
+       >>> 
+       >>>     def __init__(self, device=-1):
+       >>>         super(DummyForwardModel, self).__init__()
+       >>>         with self.init_scope():
+       >>>             self.l = chainer.links.Linear(3, 10)
+       >>>         self.initialize(device)
+       >>> 
+       >>>     def __call__(self, x):
+       >>>         return self.l(x)
+       >>>
+       >>> model = DummyForwardModel()
+       >>> filepath = 'model.pkl'
+       >>> model.save_pickle(filepath)  
+
         Args:
             filepath (str): file path of pickle file.
             protocol (int or None): protocol version used in `pickle`.
@@ -156,6 +188,18 @@ class BaseForwardModel(link.Chain):
     @staticmethod
     def load_pickle(filepath, device=-1):
         """Load the model from `filepath` of pickle file, and send to `device`
+
+        The file saved by `save_pickle` method can be loaded, but it may fail
+        to load when loading from different develop environment or after
+        updating library version.
+        See `save_pickle` method for the transportability of the saved file.
+
+    .. admonition:: Example
+
+       >>> from chainer_chemistry.models import BaseForwardModel
+       >>> filepath = 'model.pkl'
+       >>> # `load_pickle` is static method, call from Class to get instance.
+       >>> model = BaseForwardModel.load_pickle(filepath)
 
         Args:
             filepath (str): file path of pickle file.
