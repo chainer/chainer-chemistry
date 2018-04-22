@@ -100,6 +100,10 @@ def main():
     args = parser.parse_args()
 
     method = args.method
+    if method not in ['rsgcn', 'sparse_rsgcn']:
+        raise ValueError('This experimental branch only supports rsgcn or sparse_rsgcn method, '
+                         'got {} instead'.format(method))
+
     if args.label:
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1
