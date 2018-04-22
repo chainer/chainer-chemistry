@@ -4,10 +4,11 @@ import argparse
 import glob
 import json
 import numpy
+
 from chainer import cuda
+import chainer.functions as F
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-import chainer.functions as F
 from rdkit import RDLogger
 import six
 
@@ -23,7 +24,6 @@ except ImportError:
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 import data
-import predictor
 
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
@@ -70,6 +70,8 @@ def main():
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID to use. Negative value indicates '
                         'not to use GPU and to run the code in CPU.')
+    parser.add_argument('--model-filename', type=str, default='classifier.pkl',
+                        help='file name for pickled model')
     args = parser.parse_args()
 
     with open(os.path.join(args.in_dir, 'config.json'), 'r') as i:
@@ -83,7 +85,7 @@ def main():
 
     # Load pretrained model
     clf = Classifier.load_pickle(
-        os.path.join(args.in_dir, 'clf.pkl'),
+        os.path.join(args.in_dir, args.model_filename),
         device=args.gpu)  # type: Classifier
 
     # ---- predict ---

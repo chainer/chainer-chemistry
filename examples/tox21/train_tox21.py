@@ -16,7 +16,6 @@ import argparse
 import chainer
 from chainer import functions as F
 from chainer import iterators as I
-from chainer import links as L
 from chainer import optimizers as O
 from chainer import training
 from chainer.training import extensions as E
@@ -88,6 +87,8 @@ def main():
                         help='Frequency of taking a snapshot')
     parser.add_argument('--protocol', type=int, default=2,
                         help='protocol version for pickle')
+    parser.add_argument('--model-filename', type=str, default='classifier.pkl',
+                        help='file name for pickled model')
     args = parser.parse_args()
 
     method = args.method
@@ -178,7 +179,7 @@ def main():
     with open(os.path.join(args.out, 'config.json'), 'w') as o:
         o.write(json.dumps(config))
 
-    classifier.save_pickle(os.path.join(args.out, 'clf.pkl'),
+    classifier.save_pickle(os.path.join(args.out, args.model_filename),
                            protocol=args.protocol)
 
 if __name__ == '__main__':
