@@ -66,9 +66,9 @@ class GGNN(chainer.Chain):
         message_layer_index = 0 if self.weight_tying else step
         m = functions.reshape(self.message_layers[message_layer_index](h),
                               (mb, atom, out_ch, self.NUM_EDGE_TYPE))
-        # m: (minibatch, ch, atom, edge_type)
+        # m: (minibatch, atom, ch, edge_type)
         # Transpose
-        m = functions.transpose(m, (0, 3, 2, 1))
+        m = functions.transpose(m, (0, 3, 1, 2))
         # m: (minibatch, edge_type, atom, ch)
 
         adj = functions.reshape(adj, (mb * self.NUM_EDGE_TYPE, atom, atom))
