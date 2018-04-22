@@ -54,36 +54,28 @@ def test_permute_adj(adj):
     adj_perm = permute_adj(adj, perm)
 
     assert adj.shape == adj_perm.shape
-    # print('perm', perm)
-    # print('adj, adj_perm', adj, adj_perm)
     for i in range(num_node):
         for j in range(num_node):
-            assert numpy.allclose(
+            assert numpy.array_equal(
                 adj[..., perm[i], perm[j]], adj_perm[..., i, j])
 
 
-@pytest.mark.parametrize('adj', [
-    numpy.random.randint(10, size=(batchsize, num_node, num_node, ch),
-                         dtype=numpy.int32)
-])
-def test_permute_adj_axis12(adj):
+def test_permute_adj_axis12():
+    adj = numpy.random.randint(
+        10, size=(batchsize, num_node, num_node, ch), dtype=numpy.int32)
     perm = numpy.random.permutation(num_node)
     adj_perm = permute_adj(adj, perm, axis=[1, 2])
 
     assert adj.shape == adj_perm.shape
-    # print('perm', perm)
-    # print('adj, adj_perm', adj, adj_perm)
     for i in range(num_node):
         for j in range(num_node):
             assert numpy.allclose(
                 adj[:, perm[i], perm[j], :], adj_perm[:, i, j, :])
 
 
-@pytest.mark.parametrize('adj', [
-    numpy.random.randint(10, size=(batchsize, ch, num_node, num_node),
-                         dtype=numpy.int32)
-])
-def test_permute_adj_error(adj):
+def test_permute_adj_error():
+    adj = numpy.random.randint(
+        10, size=(batchsize, ch, num_node, num_node), dtype=numpy.int32)
     perm = numpy.random.permutation(num_node)
     with pytest.raises(TypeError):
         permute_adj(adj, perm, axis=1)

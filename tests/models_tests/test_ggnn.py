@@ -5,7 +5,8 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.ggnn import GGNN
-from chainer_chemistry.utils.permutation import permute_node, permute_adj
+from chainer_chemistry.utils.permutation import permute_adj
+from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
 out_dim = 4
@@ -26,13 +27,6 @@ def data():
     adj_data = numpy.random.randint(
         0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
     ).astype(numpy.float32)
-
-    # adj_data is symmetric matrix
-    # adj_data = numpy.random.uniform(
-    #     0, high=1, size=(batch_size, num_edge_type, atom_size, atom_size)
-    # ).astype(numpy.float32)
-    # adj_data = adj_data + adj_data.swapaxes(-1, -2)
-    # adj_data = (adj_data > 1.5).astype(numpy.float32)
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, out_dim)).astype(numpy.float32)
     return atom_data, adj_data, y_grad

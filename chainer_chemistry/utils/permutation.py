@@ -29,16 +29,17 @@ def permute_adj(adj, permutation_index, axis=None):
             It is considered as adjacency matrix.
         permutation_index (numpy.ndarray): 1d numpy array whose size should be
             same as permutation axis of `node`.
-        axis (list or None): list of 2d int, indicates the permutation axis.
-            When None is passed (default), it uses -1 and -2 as `axis`, it
-            means that last 2 axis are considered to be permuted.
+        axis (list or tuple or None): list of 2d int, indicates the permutation
+            axis. When None is passed (default), it uses -1 and -2 as `axis`,
+            it means that last 2 axis are considered to be permuted.
 
     Returns (numpy.ndarray): permutated `adj` array.
 
     """
     if axis is not None:
-        if not isinstance(axis, list):
-            raise TypeError('axis must be list, got {}'.format(type(axis)))
+        if not isinstance(axis, (list, tuple)):
+            raise TypeError('axis must be list or tuple, got {}'
+                            .format(type(axis)))
         if len(axis) != 2:
             raise ValueError('axis length must 2, got {}'.format(len(axis)))
     else:
