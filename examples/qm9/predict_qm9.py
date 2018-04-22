@@ -8,7 +8,6 @@ import pickle
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 import pandas
-from sklearn.preprocessing import StandardScaler
 
 try:
     import matplotlib
@@ -16,9 +15,10 @@ try:
 except ImportError:
     pass
 
-from chainer import cuda, Variable
+from chainer import cuda
 from chainer.datasets import split_dataset_random
-import numpy
+from chainer import Variable
+import numpy  # NOQA
 
 from chainer_chemistry import datasets as D
 try:
@@ -34,8 +34,9 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 
 # These import is necessary for pickle to work
-from train_qm9 import GraphConvPredictor
-from train_qm9 import ScaledAbsError
+from sklearn.preprocessing import StandardScaler  # NOQA
+from train_qm9 import GraphConvPredictor  # NOQA
+from train_qm9 import ScaledAbsError  # NOQA
 
 
 def main():
@@ -60,6 +61,7 @@ def main():
     parser.add_argument('--in-dir', '-i', type=str, default='result')
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
+    parser.add_argument('--model-filename', type=str, default='regressor.pkl')
     args = parser.parse_args()
 
     seed = args.seed
@@ -98,7 +100,7 @@ def main():
     train, val = split_dataset_random(dataset, train_data_size, seed)
 
     regressor = Regressor.load_pickle(
-        os.path.join(args.in_dir, 'regressor.pkl'),
+        os.path.join(args.in_dir, args.model_filename),
         device=args.gpu)  # type: Regressor
 
     # We need to feed only input features `x` to `predict`/`predict_proba`.
@@ -141,10 +143,10 @@ def main():
     print(df.sample(5))
 
     for target_label in range(y_pred.shape[1]):
+        diff = y_pred[:n_eval, target_label] - t[:n_eval, target_label]
         print('target_label = {}, y_pred = {}, t = {}, diff = {}'
               .format(target_label, y_pred[:n_eval, target_label],
-                      t[:n_eval, target_label],
-                      y_pred[:n_eval, target_label] - t[:n_eval, target_label]))
+                      t[:n_eval, target_label], diff))
 
     # --- evaluate ---
     # To calc loss/accuracy, we can use `Evaluator`, `ROCAUCEvaluator`

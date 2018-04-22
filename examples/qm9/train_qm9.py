@@ -112,6 +112,7 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
     parser.add_argument('--protocol', type=int, default=2)
+    parser.add_argument('--model-filename', type=str, default='regressor.pkl')
     args = parser.parse_args()
 
     seed = args.seed
@@ -191,7 +192,6 @@ def main():
 
     regressor = Regressor(
         model, lossfun=F.mean_squared_error,
-        # metrics_fun={'abs_error': scaled_abs_error(scale=args.scale, ss=ss)},
         metrics_fun={'abs_error': ScaledAbsError(scale=args.scale, ss=ss)},
         device=args.gpu)
 
@@ -214,7 +214,7 @@ def main():
 
     # --- save regressor & standardscaler ---
     protocol = args.protocol
-    regressor.save_pickle(os.path.join(args.out, 'regressor.pkl'),
+    regressor.save_pickle(os.path.join(args.out, args.model_filename),
                           protocol=protocol)
     if args.scale == 'standardize':
         with open(os.path.join(args.out, 'ss.pkl'), mode='wb') as f:
