@@ -136,15 +136,15 @@ class BaseForwardModel(link.Chain):
 
         This function send the parameters to CPU before saving the model so
         that the pickled file can be loaded with in CPU-only environment. 
+        After the model is saved, it is sent back to the original device.
 
         Saved pickle file can be loaded with `load_pickle` static method.
 
         Note that the transportability of the saved file follows the
         specification of `pickle` module, namely serialized data depends on the
         specific class or attribute structure when saved. The file may not be
-        loaded in different environment (python version is different or
-        different version of library), or after large refactoring of the
-        pickled object class.
+        loaded in different environment (version of python or dependent
+        libraries), or after large refactoring of the pickled object class.
         If you want to avoid it, use `chainer.serializers.save_npz`
         method instead to save only model parameters.
 
@@ -198,7 +198,7 @@ class BaseForwardModel(link.Chain):
 
        >>> from chainer_chemistry.models import BaseForwardModel
        >>> filepath = 'model.pkl'
-       >>> # `load_pickle` is static method, call from Class to get instance.
+       >>> # `load_pickle` is static method, call from Class to get an instance
        >>> model = BaseForwardModel.load_pickle(filepath)
 
         Args:
