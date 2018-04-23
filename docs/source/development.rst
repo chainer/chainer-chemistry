@@ -29,7 +29,7 @@ Compatibiity policy
 ===================
 
 As an immediate consequence of the semantic versioning, we may break compatibility of public APIs including addition, deletion, and changes in their semantics anytime in the major version zero.
-Actally, since APIs of Chainer Chemistry are still immature and unstable, we expect introduction of new features can sometime involve compatibility break.
+Since APIs of Chainer Chemistry are still immature and unstable, we expect introduction of new features can sometime involve compatibility break.
 If we are faced with a dilemma between cost for backward compatibility and benefit of new features, we are likely to give up the former because we want to place importance on introducing new features as soon as possible. Of course, we care backward compatibility whenever it is easy and low-cost.
 
 Like `ChainerCV <https://twitter.com>`_, Chainer Chemistry provides several off-the-shelf deep learning models (e.g. Neural Finger Print) whose papers are available in such as arXiv or conferences related to machine learning.
