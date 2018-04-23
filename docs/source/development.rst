@@ -38,7 +38,7 @@ Although, most of published papers reports evaluation results of the models with
 At some point, coding examples in the master branch of the official repository may not work even with the latest release. In that case, users are recommended to either use the example code of the latest release or update the library code to the master branch.
 
 As of v0.3.0, we have introduced `BaseForwardModel`, which provides methods for serializing itself to and loading from a file.
-As these methods use intenally `pickle <https://docs.python.org/3/library/pickle.html>`_, portability of the class depends on that of pickling.
+As these methods intenally use `pickle <https://docs.python.org/3/library/pickle.html>`_, portability of the class depends on that of pickling.
 Especially, serialized instances of `BaseForwardModel` made with older Chainer Chemistry may not be loaded with newer one, partly because we may change their internal structures for refactoring, performance improvement, and so on.
 See the document of `BaseForwardModel` and their subclasses (e.g. `Classifier`, `Regressor`).
 
