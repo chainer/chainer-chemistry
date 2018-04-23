@@ -44,9 +44,9 @@ do
     fi
 
     python train_qm9.py --method ${method} --label A --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --label A --gpu ${gpu} --batchsize 32
+    python predict_qm9.py --method ${method} --label A --gpu ${gpu} --batchsize 32 --num-data 100
     python train_qm9.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --gpu ${gpu} --batchsize 32
+    python predict_qm9.py --method ${method} --gpu ${gpu} --batchsize 32 --num-data 100
     cd ../
 
     # Own dataset
