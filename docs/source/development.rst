@@ -28,14 +28,18 @@ We do not have a concrete plan about versioning strategy after v1.0.0.
 Compatibiity policy
 ===================
 
-As an immediate consequence of the semantic versioning, we may break compatibility of public APIs including addition, deletion, change in semantics of them anytime in the major version zero.
-Since APIs of Chainer Chemistry are still immature and unstable, introduction of new features can sometime involve compatibility break.
+As an immediate consequence of the semantic versioning, we may break compatibility of public APIs including addition, deletion, and changes in their semantics anytime in the major version zero.
+Actally, since APIs of Chainer Chemistry are still immature and unstable, we expect introduction of new features can sometime involve compatibility break.
 If we are faced with a dilemma between cost for backward compatibility and benefit of new features, we are likely to give up the former because we want to place importance on introducing new features as soon as possible. Of course, we care backward compatibility whenever it is easy and low-cost.
 
 Like `ChainerCV <https://twitter.com>`_, Chainer Chemistry provides several off-the-shelf deep learning models (e.g. Neural Finger Print) whose papers are available in such as arXiv or conferences related to machine learning.
 Although, most of published papers reports evaluation results of the models with publicly available datasets, we do *NOT* guarantee the reproducibility of experiments in the papers.
 
 At some point, coding examples in the master branch of the official repository may not work even with the latest release. In that case, users are recommended to either use the example code of the latest release or update the library code to the master branch.
+
+As of v0.3.0, we have introduced `BaseForwardModel`, which can serialize itself to and load from a file with `pickle <https://docs.python.org/3/library/pickle.html>`_.
+We rely on pickle about portability of serialized instances. Especially, serialized instances of `BaseForwardModel` made with older Chainer Chemistry may not be loaded with newer one, partly because we may change their internal structures for refactoring, performance improvement, and so on.
+See the document of `BaseForwardModel` and their subclasses (e.g. `Classifier`, `Regressor`).
 
 Branch strategy
 ===============
