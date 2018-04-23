@@ -10,9 +10,11 @@ import numpy
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry import links
+from chainer_chemistry.models.init_serializable_chain import \
+    InitSerializableChain, retain_args
 
 
-class NFPUpdate(chainer.Chain):
+class NFPUpdate(InitSerializableChain):
     """NFP sub module for update part
 
     Args:
@@ -21,6 +23,7 @@ class NFPUpdate(chainer.Chain):
         max_degree (int): max degree of edge
     """
 
+    @retain_args
     def __init__(self, in_channels, out_channels, max_degree=6):
         super(NFPUpdate, self).__init__()
         num_degree_type = max_degree + 1
@@ -62,7 +65,7 @@ class NFPUpdate(chainer.Chain):
         return out_h
 
 
-class NFPReadout(chainer.Chain):
+class NFPReadout(InitSerializableChain):
     """NFP sub module for readout part
 
     Args:
@@ -72,6 +75,7 @@ class NFPReadout(chainer.Chain):
             molecule (graph)
     """
 
+    @retain_args
     def __init__(self, in_channels, out_size):
         super(NFPReadout, self).__init__()
         with self.init_scope():
@@ -91,7 +95,7 @@ class NFPReadout(chainer.Chain):
         return i
 
 
-class NFP(chainer.Chain):
+class NFP(InitSerializableChain):
 
     """Neural Finger Print (NFP)
 
@@ -105,6 +109,7 @@ class NFP(chainer.Chain):
         n_layer (int): number of layers
     """
 
+    @retain_args
     def __init__(self, out_dim, hidden_dim=16, n_layers=4, max_degree=6,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False):
         super(NFP, self).__init__()
