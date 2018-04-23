@@ -1,31 +1,29 @@
 import os
 
 import argparse
-import chainer
 import glob
 import json
 import numpy
+
 from chainer import cuda
+import chainer.functions as F
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-import chainer.functions as F
 from rdkit import RDLogger
 import six
 
-from chainer_chemistry import datasets as D
 from chainer_chemistry.dataset.converters import concat_mols
 try:
     from chainer_chemistry.models.prediction import Classifier
 except ImportError:
-    print('[WARNING] If you want to use Classifier in Chainer Chemistry, '
-          'please install the library from master branch.\n See '
+    print('[ERROR] This example uses newly implemented `Classifier` class.\n'
+          'Please install the library from master branch.\n See '
           'https://github.com/pfnet-research/chainer-chemistry#installation'
           ' for detail.')
-from chainer_chemistry.training.extensions.roc_auc_evaluator import \
-    ROCAUCEvaluator
+    exit()
+from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 import data
-import predictor
 
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
@@ -52,8 +50,6 @@ def _find_latest_snapshot(in_dir, prefix='snapshot_iter_'):
 
 
 def main():
-    label_names = D.get_tox21_label_names()
-
     parser = argparse.ArgumentParser(
         description='Predict with a trained model.')
     parser.add_argument('--in-dir', '-i', type=str, default='result',
@@ -74,6 +70,8 @@ def main():
     parser.add_argument('--gpu', '-g', type=int, default=-1,
                         help='GPU ID to use. Negative value indicates '
                         'not to use GPU and to run the code in CPU.')
+    parser.add_argument('--model-filename', type=str, default='classifier.pkl',
+                        help='file name for pickled model')
     args = parser.parse_args()
 
     with open(os.path.join(args.in_dir, 'config.json'), 'r') as i:
@@ -81,27 +79,14 @@ def main():
 
     method = config['method']
     labels = config['labels']
-    if labels:
-        class_num = len(labels) if isinstance(labels, list) else 1
-    else:
-        class_num = len(label_names)
 
     _, test, _ = data.load_dataset(method, labels)
     y_test = test.get_datasets()[-1]
 
     # Load pretrained model
-    predictor_ = predictor.build_predictor(
-        method, config['unit_num'], config['conv_layers'], class_num)
-    snapshot_file = args.trainer_snapshot
-    if not snapshot_file:
-        snapshot_file = _find_latest_snapshot(args.in_dir)
-    print('Loading pretrained model parameters from {}'.format(snapshot_file))
-    chainer.serializers.load_npz(snapshot_file,
-                                 predictor_, 'updater/model:main/predictor/')
-
-    clf = Classifier(predictor=predictor_, device=args.gpu,
-                     lossfun=F.sigmoid_cross_entropy,
-                     metrics_fun=F.binary_accuracy)
+    clf = Classifier.load_pickle(
+        os.path.join(args.in_dir, args.model_filename),
+        device=args.gpu)  # type: Classifier
 
     # ---- predict ---
     print('Predicting...')
@@ -164,7 +149,7 @@ def main():
     print('Evaluation result: ', eval_result)
     rocauc_result = ROCAUCEvaluator(
         test_iterator, clf, converter=concat_mols, device=args.gpu,
-        eval_func=predictor_, name='test', ignore_labels=-1)()
+        eval_func=clf.predictor, name='test', ignore_labels=-1)()
     print('ROCAUC Evaluation result: ', rocauc_result)
     # --- evaluate end ---
 
