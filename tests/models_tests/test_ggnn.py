@@ -5,7 +5,8 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.ggnn import GGNN
-from chainer_chemistry.utils.permutation import permute_node, permute_adj
+from chainer_chemistry.utils.permutation import permute_adj
+from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
 out_dim = 4
@@ -23,16 +24,9 @@ def data():
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)
-    # adj_data = numpy.random.randint(
-    #     0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
-    # ).astype(numpy.float32)
-
-    # adj_data is symmetric matrix
-    adj_data = numpy.random.uniform(
-        0, high=1, size=(batch_size, num_edge_type, atom_size, atom_size)
+    adj_data = numpy.random.randint(
+        0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
     ).astype(numpy.float32)
-    adj_data = adj_data + adj_data.swapaxes(-1, -2)
-    adj_data = (adj_data > 1.5).astype(numpy.float32)
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, out_dim)).astype(numpy.float32)
     return atom_data, adj_data, y_grad
@@ -78,7 +72,7 @@ def test_forward_cpu_graph_invariant(model, data):
     permute_adj_data = permute_adj(adj_data, permutation_index)
     permute_y_actual = cuda.to_cpu(model(
         permute_atom_data, permute_adj_data).data)
-    assert numpy.allclose(y_actual, permute_y_actual)
+    assert numpy.allclose(y_actual, permute_y_actual, rtol=1e-5, atol=1e-6)
 
 
 if __name__ == '__main__':
