@@ -1,9 +1,8 @@
 import numpy
 import pytest
 
-
-from chainer_chemistry.utils.permutation import permute_node
 from chainer_chemistry.utils.permutation import permute_adj
+from chainer_chemistry.utils.permutation import permute_node
 
 
 batchsize = 1

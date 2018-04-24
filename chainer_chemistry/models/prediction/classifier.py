@@ -179,13 +179,13 @@ class Classifier(BaseForwardModel):
                 Variable.
             batchsize (int): batch size
             converter (Callable): convert from `data` to `inputs`
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
+            preprocess_fn (Callable): Its input is numpy.ndarray or
                 cupy.ndarray, it can return either Variable, cupy.ndarray or
                 numpy.ndarray
             postprocess_fn (Callable): Its input argument is Variable,
                 but this method may return either Variable, cupy.ndarray or
                 numpy.ndarray.
-            retain_inputs (bool): If True, this instance keeps inputs in 
+            retain_inputs (bool): If True, this instance keeps inputs in
                 `self.inputs` or not.
 
         Returns (tuple or numpy.ndarray): Typically, it is 2-dimensional float
@@ -206,16 +206,16 @@ class Classifier(BaseForwardModel):
         """Predict label of each category by taking .
 
         Args:
-            data: 
+            data: input data
             batchsize (int): batch size
             converter (Callable): convert from `data` to `inputs`
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
+            preprocess_fn (Callable): Its input is numpy.ndarray or
                 cupy.ndarray, it can return either Variable, cupy.ndarray or
                 numpy.ndarray
             postprocess_fn (Callable): Its input argument is Variable,
                 but this method may return either Variable, cupy.ndarray or
                 numpy.ndarray.
-            retain_inputs (bool): If True, this instance keeps inputs in 
+            retain_inputs (bool): If True, this instance keeps inputs in
                 `self.inputs` or not.
 
         Returns (tuple or numpy.ndarray): Typically, it is 1-dimensional int

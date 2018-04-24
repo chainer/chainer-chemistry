@@ -77,7 +77,8 @@ def construct_hybridization_vec(mol,
     return hybridization_vec
 
 
-def construct_partial_charge_vec(mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
+def construct_partial_charge_vec(
+        mol, num_max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS):
     AllChem.ComputeGasteigerCharges(mol)
     n = mol.GetNumAtoms()
     partial_charge_vec = numpy.zeros((num_max_atoms, 1), dtype=numpy.float32)

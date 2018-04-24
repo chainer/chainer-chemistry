@@ -4,8 +4,8 @@ import pytest
 
 import chainer
 from chainer import cuda
-from chainer import reporter
 from chainer import links
+from chainer import reporter
 
 from chainer_chemistry.models.prediction import Regressor
 
@@ -15,9 +15,9 @@ class DummyPredictor(chainer.Chain):
         return 2 * x
 
 
-@pytest.mark.parametrize('metrics_fun',
-                         [None, chainer.functions.mean_absolute_error,
-                         {'user_key': chainer.functions.mean_absolute_error}])
+@pytest.mark.parametrize(
+    'metrics_fun', [None, chainer.functions.mean_absolute_error,
+                    {'user_key': chainer.functions.mean_absolute_error}])
 @pytest.mark.parametrize('compute_metrics', [True, False])
 class TestRegressor(object):
 

@@ -8,9 +8,9 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.models import GGNN
 from chainer_chemistry.models import MLP
 from chainer_chemistry.models import NFP
+from chainer_chemistry.models import RSGCN
 from chainer_chemistry.models import SchNet
 from chainer_chemistry.models import WeaveNet
-from chainer_chemistry.models import RSGCN
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):

@@ -2,8 +2,8 @@ from __future__ import division
 
 from logging import getLogger
 
-import numpy
 from chainer.dataset import iterator
+import numpy
 
 from chainer_chemistry.iterators.index_iterator import IndexIterator
 
