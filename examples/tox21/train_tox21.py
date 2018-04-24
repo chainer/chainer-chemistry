@@ -1,4 +1,33 @@
 #!/usr/bin/env python
+"""
+This experimental branch is only for checking sparse matmul performance.
+The behavior except below (training all the model etc) is not tested.
+
+Sparse matmul experimental train code.
+
+1. Compare RSGCN (using dense matmul) and SparseRSGCN (using sparse matmul)
+
+$ python train_tox21.py -m rsgcn -g 0
+$ python train_tox21.py -m sparse_rsgcn
+
+However, when the graph size is not big, there is no significant difference.
+
+2. Compare with different dataset size.
+   Tox21 dataset can be virtually enlarged to construct big graph dataset.
+   It can be done by `multiplier` option.
+
+$ python train_tox21.py -m rsgcn -g 0 --multiplier=8
+$ python train_tox21.py -m sparse_rsgcn -g 0 --multiplier=8
+
+Now you can see the big speed difference between RSGCN & SparseRSGCN.
+
+3. Compare different sparse matmul calculation.
+   By setting `flatten` option ON, fused sparse matmul calculation is executed.
+   To see the difference, try below:
+
+$ python train_tox21.py -m sparse_rsgcn -g 0 --multiplier=8
+$ python train_tox21.py -m sparse_rsgcn -g 0 --multiplier=8 --flatten
+"""
 
 from __future__ import print_function
 
@@ -100,6 +129,11 @@ def main():
     args = parser.parse_args()
 
     method = args.method
+    if method not in ['rsgcn', 'sparse_rsgcn']:
+        raise ValueError(
+            'This experimental branch only supports rsgcn or sparse_rsgcn '
+            'method, got {} instead'.format(method))
+
     if args.label:
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1

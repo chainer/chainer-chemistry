@@ -40,8 +40,7 @@ def get_tox21_label_names():
     return _label_names
 
 
-def get_tox21(preprocessor=None, labels=None, retain_smiles=False,
-              multiplier=1):
+def get_tox21(preprocessor=None, labels=None, return_smiles=False):
     """Downloads, caches and preprocesses Tox21 dataset.
 
     Args:
