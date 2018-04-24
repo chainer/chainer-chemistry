@@ -62,6 +62,9 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
     parser.add_argument('--model-filename', type=str, default='regressor.pkl')
+    parser.add_argument('--num-data', type=int, default=-1,
+                        help='Number of data to be parsed from parser.'
+                             '-1 indicates to parse all data.')
     args = parser.parse_args()
 
     seed = args.seed
@@ -79,15 +82,23 @@ def main():
     # Dataset preparation
     dataset = None
 
-    if os.path.exists(cache_dir):
-        print('load from cache {}'.format(cache_dir))
-        dataset = NumpyTupleDataset.load(os.path.join(cache_dir, 'data.npz'))
+    num_data = args.num_data
+    if num_data >= 0:
+        dataset_filename = 'data_{}.npz'.format(num_data)
+    else:
+        dataset_filename = 'data.npz'
+
+    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
+    if os.path.exists(dataset_cache_path):
+        print('load from cache {}'.format(dataset_cache_path))
+        dataset = NumpyTupleDataset.load(dataset_cache_path)
     if dataset is None:
         print('preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
         dataset = D.get_qm9(preprocessor, labels=labels)
-        os.makedirs(cache_dir)
-        NumpyTupleDataset.save(os.path.join(cache_dir, 'data.npz'), dataset)
+        if not os.path.exists(cache_dir):
+            os.mkdir(cache_dir)
+        NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     if args.scale == 'standardize':
         # Standard Scaler for labels
