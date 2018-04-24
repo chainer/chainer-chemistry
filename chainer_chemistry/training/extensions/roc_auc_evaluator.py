@@ -1,4 +1,5 @@
 import copy
+from logging import getLogger
 
 import numpy
 
@@ -73,6 +74,10 @@ class ROCAUCEvaluator(Evaluator):
             are considered as negative.
         ignore_labels (int or list or None): labels to be ignored.
             `None` is used to not ignore all labels.
+        raise_value_error (bool): If False, `ValueError` caused by
+            `roc_auc_score` calculation is suppressed and ignored with warning
+            message.
+        logger:
 
     Attributes:
         converter: Converter function.
@@ -86,13 +91,16 @@ class ROCAUCEvaluator(Evaluator):
 
     def __init__(self, iterator, target, converter=convert.concat_examples,
                  device=None, eval_hook=None, eval_func=None, name=None,
-                 pos_labels=1, ignore_labels=None):
+                 pos_labels=1, ignore_labels=None, raise_value_error=True,
+                 logger=None):
         super(ROCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func)
         self.name = name
         self.pos_labels = _to_list(pos_labels)
         self.ignore_labels = _to_list(ignore_labels)
+        self.raise_value_error = raise_value_error
+        self.logger = logger or getLogger()
 
     def evaluate(self):
         iterator = self._iterators['main']
@@ -132,7 +140,19 @@ class ROCAUCEvaluator(Evaluator):
         # --- set positive labels to 1, negative labels to 0 ---
         pos_indices = numpy.in1d(t_total, self.pos_labels)
         t_total = numpy.where(pos_indices, 1, 0)
-        roc_auc = metrics.roc_auc_score(t_total, y_total)
+        try:
+            roc_auc = metrics.roc_auc_score(t_total, y_total)
+        except ValueError as e:
+            if self.raise_value_error:
+                raise e
+            else:
+                # This is usually caused by the following
+                # Only one class present in y_true.
+                # ROC AUC score is not defined in that case
+                self.logger.warning(
+                    'ValueError detected during roc_auc_score calculation. {}'
+                    .format(e.args))
+                roc_auc = numpy.nan
 
         observation = {}
         with reporter.report_scope(observation):
