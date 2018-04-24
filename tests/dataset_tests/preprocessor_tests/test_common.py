@@ -28,7 +28,7 @@ class TestGetAtomicNumbers(object):
 
     def test_normal_truncated(self, sample_molecule):
         with pytest.raises(ValueError):
-            adj = common.construct_atomic_number_array(sample_molecule, 3)
+            adj = common.construct_atomic_number_array(sample_molecule, 3)  # NOQA
 
 
 @pytest.fixture

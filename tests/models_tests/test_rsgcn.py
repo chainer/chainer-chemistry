@@ -6,7 +6,8 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.rsgcn import RSGCN
-from chainer_chemistry.utils.permutation import permute_node, permute_adj
+from chainer_chemistry.utils.permutation import permute_adj
+from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
 out_dim = 4

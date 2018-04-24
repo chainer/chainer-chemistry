@@ -1,10 +1,10 @@
 import chainer
 from chainer import functions
 from chainer import links
-from chainer_chemistry.links.embed_atom_id import EmbedAtomID
 
-from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
 from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
+from chainer_chemistry.links.embed_atom_id import EmbedAtomID
 
 
 WEAVENET_DEFAULT_WEAVE_CHANNELS = [50, ]

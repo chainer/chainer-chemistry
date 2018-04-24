@@ -115,8 +115,8 @@ class Regressor(BaseForwardModel):
         reporter.report({'loss': self.loss}, self)
 
         if self.compute_metrics:
-            # Note: self.metrics_fun is `dict`, which is different from original
-            # chainer implementation
+            # Note: self.metrics_fun is `dict`,
+            # which is different from original chainer implementation
             self.metrics = {key: value(self.y, t) for key, value in
                             self.metrics_fun.items()}
             reporter.report(self.metrics, self)
@@ -128,16 +128,16 @@ class Regressor(BaseForwardModel):
         """Predict label of each category by taking .
 
         Args:
-            data: 
+            data: input data
             batchsize (int): batch size
             converter (Callable): convert from `data` to `inputs`
-            preprocess_fn (Callable): Its input is numpy.ndarray or 
+            preprocess_fn (Callable): Its input is numpy.ndarray or
                 cupy.ndarray, it can return either Variable, cupy.ndarray or
                 numpy.ndarray
             postprocess_fn (Callable): Its input argument is Variable,
                 but this method may return either Variable, cupy.ndarray or
                 numpy.ndarray.
-            retain_inputs (bool): If True, this instance keeps inputs in 
+            retain_inputs (bool): If True, this instance keeps inputs in
                 `self.inputs` or not.
 
         Returns (tuple or numpy.ndarray): Typically, it is 1-dimensional int

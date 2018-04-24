@@ -4,8 +4,9 @@ import pytest
 
 import chainer
 from chainer import cuda
-from chainer import functions, reporter
+from chainer import functions
 from chainer import links
+from chainer import reporter
 
 from chainer_chemistry.models.prediction import Classifier
 
@@ -25,9 +26,9 @@ class DummyPredictor(chainer.Chain):
         return x
 
 
-@pytest.mark.parametrize('metrics_fun',
-                         [AccuracyWithIgnoreLabel(), None,
-                         {'user_key': AccuracyWithIgnoreLabel()}])
+@pytest.mark.parametrize(
+    'metrics_fun', [AccuracyWithIgnoreLabel(), None,
+                    {'user_key': AccuracyWithIgnoreLabel()}])
 @pytest.mark.parametrize('compute_metrics', [True, False])
 class TestClassifier(object):
 
@@ -261,7 +262,7 @@ class TestClassifierPrediction(object):
         self.check_predict_proba(-1)
 
     @pytest.mark.gpu
-    def test_predict_proba_cpu(self):
+    def test_predict_proba_gpu(self):
         self.check_predict_proba(0)
 
 

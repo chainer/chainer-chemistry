@@ -1,7 +1,6 @@
 import os
 
 import argparse
-import glob
 import json
 import numpy
 

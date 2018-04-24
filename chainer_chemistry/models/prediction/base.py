@@ -1,9 +1,10 @@
 import pickle
 
 import chainer
+from chainer import cuda
 from chainer.dataset.convert import concat_examples
-from chainer import link, cuda
 from chainer.iterators import SerialIterator
+from chainer import link
 import numpy
 
 
