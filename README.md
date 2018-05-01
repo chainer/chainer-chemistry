@@ -109,7 +109,8 @@ Currently, following dataset is supported.
 - Tox21 [9]
 
 ## Evaluation
-![tox21-evaluation](https://user-images.githubusercontent.com/29328746/39096424-d8d8e472-468a-11e8-8eb4-c8cd95576b95.png)
+![tox21-evaluation](https://user-images.githubusercontent.com/29328746/39457687-974ad4ce-4d2a-11e8-9305-f6ca607af9dc.png)
+This graph is the result of `examples/tox21/evaluate_models_tox21.sh`.
 
 ## License
 
