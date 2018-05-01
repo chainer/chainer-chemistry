@@ -2,16 +2,16 @@ set -eu
 
 gpu=-1
 methods=(nfp ggnn schnet weavenet rsgcn)
+dir_name="result-evaluation"
 results=()
 
-mkdir -p results-evaluation
+mkdir -p ${dir_name}
 for method in ${methods[@]}
 do
-    python train_tox21.py --method ${method} --gpu ${gpu}
-    python predict_tox21_with_classifier.py > log-${method}
-    roc_auc=`cat log-${method} | tail -1 | grep -oP '0\.\d+'`
-    results+=(${roc_auc})
-    mv result results-evaluation/${method}
+    python train_tox21.py --method ${method} --gpu ${gpu} -c 1 -u 1 -e 1
+    python predict_tox21_with_classifier.py
+    mv result ${dir_name}/${method}
+    mv result.json ${dir_name}/${method}.json
 done
 
-python plot.py --names ${methods[@]} --values ${results[@]}
+python plot.py --dir ${dir_name} --methods ${methods[@]}

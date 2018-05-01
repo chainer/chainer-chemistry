@@ -1,18 +1,23 @@
 #! -*- coding: utf-8 -*-
 import argparse
+import json
 
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--names', nargs='+', required=True)
-parser.add_argument('--values', nargs='+', required=True, type=float) 
+parser.add_argument('--dir', required=True)
+parser.add_argument('--methods', nargs='+', required=True)
 args = parser.parse_args()
 
 sns.set()
 
-x = args.names
-y = args.values
+x = args.methods
+y = []
+for method in args.methods:
+    with open('{}/{}.json'.format(args.dir, method)) as f:
+        result = json.load(f)
+        y.append(result["test/main/roc_auc"])
 
 ax = sns.barplot(y=x, x=y)
 
