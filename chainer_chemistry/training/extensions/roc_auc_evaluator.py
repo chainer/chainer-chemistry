@@ -143,9 +143,8 @@ class ROCAUCEvaluator(Evaluator):
         try:
             roc_auc = metrics.roc_auc_score(t_total, y_total)
         except ValueError as e:
-            # `ValueError` is usually caused by the following
-            # Only one class present in y_true.
-            # ROC AUC score is not defined in that case
+            # When only one class present in `y_true`, `ValueError` is raised.
+            # ROC AUC score is not defined in that case.
             if self.raise_value_error:
                 raise e
             else:
