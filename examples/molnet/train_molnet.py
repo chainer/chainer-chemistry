@@ -58,7 +58,7 @@ class GraphConvPredictor(chainer.Chain):
 
 def main():
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
-    dataset_names = ['bbbp', 'clearance', 'tox21']
+    dataset_names = ['bbbp', 'clearance', 'tox21', 'kaggle']
 
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
@@ -103,34 +103,37 @@ def main():
     # Dataset preparation
     dataset = None
     num_data = args.num_data
-    if num_data >= 0:
-        dataset_filename = 'data_{}.npz'.format(num_data)
+    def get_dataset_paths(cache_dir, num_data):
+        filepaths = []
+        for filetype in ['train', 'valid', 'test']:
+            filename = filetype+'_data'
+            if num_data >= 0:
+                filename += '_' + str(num_data)
+            filename += '.npz'
+            filepath = os.path.join(cache_dir, filename)
+            filepaths.append(filepath)
+        return filepaths
+    filepaths = get_dataset_paths(cache_dir, num_data)
+    if all([os.path.exists(fpath) for fpath in filepaths]):
+        datasets = []
+        for fpath in filepaths:
+            print('load from cache {}'.format(fpath))
+            datasets.append(NumpyTupleDataset.load(fpath))
+    # if any([dataset is None for dataset in datasets]):
     else:
-        dataset_filename = 'data.npz'
-    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
-    if os.path.exists(dataset_cache_path):
-        print('load from cache {}'.format(dataset_cache_path))
-        dataset = NumpyTupleDataset.load(dataset_cache_path)
-    if dataset is None:
         print('preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
-        if num_data >= 0:
-            # only use first 100 for debug
-            target_index = numpy.arange(num_data)
-            dataset = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
-                                                  labels=labels,
-                                                  target_index=target_index)
-        else:
-            dataset = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
-                                                  labels=labels)
+        # only use first 100 for debug if num_data >= 0
+        target_index = numpy.arangs(num_data) if num_data >= 0 else None
+        datasets = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
+                                              labels=labels,
+                                              target_index=target_index)
         os.makedirs(cache_dir)
-        dataset = dataset['dataset']
-        NumpyTupleDataset.save(dataset_cache_path, dataset)
+        datasets = datasets['dataset']
+        for i, fpath in enumerate(filepaths):
+            NumpyTupleDataset.save(fpath, datasets[i])
 
-    # TODO(motoki): consider API
-
-    train_data_size = int(len(dataset) * train_data_ratio)
-    train, val = split_dataset_random(dataset, train_data_size, seed)
+    train, val, test = datasets
 
     # Network
     n_unit = args.unit_num
@@ -206,7 +209,7 @@ def main():
 
     # --- save regressor & standardscaler ---
     protocol = args.protocol
-    regressor.save_pickle(os.path.join(args.out, args.model_filename),
+    model.save_pickle(os.path.join(args.out, args.model_filename),
                           protocol=protocol)
 
 

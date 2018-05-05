@@ -82,6 +82,23 @@ molnet_default_config = {
         "tasks": ['HOMO', 'LUMO', 'electrochemical_gap', 'optical_gap',
                   'PCE', 'V_OC', 'J_SC', 'fill_factor'],
     },
+    "kaggle": {
+        "dataset_type": 'separate_csv',
+        "train_url": molnet_base + 'KAGGLE_training_'
+                    'disguised_combined_full.csv.gz',
+        "valid_url": molnet_base + 'KAGGLE_test1_'
+                    'disguised_combined_full.csv.gz',
+        "test_url": molnet_base + 'KAGGLE_test2_'
+                    'disguised_combined_full.csv.gz',
+        "smiles_columns": 'smiles',
+        "metrics": None,
+        "loss": F.mean_squared_error,
+        "task_type": 'regression',
+        "tasks": ['3A4', 'CB1', 'DPP4', 'HIVINT', 'HIV_PROT', 'LOGD', 'METAB',
+                  'NK1', 'OX1', 'OX2', 'PGP', 'PPB', 'RAT_F', 'TDI', 'THROMBIN'
+                  ]
+    },
+
     "lipo": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'Lipophilicity.csv',
