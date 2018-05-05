@@ -93,6 +93,7 @@ ENV/
 .idea/
 examples/tox21/input/
 examples/qm9/input/
+examples/molnet/input/
 
 # emacs
 *~

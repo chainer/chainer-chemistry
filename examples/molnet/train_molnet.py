@@ -58,7 +58,7 @@ class GraphConvPredictor(chainer.Chain):
 
 def main():
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
-    dataset_names = ['bbbp', 'clearance', 'tox21', 'kaggle']
+    dataset_names = list(molnet_default_config.keys())
 
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,

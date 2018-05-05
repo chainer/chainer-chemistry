@@ -32,7 +32,10 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
     if dataset_config['task_type'] == 'regression':
         postprocess_label = lambda x: np.asarray(x, dtype=np.float32)
     elif dataset_config['task_type'] == 'classification':
-        postprocess_label = lambda x: np.asarray(x, dtype=np.int32)
+        def postprocess_label(label_list):
+            label_list = np.asarray(label_list)
+            label_list[np.isnan(label_list)] = -1
+            return label_list.astype(np.int32)
 
     parser = CSVFileParser(preprocessor, labels=labels,
                            smiles_col=dataset_config['smiles_columns'],
