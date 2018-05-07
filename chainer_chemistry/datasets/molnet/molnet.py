@@ -60,11 +60,11 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
 
             result['dataset'] = (train, valid, test)
             if return_smiles:
-                smiles = result['smiles']
+                smiles = result['smiles'][perm]
                 train_smiles = smiles[:train_data_size]
                 valid_smiles = smiles[train_data_size:train_data_size +
-                                      valaid_data_size]
-                test_smiles = smiles[train_data_size + valaid_data_size:]
+                                      valid_data_size]
+                test_smiles = smiles[train_data_size + valid_data_size:]
                 result['smiles'] = (train_smiles, valid_smiles, test_smiles)
             else:
                 result['smiles'] = None
