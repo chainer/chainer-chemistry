@@ -1,18 +1,17 @@
-import gzip
 from logging import getLogger
 import os
 import shutil
 
 import numpy as np
 from chainer.dataset import download
-from chainer.datasets import split_dataset_random
 
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
-from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config #NOQA
+from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config # NOQA
 
 _root = 'pfnet/chainer/molnet'
+
 
 def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                        split='random', frac_train=.8, frac_valid=.1,
@@ -30,7 +29,8 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         #
 
     if dataset_config['task_type'] == 'regression':
-        postprocess_label = lambda x: np.asarray(x, dtype=np.float32)
+        def postprocess_label(label_list):
+            return np.asarray(label_list, dtype=np.float32)
     elif dataset_config['task_type'] == 'classification':
         def postprocess_label(label_list):
             label_list = np.asarray(label_list)
@@ -79,15 +79,16 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                                     return_smiles=return_smiles,
                                     target_index=target_index)
         test_result = parser.parse(get_molnet_filepath(dataset_name, 'test'),
-                                    return_smiles=return_smiles,
-                                    target_index=target_index)
+                                   return_smiles=return_smiles,
+                                   target_index=target_index)
         result['dataset'] = (train_result['dataset'], valid_result['dataset'],
                              test_result['dataset'])
         result['smiles'] = (train_result['smiles'], valid_result['smiles'],
-                             test_result['smiles'])
+                            test_result['smiles'])
     else:
         raise NotImplementedError
     return result
+
 
 def get_molnet_filepath(dataset_name, filetype='onefile',
                         download_if_not_exist=True):
@@ -108,6 +109,7 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
                 logger.warning('Download failed.')
     return cache_path
 
+
 def _get_molnet_filepath(file_name):
     """Construct a filepath which stores QM9 dataset in csv
 
@@ -119,6 +121,7 @@ def _get_molnet_filepath(file_name):
     cache_root = download.get_dataset_directory(_root)
     cache_path = os.path.join(cache_root, file_name)
     return cache_path
+
 
 def download_dataset(dataset_url, save_filepath):
     logger = getLogger(__name__)

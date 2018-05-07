@@ -1,4 +1,6 @@
-toxcast_tasks = ['smiles', 'ACEA_T47D_80hr_Negative', 'ACEA_T47D_80hr_Positive',
+# flake8: noqa
+
+toxcast_tasks = ['ACEA_T47D_80hr_Negative', 'ACEA_T47D_80hr_Positive',
        'APR_HepG2_CellCycleArrest_24h_dn',
        'APR_HepG2_CellCycleArrest_24h_up',
        'APR_HepG2_CellCycleArrest_72h_dn', 'APR_HepG2_CellLoss_24h_dn',
