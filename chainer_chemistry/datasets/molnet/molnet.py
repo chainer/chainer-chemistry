@@ -17,6 +17,26 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                        split='random', frac_train=.8, frac_valid=.1,
                        frac_test=.1, seed=777, return_smiles=False,
                        target_index=None):
+    """Downloads, caches and preprocess MoleculeNet dataset.
+
+    Args:
+        dataset_name (str): MoleculeNet dataset name. If you want to know the
+            detail of MoleculeNet, please refer to
+            `official site <http://moleculenet.ai/datasets-1>`_
+        preprocessor (BasePreprocessor): Preprocessor.
+            This sould be chose base on the network to be trained.
+            If it is None, default `AtomicNumberPreprocessor` is used.
+        labels (str or list): List of target labels.
+        return_smiles (bool): If set to ``True``,
+            smiles array is also returned.
+        target_index (list or None): target index list to partially extract
+            dataset. If `None` (default), all examples are parsed.
+    Returns (dict):
+        dictionary that contains dataset that is already splitted into train,
+        valid and test dataset and 1-d numpy array with dtype=object(string)
+        which is a vector of smiles for each example or `None`.
+
+    """
     assert dataset_name in molnet_default_config
     dataset_config = molnet_default_config[dataset_name]
     labels = labels or dataset_config['tasks']
@@ -25,8 +45,6 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
 
     if preprocessor is None:
         preprocessor = AtomicNumberPreprocessor()
-        # TODO(motoki): raise Error?
-        #
 
     if dataset_config['task_type'] == 'regression':
         def postprocess_label(label_list):
@@ -92,6 +110,19 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
 
 def get_molnet_filepath(dataset_name, filetype='onefile',
                         download_if_not_exist=True):
+    """Construct a file path which stores MoleculeNet dataset.
+
+    This method check whether the file exist or not, and downloaded it if
+    necessary.
+
+    Args:
+        dataset_name (str): MoleculeNet dataset name.
+        file_type (str): either 'onefile', 'train', 'valid', 'test'
+        download_if_not_exist (bool): Download a file if it does not exist.
+
+    Returns (str): filepath for specific MoleculeNet dataset
+
+    """
     assert filetype in ['onefile', 'train', 'valid', 'test']
     if filetype == 'onefile':
         url_key = 'url'
@@ -111,11 +142,14 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
 
 
 def _get_molnet_filepath(file_name):
-    """Construct a filepath which stores QM9 dataset in csv
+    """Construct a filepath which stores MoleculeNet dataset in csv
 
     This method does not check if the file is already downloaded or not.
 
-    Returns (str): filepath for tox21 dataset
+    Args:
+        file_name (str): file name of MoleculeNet dataset
+
+    Returns (str): filepath for one of MoleculeNet dataset
 
     """
     cache_root = download.get_dataset_directory(_root)
@@ -124,6 +158,15 @@ def _get_molnet_filepath(file_name):
 
 
 def download_dataset(dataset_url, save_filepath):
+    """Download and caches MoleculeNet Dataset
+
+    Args:
+        dataset_url (str): URL of dataset
+        save_filepath (str): filepath for dataset
+
+    Returns (bool): If success downloading, returning `True`.
+
+    """
     logger = getLogger(__name__)
     logger.warning('Download {} dataset, it takes time...'
                    .format(dataset_url.split('/')[-1]))
