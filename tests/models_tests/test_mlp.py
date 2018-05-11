@@ -3,12 +3,10 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.mlp import MLP
 
-atom_size = 5
+hidden_dim = 16
 out_dim = 4
-batch_size = 2
 
 
 @pytest.fixture
@@ -18,17 +16,14 @@ def model():
 
 @pytest.fixture
 def data():
-    atom_data = numpy.random.randint(
-        0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
-    ).astype(numpy.float32)
-    y_grad = numpy.random.uniform(
-        -1, 1, (batch_size, out_dim)).astype(numpy.float32)
-    return atom_data, y_grad
+    hidden = numpy.random.rand(1, hidden_dim).astype(numpy.float32)
+    y_grad = numpy.random.uniform(-1, 1, (1, out_dim)).astype(numpy.float32)
+    return hidden, y_grad
 
 
-def check_forward(model, atom_data):
-    y_actual = cuda.to_cpu(model(atom_data).data)
-    assert y_actual.shape == (batch_size, out_dim)
+def check_forward(model, data):
+    y_actual = cuda.to_cpu(model(data).data)
+    assert y_actual.shape == (1, out_dim)
 
 
 def test_forward_cpu(model, data):
@@ -47,15 +42,15 @@ def test_mlp_assert_raises():
 
 
 def test_backward_cpu(model, data):
-    atom_data, y_grad = data
-    gradient_check.check_backward(model, atom_data, y_grad, atol=1e0, rtol=1e0)
+    hidden, y_grad = data
+    gradient_check.check_backward(model, hidden, y_grad, atol=1e0, rtol=1e0)
 
 
 @pytest.mark.gpu
 def test_backward_gpu(model, data):
-    atom_data, y_grad = [cuda.to_gpu(d) for d in data]
+    hidden, y_grad = [cuda.to_gpu(d) for d in data]
     model.to_gpu()
-    gradient_check.check_backward(model, atom_data, y_grad, atol=1e0, rtol=1e0)
+    gradient_check.check_backward(model, hidden, y_grad, atol=1e0, rtol=1e0)
 
 
 if __name__ == '__main__':
