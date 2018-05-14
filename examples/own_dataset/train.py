@@ -3,6 +3,7 @@
 from __future__ import print_function
 import argparse
 import os
+import pickle
 import sys
 
 import chainer
@@ -53,6 +54,26 @@ class GraphConvPredictor(chainer.Chain):
         return x
 
 
+class ScaledAbsError(object):
+
+    def __init__(self, scale='standardize', ss=None):
+        self.scale = scale
+        self.ss = ss
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scale == 'standardize':
+            scaled_x0 = self.ss.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.ss.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        elif self.scale == 'none':
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+
+
 def main():
     # Supported preprocessing/network list
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
@@ -75,6 +96,7 @@ def main():
     parser.add_argument('--unit-num', '-u', type=int, default=16)
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
+    parser.add_argument('--protocol', type=int, default=2)
     args = parser.parse_args()
 
     seed = args.seed
@@ -103,6 +125,8 @@ def main():
         ss = StandardScaler()
         labels = ss.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+    else:
+        ss = None
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
@@ -146,22 +170,9 @@ def main():
     val_iter = iterators.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    def scaled_abs_error(x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if args.scale == 'standardize':
-            scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        elif args.scale == 'none':
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
-
     regressor = Regressor(
         model, lossfun=F.mean_squared_error,
-        metrics_fun={'abs_error': scaled_abs_error},
+        metrics_fun={'abs_error': ScaledAbsError(scale=args.scale, ss=ss)},
         device=args.gpu)
 
     optimizer = optimizers.Adam()
@@ -184,9 +195,13 @@ def main():
     trainer.run()
 
     # --- save regressor's parameters ---
+    protocol = args.protocol
     save_model_path = os.path.join(args.out, 'model.npz')
     print('saving trained model to {}'.format(save_model_path))
     serializers.save_npz(save_model_path, regressor)
+    if args.scale == 'standardize':
+        with open(os.path.join(args.out, 'ss.pkl'), mode='wb') as f:
+            pickle.dump(ss, f, protocol=protocol)
 
     # Example of prediction using trained model
     smiles = 'c1ccccc1'
