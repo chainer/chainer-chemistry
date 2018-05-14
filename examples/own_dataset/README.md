@@ -1,4 +1,10 @@
 # Example of using your own dataset
+
+This example shows how to train your own dataset stored in CSV format.
+
+This example is for regression task using `Regressor`.
+For the classification task, please refer `tox21` example for how to make a model using `Classifier`.
+
 ## Usage
 ```
 python train.py dataset.csv --label value1 value2

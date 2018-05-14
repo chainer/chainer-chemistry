@@ -2,24 +2,27 @@
 
 from __future__ import print_function
 import argparse
+import os
 import sys
 
 import chainer
 from chainer.datasets import split_dataset_random
 from chainer import functions as F, cuda, Variable
-from chainer import iterators as I
+from chainer import iterators
 from chainer import links as L
-from chainer import optimizers as O
+from chainer import optimizers
+from chainer import serializers
 from chainer import training
 from chainer.training import extensions as E
+import numpy
+from rdkit import Chem
+from sklearn.preprocessing import StandardScaler
+
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
-import numpy
-from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, Regressor  # NOQA
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -139,8 +142,8 @@ def main():
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
 
-    train_iter = I.SerialIterator(train, args.batchsize)
-    val_iter = I.SerialIterator(val, args.batchsize,
+    train_iter = iterators.SerialIterator(train, args.batchsize)
+    val_iter = iterators.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
     def scaled_abs_error(x0, x1):
@@ -156,30 +159,34 @@ def main():
             diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
         return numpy.mean(numpy.absolute(diff), axis=0)[0]
 
-    classifier = L.Classifier(model, lossfun=F.mean_squared_error,
-                              accfun=scaled_abs_error)
+    regressor = Regressor(
+        model, lossfun=F.mean_squared_error,
+        metrics_fun={'abs_error': scaled_abs_error},
+        device=args.gpu)
 
-    if args.gpu >= 0:
-        chainer.cuda.get_device_from_id(args.gpu).use()
-        classifier.to_gpu()
-
-    optimizer = O.Adam()
-    optimizer.setup(classifier)
+    optimizer = optimizers.Adam()
+    optimizer.setup(regressor)
 
     updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
                                        converter=concat_mols)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, classifier, device=args.gpu,
+    trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    # Note that scaled errors are reported as (validation/)main/accuracy
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/accuracy',
+    # Note that original scale absolute errors are reported in
+    # (validation/)main/abs_error
+    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
                                   'validation/main/loss',
-                                  'validation/main/accuracy',
+                                  'validation/main/abs_error',
                                   'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
+
+    # --- save regressor's parameters ---
+    save_model_path = os.path.join(args.out, 'model.npz')
+    print('saving trained model to {}'.format(save_model_path))
+    serializers.save_npz(save_model_path, regressor)
 
     # Example of prediction using trained model
     smiles = 'c1ccccc1'
