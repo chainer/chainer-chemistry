@@ -43,7 +43,8 @@ class CSVFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False, target_index=None):
+    def parse(self, filepath, return_smiles=False, return_success_index=False,
+              target_index=None):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -51,10 +52,12 @@ class CSVFileParser(BaseFileParser):
 
         Args:
             filepath (str): file path to be parsed.
-            return_smiles (bool): If set to True, this function returns
-                preprocessed dataset and smiles list.
-                If set to False, this function returns preprocessed dataset and
-                `None`.
+            return_smiles (bool): If set to True, smiles list is returned in
+                the key 'smiles'.
+                If set to False, `None` is returned in the key 'smiles'.
+            return_success_index (bool): If set to True, smiles list is
+                returned in the key 'success_index'.
+                If set to False, `None` is returned in the key 'success_index'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
 
@@ -66,6 +69,7 @@ class CSVFileParser(BaseFileParser):
         logger = self.logger
         pp = self.preprocessor
         smiles_list = []
+        success_index_list = []
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
@@ -116,12 +120,16 @@ class CSVFileParser(BaseFileParser):
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1
+                    if return_success_index:
+                        success_index_list.append(False)
                     continue
                 except Exception as e:
                     logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     logger.info(traceback.format_exc())
                     fail_count += 1
+                    if return_success_index:
+                        success_index_list.append(False)
                     continue
                 # Initialize features: list of list
                 if features is None:
@@ -141,6 +149,9 @@ class CSVFileParser(BaseFileParser):
                 if self.labels is not None:
                     features[len(features) - 1].append(labels)
                 success_count += 1
+                if return_success_index:
+                    success_index_list.append(True)
+
             ret = []
 
             for feature in features:
@@ -161,15 +172,23 @@ class CSVFileParser(BaseFileParser):
             result = pp.process(filepath)
 
         smileses = numpy.array(smiles_list) if return_smiles else None
+        if return_success_index:
+            success_index = numpy.array(success_index_list)
+        else:
+            success_index = None
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
+            dataset = NumpyTupleDataset(*result)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
+            dataset = NumpyTupleDataset(result)
+
+        return {"dataset": dataset,
+                "smiles": smileses,
+                "success_index": success_index}
 
     def extract_total_num(self, filepath):
         """Extracts total number of data which can be parsed
