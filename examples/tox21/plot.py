@@ -16,7 +16,7 @@ sns.set()
 x = args.methods
 y = []
 for method in args.methods:
-    with open(os.path.join(args.prefix+method, 'eval_result.json')) as f:
+    with open(os.path.join(args.prefix + method, 'eval_result.json')) as f:
         result = json.load(f)
         y.append(result["test/main/roc_auc"])
 

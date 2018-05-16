@@ -69,3 +69,13 @@ As with training, we can specify GPU/CPU to use by `-g` option.
 
 The full options available including `-g` and `-i` are found
 by running the following command `python inference_tox21.py -h`.
+
+### Evaluate models
+`seaborn` is required to run this script.
+
+```
+bash examples/tox21/evaluate_models_tox21.sh
+```
+
+This script evaluates each method and generate a graph.
+

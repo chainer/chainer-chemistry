@@ -112,6 +112,7 @@ Currently, following dataset is supported.
 ![tox21-evaluation](https://user-images.githubusercontent.com/29328746/39457687-974ad4ce-4d2a-11e8-9305-f6ca607af9dc.png)
 
 This image is the result of `examples/tox21/evaluate_models_tox21.sh`.
+Note that we do not guarantee reproducibility of papers in which each model is proposed and hence this result doesn't imply the performance of models themselves.
 
 ## License
 
