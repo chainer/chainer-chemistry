@@ -90,3 +90,12 @@ With GPU:
 ```
 python predict_tox21_with_classifier.py -g 0 [-i /path/to/training/result/directory]
 ```
+
+### Evaluation of Models
+`seaborn` is required to run this script.
+
+```
+bash examples/tox21/evaluate_models_tox21.sh
+```
+
+This script evaluates each method and generate a graph.
