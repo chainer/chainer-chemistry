@@ -5,6 +5,7 @@ roc_auc_score.html
 """
 import numpy
 import pytest
+
 import chainer
 from chainer.iterators import SerialIterator
 

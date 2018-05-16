@@ -6,17 +6,10 @@ import os
 
 import logging
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
 import argparse
 import chainer
 from chainer import functions as F
 from chainer import iterators as I
-from chainer import links as L
 from chainer import optimizers as O
 from chainer import training
 from chainer.training import extensions as E
@@ -25,20 +18,16 @@ from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
+from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
+from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
 try:
-    from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
+    from chainer_chemistry.models.prediction import Classifier
 except ImportError:
-    print('[WARNING] If you want to use BalancedSerialIterator, please install'
-          'the library from master branch.\n          See '
+    print('[ERROR] This example uses newly implemented `Classifier` class.\n'
+          'Please install the library from master branch.\n See '
           'https://github.com/pfnet-research/chainer-chemistry#installation'
           ' for detail.')
-try:
-    from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
-except ImportError:
-    print('[WARNING] If you want to use ROCAUCEvaluator, please install'
-          'the library from master branch.\n          See '
-          'https://github.com/pfnet-research/chainer-chemistry#installation'
-          ' for detail.')
+    exit()
 
 import data
 import predictor
@@ -90,6 +79,13 @@ def main():
                         help='path to a trainer snapshot')
     parser.add_argument('--frequency', '-f', type=int, default=-1,
                         help='Frequency of taking a snapshot')
+    parser.add_argument('--protocol', type=int, default=2,
+                        help='protocol version for pickle')
+    parser.add_argument('--model-filename', type=str, default='classifier.pkl',
+                        help='file name for pickled model')
+    parser.add_argument('--num-data', type=int, default=-1,
+                        help='Number of data to be parsed from parser.'
+                             '-1 indicates to parse all data.')
     args = parser.parse_args()
 
     method = args.method
@@ -101,7 +97,7 @@ def main():
         class_num = len(label_names)
 
     # Dataset preparation
-    train, val, _ = data.load_dataset(method, labels)
+    train, val, _ = data.load_dataset(method, labels, num_data=args.num_data)
 
     # Network
     predictor_ = predictor.build_predictor(
@@ -123,12 +119,10 @@ def main():
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    classifier = L.Classifier(predictor_,
-                              lossfun=F.sigmoid_cross_entropy,
-                              accfun=F.binary_accuracy)
-    if args.gpu >= 0:
-        chainer.cuda.get_device_from_id(args.gpu).use()
-        classifier.to_gpu()
+    classifier = Classifier(predictor_,
+                            lossfun=F.sigmoid_cross_entropy,
+                            metrics_fun=F.binary_accuracy,
+                            device=args.gpu)
 
     optimizer = O.Adam()
     optimizer.setup(classifier)
@@ -182,6 +176,8 @@ def main():
     with open(os.path.join(args.out, 'config.json'), 'w') as o:
         o.write(json.dumps(config))
 
+    classifier.save_pickle(os.path.join(args.out, args.model_filename),
+                           protocol=args.protocol)
 
 if __name__ == '__main__':
     main()

@@ -4,8 +4,8 @@ import numpy
 
 import chainer
 from chainer import cuda
-from chainer import reporter
 from chainer.dataset import convert
+from chainer import reporter
 from chainer.training.extensions import Evaluator
 from sklearn import metrics
 

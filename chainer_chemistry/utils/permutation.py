@@ -29,16 +29,22 @@ def permute_adj(adj, permutation_index, axis=None):
             It is considered as adjacency matrix.
         permutation_index (numpy.ndarray): 1d numpy array whose size should be
             same as permutation axis of `node`.
-        axis (list or None): list of 2d int, indicates the permutation axis.
-            When None is passed (default), it uses -1 and -2 as `axis`, it
-            means that last 2 axis are considered to be permuted.
+        axis (list or tuple or None): list of 2d int, indicates the permutation
+            axis. When None is passed (default), it uses -1 and -2 as `axis`,
+            it means that last 2 axis are considered to be permuted.
 
     Returns (numpy.ndarray): permutated `adj` array.
 
     """
     if axis is not None:
-        raise NotImplementedError('Sorry, it is not implemented yet.')
-    axis = [-1, -2]
+        if not isinstance(axis, (list, tuple)):
+            raise TypeError('axis must be list or tuple, got {}'
+                            .format(type(axis)))
+        if len(axis) != 2:
+            raise ValueError('axis length must 2, got {}'.format(len(axis)))
+    else:
+        axis = [-1, -2]  # default value is to use last 2 axis
+
     num_node = len(permutation_index)
     for ax in axis:
         if adj.shape[ax] != len(permutation_index):
@@ -46,10 +52,15 @@ def permute_adj(adj, permutation_index, axis=None):
                 'adj.shape[{}] = {} and len(permutation_index) = {} do not '
                 'match!'.format(axis, adj.shape[axis], len(permutation_index)))
 
-    # TODO(nakago): support arbitrary axis. not this is only for axis=-1, -2
     out_adj = numpy.zeros_like(adj)
+    ndim = adj.ndim
     for i in range(num_node):
         for j in range(num_node):
-            out_adj[..., i, j] = adj[..., permutation_index[i],
-                                     permutation_index[j]]
+            in_indices = [slice(None)] * ndim
+            out_indices = [slice(None)] * ndim
+            in_indices[axis[0]] = i
+            in_indices[axis[1]] = j
+            out_indices[axis[0]] = permutation_index[i]
+            out_indices[axis[1]] = permutation_index[j]
+            out_adj[in_indices] = adj[out_indices]
     return out_adj

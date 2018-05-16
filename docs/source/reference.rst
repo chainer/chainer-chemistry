@@ -8,6 +8,7 @@ API Reference
    dataset
    datasets
    functions
+   iterators
    links
    models
    utils

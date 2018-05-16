@@ -70,7 +70,28 @@ As with training, we can specify GPU/CPU to use by `-g` option.
 The full options available including `-g` and `-i` are found
 by running the following command `python inference_tox21.py -h`.
 
-### Evaluate models
+
+### Inference with a trained model using Classifier
+
+As of v0.3.0, `Classifier` class is introduced which supports `predict` and
+`predict_proba` methods for easier inference.
+
+`Classifier` also supports `load_pickle` method, user may load
+the instance of pretrained-model using `pickle` file.
+
+The example implemented in `predict_tox21_with_classifier.py`.
+
+With CPU:
+```
+python predict_tox21_with_classifier.py [-i /path/to/training/result/directory]
+```
+
+With GPU:
+```
+python predict_tox21_with_classifier.py -g 0 [-i /path/to/training/result/directory]
+```
+
+### Evaluation of Models
 `seaborn` is required to run this script.
 
 ```
@@ -78,4 +99,3 @@ bash examples/tox21/evaluate_models_tox21.sh
 ```
 
 This script evaluates each method and generate a graph.
-

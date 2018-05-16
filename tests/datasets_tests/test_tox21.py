@@ -1,9 +1,9 @@
 import os
+
 import numpy
 import pytest
-from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import\
-    AtomicNumberPreprocessor
 
+from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.datasets import tox21
 
 
@@ -70,7 +70,7 @@ def test_get_tox21_label_names():
 
 def test_get_tox21_filepath_assert_raises():
     with pytest.raises(ValueError):
-        cache_filepath = tox21.get_tox21_filepath('other')
+        tox21.get_tox21_filepath('other')
 
 
 if __name__ == '__main__':

@@ -39,7 +39,6 @@ def test_schnet_preprocessor(mol, pp):
 def test_schnet_preprocessor_with_tox21():
     preprocessor = SchNetPreprocessor()
 
-
     dataset = SDFFileParser(preprocessor, postprocess_label=None
                             ).parse(get_tox21_filepath('train'))['dataset']
 
@@ -55,7 +54,7 @@ def test_schnet_preprocessor_with_tox21():
 
 def test_schnet_preprocessor_assert_raises():
     with pytest.raises(ValueError):
-        pp = SchNetPreprocessor(max_atoms=3, out_size=2)
+        pp = SchNetPreprocessor(max_atoms=3, out_size=2)  # NOQA
 
 
 if __name__ == '__main__':
