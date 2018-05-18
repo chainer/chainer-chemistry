@@ -5,6 +5,7 @@ import pytest
 
 from chainer_chemistry.models.mlp import MLP
 
+batch_size = 2
 hidden_dim = 16
 out_dim = 4
 
@@ -16,14 +17,15 @@ def model():
 
 @pytest.fixture
 def data():
-    hidden = numpy.random.rand(1, hidden_dim).astype(numpy.float32)
-    y_grad = numpy.random.uniform(-1, 1, (1, out_dim)).astype(numpy.float32)
+    hidden = numpy.random.rand(batch_size, hidden_dim).astype(numpy.float32)
+    y_grad = numpy.random.uniform(-1, 1, (batch_size, out_dim)).astype(
+        numpy.float32)
     return hidden, y_grad
 
 
 def check_forward(model, data):
     y_actual = cuda.to_cpu(model(data).data)
-    assert y_actual.shape == (1, out_dim)
+    assert y_actual.shape == (batch_size, out_dim)
 
 
 def test_forward_cpu(model, data):
