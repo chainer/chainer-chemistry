@@ -42,22 +42,19 @@ class RSGCNPreprocessor(MolPreprocessor):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
+        num_atoms = mol.GetNumAtoms()
+
+        # Construct the atom array and adjacency matrix.
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_adj_matrix(mol, out_size=self.out_size)
 
-        num_atoms = mol.GetNumAtoms()
-        degree_vec = numpy.sum(adj_array, axis=1)
-
-        # Add self-connections to avoid having NaN values in the matrix.
-        degree_sqrt_inv = numpy.zeros(degree_vec.shape)
-        mask = degree_vec > 0
-        degree_sqrt_inv[mask] = 1. / numpy.sqrt(degree_vec[mask])
-
         # Adjust the adjacency matrix.
-        adj_array *= numpy.broadcast_to(degree_sqrt_inv[:, None],
-                                        adj_array.shape)
-        adj_array *= numpy.broadcast_to(degree_sqrt_inv[None, :],
-                                        adj_array.shape)
-        numpy.fill_diagonal(adj_array[num_atoms:, num_atoms:], 1)
+        degree_vec = numpy.sum(adj_array[:num_atoms], axis=1)
+        degree_sqrt_inv = 1. / numpy.sqrt(degree_vec)
+
+        adj_array[:num_atoms, :num_atoms] *= numpy.broadcast_to(
+            degree_sqrt_inv[:, None], (num_atoms, num_atoms))
+        adj_array[:num_atoms, :num_atoms] *= numpy.broadcast_to(
+            degree_sqrt_inv[None, :], (num_atoms, num_atoms))
 
         return atom_array, adj_array
