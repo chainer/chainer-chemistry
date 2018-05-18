@@ -55,7 +55,7 @@ def test_atomic_number_preprocessor_with_tox21():
     dataset = SDFFileParser(preprocessor) \
         .parse(get_tox21_filepath('train'))['dataset']
     index = numpy.random.choice(len(dataset), None)
-    atoms = dataset[index]
+    atoms, = dataset[index]
 
     assert atoms.ndim == 1
     assert atoms.dtype == numpy.int32
