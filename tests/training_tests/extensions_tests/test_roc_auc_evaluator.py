@@ -30,6 +30,15 @@ def data1():
     return y, t
 
 
+@pytest.fixture
+def data2():
+    # Example of bad example case
+    # `t` only contains correct label, `y` is dummy predict value by predictor
+    t = numpy.array([0, 0, 0, 0], dtype=numpy.int32)[:, None]
+    y = numpy.array([0.1, 0.4, 0.35, 0.8], dtype=numpy.float32)[:, None]
+    return y, t
+
+
 class DummyPredictor(chainer.Chain):
 
     def __call__(self, y):
@@ -93,6 +102,33 @@ def _test_roc_auc_evaluator_with_labels(data1):
     result = evaluator()
     # print('result ', result)
     assert result['val/main/roc_auc'] == expected_roc_auc
+
+
+def test_roc_auc_evaluator_raise_value_error(data2):
+    with pytest.raises(ValueError):
+        _test_roc_auc_evaluator_raise_error(data2, raise_value_error=True)
+
+    res = _test_roc_auc_evaluator_raise_error(data2, raise_value_error=False)
+    assert numpy.isnan(res)
+
+
+def _test_roc_auc_evaluator_raise_error(data, raise_value_error=True):
+
+    predictor = DummyPredictor()
+    dataset = NumpyTupleDataset(*data)
+
+    iterator = SerialIterator(dataset, 2, repeat=False, shuffle=False)
+    evaluator = ROCAUCEvaluator(
+        iterator, predictor, name='train',
+        pos_labels=1, ignore_labels=None,
+        raise_value_error=raise_value_error
+    )
+    repo = chainer.Reporter()
+    repo.add_observer('target', predictor)
+    with repo:
+        observation = evaluator.evaluate()
+
+    return observation['target/roc_auc']
 
 
 if __name__ == '__main__':
