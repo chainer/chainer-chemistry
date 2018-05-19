@@ -18,8 +18,8 @@ class MLP(chainer.Chain):
     def __init__(self, out_dim, hidden_dim=16, n_layers=2, activation=relu):
         super(MLP, self).__init__()
         if n_layers <= 0:
-            raise ValueError('n_layers must be positive integer, but set {}'
-                             .format(n_layers))
+            raise ValueError('n_layers must be a positive integer, but it was '
+                             'set to {}'.format(n_layers))
         layers = [links.Linear(None, hidden_dim) for i in range(n_layers - 1)]
         with self.init_scope():
             self.layers = chainer.ChainList(*layers)

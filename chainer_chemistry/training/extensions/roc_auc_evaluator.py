@@ -74,9 +74,9 @@ class ROCAUCEvaluator(Evaluator):
             are considered as negative.
         ignore_labels (int or list or None): labels to be ignored.
             `None` is used to not ignore all labels.
-        raise_value_error (bool): If False, `ValueError` caused by
-            `roc_auc_score` calculation is suppressed and ignored with warning
-            message.
+        raise_value_error (bool): If `False`, `ValueError` caused by
+            `roc_auc_score` calculation is suppressed and ignored with a
+            warning message.
         logger:
 
     Attributes:
@@ -143,12 +143,11 @@ class ROCAUCEvaluator(Evaluator):
         try:
             roc_auc = metrics.roc_auc_score(t_total, y_total)
         except ValueError as e:
+            # When only one class present in `y_true`, `ValueError` is raised.
+            # ROC AUC score is not defined in that case.
             if self.raise_value_error:
                 raise e
             else:
-                # This is usually caused by the following
-                # Only one class present in y_true.
-                # ROC AUC score is not defined in that case
                 self.logger.warning(
                     'ValueError detected during roc_auc_score calculation. {}'
                     .format(e.args))

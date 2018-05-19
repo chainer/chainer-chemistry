@@ -125,6 +125,8 @@ def main():
         test_iterator, clf, converter=concat_mols, device=args.gpu,
         eval_func=clf.predictor, name='test', ignore_labels=-1)()
     print('ROCAUC Evaluation result: ', rocauc_result)
+    with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
+        json.dump(rocauc_result, f)
     # --- evaluate end ---
 
 
