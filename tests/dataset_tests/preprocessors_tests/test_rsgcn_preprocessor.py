@@ -27,7 +27,7 @@ def test_rsgcn_default_preprocessor(mol):
         ret_adj_array, expect_adj_array, rtol=1e-03, atol=1e-03)
 
 
-def test_atomic_number_non_default_padding_preprocessor(mol):
+def test_rsgcn_non_default_padding_preprocessor(mol):
     preprocessor = RSGCNPreprocessor(out_size=7)
     ret_atom_array, ret_adj_array = preprocessor.get_input_features(mol)
     expect_atom_array = numpy.array([6, 7, 6, 8, 0, 0, 0], dtype=numpy.int32)
