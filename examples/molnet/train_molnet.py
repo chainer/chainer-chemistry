@@ -114,7 +114,7 @@ def main():
         print('preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
         # only use first 100 for debug if num_data >= 0
-        target_index = numpy.arangs(num_data) if num_data >= 0 else None
+        target_index = numpy.arange(num_data) if num_data >= 0 else None
         datasets = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
                                                labels=labels,
                                                target_index=target_index)
@@ -171,7 +171,6 @@ def main():
     elif molnet_default_config[args.dataset]['task_type'] == 'classification':
         model = Classifier(model, lossfun=loss_fun, metrics_fun=metrics_fun,
                            device=args.gpu)
-    # TODO(motoki): how to support bace dataset
     else:
         raise NotImplementedError
 
