@@ -5,16 +5,23 @@ from chainer_chemistry.datasets.molnet.toxcast_tasks import toxcast_tasks
 molnet_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/datasets/'
 
 molnet_default_config = {
-    "bace": {
+    "bace_Class": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'bace.csv',
         "smiles_columns": 'mol',
         "metrics": None,
         "loss": None,
-        "task_type": 'mix',
-        # pIC50: regression
-        # Class: classification
-        "tasks": ["pIC50", "Class"],
+        "task_type": 'classification',
+        "tasks": ["Class"],
+    },
+    "bace_pIC50": {
+        "dataset_type": 'one_file_csv',
+        "url": molnet_base + 'bace.csv',
+        "smiles_columns": 'mol',
+        "metrics": None,
+        "loss": None,
+        "task_type": 'regression',
+        "tasks": ["pIC50"],
     },
     "bbbp": {
         "dataset_type": 'one_file_csv',

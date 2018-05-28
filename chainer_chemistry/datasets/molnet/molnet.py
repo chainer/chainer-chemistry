@@ -2,7 +2,7 @@ from logging import getLogger
 import os
 import shutil
 
-import numpy as np
+import numpy
 from chainer.dataset import download
 
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
@@ -23,8 +23,10 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         dataset_name (str): MoleculeNet dataset name. If you want to know the
             detail of MoleculeNet, please refer to
             `official site <http://moleculenet.ai/datasets-1>`_
+            If you would like to know what dataset_name is available for
+            chainer_chemistry, please refer to `molnet_config.py`.
         preprocessor (BasePreprocessor): Preprocessor.
-            This sould be chose base on the network to be trained.
+            It should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         return_smiles (bool): If set to ``True``,
@@ -32,12 +34,15 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         target_index (list or None): target index list to partially extract
             dataset. If `None` (default), all examples are parsed.
     Returns (dict):
-        dictionary that contains dataset that is already splitted into train,
+        Dictionary that contains dataset that is already splitted into train,
         valid and test dataset and 1-d numpy array with dtype=object(string)
         which is a vector of smiles for each example or `None`.
 
     """
-    assert dataset_name in molnet_default_config
+    if dataset_name not in molnet_default_config:
+        raise ValueError("We don't support {} dataset. Please choose from {}".
+                         format(dataset_name,
+                                list(molnet_default_config.keys())))
     dataset_config = molnet_default_config[dataset_name]
     labels = labels or dataset_config['tasks']
     if isinstance(labels, str):
@@ -48,12 +53,12 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
 
     if dataset_config['task_type'] == 'regression':
         def postprocess_label(label_list):
-            return np.asarray(label_list, dtype=np.float32)
+            return numpy.asarray(label_list, dtype=numpy.float32)
     elif dataset_config['task_type'] == 'classification':
         def postprocess_label(label_list):
-            label_list = np.asarray(label_list)
-            label_list[np.isnan(label_list)] = -1
-            return label_list.astype(np.int32)
+            label_list = numpy.asarray(label_list)
+            label_list[numpy.isnan(label_list)] = -1
+            return label_list.astype(numpy.int32)
 
     parser = CSVFileParser(preprocessor, labels=labels,
                            smiles_col=dataset_config['smiles_columns'],
@@ -65,7 +70,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         # TODO(motoki): splitting function or class
         dataset = result['dataset']
         if split == 'random':
-            perm = np.random.permutation(len(dataset))
+            perm = numpy.random.permutation(len(dataset))
             dataset = NumpyTupleDataset(*dataset.features[perm])
             train_data_size = int(len(dataset) * frac_train)
             valid_data_size = int(len(dataset) * frac_valid)
@@ -123,7 +128,9 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
     Returns (str): filepath for specific MoleculeNet dataset
 
     """
-    assert filetype in ['onefile', 'train', 'valid', 'test']
+    if filetype in ['onefile', 'train', 'valid', 'test']:
+        raise ValueError("Please choose filetype from {}".format(
+            ['onefile', 'train', 'valid', 'test']))
     if filetype == 'onefile':
         url_key = 'url'
     else:
@@ -168,7 +175,7 @@ def download_dataset(dataset_url, save_filepath):
 
     """
     logger = getLogger(__name__)
-    logger.warning('Download {} dataset, it takes time...'
+    logger.warning('Downloading {} dataset, it takes time...'
                    .format(dataset_url.split('/')[-1]))
     download_file_path = download.cached_download(dataset_url)
     shutil.move(download_file_path, save_filepath)
