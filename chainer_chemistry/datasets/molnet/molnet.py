@@ -128,7 +128,7 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
     Returns (str): filepath for specific MoleculeNet dataset
 
     """
-    if filetype in ['onefile', 'train', 'valid', 'test']:
+    if filetype not in ['onefile', 'train', 'valid', 'test']:
         raise ValueError("Please choose filetype from {}".format(
             ['onefile', 'train', 'valid', 'test']))
     if filetype == 'onefile':
