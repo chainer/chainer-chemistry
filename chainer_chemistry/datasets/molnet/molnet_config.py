@@ -9,8 +9,8 @@ molnet_default_config = {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'bace.csv',
         "smiles_columns": 'mol',
-        "metrics": None,
-        "loss": None,
+        "metrics": {'binary_accuracy': F.binary_accuracy},
+        "loss": F.sigmoid_cross_entropy,
         "task_type": 'classification',
         "tasks": ["Class"],
     },
@@ -19,7 +19,7 @@ molnet_default_config = {
         "url": molnet_base + 'bace.csv',
         "smiles_columns": 'mol',
         "metrics": None,
-        "loss": None,
+        "loss": F.mean_squared_error,
         "task_type": 'regression',
         "tasks": ["pIC50"],
     },
@@ -82,7 +82,7 @@ molnet_default_config = {
     "hopv": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'hopv.tar.gz',
-        "smiles_columns": 'smiles',
+        "smiles_columns": 'hopv.csv',
         "metrics": None,
         "loss": F.mean_squared_error,
         "task_type": 'regression',
@@ -230,7 +230,7 @@ molnet_default_config = {
     },
     "SAMPL": {
         "dataset_type": 'one_file_csv',
-        "url": molnet_base + 'SMAPL.csv',
+        "url": molnet_base + 'SAMPL.csv',
         "smiles_columns": 'smiles',
         "metrics": None,
         "loss": F.mean_squared_error,
@@ -251,7 +251,7 @@ molnet_default_config = {
                   'Gastrointestinal disorders', 'Social circumstances',
                   'Immune system disorders',
                   'Reproductive system and breast disorders',
-                  'Neoplasms benign, malignant and unspecified'
+                  'Neoplasms benign, malignant and unspecified '
                   '(incl cysts and polyps)',
                   'General disorders and administration site conditions',
                   'Endocrine disorders', 'Surgical and medical procedures',

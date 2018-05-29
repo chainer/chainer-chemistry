@@ -119,7 +119,7 @@ def main():
                                                labels=labels,
                                                target_index=target_index)
         if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
+            os.makedirs(cache_dir)
         datasets = datasets['dataset']
         for i, fpath in enumerate(filepaths):
             NumpyTupleDataset.save(fpath, datasets[i])
