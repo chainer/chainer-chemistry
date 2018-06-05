@@ -1,9 +1,10 @@
 # Example of using your own dataset
 
-This example shows how to train your own dataset stored in CSV format.
+This example shows how to train models with your own dataset stored in CSV format.
 
-This example is for regression task using `Regressor`.
-For the classification task, please refer `tox21` example for how to make a model using `Classifier`.
+We will solve a regression task with [`Regressor`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Regressor.html#chainer_chemistry.models.Regressor).
+For a classification setting that makes use of [`Classifier`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Classifier.html#chainer_chemistry.models.Classifier), 
+please refer to the tox21 example.
 
 ## Usage
 ```

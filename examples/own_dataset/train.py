@@ -10,7 +10,6 @@ import chainer
 from chainer.datasets import split_dataset_random
 from chainer import functions as F, cuda, Variable
 from chainer import iterators
-from chainer import links as L
 from chainer import optimizers
 from chainer import serializers
 from chainer import training
@@ -56,20 +55,19 @@ class GraphConvPredictor(chainer.Chain):
 
 class ScaledAbsError(object):
 
-    def __init__(self, scale='standardize', ss=None):
-        self.scale = scale
-        self.ss = ss
+    def __init__(self, scaler=None):
+        self.scaler = scaler
 
     def __call__(self, x0, x1):
         if isinstance(x0, Variable):
             x0 = cuda.to_cpu(x0.data)
         if isinstance(x1, Variable):
             x1 = cuda.to_cpu(x1.data)
-        if self.scale == 'standardize':
-            scaled_x0 = self.ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.ss.inverse_transform(cuda.to_cpu(x1))
+        if self.scaler is not None:
+            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
             diff = scaled_x0 - scaled_x1
-        elif self.scale == 'none':
+        else:
             diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
         return numpy.mean(numpy.absolute(diff), axis=0)[0]
 
@@ -81,10 +79,11 @@ def main():
 
     parser = argparse.ArgumentParser(
         description='Regression with own dataset.')
-    parser.add_argument('datafile', type=str)
+    parser.add_argument('--datafile', type=str, default='dataset.csv')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='nfp')
     parser.add_argument('--label', '-l', nargs='+',
+                        default=['value1', 'value2'],
                         help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='Label scaling method')
@@ -122,11 +121,12 @@ def main():
 
     if args.scale == 'standardize':
         # Standard Scaler for labels
-        ss = StandardScaler()
-        labels = ss.fit_transform(dataset.get_datasets()[-1])
+        scaler = StandardScaler()
+        labels = scaler.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
     else:
-        ss = None
+        # Not use scaler
+        scaler = None
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
@@ -172,7 +172,7 @@ def main():
 
     regressor = Regressor(
         model, lossfun=F.mean_squared_error,
-        metrics_fun={'abs_error': ScaledAbsError(scale=args.scale, ss=ss)},
+        metrics_fun={'abs_error': ScaledAbsError(scaler=scaler)},
         device=args.gpu)
 
     optimizer = optimizers.Adam()
@@ -196,12 +196,12 @@ def main():
 
     # --- save regressor's parameters ---
     protocol = args.protocol
-    save_model_path = os.path.join(args.out, 'model.npz')
-    print('saving trained model to {}'.format(save_model_path))
-    serializers.save_npz(save_model_path, regressor)
-    if args.scale == 'standardize':
-        with open(os.path.join(args.out, 'ss.pkl'), mode='wb') as f:
-            pickle.dump(ss, f, protocol=protocol)
+    model_path = os.path.join(args.out, 'model.npz')
+    print('saving trained model to {}'.format(model_path))
+    serializers.save_npz(model_path, regressor)
+    if scaler is not None:
+        with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
+            pickle.dump(scaler, f, protocol=protocol)
 
     # Example of prediction using trained model
     smiles = 'c1ccccc1'
