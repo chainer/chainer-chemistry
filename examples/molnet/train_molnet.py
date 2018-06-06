@@ -80,6 +80,7 @@ def main():
     num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
+    print('Training {} dataset'.format(dataset_name))
 
     if args.label:
         labels = args.label
@@ -167,6 +168,7 @@ def main():
     if molnet_default_config[dataset_name]['task_type'] == 'regression':
         model = Regressor(model, lossfun=loss_fun, metrics_fun=metrics_fun,
                           device=args.gpu)
+        # TODO(nakago): Use standard scaler for regression task
     elif molnet_default_config[args.dataset]['task_type'] == 'classification':
         model = Classifier(model, lossfun=loss_fun, metrics_fun=metrics_fun,
                            device=args.gpu)
@@ -193,7 +195,7 @@ def main():
     trainer.extend(E.ProgressBar())
     trainer.run()
 
-    # --- save regressor & standardscaler ---
+    # --- save model ---
     protocol = args.protocol
     model.save_pickle(os.path.join(args.out, args.model_filename),
                       protocol=protocol)
