@@ -6,13 +6,12 @@ gpu=-1
 
 declare method_list=(nfp ggnn schnet weavenet rsgcn)
 # Preprocessor parse result must contain both pos/neg samples
-declare tox21_num_data_list=(1000 1000 2000 3000 1000)
+tox21_num_data=100
 
 #for method in nfp ggnn schnet weavenet rsgcn
 for (( i=0; i<${#method_list[@]}; i++ ));
 do
     method=${method_list[$i]}
-    tox21_num_data=${tox21_num_data_list[$i]}
 
     # Tox21
     cd tox21

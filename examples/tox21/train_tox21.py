@@ -146,7 +146,7 @@ def main():
         trainer.extend(ROCAUCEvaluator(
             train_eval_iter, classifier, eval_func=predictor_,
             device=args.gpu, converter=concat_mols, name='train',
-            pos_labels=1, ignore_labels=-1))
+            pos_labels=1, ignore_labels=-1, raise_value_error=False))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(
