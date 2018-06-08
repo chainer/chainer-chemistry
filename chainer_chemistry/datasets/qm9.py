@@ -95,7 +95,7 @@ def _get_qm9_filepath():
 
     This method does not check if the file is already downloaded or not.
 
-    Returns (str): filepath for tox21 dataset
+    Returns (str): filepath for qm9 dataset
 
     """
     cache_root = download.get_dataset_directory(_root)
