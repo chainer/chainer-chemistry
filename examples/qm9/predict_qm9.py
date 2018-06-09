@@ -21,14 +21,7 @@ from chainer import Variable
 import numpy  # NOQA
 
 from chainer_chemistry import datasets as D
-try:
-    from chainer_chemistry.models.prediction import Regressor
-except ImportError:
-    print('[ERROR] This example uses newly implemented `Regressor` class.\n'
-          'Please install the library from master branch.\n See '
-          'https://github.com/pfnet-research/chainer-chemistry#installation'
-          ' for detail.')
-    exit()
+from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
