@@ -2,19 +2,14 @@
 
 set -e
 
-gpu=-1
+# gpu id given from first argument, default value is -1
+gpu=${1:--1}
 
-declare method_list=(nfp ggnn schnet weavenet rsgcn)
 # Preprocessor parse result must contain both pos/neg samples
 tox21_num_data=100
 
-#for method in nfp ggnn schnet weavenet rsgcn
-for (( i=0; i<${#method_list[@]}; i++ ));
+for method in nfp ggnn schnet weavenet rsgcn
 do
-    method=${method_list[$i]}
-
-    # Tox21
-    cd tox21
     if [ ! -f "input" ]; then
         rm -rf input
     fi
@@ -34,30 +29,10 @@ do
     python predict_tox21_with_classifier.py --in-dir ${out_dir} --num-data=${tox21_num_data}
     snapshot=`ls ${out_dir}/snapshot_iter_* | head -1`
     python inference_tox21.py --in-dir ${out_dir} --gpu ${gpu} --trainer-snapshot ${snapshot} --num-data=${tox21_num_data}
-    cd ../
-
-    # QM9
-    cd qm9
-    if [ ! -f "input" ]; then
-        rm -rf input
-    fi
-
-    python train_qm9.py --method ${method} --label A --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --label A --gpu ${gpu} --batchsize 32 --num-data 100
-    python train_qm9.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --gpu ${gpu} --batchsize 32 --num-data 100
-    cd ../
-
-    # Own dataset
-    cd own_dataset
-    python train.py --datafile dataset.csv --method ${method} --label value1 --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32
-    cd ../
 done
 
-cd tox21
 # BalancedSerialIterator test with Tox21
 python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type balanced --eval-mode 0 --num-data 1000
 python inference_tox21.py --in-dir nr_ar_nfp_balanced --gpu ${gpu} --num-data 1000
 # ROCAUCEvaluator test with Tox21
 python train_tox21.py --method nfp --label NR-AR --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --out nr_ar_nfp_balanced --iterator-type serial --eval-mode 1 --num-data 1000
-cd ..
