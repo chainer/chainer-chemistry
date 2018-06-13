@@ -22,5 +22,5 @@ python train_molnet.py --dataset=bbbp
 
 With GPU:
 ```angular2html
-python train_molnet.py --dataset=bbbp -g 6
+python train_molnet.py --dataset=bbbp -g 0
 ```
