@@ -16,6 +16,7 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
+from chainer_chemistry.training.extensions import ROCAUCEvaluator
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -80,7 +81,7 @@ def main():
     num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
-    print('Training {} dataset'.format(dataset_name))
+    print('Use {} dataset'.format(dataset_name))
 
     if args.label:
         labels = args.label
@@ -129,17 +130,17 @@ def main():
     # Network
     if method == 'nfp':
         print('Train NFP model...')
-        model = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
+        predictor = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
                                        n_layers=conv_layers),
                                    MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'ggnn':
         print('Train GGNN model...')
-        model = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
+        predictor = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
                                         n_layers=conv_layers),
                                    MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'schnet':
         print('Train SchNet model...')
-        model = GraphConvPredictor(
+        predictor = GraphConvPredictor(
             SchNet(out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers),
             None)
     elif method == 'weavenet':
@@ -147,13 +148,13 @@ def main():
         n_atom = 20
         n_sub_layer = 1
         weave_channels = [50] * conv_layers
-        model = GraphConvPredictor(
+        predictor = GraphConvPredictor(
             WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
                      n_sub_layer=n_sub_layer, n_atom=n_atom),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'rsgcn':
         print('Train RSGCN model...')
-        model = GraphConvPredictor(
+        predictor = GraphConvPredictor(
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
@@ -165,15 +166,17 @@ def main():
 
     metrics_fun = molnet_default_config[dataset_name]['metrics']
     loss_fun = molnet_default_config[dataset_name]['loss']
-    if molnet_default_config[dataset_name]['task_type'] == 'regression':
-        model = Regressor(model, lossfun=loss_fun, metrics_fun=metrics_fun,
+    task_type = molnet_default_config[dataset_name]['task_type']
+    if task_type == 'regression':
+        model = Regressor(predictor, lossfun=loss_fun, metrics_fun=metrics_fun,
                           device=args.gpu)
         # TODO(nakago): Use standard scaler for regression task
-    elif molnet_default_config[args.dataset]['task_type'] == 'classification':
-        model = Classifier(model, lossfun=loss_fun, metrics_fun=metrics_fun,
-                           device=args.gpu)
+    elif task_type == 'classification':
+        model = Classifier(predictor, lossfun=loss_fun,
+                           metrics_fun=metrics_fun, device=args.gpu)
     else:
-        raise NotImplementedError
+        raise NotImplementedError(
+            'Not implemented task_type = {}'.format(task_type))
 
     optimizer = optimizers.Adam()
     optimizer.setup(model)
@@ -190,6 +193,16 @@ def main():
         for m_k in metrics_fun.keys():
             print_report_targets.append('main/'+m_k)
             print_report_targets.append('validation/main/'+m_k)
+    if task_type == 'classification':
+        # Evaluation for train data takes time, skip for now.
+        # trainer.extend(ROCAUCEvaluator(
+        #     train_iter, model, device=args.gpu, eval_func=predictor,
+        #     converter=concat_mols, name='train', raise_value_error=False))
+        # print_report_targets.append('train/main/roc_auc')
+        trainer.extend(ROCAUCEvaluator(
+            val_iter, model, device=args.gpu, eval_func=predictor,
+            converter=concat_mols, name='val', raise_value_error=False))
+        print_report_targets.append('val/main/roc_auc')
     print_report_targets.append('elapsed_time')
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
