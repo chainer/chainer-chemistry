@@ -44,7 +44,7 @@ do
 
     # Own dataset
     cd own_dataset
-    python train.py dataset.csv --method ${method} --label value1 --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32
+    python train.py --datafile dataset.csv --method ${method} --label value1 --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32
     cd ../
 done
 
