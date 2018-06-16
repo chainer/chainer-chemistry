@@ -27,7 +27,6 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 
 
 class GraphConvPredictor(chainer.Chain):
-
     def __init__(self, graph_conv, mlp=None):
         """Graph Convolution Predictor
 
@@ -59,8 +58,7 @@ class GraphConvPredictor(chainer.Chain):
         return x
 
 
-class ScaledAbsError(object):
-
+class MeanAbsError(object):
     def __init__(self, scale='standardize', ss=None):
         self.scale = scale
         self.ss = ss
@@ -71,12 +69,31 @@ class ScaledAbsError(object):
         if isinstance(x1, Variable):
             x1 = cuda.to_cpu(x1.data)
         if self.scale == 'standardize':
-            scaled_x0 = self.ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.ss.inverse_transform(cuda.to_cpu(x1))
+            scaled_x0 = self.ss.inverse_transform(x0)
+            scaled_x1 = self.ss.inverse_transform(x1)
             diff = scaled_x0 - scaled_x1
         elif self.scale == 'none':
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+            diff = x0 - x1
         return numpy.mean(numpy.absolute(diff), axis=0)[0]
+
+
+class RootMeanSqrError(object):
+    def __init__(self, scale='standardize', ss=None):
+        self.scale = scale
+        self.ss = ss
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scale == 'standardize':
+            scaled_x0 = self.ss.inverse_transform(x0)
+            scaled_x1 = self.ss.inverse_transform(x1)
+            diff = scaled_x0 - scaled_x1
+        elif self.scale == 'none':
+            diff = x0 - x1
+        return numpy.sqrt(numpy.mean(numpy.power(diff, 2), axis=0)[0])
 
 
 def main():
@@ -199,8 +216,14 @@ def main():
                                 repeat=False, shuffle=False)
 
     regressor = Regressor(
-        model, lossfun=F.mean_squared_error,
-        metrics_fun={'abs_error': ScaledAbsError(scale=args.scale, ss=ss)},
+        model,
+        lossfun=F.mean_squared_error,
+        metrics_fun={
+            'mean_abs_error':
+            MeanAbsError(scale=args.scale, ss=ss),
+            'root_mean_sqr_error':
+            RootMeanSqrError(scale=args.scale, ss=ss),
+        },
         device=args.gpu)
 
     optimizer = O.Adam()
