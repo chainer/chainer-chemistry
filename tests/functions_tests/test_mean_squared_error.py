@@ -44,7 +44,8 @@ class TestMeanSquaredError(unittest.TestCase):
     def check_forward_ignore_nan(self, x0_data, x2_data):
         x0 = chainer.Variable(x0_data)
         x2 = chainer.Variable(x2_data)
-        loss = chainer_chemistry.functions.mean_squared_error(x0, x2)
+        loss = chainer_chemistry.functions.mean_squared_error(x0, x2,
+                                                              ignore_nan=True)
         loss_value = cuda.to_cpu(loss.data)
         self.assertEqual(loss_value.dtype, numpy.float32)
         self.assertEqual(loss_value.shape, ())
@@ -74,9 +75,17 @@ class TestMeanSquaredError(unittest.TestCase):
             chainer_chemistry.functions.mean_squared_error,
             (x0_data, x1_data), None, eps=1e-2)
 
+    def check_backward_ignore_nan(self, x0_data, x2_data):
+        def func(x0, x1):
+            return chainer_chemistry.functions.mean_squared_error(
+                x0, x1, ignore_nan=True)
+        gradient_check.check_backward(func, (x0_data, x2_data),
+                                      None, eps=1e-2)
+
     @condition.retry(3)
     def test_backward_cpu(self):
         self.check_backward(self.x0, self.x1)
+        self.check_backward_ignore_nan(self.x0, self.x2)
 
     @attr.gpu
     @condition.retry(3)
@@ -87,7 +96,7 @@ class TestMeanSquaredError(unittest.TestCase):
                               ggx0_data, ggx1_data):
 
         gradient_check.check_double_backward(
-            chainer_chemistry.functions.mean_squared_error, (x0_data, x1_data),
+            chainer_chemistry.functions.mean_squared_error, (x0_data, x1_data), # NOQA
             gy_data, (ggx0_data, ggx1_data), eps=1e-2)
 
     @condition.retry(3)

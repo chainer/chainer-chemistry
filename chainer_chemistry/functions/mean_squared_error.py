@@ -1,5 +1,6 @@
 import numpy
 
+from chainer.backends import cuda
 from chainer import function_node
 import chainer.functions
 from chainer.utils import type_check
@@ -9,7 +10,7 @@ class MeanSquaredError(function_node.FunctionNode):
 
     """Mean squared error (a.k.a. Euclidean loss) function."""
 
-    def __init__(self, ignore_nan=True):
+    def __init__(self, ignore_nan=False):
         self.task_weight = None
         self.ignore_nan = ignore_nan
 
@@ -25,18 +26,25 @@ class MeanSquaredError(function_node.FunctionNode):
         self.retain_inputs((0, 1))
         diff = (inputs[0] - inputs[1]).ravel()
         if self.ignore_nan:
-            diff = numpy.nan_to_num(diff)
+            diff[numpy.isnan(diff)] = 0.
         return numpy.array(diff.dot(diff) / diff.size, dtype=diff.dtype),
 
     def forward_gpu(self, inputs):
+        cupy = cuda.cupy
         self.retain_inputs((0, 1))
         diff = (inputs[0] - inputs[1]).ravel()
+        if self.ignore_nan:
+            diff[cupy.isnan(diff)] = 0.
         return diff.dot(diff) / diff.dtype.type(diff.size),
 
     def backward(self, indexes, gy):
         x0, x1 = self.get_retained_inputs()
+        xp = cuda.get_array_module(x0)
         ret = []
         diff = x0 - x1
+        if self.ignore_nan:
+            diff = chainer.functions.where(xp.isnan(diff.array),
+                                           xp.zeros_like(diff.array), diff)
         gy0 = chainer.functions.broadcast_to(gy[0], diff.shape)
         gx0 = gy0 * diff * (2. / diff.size)
         if 0 in indexes:
@@ -46,7 +54,7 @@ class MeanSquaredError(function_node.FunctionNode):
         return ret
 
 
-def mean_squared_error(x0, x1, ignore_nan=True):
+def mean_squared_error(x0, x1, ignore_nan=False):
     """Mean squared error function.
     This function computes mean squared error between two variables. The mean
     is taken over the minibatch. Note that the error is not scaled by 1/2.
