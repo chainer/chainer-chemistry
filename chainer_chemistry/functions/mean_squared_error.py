@@ -25,6 +25,7 @@ class MeanSquaredError(function_node.FunctionNode):
     def forward_cpu(self, inputs):
         self.retain_inputs((0, 1))
         diff = (inputs[0] - inputs[1]).ravel()
+        # TODO(mottodora): add reduce option
         if self.ignore_nan:
             diff[numpy.isnan(diff)] = 0.
         return numpy.array(diff.dot(diff) / diff.size, dtype=diff.dtype),
@@ -33,6 +34,7 @@ class MeanSquaredError(function_node.FunctionNode):
         cupy = cuda.cupy
         self.retain_inputs((0, 1))
         diff = (inputs[0] - inputs[1]).ravel()
+        # TODO(mottodora): add reduce option
         if self.ignore_nan:
             diff[cupy.isnan(diff)] = 0.
         return diff.dot(diff) / diff.dtype.type(diff.size),
