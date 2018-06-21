@@ -58,5 +58,17 @@ def mean_absolute_error(x0, x1, ignore_nan=False):
     This function computes mean absolute error between two variables. The mean
     is taken over the minibatch.
 
+    Args:
+        x0 (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
+        :class:`cupy.ndarray`): Input variable.
+        x1 (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
+        :class:`cupy.ndarray`): Input variable.
+        ignore_nan (bool): If `True`, this function compute mean absolute error
+            ignoring NaNs.
+
+    Returns:
+        ~chainer.Variable:
+            A variable holding an array representing the mean absolute
+            error of two inputs.
     """
     return MeanAbsoluteError(ignore_nan).apply((x0, x1))[0]
