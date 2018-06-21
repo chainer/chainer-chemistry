@@ -67,7 +67,8 @@ def mean_squared_error(x0, x1, ignore_nan=False):
         x1 (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
         :class:`cupy.ndarray`): Input variable.
         ignore_nan (bool): If `True`, this function compute mean squared error
-            ignoring NaNs.
+            ignoring NaNs. The arithmetic mean is the sum of the non-NaN
+            elements along the axis divided by the number of whole elements.
 
     Returns:
         ~chainer.Variable:
