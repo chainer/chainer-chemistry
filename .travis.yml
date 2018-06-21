@@ -8,6 +8,8 @@ python:
   - 3.5
   - 3.6
 env:
+env:
+  - CHAINER_VERSION="chainer<4"
   - CHAINER_VERSION="chainer"
   - CHAINER_VERSION="prerelease"
 
