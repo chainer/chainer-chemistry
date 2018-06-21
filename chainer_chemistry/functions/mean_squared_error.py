@@ -11,7 +11,7 @@ class MeanSquaredError(function_node.FunctionNode):
     """Mean squared error (a.k.a. Euclidean loss) function."""
 
     def __init__(self, ignore_nan=False):
-        self.task_weight = None
+        # TODO(mottodora): implement task weight calculation
         self.ignore_nan = ignore_nan
 
     def check_type_forward(self, in_types):
