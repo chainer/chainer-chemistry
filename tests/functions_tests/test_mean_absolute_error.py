@@ -39,11 +39,13 @@ def check_forward(inputs):
     assert loss.dtype == numpy.float32
     assert loss_value.shape == ()
 
-    loss_expect = 0.
+    loss_expect = numpy.zeros(())
+    x0_data = cuda.to_cpu(x0_data)
+    x1_data = cuda.to_cpu(x1_data)
     for i in numpy.ndindex(x0_data.shape):
         loss_expect += abs((x0_data[i] - x1_data[i]))
     loss_expect /= x0_data.size
-    assert pytest.approx(loss_value, loss_expect)
+    assert numpy.allclose(loss_value, loss_expect)
 
 
 def check_forward_ignore_nan(inputs):
@@ -56,7 +58,7 @@ def check_forward_ignore_nan(inputs):
     assert loss.dtype == numpy.float32
     assert loss_value.shape == ()
 
-    loss_expect = 0.
+    loss_expect = numpy.zeros(())
     x0_data = cuda.to_cpu(x0_data)
     x2_data = cuda.to_cpu(x2_data)
     nan_mask = numpy.invert(numpy.isnan(x2_data)).astype(x2_data.dtype)
@@ -77,7 +79,7 @@ def check_forward_ignore_nan_with_nonnan_value(inputs):
     assert loss.dtype == numpy.float32
     assert loss_value.shape == ()
 
-    loss_expect = 0.
+    loss_expect = numpy.zeros(())
     x0_data = cuda.to_cpu(x0_data)
     x1_data = cuda.to_cpu(x1_data)
     nan_mask = numpy.invert(numpy.isnan(x1_data)).astype(x1_data.dtype)
