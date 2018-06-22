@@ -119,9 +119,19 @@ def check_backward_ignore_nan(inputs):
     gradient_check.check_backward(func, (x0_data, x2_data), None, eps=1e-2)
 
 
+def check_backward_ignore_nan_with_nonnan_value(inputs):
+    x0_data, x1_data, _ = inputs
+
+    def func(x0, x1):
+        return chainer_chemistry.functions.mean_absolute_error(x0, x1,
+                                                               ignore_nan=True)
+    gradient_check.check_backward(func, (x0_data, x1_data), None, eps=1e-2)
+
+
 def test_backward_cpu(inputs):
     check_backward(inputs)
     check_backward_ignore_nan(inputs)
+    check_backward_ignore_nan_with_nonnan_value(inputs)
 
 
 @pytest.mark.gpu
@@ -129,6 +139,8 @@ def test_backward_gpu(inputs):
     x0, x1, x2 = inputs
     check_backward((cuda.to_gpu(x0), cuda.to_gpu(x1), None))
     check_backward_ignore_nan((cuda.to_gpu(x0), None, cuda.to_gpu(x2)))
+    check_backward_ignore_nan_with_nonnan_value((cuda.to_gpu(x0),
+                                                 cuda.to_gpu(x1), None))
 
 
 def check_double_backward(inputs, grads):
@@ -152,9 +164,21 @@ def check_double_backward_ignore_nan(inputs, grads):
     gradient_check.check_double_backward(func, (x0, x2), gy, (ggx0, ggx1))
 
 
+def check_double_backward_ignore_nan_with_nonnan_value(inputs, grads):
+    x0, x1, _ = inputs
+    gy, ggx0, ggx1 = grads
+
+    def func(*xs):
+        y = chainer_chemistry.functions.mean_absolute_error(*xs,
+                                                            ignore_nan=True)
+        return y * y
+    gradient_check.check_double_backward(func, (x0, x1), gy, (ggx0, ggx1))
+
+
 def test_double_backward_cpu(inputs, grads):
     check_double_backward(inputs, grads)
     check_double_backward_ignore_nan(inputs, grads)
+    check_double_backward_ignore_nan_with_nonnan_value(inputs, grads)
 
 
 @pytest.mark.gpu
@@ -164,9 +188,12 @@ def test_double_backward_gpu(inputs, grads):
     check_double_backward((cuda.to_gpu(x0), cuda.to_gpu(x1), None),
                           (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
                            cuda.to_gpu(ggx1)))
-    check_double_backward_ignore_nan((cuda.to_gpu(x0), None, cuda.to_gpu(x2)),
-                                     (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
-                                      cuda.to_gpu(ggx1)))
+    check_double_backward_ignore_nan_with_nonnan_value((cuda.to_gpu(x0),
+                                                        cuda.to_gpu(x1),
+                                                        None),
+                                                       (cuda.to_gpu(gy),
+                                                        cuda.to_gpu(ggx0),
+                                                        cuda.to_gpu(ggx1)))
 
 
 if __name__ == '__main__':
