@@ -6,6 +6,7 @@ import numpy
 from chainer.dataset import download
 
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
+from chainer_chemistry.dataset import splitters
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config # NOQA
@@ -67,32 +68,24 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         result = parser.parse(get_molnet_filepath(dataset_name),
                               return_smiles=return_smiles,
                               target_index=target_index)
-        # TODO(motoki): splitting function or class
         dataset = result['dataset']
         if split == 'random':
-            perm = numpy.random.permutation(len(dataset))
-            dataset = NumpyTupleDataset(*dataset.features[perm])
-            train_data_size = int(len(dataset) * frac_train)
-            valid_data_size = int(len(dataset) * frac_valid)
-            train = NumpyTupleDataset(*dataset.features[:train_data_size])
-            valid = NumpyTupleDataset(*dataset.features[train_data_size:
-                                                        train_data_size +
-                                                        valid_data_size])
-            test = NumpyTupleDataset(*dataset.features[train_data_size +
-                                                       valid_data_size:])
+            splitter = splitters.RandomSplitter()
+        train_ind, valid_ind, test_ind = \
+            splitter.train_valid_test_split(dataset)
+        train = NumpyTupleDataset(*dataset.features[train_ind])
+        valid = NumpyTupleDataset(*dataset.features[valid_ind])
+        test = NumpyTupleDataset(*dataset.features[test_ind])
 
-            result['dataset'] = (train, valid, test)
-            if return_smiles:
-                smiles = result['smiles'][perm]
-                train_smiles = smiles[:train_data_size]
-                valid_smiles = smiles[train_data_size:train_data_size +
-                                      valid_data_size]
-                test_smiles = smiles[train_data_size + valid_data_size:]
-                result['smiles'] = (train_smiles, valid_smiles, test_smiles)
-            else:
-                result['smiles'] = None
+        result['dataset'] = (train, valid, test)
+        if return_smiles:
+            smiles = result['smiles']
+            train_smiles = smiles[train_ind]
+            valid_smiles = smiles[valid_ind]
+            test_smiles = smiles[test_ind]
+            result['smiles'] = (train_smiles, valid_smiles, test_smiles)
         else:
-            raise NotImplementedError
+            result['smiles'] = None
     elif dataset_config['dataset_type'] == 'separate_csv':
         result = {}
         train_result = parser.parse(get_molnet_filepath(dataset_name, 'train'),
