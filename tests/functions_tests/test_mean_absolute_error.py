@@ -133,19 +133,39 @@ def test_backward_gpu(inputs):
 def check_double_backward(inputs, grads):
     x0, x1, _ = inputs
     gy, ggx0, ggx1 = grads
-    gradient_check.check_double_backward(
-        chainer_chemistry.functions.mean_absolute_error,
-        (x0, x1), gy, (ggx0, ggx1))
+
+    def func(*xs):
+        y = chainer_chemistry.functions.mean_absolute_error(*xs)
+        return y * y
+    gradient_check.check_double_backward(func, (x0, x1), gy, (ggx0, ggx1))
 
 
 def check_double_backward_ignore_nan(inputs, grads):
     x0, _, x2 = inputs
     gy, ggx0, ggx1 = grads
 
-    def func(x0, x1):
-        return chainer_chemistry.functions.mean_absolute_error(x0, x1,
-                                                               ignore_nan=True)
+    def func(*xs):
+        y = chainer_chemistry.functions.mean_absolute_error(*xs,
+                                                            ignore_nan=True)
+        return y * y
     gradient_check.check_double_backward(func, (x0, x2), gy, (ggx0, ggx1))
+
+
+def test_double_backward_cpu(inputs, grads):
+    check_double_backward(inputs, grads)
+    check_double_backward_ignore_nan(inputs, grads)
+
+
+@pytest.mark.gpu
+def test_double_backward_gpu(inputs, grads):
+    x0, x1, x2 = inputs
+    gy, ggx0, ggx1 = grads
+    check_double_backward((cuda.to_gpu(x0), cuda.to_gpu(x1), None),
+                          (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
+                           cuda.to_gpu(ggx1)))
+    check_double_backward_ignore_nan((cuda.to_gpu(x0), None, cuda.to_gpu(x2)),
+                                     (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
+                                      cuda.to_gpu(ggx1)))
 
 
 if __name__ == '__main__':

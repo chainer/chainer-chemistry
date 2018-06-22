@@ -46,9 +46,8 @@ class MeanAbsoluteError(function_node.FunctionNode):
         if self.ignore_nan:
             diff = chainer.functions.where(xp.isnan(diff.array),
                                            xp.zeros_like(diff.array), diff)
-        coeff = gy[0] * gy[0].data.dtype.type(1. / diff.size)
-        coeff = chainer.functions.broadcast_to(coeff, diff.shape)
-        gx0 = coeff * chainer.functions.sign(diff)
+        gy0 = chainer.functions.broadcast_to(gy[0], diff.shape)
+        gx0 = gy0 * chainer.functions.sign(diff) * 1. / diff.size
         return gx0, -gx0
 
 
