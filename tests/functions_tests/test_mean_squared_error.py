@@ -146,5 +146,10 @@ def check_double_backward_ignore_nan(inputs, grads):
     gradient_check.check_double_backward(func, (x0, x2), gy, (ggx0, ggx1))
 
 
+def test_double_backward_cpu(inputs, grads):
+    check_double_backward(inputs, grads)
+    check_double_backward_ignore_nan(inputs, grads)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
