@@ -151,5 +151,17 @@ def test_double_backward_cpu(inputs, grads):
     check_double_backward_ignore_nan(inputs, grads)
 
 
+@pytest.mark.gpu
+def test_double_backward_gpu(inputs, grads):
+    x0, x1, x2 = inputs
+    gy, ggx0, ggx1 = grads
+    check_double_backward((cuda.to_gpu(x0), cuda.to_gpu(x1), None),
+                          (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
+                           cuda.to_gpu(ggx1)))
+    check_double_backward_ignore_nan((cuda.to_gpu(x0), None, cuda.to_gpu(x2)),
+                                     (cuda.to_gpu(gy), cuda.to_gpu(ggx0),
+                                      cuda.to_gpu(ggx1)))
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
