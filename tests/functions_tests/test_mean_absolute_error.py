@@ -96,6 +96,7 @@ def test_forward_cpu(inputs):
     check_forward_ignore_nan_with_nonnan_value(inputs)
 
 
+@pytest.mark.gpu
 def test_forward_gpu(inputs):
     x0, x1, x2 = inputs
     check_forward((cuda.to_gpu(x0), cuda.to_gpu(x1), None))
