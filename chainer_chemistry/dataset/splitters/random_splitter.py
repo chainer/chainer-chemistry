@@ -8,8 +8,9 @@ class RandomSplitter(BaseSplitter):
         numpy.testing.assert_almost_equal(frac_train + frac_valid + frac_test,
                                           1.)
         if seed is not None:
-            numpy.random.seed(seed)
-        perm = numpy.random.permutation(len(dataset))
+            perm = numpy.random.RandomState(seed).permutation(len(dataset))
+        else:
+            perm = numpy.random.permutation(len(dataset))
         train_data_size = int(len(dataset) * frac_train)
         valid_data_size = int(len(dataset) * frac_valid)
         return (perm[:train_data_size],
