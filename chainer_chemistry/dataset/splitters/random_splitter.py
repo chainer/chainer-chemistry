@@ -3,8 +3,8 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 
 
 class RandomSplitter(BaseSplitter):
-    def split(self, dataset, seed=None, frac_train=.8, frac_valid=.1,
-              frac_test=.1):
+    def _split(self, dataset, seed=None, frac_train=.8, frac_valid=.1,
+               frac_test=.1):
         numpy.testing.assert_almost_equal(frac_train + frac_valid + frac_test,
                                           1.)
         if seed is not None:
