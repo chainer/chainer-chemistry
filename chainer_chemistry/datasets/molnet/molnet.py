@@ -73,9 +73,9 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             splitter = splitters.RandomSplitter()
         train_ind, valid_ind, test_ind = \
             splitter.train_valid_test_split(dataset)
-        train = NumpyTupleDataset(*dataset.features[train_ind])
-        valid = NumpyTupleDataset(*dataset.features[valid_ind])
-        test = NumpyTupleDataset(*dataset.features[test_ind])
+        train = NumpyTupleDataset(*dataset[train_ind])
+        valid = NumpyTupleDataset(*dataset[valid_ind])
+        test = NumpyTupleDataset(*dataset[test_ind])
 
         result['dataset'] = (train, valid, test)
         if return_smiles:
