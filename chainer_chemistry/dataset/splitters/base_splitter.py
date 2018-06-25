@@ -6,7 +6,7 @@ def converter_default(dataset, indices):
 
 
 def converter_numpy_tuple_dataset(dataset, indices):
-    return NumpyTupleDataset(*dataset.features[indices])
+    return NumpyTupleDataset(*dataset[indices])
 
 
 converter_dict = {
@@ -34,28 +34,24 @@ class BaseSplitter(object):
         if return_index:
             return train_inds, valid_inds, test_inds
         else:
-            if type(dataset) == NumpyTupleDataset:
-                train = NumpyTupleDataset(*dataset[train_inds])
-                valid = NumpyTupleDataset(*dataset[valid_inds])
-                test = NumpyTupleDataset(*dataset[test_inds])
-                return train, valid, test
-            else:
-                return dataset[train_inds], dataset[valid_inds],\
-                    dataset[test_inds]
+            train = converter(dataset, train_inds)
+            valid = converter(dataset, valid_inds)
+            test = converter(dataset, test_inds)
+            return train, valid, test,
 
     def train_valid_split(self, dataset, frac_train=.9, frac_valid=.1,
-                          seed=None, return_index=True):
+                          seed=None, return_index=True, converter=None):
         train_inds, valid_inds, test_inds = self._split(dataset,
                                                         frac_train=frac_train,
                                                         frac_valid=frac_valid,
                                                         frac_test=0)
         assert len(test_inds) == 0
+        if converter is None:
+            converter = converter_dict.get(type(dataset), converter_default)
+
         if return_index:
             return train_inds, valid_inds
         else:
-            if type(dataset) == NumpyTupleDataset:
-                train = NumpyTupleDataset(*dataset[train_inds])
-                valid = NumpyTupleDataset(*dataset[valid_inds])
-                return train, valid,
-            else:
-                return dataset[train_inds], dataset[valid_inds]
+            train = converter(dataset, train_inds)
+            valid = converter(dataset, valid_inds)
+            return train, valid,

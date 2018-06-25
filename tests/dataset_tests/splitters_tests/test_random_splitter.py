@@ -8,9 +8,10 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 @pytest.fixture
 def dataset():
     a = numpy.random.random((10, 10))
-    b = numpy.random.random((10, 10))
-    c = numpy.random.random((10, 10))
-    return NumpyTupleDataset(*(a, b, c))
+    b = numpy.random.random((10, 8))
+    c = numpy.random.random((10, 1))
+    return NumpyTupleDataset(a, b, c)
+
 
 def test_split(dataset):
     splitter = RandomSplitter()
@@ -29,6 +30,7 @@ def test_split(dataset):
     assert valid_ind.shape[0] == 3
     assert test_ind.shape[0] == 2
 
+
 def test_split_fix_seed(dataset):
     splitter = RandomSplitter()
     train_ind1, valid_ind1, test_ind1 = splitter._split(dataset, seed=44)
@@ -38,6 +40,7 @@ def test_split_fix_seed(dataset):
     assert numpy.array_equal(valid_ind1, valid_ind2)
     assert numpy.array_equal(test_ind1, test_ind2)
 
+
 def test_split_fail(dataset):
     splitter = RandomSplitter()
     with pytest.raises(AssertionError):
@@ -46,6 +49,7 @@ def test_split_fail(dataset):
                                                          frac_valid=0.3,
                                                          frac_test=0.2)
 
+
 def test_train_valid_test_split(dataset):
     splitter = RandomSplitter()
     train_ind, valid_ind, test_ind = splitter.train_valid_test_split(dataset)
@@ -53,6 +57,7 @@ def test_train_valid_test_split(dataset):
     assert train_ind.shape[0] == 8
     assert valid_ind.shape[0] == 1
     assert test_ind.shape[0] == 1
+
 
 def test_train_valid_test_split_return_dataset(dataset):
     splitter = RandomSplitter()
