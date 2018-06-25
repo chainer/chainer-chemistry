@@ -6,7 +6,7 @@ def converter_default(dataset, indices):
 
 
 def converter_numpy_tuple_dataset(dataset, indices):
-    return NumpyTupleDataset(*dataset[indices])
+    return NumpyTupleDataset(*dataset.features[indices])
 
 
 converter_dict = {

@@ -119,7 +119,7 @@ def test_get_molnet_clearance_dataset():
 
 
 @pytest.mark.slow
-def test_get_molnet_clearance_dataset():
+def test_get_molnet_clearance_dataset_with_return_smiles_enabled():
     # test default behavior
     pp = AtomicNumberPreprocessor()
     datasets = molnet.get_molnet_dataset('clearance', preprocessor=pp,
