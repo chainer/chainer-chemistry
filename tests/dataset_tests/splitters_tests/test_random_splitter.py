@@ -13,6 +13,12 @@ def dataset():
     return NumpyTupleDataset(a, b, c)
 
 
+@pytest.fixture
+def ndarray_dataset():
+    a = numpy.random.random((10, 10))
+    return a
+
+
 def test_split(dataset):
     splitter = RandomSplitter()
     train_ind, valid_ind, test_ind = splitter._split(dataset)
@@ -66,6 +72,18 @@ def test_train_valid_test_split_return_dataset(dataset):
     assert type(train) == NumpyTupleDataset
     assert type(valid) == NumpyTupleDataset
     assert type(test) == NumpyTupleDataset
+    assert len(train) == 8
+    assert len(valid) == 1
+    assert len(test) == 1
+
+
+def test_train_valid_test_split_ndarray_return_dataset(ndarray_dataset):
+    splitter = RandomSplitter()
+    train, valid, test = splitter.train_valid_test_split(ndarray_dataset,
+                                                         return_index=False)
+    assert type(train) == numpy.ndarray
+    assert type(valid) == numpy.ndarray
+    assert type(test) == numpy.ndarray
     assert len(train) == 8
     assert len(valid) == 1
     assert len(test) == 1

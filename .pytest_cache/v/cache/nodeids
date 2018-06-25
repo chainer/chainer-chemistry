@@ -1,0 +1,10 @@
+[
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_split",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_split_fix_seed",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_split_fail",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_train_valid_test_split",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_train_valid_test_split_return_dataset",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_train_valid_test_split_ndarray_return_dataset",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_train_valid_split",
+  "tests/dataset_tests/splitters_tests/test_random_splitter.py::test_train_valid_split_return_dataset"
+]
