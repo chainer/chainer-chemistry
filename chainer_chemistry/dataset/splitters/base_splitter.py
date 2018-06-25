@@ -21,16 +21,18 @@ class BaseSplitter(object):
     def _split(self, dataset):
         raise NotImplementedError
 
-    def train_valid_test_split(self, dataset, frac_train=.8, frac_valid=.1,
-                               frac_test=.1, seed=None, return_index=True,
-                               converter=None):
+    def train_valid_test_split(self, dataset, **kwargs):
+        converter = kwargs.get('converter', None)
+        return_index = kwargs.get('return_index', True)
+        kwargs.setdefault('frac_train', 0.8)
+        kwargs.setdefault('frac_valid', 0.1)
+        kwargs.setdefault('frac_test', 0.1)
+
         if converter is None:
             converter = converter_dict.get(type(dataset), converter_default)
 
-        train_inds, valid_inds, test_inds = self._split(dataset,
-                                                        frac_train=frac_train,
-                                                        frac_valid=frac_valid,
-                                                        frac_test=frac_test)
+        train_inds, valid_inds, test_inds = self._split(dataset, **kwargs)
+
         if return_index:
             return train_inds, valid_inds, test_inds
         else:
@@ -39,13 +41,16 @@ class BaseSplitter(object):
             test = converter(dataset, test_inds)
             return train, valid, test,
 
-    def train_valid_split(self, dataset, frac_train=.9, frac_valid=.1,
-                          seed=None, return_index=True, converter=None):
-        train_inds, valid_inds, test_inds = self._split(dataset,
-                                                        frac_train=frac_train,
-                                                        frac_valid=frac_valid,
-                                                        frac_test=0)
+    def train_valid_split(self, dataset, **kwargs):
+        converter = kwargs.get('converter', None)
+        return_index = kwargs.get('return_index', True)
+        kwargs.setdefault('frac_train', 0.9)
+        kwargs.setdefault('frac_valid', 0.1)
+        kwargs.setdefault('frac_test', 0.0)
+
+        train_inds, valid_inds, test_inds = self._split(dataset, **kwargs)
         assert len(test_inds) == 0
+
         if converter is None:
             converter = converter_dict.get(type(dataset), converter_default)
 
