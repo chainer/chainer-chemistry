@@ -167,10 +167,7 @@ class BaseFeatureIndexer(BaseIndexer):
                                                   self.dataset_length))
                 data_index = numpy.argwhere(data_index).ravel()
 
-            if len(data_index) == 1:
-                return self.extract_feature(data_index[0], j)
-            else:
-                res = [self.extract_feature(i, j) for i in data_index]
+            res = [self.extract_feature(i, j) for i in data_index]
         else:
             return self.extract_feature(data_index, j)
         try:
