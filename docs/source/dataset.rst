@@ -88,3 +88,5 @@ Splitters
    :nosignatures:
 
    chainer_chemistry.dataset.splitters.RandomSplitter
+   .. autosummary:: chainer_chemistry.dataset.splitters.RandomSplitter
+        :methods:
