@@ -25,42 +25,41 @@ class RandomSplitter(BaseSplitter):
                                return_index=True, seed=None):
         """Generate indices to split data into train, valid and test set.
 
-        Parameters
-        ----------
-        dataset: NumpyTupleDataset, numpy.ndarray
-            Dataset.
-        seed: int (Optional, Default None)
-            Random seed.
-        frac_train: float (Optional, Default .8)
-            Fraction of dataset put into training data.
-        frac_valid: float (Optional, Default .1)
-            Fraction of dataset put into validation data.
-        frac_test: float (Optional, Default .1)
-            Fraction of dataset put into test data.
-        converter: callable
-        return_index: Boolean (Optional, Default True)
-            If `True`, this function returns only indexes. If `False`, this
-            function returns splitted dataset.
+        Args:
+            dataset(NumpyTupleDataset, numpy.ndarray):
+                Dataset.
+            seed (int):
+                Random seed.
+            frac_train(float):
+                Fraction of dataset put into training data.
+            frac_valid(float):
+                Fraction of dataset put into validation data.
+            frac_test(float):
+                Fraction of dataset put into test data.
+            converter(callable):
+            return_index(bool):
+                If `True`, this function returns only indexes. If `False`, this
+                function returns splitted dataset.
 
-        Returns
-        -------
-        SplittedDataset : tuple (train, valid, test)
-            splitted dataset or indexes
+        Returns:
+            SplittedDataset(tuple):
+                splitted dataset or indexes
 
-        Examples
-        --------
-        >>> from chainer_chemistry.datasets import NumpyTupleDataset
-        >>> from chainer_chemistry.dataset.splitters import RandomSplitter
-        >>> a = numpy.random.random((10, 10))
-        >>> b = numpy.random.random((10, 8))
-        >>> c = numpy.random.random((10, 1))
-        >>> d = NumpyTupleDataset(a, b, c)
-        >>> splitter = RandomSplitter()
-        >>> splitter.train_valid_test_split()
-        >>> train, valid, test =
-                splitter.train_valid_test_split(dataset, return_index=False)
-        >>> print(len(train), len(valid), len(test))
-        8, 1, 1
+        .. admonition:: Example
+            >>> from chainer_chemistry.datasets import NumpyTupleDataset
+            >>> from chainer_chemistry.dataset.splitters import RandomSplitter
+            >>> a = numpy.random.random((10, 10))
+            >>> b = numpy.random.random((10, 8))
+            >>> c = numpy.random.random((10, 1))
+            >>> d = NumpyTupleDataset(a, b, c)
+            >>> splitter = RandomSplitter()
+            >>> splitter.train_valid_test_split()
+            >>> train, valid, test =
+                    splitter.train_valid_test_split(dataset,
+                                                    return_index=False)
+            >>> print(len(train), len(valid), len(test))
+            8, 1, 1
+
         """
         return super(RandomSplitter, self).train_valid_test_split(dataset,
                                                                   frac_train,
@@ -74,40 +73,38 @@ class RandomSplitter(BaseSplitter):
                           converter=None, return_index=True, seed=None):
         """Generate indices to split data into train and valid set.
 
-        Parameters
-        ----------
-        dataset: NumpyTupleDataset, numpy.ndarray
-            Dataset.
-        seed: int (Optional, Default None)
-            Random seed.
-        frac_train: float (Optional, Default .9)
-            Fraction of dataset put into training data.
-        frac_valid: float (Optional, Default .1)
-            Fraction of dataset put into validation data.
-        converter: callable
-        return_index: Boolean (Optional, Default True)
-            If `True`, this function returns only indexes. If `False`, this
-            function returns splitted dataset.
+        Args:
+            dataset(NumpyTupleDataset, numpy.ndarray):
+                Dataset.
+            seed (int):
+                Random seed.
+            frac_train(float):
+                Fraction of dataset put into training data.
+            frac_valid(float):
+                Fraction of dataset put into validation data.
+            converter(callable):
+            return_index(bool):
+                If `True`, this function returns only indexes. If `False`, this
+                function returns splitted dataset.
 
-        Returns
-        -------
-        SplittedDataset : tuple (train, valid, test)
-            splitted dataset or indexes
+        Returns:
+            SplittedDataset(tuple):
+                splitted dataset or indexes
 
-        Examples
-        --------
-        >>> from chainer_chemistry.datasets import NumpyTupleDataset
-        >>> from chainer_chemistry.dataset.splitters import RandomSplitter
-        >>> a = numpy.random.random((10, 10))
-        >>> b = numpy.random.random((10, 8))
-        >>> c = numpy.random.random((10, 1))
-        >>> d = NumpyTupleDataset(a, b, c)
-        >>> splitter = RandomSplitter()
-        >>> splitter.train_valid_split()
-        >>> train, valid =
-                splitter.train_valid_split(dataset, return_index=False)
-        >>> print(len(train), len(valid))
-        9, 1
+        .. admonition:: Example
+            >>> from chainer_chemistry.datasets import NumpyTupleDataset
+            >>> from chainer_chemistry.dataset.splitters import RandomSplitter
+            >>> a = numpy.random.random((10, 10))
+            >>> b = numpy.random.random((10, 8))
+            >>> c = numpy.random.random((10, 1))
+            >>> d = NumpyTupleDataset(a, b, c)
+            >>> splitter = RandomSplitter()
+            >>> splitter.train_valid_split()
+            >>> train, valid =
+                    splitter.train_valid_split(dataset, return_index=False)
+            >>> print(len(train), len(valid))
+            9, 1
+
         """
         return super(RandomSplitter, self).train_valid_split(dataset,
                                                              frac_train,
