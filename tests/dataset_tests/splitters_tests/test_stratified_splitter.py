@@ -57,6 +57,26 @@ def test_regression_split(reg_dataset):
     assert test_ind.shape[0] == 20
 
 
+def test_classification_split_fix_seed(cls_dataset):
+    splitter = StratifiedSplitter()
+    train_ind1, valid_ind1, test_ind1 = splitter._split(cls_dataset, seed=44)
+    train_ind2, valid_ind2, test_ind2 = splitter._split(cls_dataset, seed=44)
+
+    assert numpy.array_equal(train_ind1, train_ind2)
+    assert numpy.array_equal(valid_ind1, valid_ind2)
+    assert numpy.array_equal(test_ind1, test_ind2)
+
+
+def test_regression_split_fix_seed(reg_dataset):
+    splitter = StratifiedSplitter()
+    train_ind1, valid_ind1, test_ind1 = splitter._split(reg_dataset, seed=44)
+    train_ind2, valid_ind2, test_ind2 = splitter._split(reg_dataset, seed=44)
+
+    assert numpy.array_equal(train_ind1, train_ind2)
+    assert numpy.array_equal(valid_ind1, valid_ind2)
+    assert numpy.array_equal(test_ind1, test_ind2)
+
+
 def test_train_valid_test_classification_split(cls_dataset):
     splitter = StratifiedSplitter()
     train_ind, valid_ind, test_ind =\

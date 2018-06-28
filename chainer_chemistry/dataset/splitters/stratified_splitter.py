@@ -13,10 +13,12 @@ class StratifiedSplitter(BaseSplitter):
         numpy.testing.assert_almost_equal(frac_train + frac_valid + frac_test,
                                           1.)
 
-        seed = kwargs.get('seed')
+        seed = kwargs.get('seed', None)
         # TODO: feature?
         labels_feature_id = kwargs.get('labels_feature_id', -1)
         task_id = kwargs.get('task_id', 0)
+
+        rng = numpy.random.RandomState(seed)
 
         if not isinstance(dataset, NumpyTupleDataset):
             raise NotImplementedError
@@ -56,8 +58,7 @@ class StratifiedSplitter(BaseSplitter):
             n_valid = n_valid_samples[i]
             n_test = n_test_samples[i]
 
-            perm = numpy.random.RandomState(seed)\
-                .permutation(len(class_indices[i]))
+            perm = rng.permutation(len(class_indices[i]))
             class_perm_index = class_indices[i][perm]
 
             class_valid_index = class_perm_index[:n_valid]
@@ -71,9 +72,9 @@ class StratifiedSplitter(BaseSplitter):
         assert n_total_valid == len(valid_index)
         assert n_total_test == len(test_index)
 
-        return numpy.random.permutation(train_index),\
-            numpy.random.permutation(valid_index),\
-            numpy.random.permutation(test_index),
+        return rng.permutation(train_index),\
+            rng.permutation(valid_index),\
+            rng.permutation(test_index),
 
 
 def _approximate_mode(class_counts, n_draws):
