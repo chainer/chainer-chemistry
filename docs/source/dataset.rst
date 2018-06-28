@@ -77,3 +77,16 @@ Utilities
    chainer_chemistry.dataset.preprocessors.type_check_num_atoms
    chainer_chemistry.dataset.preprocessors.construct_atomic_number_array
    chainer_chemistry.dataset.preprocessors.construct_adj_matrix
+
+
+
+Splitters
+==========
+
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   chainer_chemistry.dataset.splitters.RandomSplitter
+   .. autosummary:: chainer_chemistry.dataset.splitters.RandomSplitter
+        :methods:

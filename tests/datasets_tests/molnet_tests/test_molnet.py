@@ -4,10 +4,12 @@ import numpy as np
 import pytest
 
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
+from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets import molnet
 
 expect_bbbp_lengths = [1631, 203, 205]
 expect_clearance_lengths = [669, 83, 85]
+
 
 def test_get_molnet_filepath_without_download():
     filepath = molnet.get_molnet_filepath('bbbp', download_if_not_exist=False)
@@ -17,6 +19,7 @@ def test_get_molnet_filepath_without_download():
     filepath = molnet.get_molnet_filepath('bbbp', download_if_not_exist=False)
     assert isinstance(filepath, str)
     assert not os.path.exists(filepath)
+
 
 @pytest.mark.slow
 def test_get_molnet_filepath_with_download():
@@ -28,6 +31,7 @@ def test_get_molnet_filepath_with_download():
     assert isinstance(filepath, str)
     assert os.path.exists(filepath)
 
+
 # bbbp is one of classification task dataset
 @pytest.mark.slow
 def test_get_molnet_bbbp_dataset():
@@ -38,6 +42,9 @@ def test_get_molnet_bbbp_dataset():
     assert 'dataset' in datasets.keys()
     datasets = datasets['dataset']
     assert len(datasets) == 3
+    assert type(datasets[0]) == NumpyTupleDataset
+    assert type(datasets[1]) == NumpyTupleDataset
+    assert type(datasets[2]) == NumpyTupleDataset
 
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
@@ -52,6 +59,7 @@ def test_get_molnet_bbbp_dataset():
         assert label.shape[0] == 1
         assert label.dtype == np.int32
         assert len(dataset) == expect_bbbp_lengths[i]
+
 
 @pytest.mark.slow
 def test_get_molnet_bbbp_dataset_with_smiles():
@@ -75,7 +83,7 @@ def test_get_molnet_bbbp_dataset_with_smiles():
 
         assert atoms.ndim == 1  # (atom, )
         assert atoms.dtype == np.int32
-        # (atom from, atom to) or (edge_type, atom from, atom to) assert label.ndim == 1
+        # (atom from, atom to) or (edge_type, atom from, atom to) assert label.ndim == 1 # NOQA
         assert label.shape[0] == 1
         assert label.dtype == np.int32
         assert len(dataset) == expect_bbbp_lengths[i]
@@ -111,7 +119,7 @@ def test_get_molnet_clearance_dataset():
 
 
 @pytest.mark.slow
-def test_get_molnet_clearance_dataset():
+def test_get_molnet_clearance_dataset_with_return_smiles_enabled():
     # test default behavior
     pp = AtomicNumberPreprocessor()
     datasets = molnet.get_molnet_dataset('clearance', preprocessor=pp,
