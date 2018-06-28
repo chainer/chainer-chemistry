@@ -2,7 +2,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.dataset.splitters.stratified_splitter import StratifiedSplitter # NOQA
-from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 @pytest.fixture

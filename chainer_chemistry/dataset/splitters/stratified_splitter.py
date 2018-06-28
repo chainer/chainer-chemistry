@@ -2,7 +2,7 @@ import numpy
 import pandas
 
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
-from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 def _approximate_mode(class_counts, n_draws):
