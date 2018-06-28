@@ -1,4 +1,6 @@
 import numpy
+import pandas
+
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 from chainer_chemistry.datasets import NumpyTupleDataset
 
@@ -27,7 +29,9 @@ class StratifiedSplitter(BaseSplitter):
         if labels.dtype.kind == 'i':
             classes, label_indices = numpy.unique(labels, return_inverse=True)
         elif labels.dtype.kind == 'f':
-            raise NotImplementedError
+            n_bin = 10
+            classes = numpy.arange(n_bin)
+            label_indices = pandas.qcut(labels, n_bin, labels=False)
         else:
             raise ValueError
 
