@@ -12,7 +12,8 @@ def _approximate_mode(class_counts, n_draws):
     assert n_draws // n_class == floored.sum() // n_class
     n_remainder = int(n_draws - floored.sum())
     remainder = continuous - floored
-    inds = numpy.argsort(remainder)[:n_remainder]
+    inds = numpy.argsort(remainder)[::-1]
+    inds = inds[:n_remainder]
     floored[inds] += 1
     assert n_draws == floored.sum()
     return floored.astype(numpy.int)
