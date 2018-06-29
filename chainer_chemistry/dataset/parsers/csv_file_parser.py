@@ -24,9 +24,10 @@ class CSVFileParser(DataFrameParser):
                  smiles_col='smiles',
                  postprocess_label=None, postprocess_fn=None,
                  logger=None):
-        super(DataFrameParser, self).__init__(preprocessor, labels, smiles_col,
-                                              postprocess_label,
-                                              postprocess_fn, logger)
+        super(CSVFileParser, self).__init__(
+            preprocessor, labels=labels, smiles_col=smiles_col,
+            postprocess_label=postprocess_label, postprocess_fn=postprocess_fn,
+            logger=logger)
 
     def parse(self, filepath, return_smiles=False, target_index=None):
         """parse csv file using `preprocessor`
@@ -49,8 +50,8 @@ class CSVFileParser(DataFrameParser):
 
         """
         df = pandas.read_csv(filepath)
-        return super(DataFrameParser, self).parse(df, return_smiles,
-                                                  target_index)
+        return super(CSVFileParser, self).parse(df, return_smiles,
+                                                target_index)
 
     def extract_total_num(self, filepath):
         """Extracts total number of data which can be parsed
