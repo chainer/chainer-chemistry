@@ -62,6 +62,29 @@ class ScaffoldSplitter(BaseSplitter):
                                frac_valid=0.1, frac_test=0.1, converter=None,
                                return_index=True, seed=None,
                                include_chirality=False):
+        """Generate indices by splittting based on the scaffold of small
+        molecules into train, valid and test set.
+
+        Args:
+            dataset(NumpyTupleDataset, numpy.ndarray):
+                Dataset.
+            smiles_list(list):
+                SMILES list corresponding to datset.
+            seed (int):
+                Random seed.
+            frac_train(float):
+                Fraction of dataset put into training data.
+            frac_valid(float):
+                Fraction of dataset put into validation data.
+            converter(callable):
+            return_index(bool):
+                If `True`, this function returns only indexes. If `False`, this
+                function returns splitted dataset.
+
+        Returns:
+            SplittedDataset(tuple):
+                splitted dataset or indexes
+        """
         return super(ScaffoldSplitter, self)\
             .train_valid_test_split(dataset, frac_train, frac_valid, frac_test,
                                     converter, return_index, seed=seed,
@@ -71,6 +94,29 @@ class ScaffoldSplitter(BaseSplitter):
     def train_valid_split(self, dataset, smiles_list, frac_train=0.9,
                           frac_valid=0.1, converter=None, return_index=True,
                           seed=None, include_chirality=False):
+        """Generate indices by splittting based on the scaffold of small
+        molecules into train and valid set.
+
+        Args:
+            dataset(NumpyTupleDataset, numpy.ndarray):
+                Dataset.
+            smiles_list(list):
+                SMILES list corresponding to datset.
+            seed (int):
+                Random seed.
+            frac_train(float):
+                Fraction of dataset put into training data.
+            frac_valid(float):
+                Fraction of dataset put into validation data.
+            converter(callable):
+            return_index(bool):
+                If `True`, this function returns only indexes. If `False`, this
+                function returns splitted dataset.
+
+        Returns:
+            SplittedDataset(tuple):
+                splitted dataset or indexes
+        """
         return super(ScaffoldSplitter, self)\
             .train_valid_split(dataset, frac_train, frac_valid, converter,
                                return_index, seed=seed,
