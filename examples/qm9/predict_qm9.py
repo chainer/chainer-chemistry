@@ -33,9 +33,6 @@ from train_qm9 import GraphConvPredictor  # NOQA
 from train_qm9 import MeanAbsError, RootMeanSqrError  # NOQA
 
 
-
-
-
 def main():
     # Supported preprocessing/network list
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
@@ -108,8 +105,7 @@ def main():
     train, test = split_dataset_random(dataset, train_data_size, seed)
 
     regressor = Regressor.load_pickle(
-        os.path.join(args.in_dir, args.model_filename), device=args.gpu,
-        )  # type: Regressor
+        os.path.join(args.in_dir, args.model_filename), device=args.gpu)
 
     # We need to feed only input features `x` to `predict`/`predict_proba`.
     # This converter extracts only inputs (x1, x2, ...) from the features which
@@ -161,9 +157,9 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(
-        test_iterator, regressor, converter=concat_mols, device=args.gpu,
-        name='test', eval_func=regressor.predictor)()
+        test_iterator, regressor, converter=concat_mols, device=args.gpu)()
     print('Evaluation result: ', eval_result)
+
     with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
         json.dump(eval_result, f)
 
