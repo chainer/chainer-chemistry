@@ -21,7 +21,7 @@ class DataFrameParser(BaseFileParser):
 
     Args:
         preprocessor (BasePreprocessor): preprocessor instance
-        labels (str or list): labels column
+        labels (str or list or None): labels column
         smiles_col (str): smiles column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
