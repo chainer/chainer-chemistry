@@ -33,6 +33,14 @@ class TestNumpyTupleDatasetFeatureIndexer(object):
             indexer.extract_feature_by_slice(slice_index, j),
             data[j][slice_index])
 
+    @pytest.mark.parametrize('ndarray_index', [numpy.asarray([0, 1]),
+                                               numpy.asarray([1])])
+    @pytest.mark.parametrize('j', [0, 1])
+    def test_extract_feature_by_ndarray(self, indexer, data, ndarray_index, j):
+        numpy.testing.assert_array_equal(
+            indexer.extract_feature_by_slice(ndarray_index, j),
+            data[j][ndarray_index])
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v'])
