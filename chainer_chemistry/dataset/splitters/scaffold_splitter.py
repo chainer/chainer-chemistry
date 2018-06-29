@@ -10,7 +10,7 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 def generate_scaffold(smiles, include_chirality=False):
     mol = Chem.MolFromSmiles(smiles)
     scaffold = MurckoScaffold\
-        .MurckoScaffoldSmile(mol=mol, includeChirality=include_chirality)
+        .MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
     return scaffold
 
 
@@ -34,7 +34,7 @@ class ScaffoldSplitter(BaseSplitter):
         scaffold_sets = [
             scaffold_set
             for (scaffold,  scaffold_set) in sorted(
-                    scaffolds.items(), key=lambda x: len(x[1], reverse=True)
+                    scaffolds.items(), key=lambda x: len(x[1]), reverse=True
             )
         ]
 
@@ -55,7 +55,9 @@ class ScaffoldSplitter(BaseSplitter):
 
         return rng.permutation(train_index),\
             rng.permutation(valid_index),\
-            rng.permutation(test_index),
+            rng.permutation(test_index),\
+            scaffolds,\
+            scaffold_sets,
 
     def train_valid_test_split(self, dataset, smiles_list, frac_train=0.8,
                                frac_valid=0.1, frac_test=0.1, converter=None,
