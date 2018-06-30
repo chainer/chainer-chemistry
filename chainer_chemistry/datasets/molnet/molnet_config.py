@@ -204,6 +204,7 @@ molnet_default_config = {
         "smiles_columns": 'smiles',
         "metrics": None,
         "loss": F.mean_squared_error,
+        "split": 'stratified',
         "task_type": 'regression',
         "tasks": ["u0_atom"],
     },
