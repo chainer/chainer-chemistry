@@ -97,3 +97,5 @@ examples/molnet/input/
 
 # emacs
 *~
+
+.pytest_cache

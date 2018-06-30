@@ -1,5 +1,4 @@
 from distutils.core import setup
-import imp
 import os
 
 from setuptools import find_packages
@@ -15,12 +14,11 @@ install_requires = [
 
 
 here = os.path.abspath(os.path.dirname(__file__))
-__version__ = imp.load_source(
-    '_version', os.path.join(here,
-                             'chainer_chemistry', '_version.py')).__version__
+# Get __version__ variable
+exec(open(os.path.join(here, 'chainer_chemistry', '_version.py')).read())
 
 setup(name='chainer-chemistry',
-      version=__version__,
+      version=__version__,  # NOQA
       description='Chainer Chemistry: A Library for Deep Learning in Biology\
       and Chemistry',
       author='Kosuke Nakago',
