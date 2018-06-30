@@ -18,7 +18,7 @@ _root = 'pfnet/chainer/molnet'
 def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                        split=None, frac_train=.8, frac_valid=.1,
                        frac_test=.1, seed=777, return_smiles=False,
-                       target_index=None, task_index=0,  **kwargs):
+                       target_index=None, task_index=0, **kwargs):
     """Downloads, caches and preprocess MoleculeNet dataset.
 
     Args:
@@ -78,7 +78,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         smiles = result['smiles']
         train_ind, valid_ind, test_ind = \
             splitter.train_valid_test_split(dataset, smiles=smiles,
-                                            task_index=task_index)
+                                            task_index=task_index, **kwargs)
         train = NumpyTupleDataset(*dataset.features[train_ind])
         valid = NumpyTupleDataset(*dataset.features[valid_ind])
         test = NumpyTupleDataset(*dataset.features[test_ind])
