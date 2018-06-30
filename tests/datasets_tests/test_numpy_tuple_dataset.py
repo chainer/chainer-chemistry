@@ -16,6 +16,14 @@ def data():
     return a, b, c
 
 
+@pytest.fixture
+def long_data():
+    a = numpy.array([1, 2, 3, 4])
+    b = numpy.array([4, 5, 6, 7])
+    c = numpy.array([[6, 7, 8], [8, 9, 10], [11, 12, 13], [14, 15, 16]])
+    return a, b, c
+
+
 class TestNumpyTupleDataset(object):
 
     def test_len(self, data):
@@ -37,6 +45,39 @@ class TestNumpyTupleDataset(object):
         actual = dataset[index]
 
         batches = [d[index] for d in data]
+        length = len(batches[0])
+        expect = [tuple([batch[i] for batch in batches])
+                  for i in six.moves.range(length)]
+
+        assert len(actual) == len(expect)
+        for tuple_a, tuple_e in six.moves.zip(actual, expect):
+            assert len(tuple_a) == len(tuple_e)
+            for a, e in six.moves.zip(tuple_a, tuple_e):
+                numpy.testing.assert_array_equal(a, e)
+
+    @pytest.mark.parametrize('index', [numpy.asarray([2, 0]),
+                                       numpy.asarray([1])])
+    def test_get_item_ndarray_index(self, long_data, index):
+        dataset = NumpyTupleDataset(*long_data)
+        actual = dataset[index]
+
+        batches = [d[index] for d in long_data]
+        length = len(batches[0])
+        expect = [tuple([batch[i] for batch in batches])
+                  for i in six.moves.range(length)]
+
+        assert len(actual) == len(expect)
+        for tuple_a, tuple_e in six.moves.zip(actual, expect):
+            assert len(tuple_a) == len(tuple_e)
+            for a, e in six.moves.zip(tuple_a, tuple_e):
+                numpy.testing.assert_array_equal(a, e)
+
+    @pytest.mark.parametrize('index', [[2, 0], [1]])
+    def test_get_item_list_index(self, long_data, index):
+        dataset = NumpyTupleDataset(*long_data)
+        actual = dataset[index]
+
+        batches = [d[index] for d in long_data]
         length = len(batches[0])
         expect = [tuple([batch[i] for batch in batches])
                   for i in six.moves.range(length)]

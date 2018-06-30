@@ -12,14 +12,7 @@ from rdkit import RDLogger
 import six
 
 from chainer_chemistry.dataset.converters import concat_mols
-try:
-    from chainer_chemistry.models.prediction import Classifier
-except ImportError:
-    print('[ERROR] This example uses newly implemented `Classifier` class.\n'
-          'Please install the library from master branch.\n See '
-          'https://github.com/pfnet-research/chainer-chemistry#installation'
-          ' for detail.')
-    exit()
+from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 import data
@@ -125,6 +118,8 @@ def main():
         test_iterator, clf, converter=concat_mols, device=args.gpu,
         eval_func=clf.predictor, name='test', ignore_labels=-1)()
     print('ROCAUC Evaluation result: ', rocauc_result)
+    with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
+        json.dump(rocauc_result, f)
     # --- evaluate end ---
 
 

@@ -20,14 +20,7 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
 from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
 from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
-try:
-    from chainer_chemistry.models.prediction import Classifier
-except ImportError:
-    print('[ERROR] This example uses newly implemented `Classifier` class.\n'
-          'Please install the library from master branch.\n See '
-          'https://github.com/pfnet-research/chainer-chemistry#installation'
-          ' for detail.')
-    exit()
+from chainer_chemistry.models.prediction import Classifier
 
 import data
 import predictor
@@ -146,7 +139,7 @@ def main():
         trainer.extend(ROCAUCEvaluator(
             train_eval_iter, classifier, eval_func=predictor_,
             device=args.gpu, converter=concat_mols, name='train',
-            pos_labels=1, ignore_labels=-1))
+            pos_labels=1, ignore_labels=-1, raise_value_error=False))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(

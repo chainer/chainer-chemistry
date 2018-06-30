@@ -2,18 +2,18 @@
 
 These examples are implemented to train the model.
 
-TODO: Also, trained model is available and one can use only for predicting the value.
-
 * Tox21: 12 types of toxity classification
 * QM9: Chemical property regression
+* Own dataset: Own dataset (prepared in csv format) regression
+* Molcule Net: Various dataset for both classification and regression
 
 ## Test
 
-To test code in this directory, run
+To test code of all examples, run
 
 ```
-bash -x example_test_cpu.sh  # for CPU
-bash -x example_test_gpu.sh  # for GPU
+bash -x test_examples.sh -1 # for CPU
+bash -x test_examples.sh 0  # for GPU
 ```
 
 If you encounter errors, please report them to

@@ -2,24 +2,27 @@
 
 from __future__ import print_function
 import argparse
+import os
+import pickle
 import sys
 
 import chainer
 from chainer.datasets import split_dataset_random
 from chainer import functions as F, cuda, Variable
-from chainer import iterators as I
-from chainer import links as L
-from chainer import optimizers as O
+from chainer import iterators
+from chainer import optimizers
+from chainer import serializers
 from chainer import training
 from chainer.training import extensions as E
+import numpy
+from rdkit import Chem
+from sklearn.preprocessing import StandardScaler
+
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN
-import numpy
-from rdkit import Chem
-from sklearn.preprocessing import StandardScaler
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, Regressor  # NOQA
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -50,6 +53,25 @@ class GraphConvPredictor(chainer.Chain):
         return x
 
 
+class ScaledAbsError(object):
+
+    def __init__(self, scaler=None):
+        self.scaler = scaler
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scaler is not None:
+            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        else:
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+
+
 def main():
     # Supported preprocessing/network list
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
@@ -57,10 +79,11 @@ def main():
 
     parser = argparse.ArgumentParser(
         description='Regression with own dataset.')
-    parser.add_argument('datafile', type=str)
+    parser.add_argument('--datafile', type=str, default='dataset.csv')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='nfp')
     parser.add_argument('--label', '-l', nargs='+',
+                        default=['value1', 'value2'],
                         help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='Label scaling method')
@@ -72,6 +95,7 @@ def main():
     parser.add_argument('--unit-num', '-u', type=int, default=16)
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
+    parser.add_argument('--protocol', type=int, default=2)
     args = parser.parse_args()
 
     seed = args.seed
@@ -97,9 +121,12 @@ def main():
 
     if args.scale == 'standardize':
         # Standard Scaler for labels
-        ss = StandardScaler()
-        labels = ss.fit_transform(dataset.get_datasets()[-1])
+        scaler = StandardScaler()
+        labels = scaler.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+    else:
+        # Not use scaler
+        scaler = None
 
     train_data_size = int(len(dataset) * train_data_ratio)
     train, val = split_dataset_random(dataset, train_data_size, seed)
@@ -139,47 +166,42 @@ def main():
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
 
-    train_iter = I.SerialIterator(train, args.batchsize)
-    val_iter = I.SerialIterator(val, args.batchsize,
+    train_iter = iterators.SerialIterator(train, args.batchsize)
+    val_iter = iterators.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
-    def scaled_abs_error(x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if args.scale == 'standardize':
-            scaled_x0 = ss.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = ss.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        elif args.scale == 'none':
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+    regressor = Regressor(
+        model, lossfun=F.mean_squared_error,
+        metrics_fun={'abs_error': ScaledAbsError(scaler=scaler)},
+        device=args.gpu)
 
-    classifier = L.Classifier(model, lossfun=F.mean_squared_error,
-                              accfun=scaled_abs_error)
-
-    if args.gpu >= 0:
-        chainer.cuda.get_device_from_id(args.gpu).use()
-        classifier.to_gpu()
-
-    optimizer = O.Adam()
-    optimizer.setup(classifier)
+    optimizer = optimizers.Adam()
+    optimizer.setup(regressor)
 
     updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
                                        converter=concat_mols)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, classifier, device=args.gpu,
+    trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    # Note that scaled errors are reported as (validation/)main/accuracy
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/accuracy',
+    # Note that original scale absolute errors are reported in
+    # (validation/)main/abs_error
+    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
                                   'validation/main/loss',
-                                  'validation/main/accuracy',
+                                  'validation/main/abs_error',
                                   'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
+
+    # --- save regressor's parameters ---
+    protocol = args.protocol
+    model_path = os.path.join(args.out, 'model.npz')
+    print('saving trained model to {}'.format(model_path))
+    serializers.save_npz(model_path, regressor)
+    if scaler is not None:
+        with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
+            pickle.dump(scaler, f, protocol=protocol)
 
     # Example of prediction using trained model
     smiles = 'c1ccccc1'

@@ -1,7 +1,14 @@
 # Example of using your own dataset
+
+This example shows how to train models with your own dataset stored in CSV format.
+
+We will solve a regression task with [`Regressor`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Regressor.html#chainer_chemistry.models.Regressor).
+For a classification setting that makes use of [`Classifier`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Classifier.html#chainer_chemistry.models.Classifier), 
+please refer to the tox21 example.
+
 ## Usage
 ```
-python train.py dataset.csv --label value1 value2
+python train.py --datafile dataset.csv --label value1 value2
 ```
 
 The `--label` option specifies which columns in `dataset.csv` are trained.
