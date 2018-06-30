@@ -38,15 +38,15 @@ class StratifiedSplitter(BaseSplitter):
 
         rng = numpy.random.RandomState(seed)
 
-        if not isinstance(dataset, NumpyTupleDataset):
-            raise NotImplementedError
-
         if labels is None:
-            labels_feature = dataset.features[:, label_axis]
-            if len(labels_feature.shape) == 1:
-                labels = labels_feature
-            else:
-                labels = labels_feature[:, task_index]
+            if not isinstance(dataset, NumpyTupleDataset):
+                raise ValueError("Please assign label dataset.")
+            labels = dataset.features[:, label_axis]
+
+        if len(labels.shape) == 1:
+            labels = labels
+        else:
+            labels = labels[:, task_index]
 
         if task_type == 'infer':
             if labels.dtype.kind == 'i':
@@ -154,7 +154,7 @@ class StratifiedSplitter(BaseSplitter):
                                     converter, return_index, seed=seed,
                                     label_axis=label_axis, task_type=task_type,
                                     task_index=task_index, n_bin=n_bin,
-                                    **kwargs)
+                                    labels=labels, **kwargs)
 
     def train_valid_split(self, dataset, labels=None, label_axis=-1,
                           task_index=0, frac_train=0.9, frac_valid=0.1,

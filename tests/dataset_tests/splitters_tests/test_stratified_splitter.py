@@ -20,6 +20,13 @@ def cls_label():
 
 
 @pytest.fixture
+def cls_ndarray_dataset():
+    a = numpy.concatenate([numpy.zeros(20), numpy.ones(10)]).astype(numpy.int)
+    b = numpy.concatenate([numpy.zeros(20), numpy.ones(10)]).astype(numpy.int)
+    return a, b
+
+
+@pytest.fixture
 def reg_dataset():
     a = numpy.random.random((100, 10))
     b = numpy.random.random((100, 8))
@@ -147,6 +154,24 @@ def test_train_valid_test_classification_split_return_dataset(cls_dataset):
     assert (test.features[:, -1] == 1).sum() == 1
 
 
+def test_train_valid_test_classification_split_ndarray_return_dataset(
+        cls_ndarray_dataset):
+    cls_dataset, cls_label = cls_ndarray_dataset
+    splitter = StratifiedSplitter()
+    train, valid, test = splitter.train_valid_test_split(cls_dataset,
+                                                         labels=cls_label,
+                                                         return_index=False)
+    assert type(train) == numpy.ndarray
+    assert type(valid) == numpy.ndarray
+    assert type(test) == numpy.ndarray
+    assert len(train) == 24
+    assert len(valid) == 3
+    assert len(test) == 3
+    assert (train == 1).sum() == 8
+    assert (valid == 1).sum() == 1
+    assert (test == 1).sum() == 1
+
+
 def test_train_valid_test_regression_split(reg_dataset):
     splitter = StratifiedSplitter()
     train_ind, valid_ind, test_ind =\
@@ -189,6 +214,20 @@ def test_train_valid_classification_split_return_dataset(cls_dataset):
     assert len(valid) == 3
     assert (train.features[:, -1] == 1).sum() == 9
     assert (valid.features[:, -1] == 1).sum() == 1
+
+
+def test_train_valid_classification_split_ndarray_return_dataset(
+        cls_ndarray_dataset):
+    cls_dataset, cls_label = cls_ndarray_dataset
+    splitter = StratifiedSplitter()
+    train, valid = splitter.train_valid_split(cls_dataset, labels=cls_label,
+                                              return_index=False)
+    assert type(train) == numpy.ndarray
+    assert type(valid) == numpy.ndarray
+    assert len(train) == 27
+    assert len(valid) == 3
+    assert (train == 1).sum() == 9
+    assert (valid == 1).sum() == 1
 
 
 def test_train_valid_test_cls_split_by_labels_return_dataset(cls_dataset,
