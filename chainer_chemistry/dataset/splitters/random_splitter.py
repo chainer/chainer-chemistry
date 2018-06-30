@@ -22,7 +22,7 @@ class RandomSplitter(BaseSplitter):
 
     def train_valid_test_split(self, dataset, frac_train=0.8, frac_valid=0.1,
                                frac_test=0.1, converter=None,
-                               return_index=True, seed=None):
+                               return_index=True, seed=None, **kwargs):
         """Generate indices to split data into train, valid and test set.
 
         Args:
@@ -67,10 +67,12 @@ class RandomSplitter(BaseSplitter):
                                                                   frac_test,
                                                                   converter,
                                                                   return_index,
-                                                                  seed=seed)
+                                                                  seed=seed,
+                                                                  **kwargs)
 
     def train_valid_split(self, dataset, frac_train=0.9, frac_valid=0.1,
-                          converter=None, return_index=True, seed=None):
+                          converter=None, return_index=True, seed=None,
+                          **kwargs):
         """Generate indices to split data into train and valid set.
 
         Args:
@@ -111,4 +113,5 @@ class RandomSplitter(BaseSplitter):
                                                              frac_valid,
                                                              converter,
                                                              return_index,
-                                                             seed=seed)
+                                                             seed=seed,
+                                                             **kwargs)
