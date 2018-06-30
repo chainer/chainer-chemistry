@@ -29,6 +29,7 @@ def model_processed():
 
 @pytest.fixture
 def data():
+    numpy.random.seed(0)
     atom_data_processed = numpy.random.uniform(
         0, high=1, size=(batch_size, atom_size, atom_feature_dim)
     ).astype(numpy.float32)
