@@ -29,7 +29,8 @@ class CSVFileParser(DataFrameParser):
             postprocess_label=postprocess_label, postprocess_fn=postprocess_fn,
             logger=logger)
 
-    def parse(self, filepath, return_smiles=False, target_index=None):
+    def parse(self, filepath, return_smiles=False, return_success_index=False,
+              target_index=None):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -37,10 +38,12 @@ class CSVFileParser(DataFrameParser):
 
         Args:
             filepath (str): file path to be parsed.
-            return_smiles (bool): If set to True, this function returns
-                preprocessed dataset and smiles list.
-                If set to False, this function returns preprocessed dataset and
-                `None`.
+            return_smiles (bool): If set to True, smiles list is returned in
+                the key 'smiles'.
+                If set to False, `None` is returned in the key 'smiles'.
+            return_success_index (bool): If set to True, smiles list is
+                returned in the key 'success_index'.
+                If set to False, `None` is returned in the key 'success_index'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
 
