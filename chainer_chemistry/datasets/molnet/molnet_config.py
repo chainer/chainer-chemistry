@@ -29,7 +29,7 @@ molnet_default_config = {
         "smiles_columns": 'smiles',
         "metrics": {'binary_accuracy': F.binary_accuracy},
         "loss": F.sigmoid_cross_entropy,
-        "split": 'random',
+        "split": 'scaffold',
         "task_type": 'classification',
         "tasks": ["p_np"],
     },

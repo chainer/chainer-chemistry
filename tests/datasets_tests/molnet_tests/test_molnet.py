@@ -7,7 +7,7 @@ from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import A
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets import molnet
 
-expect_bbbp_lengths = [1631, 203, 205]
+expect_bbbp_lengths = [1633, 203, 203]
 expect_clearance_lengths = [669, 83, 85]
 
 

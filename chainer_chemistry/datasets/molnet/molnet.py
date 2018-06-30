@@ -8,6 +8,7 @@ from chainer.dataset import download
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 from chainer_chemistry.dataset.splitters import split_method_dict
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
+from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config # NOQA
@@ -67,17 +68,24 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                            postprocess_label=postprocess_label)
     if dataset_config['dataset_type'] == 'one_file_csv':
         split = dataset_config['split'] if split is None else split
+
         if isinstance(split, str):
             splitter = split_method_dict[split]()
         elif isinstance(split, BaseSplitter):
             splitter = split
+
+        if isinstance(splitter, ScaffoldSplitter):
+            get_smiles = True
+        else:
+            get_smiles = return_smiles
+
         result = parser.parse(get_molnet_filepath(dataset_name),
-                              return_smiles=return_smiles,
+                              return_smiles=get_smiles,
                               target_index=target_index, **kwargs)
         dataset = result['dataset']
         smiles = result['smiles']
         train_ind, valid_ind, test_ind = \
-            splitter.train_valid_test_split(dataset, smiles=smiles,
+            splitter.train_valid_test_split(dataset, smiles_list=smiles,
                                             task_index=task_index, **kwargs)
         train = NumpyTupleDataset(*dataset.features[train_ind])
         valid = NumpyTupleDataset(*dataset.features[valid_ind])
