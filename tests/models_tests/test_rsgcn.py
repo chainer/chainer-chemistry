@@ -28,6 +28,7 @@ def model_no_dropout():
 
 @pytest.fixture
 def data():
+    numpy.random.seed(0)
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)

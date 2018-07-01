@@ -10,6 +10,7 @@ import chainer_chemistry
 
 @pytest.fixture
 def inputs():
+    numpy.random.seed(0)
     x0 = numpy.random.uniform(-1, 1, (4, 3)).astype(numpy.float32)
     x1 = numpy.random.uniform(-1, 1, (4, 3)).astype(numpy.float32)
     x2 = numpy.asarray([[0.3, numpy.nan, 0.2],
@@ -21,6 +22,7 @@ def inputs():
 
 @pytest.fixture
 def grads():
+    numpy.random.seed(0)
     gy = numpy.random.uniform(-1, 1, ()).astype(numpy.float32)
     ggx0 = numpy.random.uniform(-1, 1, (4, 3)).astype(numpy.float32)
     ggx1 = numpy.random.uniform(-1, 1, (4, 3)).astype(numpy.float32)
