@@ -8,12 +8,15 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 
 
 def _generate_scaffold(smiles, include_chirality=False):
+    """return scaffold string of target molecule"""
     mol = Chem.MolFromSmiles(smiles)
     scaffold = MurckoScaffold\
         .MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
     return scaffold
 
 
+# Refer to Deepchem
+# https://git.io/fXzF4
 class ScaffoldSplitter(BaseSplitter):
     """Class for doing data splits by chemical scaffold."""
     def _split(self, dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1,
@@ -23,7 +26,9 @@ class ScaffoldSplitter(BaseSplitter):
         seed = kwargs.get('seed', None)
         smiles_list = kwargs.get('smiles_list')
         include_chirality = kwargs.get('include_chirality')
-        assert len(dataset) == len(smiles_list)
+        if len(dataset) != len(smiles_list):
+            raise ValueError("The lengths of dataset and smiles_list are "
+                             "different")
 
         rng = numpy.random.RandomState(seed)
 
@@ -31,12 +36,8 @@ class ScaffoldSplitter(BaseSplitter):
         for ind, smiles in enumerate(smiles_list):
             scaffold = _generate_scaffold(smiles, include_chirality)
             scaffolds[scaffold].append(ind)
-        scaffold_sets = [
-            scaffold_set
-            for (scaffold,  scaffold_set) in sorted(
-                    scaffolds.items(), key=lambda x: len(x[1]), reverse=True
-            )
-        ]
+
+        scaffold_sets = rng.permutation(list(scaffolds.values()))
 
         n_total_valid = int(numpy.floor(frac_valid * len(dataset)))
         n_total_test = int(numpy.floor(frac_test * len(dataset)))
@@ -53,9 +54,8 @@ class ScaffoldSplitter(BaseSplitter):
             else:
                 train_index.extend(scaffold_set)
 
-        return rng.permutation(train_index),\
-            rng.permutation(valid_index),\
-            rng.permutation(test_index),\
+        return numpy.array(train_index), numpy.array(valid_index),\
+            numpy.array(test_index),\
 
 
     def train_valid_test_split(self, dataset, smiles_list, frac_train=0.8,
