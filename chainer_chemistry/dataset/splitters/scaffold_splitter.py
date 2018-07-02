@@ -61,7 +61,7 @@ class ScaffoldSplitter(BaseSplitter):
     def train_valid_test_split(self, dataset, smiles_list, frac_train=0.8,
                                frac_valid=0.1, frac_test=0.1, converter=None,
                                return_index=True, seed=None,
-                               include_chirality=False):
+                               include_chirality=False, **kwargs):
         """Generate indices by splittting based on the scaffold of small
         molecules into train, valid and test set.
 
@@ -89,11 +89,12 @@ class ScaffoldSplitter(BaseSplitter):
             .train_valid_test_split(dataset, frac_train, frac_valid, frac_test,
                                     converter, return_index, seed=seed,
                                     smiles_list=smiles_list,
-                                    include_chirality=include_chirality)
+                                    include_chirality=include_chirality,
+                                    **kwargs)
 
     def train_valid_split(self, dataset, smiles_list, frac_train=0.9,
                           frac_valid=0.1, converter=None, return_index=True,
-                          seed=None, include_chirality=False):
+                          seed=None, include_chirality=False, **kwargs):
         """Generate indices by splittting based on the scaffold of small
         molecules into train and valid set.
 
@@ -121,4 +122,4 @@ class ScaffoldSplitter(BaseSplitter):
             .train_valid_split(dataset, frac_train, frac_valid, converter,
                                return_index, seed=seed,
                                smiles_list=smiles_list,
-                               include_chirality=include_chirality)
+                               include_chirality=include_chirality, **kwargs)

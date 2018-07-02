@@ -12,7 +12,8 @@ def _approximate_mode(class_counts, n_draws):
     assert n_draws // n_class == floored.sum() // n_class
     n_remainder = int(n_draws - floored.sum())
     remainder = continuous - floored
-    inds = numpy.argsort(remainder)[:n_remainder]
+    inds = numpy.argsort(remainder)[::-1]
+    inds = inds[:n_remainder]
     floored[inds] += 1
     assert n_draws == floored.sum()
     return floored.astype(numpy.int)
@@ -22,30 +23,44 @@ class StratifiedSplitter(BaseSplitter):
     """Class for doing stratified data splits."""
 
     def _split(self, dataset, frac_train=0.8, frac_valid=0.1, frac_test=0.1,
-               **kwargs):
+               labels=None, **kwargs):
         numpy.testing.assert_almost_equal(frac_train + frac_valid + frac_test,
                                           1.)
 
         seed = kwargs.get('seed', None)
-        labels_feature_id = kwargs.get('labels_feature_id', -1)
-        task_id = kwargs.get('task_id', 0)
+        label_axis = kwargs.get('label_axis', -1)
+        task_index = kwargs.get('task_index', 0)
+        n_bin = kwargs.get('n_bin', 10)
+        task_type = kwargs.get('task_type', 'infer')
+        if task_type not in ['classification', 'regression', 'infer']:
+            raise ValueError("{} is invalid. Please use 'classification',"
+                             "'regression' or 'infer'".format(task_type))
 
         rng = numpy.random.RandomState(seed)
 
-        if not isinstance(dataset, NumpyTupleDataset):
-            raise NotImplementedError
-        labels_feature = dataset.features[:, labels_feature_id]
-        if len(labels_feature.shape) == 1:
-            labels = labels_feature
-        else:
-            labels = labels_feature[:, task_id]
+        if labels is None:
+            if not isinstance(dataset, NumpyTupleDataset):
+                raise ValueError("Please assign label dataset.")
+            labels = dataset.features[:, label_axis]
 
-        if labels.dtype.kind == 'i':
-            classes, label_indices = numpy.unique(labels, return_inverse=True)
-        elif labels.dtype.kind == 'f':
-            n_bin = 10
+        if len(labels.shape) == 1:
+            labels = labels
+        else:
+            labels = labels[:, task_index]
+
+        if task_type == 'infer':
+            if labels.dtype.kind == 'i':
+                task_type = 'classification'
+            elif labels.dtype.kind == 'f':
+                task_type = 'regression'
+            else:
+                raise ValueError
+
+        if task_type == 'classification':
+            classes, labels = numpy.unique(labels, return_inverse=True)
+        elif task_type == 'regression':
             classes = numpy.arange(n_bin)
-            label_indices = pandas.qcut(labels, n_bin, labels=False)
+            labels = pandas.qcut(labels, n_bin, labels=False)
         else:
             raise ValueError
 
@@ -53,8 +68,8 @@ class StratifiedSplitter(BaseSplitter):
         n_total_valid = int(numpy.floor(frac_valid * len(dataset)))
         n_total_test = int(numpy.floor(frac_test * len(dataset)))
 
-        class_counts = numpy.bincount(label_indices)
-        class_indices = numpy.split(numpy.argsort(label_indices,
+        class_counts = numpy.bincount(labels)
+        class_indices = numpy.split(numpy.argsort(labels,
                                                   kind='mergesort'),
                                     numpy.cumsum(class_counts)[:-1])
 
@@ -88,9 +103,11 @@ class StratifiedSplitter(BaseSplitter):
             rng.permutation(valid_index),\
             rng.permutation(test_index),
 
-    def train_valid_test_split(self, dataset, labels_feature_id=-1, task_id=0,
-                               frac_train=0.8, frac_valid=0.1, frac_test=0.1,
-                               converter=None, return_index=True, seed=None):
+    def train_valid_test_split(self, dataset, labels=None, label_axis=-1,
+                               task_index=0, frac_train=0.8, frac_valid=0.1,
+                               frac_test=0.1, converter=None,
+                               return_index=True, seed=None, task_type='infer',
+                               n_bin=10, **kwargs):
         """Generate indices by stratified splittting dataset into train, valid
         and test set.
 
@@ -135,12 +152,14 @@ class StratifiedSplitter(BaseSplitter):
         return super(StratifiedSplitter, self)\
             .train_valid_test_split(dataset, frac_train, frac_valid, frac_test,
                                     converter, return_index, seed=seed,
-                                    label_feature_id=labels_feature_id,
-                                    task_id=task_id)
+                                    label_axis=label_axis, task_type=task_type,
+                                    task_index=task_index, n_bin=n_bin,
+                                    labels=labels, **kwargs)
 
-    def train_valid_split(self, dataset, labels_feature_id=-1, task_id=0,
-                          frac_train=0.9, frac_valid=0.1, converter=None,
-                          return_index=True, seed=None):
+    def train_valid_split(self, dataset, labels=None, label_axis=-1,
+                          task_index=0, frac_train=0.9, frac_valid=0.1,
+                          converter=None, return_index=True, seed=None,
+                          task_type='infer', n_bin=10, **kwargs):
         """Generate indices by stratified splittting dataset into train and
         valid set.
 
@@ -184,5 +203,6 @@ class StratifiedSplitter(BaseSplitter):
 
         return super(StratifiedSplitter, self)\
             .train_valid_split(dataset, frac_train, frac_valid, converter,
-                               return_index, seed=seed, task_id=task_id,
-                               label_feature_id=labels_feature_id)
+                               return_index, seed=seed, label_axis=label_axis,
+                               task_type=task_type, task_index=task_index,
+                               n_bin=n_bin, labels=labels, **kwargs)
