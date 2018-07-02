@@ -5,6 +5,8 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
+# Refer to scikit-learn
+# https://git.io/fPMmB
 def _approximate_mode(class_counts, n_draws):
     n_class = len(class_counts)
     continuous = class_counts * n_draws / class_counts.sum()
@@ -31,24 +33,26 @@ class StratifiedSplitter(BaseSplitter):
         label_axis = kwargs.get('label_axis', -1)
         task_index = kwargs.get('task_index', 0)
         n_bin = kwargs.get('n_bin', 10)
-        task_type = kwargs.get('task_type', 'infer')
-        if task_type not in ['classification', 'regression', 'infer']:
+        task_type = kwargs.get('task_type', 'auto')
+        if task_type not in ['classification', 'regression', 'auto']:
             raise ValueError("{} is invalid. Please use 'classification',"
-                             "'regression' or 'infer'".format(task_type))
+                             "'regression' or 'auto'".format(task_type))
 
         rng = numpy.random.RandomState(seed)
 
-        if labels is None:
+        if isinstance(labels, list):
+            labels = numpy.array(labels)
+        elif labels is None:
             if not isinstance(dataset, NumpyTupleDataset):
                 raise ValueError("Please assign label dataset.")
             labels = dataset.features[:, label_axis]
 
-        if len(labels.shape) == 1:
+        if labels.ndim == 1:
             labels = labels
         else:
             labels = labels[:, task_index]
 
-        if task_type == 'infer':
+        if task_type == 'auto':
             if labels.dtype.kind == 'i':
                 task_type = 'classification'
             elif labels.dtype.kind == 'f':
@@ -73,6 +77,7 @@ class StratifiedSplitter(BaseSplitter):
                                                   kind='mergesort'),
                                     numpy.cumsum(class_counts)[:-1])
 
+        # n_total_train is the remainder: n - n_total_valid - n_total_test
         n_valid_samples = _approximate_mode(class_counts, n_total_valid)
         class_counts = class_counts - n_valid_samples
         n_test_samples = _approximate_mode(class_counts, n_total_test)
@@ -99,14 +104,13 @@ class StratifiedSplitter(BaseSplitter):
         assert n_total_valid == len(valid_index)
         assert n_total_test == len(test_index)
 
-        return rng.permutation(train_index),\
-            rng.permutation(valid_index),\
-            rng.permutation(test_index),
+        return numpy.array(train_index), numpy.array(valid_index),\
+            numpy.array(test_index),
 
     def train_valid_test_split(self, dataset, labels=None, label_axis=-1,
                                task_index=0, frac_train=0.8, frac_valid=0.1,
                                frac_test=0.1, converter=None,
-                               return_index=True, seed=None, task_type='infer',
+                               return_index=True, seed=None, task_type='auto',
                                n_bin=10, **kwargs):
         """Generate indices by stratified splittting dataset into train, valid
         and test set.
@@ -144,7 +148,6 @@ class StratifiedSplitter(BaseSplitter):
             >>> c = numpy.random.random((10, 1))
             >>> d = NumpyTupleDataset(a, b, c)
             >>> splitter = StratifiedSplitter()
-            >>> splitter.train_valid_test_split()
             >>> train, valid, test =
                 splitter.train_valid_test_split(dataset, return_index=False)
             >>> print(len(train), len(valid))
@@ -161,7 +164,7 @@ class StratifiedSplitter(BaseSplitter):
     def train_valid_split(self, dataset, labels=None, label_axis=-1,
                           task_index=0, frac_train=0.9, frac_valid=0.1,
                           converter=None, return_index=True, seed=None,
-                          task_type='infer', n_bin=10, **kwargs):
+                          task_type='auto', n_bin=10, **kwargs):
         """Generate indices by stratified splittting dataset into train and
         valid set.
 
@@ -198,7 +201,6 @@ class StratifiedSplitter(BaseSplitter):
             >>> c = numpy.random.random((10, 1))
             >>> d = NumpyTupleDataset(a, b, c)
             >>> splitter = StratifiedSplitter()
-            >>> splitter.train_valid_split()
             >>> train, valid =
                     splitter.train_valid_split(dataset, return_index=False)
             >>> print(len(train), len(valid))

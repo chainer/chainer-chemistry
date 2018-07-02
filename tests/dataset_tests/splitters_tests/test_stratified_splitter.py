@@ -52,7 +52,28 @@ def test_classification_split(cls_dataset):
     assert test_ind.shape[0] == 6
 
 
-def test_classification_split_by_labels(cls_dataset, cls_label):
+def test_classification_split_by_labels_ndarray(cls_dataset, cls_label):
+    splitter = StratifiedSplitter()
+    train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
+                                                     labels=cls_label)
+    assert type(train_ind) == numpy.ndarray
+    assert train_ind.shape[0] == 24
+    assert valid_ind.shape[0] == 3
+    assert test_ind.shape[0] == 3
+
+    train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
+                                                     labels=cls_label,
+                                                     frac_train=0.5,
+                                                     frac_valid=0.3,
+                                                     frac_test=0.2)
+    assert type(train_ind) == numpy.ndarray
+    assert train_ind.shape[0] == 15
+    assert valid_ind.shape[0] == 9
+    assert test_ind.shape[0] == 6
+
+
+def test_classification_split_by_labels_list(cls_dataset, cls_label):
+    cls_label = cls_label.tolist()
     splitter = StratifiedSplitter()
     train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
                                                      labels=cls_label)
