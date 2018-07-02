@@ -114,17 +114,19 @@ class StratifiedSplitter(BaseSplitter):
         Args:
             dataset(NumpyTupleDataset, numpy.ndarray):
                 Dataset.
-            labels_feature_id(int):
-                Dataset feature ID in NumpyTupleDataset.
-            task_id(int):
-                Target task number for stratification.
+            labels(numpy.ndarray):
+                Target label. If `None`, this function assumes that dataset is
+                an instance of `NumpyTupleDataset`.
+            labels_axis(int):
+                Dataset feature axis in NumpyTupleDataset.
+            task_index(int):
+                Target task index in dataset for stratification.
             seed (int):
                 Random seed.
             frac_train(float):
                 Fraction of dataset put into training data.
             frac_valid(float):
                 Fraction of dataset put into validation data.
-            converter(callable):
             return_index(bool):
                 If `True`, this function returns only indexes. If `False`, this
                 function returns splitted dataset.
@@ -166,17 +168,19 @@ class StratifiedSplitter(BaseSplitter):
         Args:
             dataset(NumpyTupleDataset, numpy.ndarray):
                 Dataset.
-            labels_feature_id(int):
-                Dataset feature ID in NumpyTupleDataset.
-            task_id(int):
-                Target task number for stratification.
+            labels(numpy.ndarray):
+                Target label. If `None`, this function assumes that dataset is
+                an instance of `NumpyTupleDataset`.
+            labels_axis(int):
+                Dataset feature axis in NumpyTupleDataset.
+            task_index(int):
+                Target task index in dataset for stratification.
             seed (int):
                 Random seed.
             frac_train(float):
                 Fraction of dataset put into training data.
             frac_valid(float):
                 Fraction of dataset put into validation data.
-            converter(callable):
             return_index(bool):
                 If `True`, this function returns only indexes. If `False`, this
                 function returns splitted dataset.
