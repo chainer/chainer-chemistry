@@ -78,12 +78,12 @@ class ScaffoldSplitter(BaseSplitter):
                 Fraction of dataset put into validation data.
             converter(callable):
             return_index(bool):
-                If `True`, this function returns only indexes. If `False`, this
+                If `True`, this function returns only indices. If `False`, this
                 function returns splitted dataset.
 
         Returns:
             SplittedDataset(tuple):
-                splitted dataset or indexes
+                splitted dataset or indices
         """
         return super(ScaffoldSplitter, self)\
             .train_valid_test_split(dataset, frac_train, frac_valid, frac_test,
@@ -111,12 +111,12 @@ class ScaffoldSplitter(BaseSplitter):
                 Fraction of dataset put into validation data.
             converter(callable):
             return_index(bool):
-                If `True`, this function returns only indexes. If `False`, this
+                If `True`, this function returns only indices. If `False`, this
                 function returns splitted dataset.
 
         Returns:
             SplittedDataset(tuple):
-                splitted dataset or indexes
+                splitted dataset or indices
         """
         return super(ScaffoldSplitter, self)\
             .train_valid_split(dataset, frac_train, frac_valid, converter,
