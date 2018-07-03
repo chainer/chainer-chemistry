@@ -42,6 +42,13 @@ def test_classification_split(cls_dataset):
     assert valid_ind.shape[0] == 3
     assert test_ind.shape[0] == 3
 
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 8
+    assert (valid.features[:, -1] == 1).sum() == 1
+    assert (test.features[:, -1] == 1).sum() == 1
+
     train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
                                                      frac_train=0.5,
                                                      frac_valid=0.3,
@@ -50,6 +57,13 @@ def test_classification_split(cls_dataset):
     assert train_ind.shape[0] == 15
     assert valid_ind.shape[0] == 9
     assert test_ind.shape[0] == 6
+
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 5
+    assert (valid.features[:, -1] == 1).sum() == 3
+    assert (test.features[:, -1] == 1).sum() == 2
 
 
 def test_classification_split_by_labels_ndarray(cls_dataset, cls_label):
@@ -61,6 +75,13 @@ def test_classification_split_by_labels_ndarray(cls_dataset, cls_label):
     assert valid_ind.shape[0] == 3
     assert test_ind.shape[0] == 3
 
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 8
+    assert (valid.features[:, -1] == 1).sum() == 1
+    assert (test.features[:, -1] == 1).sum() == 1
+
     train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
                                                      labels=cls_label,
                                                      frac_train=0.5,
@@ -70,6 +91,13 @@ def test_classification_split_by_labels_ndarray(cls_dataset, cls_label):
     assert train_ind.shape[0] == 15
     assert valid_ind.shape[0] == 9
     assert test_ind.shape[0] == 6
+
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 5
+    assert (valid.features[:, -1] == 1).sum() == 3
+    assert (test.features[:, -1] == 1).sum() == 2
 
 
 def test_classification_split_by_labels_list(cls_dataset, cls_label):
@@ -82,6 +110,13 @@ def test_classification_split_by_labels_list(cls_dataset, cls_label):
     assert valid_ind.shape[0] == 3
     assert test_ind.shape[0] == 3
 
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 8
+    assert (valid.features[:, -1] == 1).sum() == 1
+    assert (test.features[:, -1] == 1).sum() == 1
+
     train_ind, valid_ind, test_ind = splitter._split(cls_dataset,
                                                      labels=cls_label,
                                                      frac_train=0.5,
@@ -92,6 +127,13 @@ def test_classification_split_by_labels_list(cls_dataset, cls_label):
     assert valid_ind.shape[0] == 9
     assert test_ind.shape[0] == 6
 
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 5
+    assert (valid.features[:, -1] == 1).sum() == 3
+    assert (test.features[:, -1] == 1).sum() == 2
+
 
 def test_regression_split(reg_dataset):
     splitter = StratifiedSplitter()
@@ -101,6 +143,13 @@ def test_regression_split(reg_dataset):
     assert valid_ind.shape[0] == 10
     assert test_ind.shape[0] == 10
 
+    train = NumpyTupleDataset(*reg_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*reg_dataset.features[test_ind])
+    assert 47.5 < train.features[:, -1].mean() < 52.5
+    assert 47.5 < valid.features[:, -1].mean() < 52.5
+    assert 47.5 < test.features[:, -1].mean() < 52.5
+
     train_ind, valid_ind, test_ind = splitter._split(reg_dataset,
                                                      frac_train=0.5,
                                                      frac_valid=0.3,
@@ -109,6 +158,13 @@ def test_regression_split(reg_dataset):
     assert train_ind.shape[0] == 50
     assert valid_ind.shape[0] == 30
     assert test_ind.shape[0] == 20
+
+    train = NumpyTupleDataset(*reg_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*reg_dataset.features[test_ind])
+    assert 47.5 < train.features[:, -1].mean() < 52.5
+    assert 47.5 < valid.features[:, -1].mean() < 52.5
+    assert 47.5 < test.features[:, -1].mean() < 52.5
 
 
 def test_classification_split_fix_seed(cls_dataset):
@@ -159,6 +215,13 @@ def test_train_valid_test_classification_split(cls_dataset):
     assert valid_ind.shape[0] == 3
     assert test_ind.shape[0] == 3
 
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*cls_dataset.features[test_ind])
+    assert (train.features[:, -1] == 1).sum() == 8
+    assert (valid.features[:, -1] == 1).sum() == 1
+    assert (test.features[:, -1] == 1).sum() == 1
+
 
 def test_train_valid_test_classification_split_return_dataset(cls_dataset):
     splitter = StratifiedSplitter()
@@ -202,6 +265,13 @@ def test_train_valid_test_regression_split(reg_dataset):
     assert valid_ind.shape[0] == 10
     assert test_ind.shape[0] == 10
 
+    train = NumpyTupleDataset(*reg_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
+    test = NumpyTupleDataset(*reg_dataset.features[test_ind])
+    assert 47.5 < train.features[:, -1].mean() < 52.5
+    assert 47.5 < valid.features[:, -1].mean() < 52.5
+    assert 47.5 < test.features[:, -1].mean() < 52.5
+
 
 def test_train_valid_test_regression_split_return_dataset(reg_dataset):
     splitter = StratifiedSplitter()
@@ -224,6 +294,11 @@ def test_train_valid_classification_split(cls_dataset):
     assert type(train_ind) == numpy.ndarray
     assert train_ind.shape[0] == 27
     assert valid_ind.shape[0] == 3
+
+    train = NumpyTupleDataset(*cls_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*cls_dataset.features[valid_ind])
+    assert (train.features[:, -1] == 1).sum() == 9
+    assert (valid.features[:, -1] == 1).sum() == 1
 
 
 def test_train_valid_classification_split_return_dataset(cls_dataset):
@@ -287,6 +362,11 @@ def test_train_valid_regression_split(reg_dataset):
     assert type(train_ind) == numpy.ndarray
     assert train_ind.shape[0] == 90
     assert valid_ind.shape[0] == 10
+
+    train = NumpyTupleDataset(*reg_dataset.features[train_ind])
+    valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
+    assert 47.5 < train.features[:, -1].mean() < 52.5
+    assert 47.5 < valid.features[:, -1].mean() < 52.5
 
 
 def test_train_valid_regression_split_return_dataset(reg_dataset):
