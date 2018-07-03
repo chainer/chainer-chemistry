@@ -17,6 +17,7 @@ def model():
 
 @pytest.fixture
 def data():
+    numpy.random.seed(0)
     hidden = numpy.random.rand(batch_size, hidden_dim).astype(numpy.float32)
     y_grad = numpy.random.uniform(-1, 1, (batch_size, out_dim)).astype(
         numpy.float32)

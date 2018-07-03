@@ -22,14 +22,14 @@ def _to_list(a):
         return a
 
 
-class ROCAUCEvaluator(BatchEvaluator):
+class PRCAUCEvaluator(BatchEvaluator):
 
-    """Evaluator which calculates ROC AUC score
+    """Evaluator which calculates PRC AUC score
 
     Note that this Evaluator is only applicable to binary classification task.
 
     Args:
-        iterator: Dataset iterator for the dataset to calculate ROC AUC score.
+        iterator: Dataset iterator for the dataset to calculate PRC AUC score.
             It can also be a dictionary of iterators. If this is just an
             iterator, the iterator is registered by the name ``'main'``.
         target: Link object or a dictionary of links to evaluate. If this is
@@ -73,8 +73,8 @@ class ROCAUCEvaluator(BatchEvaluator):
                  device=None, eval_hook=None, eval_func=None, name=None,
                  pos_labels=1, ignore_labels=None, raise_value_error=True,
                  logger=None):
-        metrics_fun = {'roc_auc': self.roc_auc_score}
-        super(ROCAUCEvaluator, self).__init__(
+        metrics_fun = {'prc_auc': self.prc_auc_score}
+        super(PRCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func, metrics_fun=metrics_fun,
             name=name, logger=logger)
@@ -83,7 +83,7 @@ class ROCAUCEvaluator(BatchEvaluator):
         self.ignore_labels = _to_list(ignore_labels)
         self.raise_value_error = raise_value_error
 
-    def roc_auc_score(self, y_total, t_total):
+    def prc_auc_score(self, y_total, t_total):
         # --- ignore labels if specified ---
         if self.ignore_labels:
             valid_ind = numpy.in1d(t_total, self.ignore_labels, invert=True)
@@ -93,16 +93,14 @@ class ROCAUCEvaluator(BatchEvaluator):
         # --- set positive labels to 1, negative labels to 0 ---
         pos_indices = numpy.in1d(t_total, self.pos_labels)
         t_total = numpy.where(pos_indices, 1, 0)
-        try:
-            roc_auc = metrics.roc_auc_score(t_total, y_total)
-        except ValueError as e:
-            # When only one class present in `y_true`, `ValueError` is raised.
-            # ROC AUC score is not defined in that case.
+
+        if len(numpy.unique(t_total)) != 2:
             if self.raise_value_error:
-                raise e
+                raise ValueError("Only one class present in y_true. PRC AUC "
+                                 "score is not defined in that case.")
             else:
-                self.logger.warning(
-                    'ValueError detected during roc_auc_score calculation. {}'
-                    .format(e.args))
-                roc_auc = numpy.nan
-        return roc_auc
+                return numpy.nan
+
+        precision, recall, _ = metrics.precision_recall_curve(t_total, y_total)
+        prc_auc = metrics.auc(recall, precision)
+        return prc_auc
