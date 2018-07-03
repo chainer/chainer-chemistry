@@ -58,10 +58,10 @@ def test_data_frame_parser_not_return_smiles(data_frame, mols):
     result = parser.parse(data_frame, return_smiles=False)
     dataset = result['dataset']
     smiles = result['smiles']
-    success_flag = result['success_flag']
+    is_successful = result['is_successful']
     assert len(dataset) == 3
     assert smiles is None
-    assert success_flag is None
+    assert is_successful is None
 
     # As we want test DataFrameParser, we assume
     # NFPPreprocessor works as documented.
@@ -100,13 +100,13 @@ def test_data_frame_parser_target_index(data_frame, mols, label_a):
     parser = DataFrameParser(preprocessor, labels='labelA',
                              smiles_col='smiles')
     result = parser.parse(data_frame, return_smiles=True, target_index=[0, 2],
-                          return_success_flag=True)
+                          return_is_successful=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 2
-    success_flag = result['success_flag']
-    assert numpy.alltrue(success_flag)
-    assert len(success_flag) == 2
+    is_successful = result['is_successful']
+    assert numpy.alltrue(is_successful)
+    assert len(is_successful) == 2
 
     # We assume NFPPreprocessor works as documented.
     expect = preprocessor.get_input_features(mols[0])
@@ -123,7 +123,7 @@ def test_data_frame_parser_target_index(data_frame, mols, label_a):
     assert smiles[1] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_data_frame_parser_return_success_flag(mols, label_a):
+def test_data_frame_parser_return_is_successful(mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
     parser = DataFrameParser(preprocessor, labels='labelA',
@@ -132,16 +132,16 @@ def test_data_frame_parser_return_success_flag(mols, label_a):
         'smiles': ['var', 'CN=C=O', 'hoge', 'Cc1ccccc1', 'CC1=CC2CC(CC1)O2'],
         'labelA': [0., 2.1, 0., 5.3, -1.2],
     })
-    result = parser.parse(df, return_smiles=True, return_success_flag=True)
+    result = parser.parse(df, return_smiles=True, return_is_successful=True)
 
     dataset = result['dataset']
     # smiles = result['smiles']
     assert len(dataset) == 3
-    success_flag = result['success_flag']
-    assert len(success_flag) == 5
-    # print('success_flag', success_flag)
-    assert numpy.alltrue(success_flag[[1, 3, 4]])
-    assert numpy.alltrue(~success_flag[[0, 2]])
+    is_successful = result['is_successful']
+    assert len(is_successful) == 5
+    # print('is_successful', is_successful)
+    assert numpy.alltrue(is_successful[[1, 3, 4]])
+    assert numpy.alltrue(~is_successful[[0, 2]])
 
     # We assume NFPPreprocessor works as documented.
     for i in range(3):

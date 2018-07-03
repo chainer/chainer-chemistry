@@ -43,7 +43,7 @@ class DataFrameParser(BaseFileParser):
         self.logger = logger or getLogger(__name__)
 
     def parse(self, df, return_smiles=False, target_index=None,
-              return_is_success=False):
+              return_is_successful=False):
         """parse DataFrame using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -57,9 +57,9 @@ class DataFrameParser(BaseFileParser):
                 If set to `False`, `None` is returned in the key 'smiles'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
-            return_is_success (bool): If set to `True`, boolean list is
-                returned in the key 'is_success'. It represents preprocessing
-                has succeeded or not for each SMILES.
+            return_is_successful (bool): If set to `True`, boolean list is
+                returned in the key 'is_successful'. It represents
+                preprocessing has succeeded or not for each SMILES.
                 If set to False, `None` is returned in the key 'is_success'.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
@@ -70,7 +70,7 @@ class DataFrameParser(BaseFileParser):
         logger = self.logger
         pp = self.preprocessor
         smiles_list = []
-        is_success_list = []
+        is_successful_list = []
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
@@ -96,8 +96,8 @@ class DataFrameParser(BaseFileParser):
                     mol = Chem.MolFromSmiles(smiles)
                     if mol is None:
                         fail_count += 1
-                        if return_is_success:
-                            is_success_list.append(False)
+                        if return_is_successful:
+                            is_successful_list.append(False)
                         continue
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
@@ -121,16 +121,16 @@ class DataFrameParser(BaseFileParser):
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1
-                    if return_is_success:
-                        is_success_list.append(False)
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 except Exception as e:
                     logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     logger.info(traceback.format_exc())
                     fail_count += 1
-                    if return_is_success:
-                        is_success_list.append(False)
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 # Initialize features: list of list
                 if features is None:
@@ -150,8 +150,8 @@ class DataFrameParser(BaseFileParser):
                 if self.labels is not None:
                     features[len(features) - 1].append(labels)
                 success_count += 1
-                if return_is_success:
-                    is_success_list.append(True)
+                if return_is_successful:
+                    is_successful_list.append(True)
             ret = []
 
             for feature in features:
@@ -171,10 +171,10 @@ class DataFrameParser(BaseFileParser):
             raise NotImplementedError
 
         smileses = numpy.array(smiles_list) if return_smiles else None
-        if return_is_success:
-            is_success = numpy.array(is_success_list)
+        if return_is_successful:
+            is_successful = numpy.array(is_successful_list)
         else:
-            is_success = None
+            is_successful = None
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
@@ -186,4 +186,4 @@ class DataFrameParser(BaseFileParser):
             dataset = NumpyTupleDataset(result)
         return {"dataset": dataset,
                 "smiles": smileses,
-                "is_success": is_success}
+                "is_successful": is_successful}
