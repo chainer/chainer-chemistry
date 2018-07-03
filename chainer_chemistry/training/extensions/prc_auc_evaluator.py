@@ -95,18 +95,29 @@ class PRCAUCEvaluator(BatchEvaluator):
         # --- set positive labels to 1, negative labels to 0 ---
         pos_indices = numpy.in1d(t_total, self.pos_labels)
         t_total = numpy.where(pos_indices, 1, 0)
-        try:
-            precision, recall, _ = metrics.precision_recall_curve(t_total,
-                                                                  y_total)
-            prc_auc = metrics.auc(precision, recall, reorder=True)
-        except ValueError as e:
-            # When only one class present in `y_true`, `ValueError` is raised.
-            # PRC AUC score is not defined in that case.
+
+        if len(numpy.unique(t_total)) != 2:
             if self.raise_value_error:
-                raise e
+                raise ValueError("Only one class present in y_true. PRC AUC "
+                                 "score is not defined in that case.")
             else:
-                self.logger.warning(
-                    'ValueError detected during prc_auc_score calculation. {}'
-                    .format(e.args))
-                prc_auc = numpy.nan
+                return numpy.nan
+
+        precision, recall, _ = metrics.precision_recall_curve(t_total, y_total)
+        prc_auc = metrics.auc(recall, precision)
         return prc_auc
+        # try:
+        #     precision, recall, _ = metrics.precision_recall_curve(t_total,
+        #                                                           y_total)
+        #     prc_auc = metrics.auc(recall, precision)
+        # except ValueError as e:
+        #     # When only one class present in `y_true`, `ValueError` is raised.
+        #     # PRC AUC score is not defined in that case.
+        #     if self.raise_value_error:
+        #         raise e
+        #     else:
+        #         self.logger.warning(
+        #             'ValueError detected during prc_auc_score calculation. {}'
+        #             .format(e.args))
+        #         prc_auc = numpy.nan
+        # return prc_auc
