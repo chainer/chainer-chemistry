@@ -1,4 +1,3 @@
-from abc import abstractmethod
 import copy
 from logging import getLogger
 
@@ -29,22 +28,22 @@ def _get_1d_numpy_array(v):
 class BatchEvaluator(Evaluator):
 
     def __init__(self, iterator, target, converter=convert.concat_examples,
-                 device=None, eval_hook=None, eval_func=None, name=None,
-                 logger=None):
+                 device=None, eval_hook=None, eval_func=None, metrics_fun=None,
+                 name=None, logger=None):
         super(BatchEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
             eval_hook=eval_hook, eval_func=eval_func)
         self.name = name
         self.logger = logger or getLogger()
 
-    @abstractmethod
-    def calc_metric(self, y_total, t_total):
-        pass
-
-    @property
-    @abstractmethod
-    def metric_name(self):
-        pass
+        if callable(metrics_fun):
+            # TODO(mottodora): use better name or infer
+            self.metrics_fun = {"evaluation": metrics_fun}
+        elif isinstance(metrics_fun, dict):
+            self.metrics_fun = metrics_fun
+        else:
+            raise TypeError('Unexpected type metrics_fun must be Callable or '
+                            'dict.')
 
     def evaluate(self):
         iterator = self._iterators['main']
@@ -74,10 +73,11 @@ class BatchEvaluator(Evaluator):
 
         y_total = numpy.concatenate(y_total).ravel()
         t_total = numpy.concatenate(t_total).ravel()
-        metric_value = self.calc_metric(y_total, t_total)
+        # metrics_value = self.metrics_fun(y_total, t_total)
+        metrics = {key: metric_fun(y_total, t_total) for key, metric_fun in
+                   self.metrics_fun.items()}
 
         observation = {}
         with reporter.report_scope(observation):
-            reporter.report({self.metric_name: metric_value},
-                            self._targets['main'])
+            reporter.report(metrics, self._targets['main'])
         return observation

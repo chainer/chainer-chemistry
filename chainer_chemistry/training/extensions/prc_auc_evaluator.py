@@ -73,19 +73,17 @@ class PRCAUCEvaluator(BatchEvaluator):
                  device=None, eval_hook=None, eval_func=None, name=None,
                  pos_labels=1, ignore_labels=None, raise_value_error=True,
                  logger=None):
+        metrics_fun = {'prc_auc': self.prc_auc_score}
         super(PRCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
-            eval_hook=eval_hook, eval_func=eval_func, name=name,
-            logger=logger)
+            eval_hook=eval_hook, eval_func=eval_func, metrics_fun=metrics_fun,
+            name=name, logger=logger)
+
         self.pos_labels = _to_list(pos_labels)
         self.ignore_labels = _to_list(ignore_labels)
         self.raise_value_error = raise_value_error
 
-    @property
-    def metric_name(self):
-        return 'prc_auc'
-
-    def calc_metric(self, y_total, t_total):
+    def prc_auc_score(self, y_total, t_total):
         # --- ignore labels if specified ---
         if self.ignore_labels:
             valid_ind = numpy.in1d(t_total, self.ignore_labels, invert=True)
@@ -106,18 +104,3 @@ class PRCAUCEvaluator(BatchEvaluator):
         precision, recall, _ = metrics.precision_recall_curve(t_total, y_total)
         prc_auc = metrics.auc(recall, precision)
         return prc_auc
-        # try:
-        #     precision, recall, _ = metrics.precision_recall_curve(t_total,
-        #                                                           y_total)
-        #     prc_auc = metrics.auc(recall, precision)
-        # except ValueError as e:
-        #     # When only one class present in `y_true`, `ValueError` is raised.
-        #     # PRC AUC score is not defined in that case.
-        #     if self.raise_value_error:
-        #         raise e
-        #     else:
-        #         self.logger.warning(
-        #             'ValueError detected during prc_auc_score calculation. {}'
-        #             .format(e.args))
-        #         prc_auc = numpy.nan
-        # return prc_auc

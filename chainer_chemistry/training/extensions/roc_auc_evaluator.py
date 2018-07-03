@@ -73,19 +73,17 @@ class ROCAUCEvaluator(BatchEvaluator):
                  device=None, eval_hook=None, eval_func=None, name=None,
                  pos_labels=1, ignore_labels=None, raise_value_error=True,
                  logger=None):
+        metrics_fun = {'roc_auc': self.roc_auc_score}
         super(ROCAUCEvaluator, self).__init__(
             iterator, target, converter=converter, device=device,
-            eval_hook=eval_hook, eval_func=eval_func, name=name,
-            logger=logger)
+            eval_hook=eval_hook, eval_func=eval_func, metrics_fun=metrics_fun,
+            name=name, logger=logger)
+
         self.pos_labels = _to_list(pos_labels)
         self.ignore_labels = _to_list(ignore_labels)
         self.raise_value_error = raise_value_error
 
-    @property
-    def metric_name(self):
-        return 'roc_auc'
-
-    def calc_metric(self, y_total, t_total):
+    def roc_auc_score(self, y_total, t_total):
         # --- ignore labels if specified ---
         if self.ignore_labels:
             valid_ind = numpy.in1d(t_total, self.ignore_labels, invert=True)
