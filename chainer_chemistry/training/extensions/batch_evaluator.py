@@ -1,4 +1,3 @@
-from abc import ABCMeta
 from abc import abstractmethod
 import copy
 from logging import getLogger
@@ -10,7 +9,6 @@ from chainer import cuda
 from chainer.dataset import convert
 from chainer import reporter
 from chainer.training.extensions import Evaluator
-# from sklearn import metrics
 
 
 def _get_1d_numpy_array(v):
@@ -28,7 +26,7 @@ def _get_1d_numpy_array(v):
     return cuda.to_cpu(v).ravel()
 
 
-class BatchEvaluator(Evaluator, metaclass=ABCMeta):
+class BatchEvaluator(Evaluator):
 
     def __init__(self, iterator, target, converter=convert.concat_examples,
                  device=None, eval_hook=None, eval_func=None, name=None,
