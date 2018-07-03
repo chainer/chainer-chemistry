@@ -3,6 +3,7 @@ import pytest
 
 from chainer_chemistry.dataset.parsers.smiles_parser import SmilesParser # NOQA
 from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
+from chainer_chemistry.dataset.splitters.scaffold_splitter import generate_scaffold # NOQA
 from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
@@ -30,6 +31,13 @@ def dataset(smiles_list):
     parser = SmilesParser(pp)
     dataset = parser.parse(smiles_list, return_smiles=True)
     return dataset
+
+
+def test_generate_scaffold():
+    smiles = "Nc1coc(=O)nc1N"
+    actual = generate_scaffold(smiles)
+    expect = 'O=c1nccco1'
+    assert actual == expect
 
 
 def test_split(dataset):
