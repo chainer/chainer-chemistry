@@ -42,7 +42,8 @@ class DataFrameParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, df, return_smiles=False, target_index=None):
+    def parse(self, df, return_smiles=False, target_index=None,
+              return_is_successful=False):
         """parse DataFrame using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -50,12 +51,16 @@ class DataFrameParser(BaseFileParser):
 
         Args:
             df (pandas.DataFrame): dataframe to be parsed.
-            return_smiles (bool): If set to True, this function returns
-                preprocessed dataset and smiles list.
-                If set to False, this function returns preprocessed dataset and
-                `None`.
+            return_smiles (bool): If set to `True`, smiles list is returned in
+                the key 'smiles', it is a list of SMILES from which input
+                features are successfully made.
+                If set to `False`, `None` is returned in the key 'smiles'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
+            return_is_successful (bool): If set to `True`, boolean list is
+                returned in the key 'is_successful'. It represents
+                preprocessing has succeeded or not for each SMILES.
+                If set to False, `None` is returned in the key 'is_success'.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -65,6 +70,7 @@ class DataFrameParser(BaseFileParser):
         logger = self.logger
         pp = self.preprocessor
         smiles_list = []
+        is_successful_list = []
 
         # counter = 0
         if isinstance(pp, MolPreprocessor):
@@ -90,6 +96,8 @@ class DataFrameParser(BaseFileParser):
                     mol = Chem.MolFromSmiles(smiles)
                     if mol is None:
                         fail_count += 1
+                        if return_is_successful:
+                            is_successful_list.append(False)
                         continue
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
@@ -113,12 +121,16 @@ class DataFrameParser(BaseFileParser):
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 except Exception as e:
                     logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
                     logger.info(traceback.format_exc())
                     fail_count += 1
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 # Initialize features: list of list
                 if features is None:
@@ -138,6 +150,8 @@ class DataFrameParser(BaseFileParser):
                 if self.labels is not None:
                     features[len(features) - 1].append(labels)
                 success_count += 1
+                if return_is_successful:
+                    is_successful_list.append(True)
             ret = []
 
             for feature in features:
@@ -157,12 +171,19 @@ class DataFrameParser(BaseFileParser):
             raise NotImplementedError
 
         smileses = numpy.array(smiles_list) if return_smiles else None
+        if return_is_successful:
+            is_successful = numpy.array(is_successful_list)
+        else:
+            is_successful = None
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
+            dataset = NumpyTupleDataset(*result)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
+            dataset = NumpyTupleDataset(result)
+        return {"dataset": dataset,
+                "smiles": smileses,
+                "is_successful": is_successful}
