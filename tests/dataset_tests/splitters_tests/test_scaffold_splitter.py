@@ -1,24 +1,47 @@
-import os
-
 import numpy
+import pandas
 import pytest
 
-
-from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser # NOQA
-from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
+from chainer_chemistry.dataset.parsers.data_frame_parser import DataFrameParser # NOQA
+# from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
+from chainer_chemistry.dataset.preprocessors import AtomicNumberPreprocessor
+from chainer_chemistry.dataset.splitters.scaffold_splitter import generate_scaffold # NOQA
 from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
 @pytest.fixture
-def dataset():
-    here = os.path.abspath(os.path.dirname(__file__))
-    file_rel_path = '../../../examples/own_dataset/dataset.csv'
-    file_abs_path = os.path.join(here, file_rel_path)
-    pp = NFPPreprocessor()
-    parser = CSVFileParser(pp, smiles_col='SMILES')
-    dataset = parser.parse(file_abs_path, return_smiles=True)
+def smiles_list():
+    smileses = [
+        "CC1=CC2CC(CC1)O2",
+        "O=Cc1nccn1C=O",
+        "CCC(C)(C)C(O)C=O",
+        "C#CCC(C)(CO)OC",
+        "Nc1coc(=O)nc1N",
+        "CC12C=CC(CCC1)C2",
+        "CC12CCC1C2OC=O",
+        "CC1C2CC3(COC3)N12",
+        "O=C1NC=NC12CC2",
+        "C1=CC2CN2CC2NC12",
+    ]
+    return smileses
+
+
+@pytest.fixture
+def dataset(smiles_list):
+    df = pandas.DataFrame(data={'smiles': smiles_list,
+                                'value': numpy.random.rand(10)})
+    pp = AtomicNumberPreprocessor()
+    parser = DataFrameParser(pp, labels='value')
+    dataset = parser.parse(df, return_smiles=True)
     return dataset
+
+
+def test_generate_scaffold():
+    smiles = "Nc1coc(=O)nc1N"
+    actual = generate_scaffold(smiles)
+    expect = 'O=c1nccco1'
+    assert actual == expect
 
 
 def test_split(dataset):
@@ -26,17 +49,17 @@ def test_split(dataset):
     train_ind, valid_ind, test_ind = splitter._split(
         dataset=dataset['dataset'], smiles_list=dataset['smiles'])
     assert type(train_ind) == numpy.ndarray
-    assert train_ind.shape[0] == 80
-    assert valid_ind.shape[0] == 10
-    assert test_ind.shape[0] == 10
+    assert train_ind.shape[0] == 8
+    assert valid_ind.shape[0] == 1
+    assert test_ind.shape[0] == 1
 
     train_ind, valid_ind, test_ind = splitter._split(
         dataset=dataset['dataset'], smiles_list=dataset['smiles'],
         frac_train=0.5, frac_valid=0.3, frac_test=0.2)
     assert type(train_ind) == numpy.ndarray
-    assert train_ind.shape[0] == 50
-    assert valid_ind.shape[0] == 30
-    assert test_ind.shape[0] == 20
+    assert train_ind.shape[0] == 5
+    assert valid_ind.shape[0] == 3
+    assert test_ind.shape[0] == 2
 
 
 def test_split_fix_seed(dataset):
@@ -65,9 +88,9 @@ def test_train_valid_test_split(dataset):
         dataset=dataset['dataset'], smiles_list=dataset['smiles'])
 
     assert type(train_ind) == numpy.ndarray
-    assert train_ind.shape[0] == 80
-    assert valid_ind.shape[0] == 10
-    assert test_ind.shape[0] == 10
+    assert train_ind.shape[0] == 8
+    assert valid_ind.shape[0] == 1
+    assert test_ind.shape[0] == 1
 
 
 def test_train_valid_test_split_return_dataset(dataset):
@@ -79,9 +102,9 @@ def test_train_valid_test_split_return_dataset(dataset):
     assert type(train) == NumpyTupleDataset
     assert type(valid) == NumpyTupleDataset
     assert type(test) == NumpyTupleDataset
-    assert len(train) == 80
-    assert len(valid) == 10
-    assert len(test) == 10
+    assert len(train) == 8
+    assert len(valid) == 1
+    assert len(test) == 1
 
 
 def test_train_valid_split(dataset):
@@ -90,8 +113,8 @@ def test_train_valid_split(dataset):
         dataset=dataset['dataset'], smiles_list=dataset['smiles'])
 
     assert type(train_ind) == numpy.ndarray
-    assert train_ind.shape[0] == 90
-    assert valid_ind.shape[0] == 10
+    assert train_ind.shape[0] == 9
+    assert valid_ind.shape[0] == 1
 
 
 def test_train_valid_split_return_dataset(dataset):
@@ -102,5 +125,5 @@ def test_train_valid_split_return_dataset(dataset):
 
     assert type(train) == NumpyTupleDataset
     assert type(valid) == NumpyTupleDataset
-    assert len(train) == 90
-    assert len(valid) == 10
+    assert len(train) == 9
+    assert len(valid) == 1

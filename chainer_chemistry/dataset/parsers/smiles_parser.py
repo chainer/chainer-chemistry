@@ -3,40 +3,34 @@ import pandas
 from chainer_chemistry.dataset.parsers.data_frame_parser import DataFrameParser
 
 
-class CSVFileParser(DataFrameParser):
-    """csv file parser
+class SmilesParser(DataFrameParser):
+    """smiles parser
 
-    This FileParser parses .csv file.
-    It should contain column which contain SMILES as input, and
-    label column which is the target to predict.
+    It parses `smiles_list`, which is a list of string of smiles.
 
     Args:
         preprocessor (BasePreprocessor): preprocessor instance
-        labels (str or list): labels column
-        smiles_col (str): smiles column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
         logger:
     """
 
     def __init__(self, preprocessor,
-                 labels=None,
-                 smiles_col='smiles',
                  postprocess_label=None, postprocess_fn=None,
                  logger=None):
-        super(CSVFileParser, self).__init__(
-            preprocessor, labels=labels, smiles_col=smiles_col,
+        super(SmilesParser, self).__init__(
+            preprocessor, labels=None, smiles_col='smiles',
             postprocess_label=postprocess_label, postprocess_fn=postprocess_fn,
             logger=logger)
 
-    def parse(self, filepath, return_smiles=False, target_index=None):
-        """parse csv file using `preprocessor`
+    def parse(self, smiles_list, return_smiles=False, target_index=None):
+        """parse `smiles_list` using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
         extracted from smiles information in `smiles` column.
 
         Args:
-            filepath (str): file path to be parsed.
+            smiles_list (list): list of strings of smiles
             return_smiles (bool): If set to True, this function returns
                 preprocessed dataset and smiles list.
                 If set to False, this function returns preprocessed dataset and
@@ -49,11 +43,11 @@ class CSVFileParser(DataFrameParser):
             or None.
 
         """
-        df = pandas.read_csv(filepath)
-        return super(CSVFileParser, self).parse(df, return_smiles,
-                                                target_index)
+        df = pandas.DataFrame({'smiles': smiles_list})
+        return super(SmilesParser, self).parse(
+            df, return_smiles, target_index)
 
-    def extract_total_num(self, filepath):
+    def extract_total_num(self, smiles_list):
         """Extracts total number of data which can be parsed
 
         We can use this method to determine the value fed to `target_index`
@@ -63,10 +57,9 @@ class CSVFileParser(DataFrameParser):
         the final dataset size.
 
         Args:
-            filepath (str): file path of to check the total number.
+            smiles_list (list): list of strings of smiles
 
         Returns (int): total number of dataset can be parsed.
 
         """
-        df = pandas.read_csv(filepath)
-        return len(df)
+        return len(smiles_list)

@@ -7,7 +7,7 @@ from rdkit.Chem.Scaffolds import MurckoScaffold
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 
 
-def _generate_scaffold(smiles, include_chirality=False):
+def generate_scaffold(smiles, include_chirality=False):
     """return scaffold string of target molecule"""
     mol = Chem.MolFromSmiles(smiles)
     scaffold = MurckoScaffold\
@@ -34,7 +34,7 @@ class ScaffoldSplitter(BaseSplitter):
 
         scaffolds = defaultdict(list)
         for ind, smiles in enumerate(smiles_list):
-            scaffold = _generate_scaffold(smiles, include_chirality)
+            scaffold = generate_scaffold(smiles, include_chirality)
             scaffolds[scaffold].append(ind)
 
         scaffold_sets = rng.permutation(list(scaffolds.values()))
@@ -78,12 +78,12 @@ class ScaffoldSplitter(BaseSplitter):
                 Fraction of dataset put into validation data.
             converter(callable):
             return_index(bool):
-                If `True`, this function returns only indexes. If `False`, this
+                If `True`, this function returns only indices. If `False`, this
                 function returns splitted dataset.
 
         Returns:
             SplittedDataset(tuple):
-                splitted dataset or indexes
+                splitted dataset or indices
         """
         return super(ScaffoldSplitter, self)\
             .train_valid_test_split(dataset, frac_train, frac_valid, frac_test,
@@ -111,12 +111,12 @@ class ScaffoldSplitter(BaseSplitter):
                 Fraction of dataset put into validation data.
             converter(callable):
             return_index(bool):
-                If `True`, this function returns only indexes. If `False`, this
+                If `True`, this function returns only indices. If `False`, this
                 function returns splitted dataset.
 
         Returns:
             SplittedDataset(tuple):
-                splitted dataset or indexes
+                splitted dataset or indices
         """
         return super(ScaffoldSplitter, self)\
             .train_valid_split(dataset, frac_train, frac_valid, converter,
