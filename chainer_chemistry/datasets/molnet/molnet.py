@@ -32,10 +32,17 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             It should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
+        split (str or BaseSplitter or None): How to split dataset into train,
+         validation and test. If `None`, this functions use the splitter that
+          is recommended by MoleculeNet. Additionally You can use an instance
+           of BaseSplitter or choose it from 'random', 'stratified' and
+           'scaffold'.
         return_smiles (bool): If set to ``True``,
             smiles array is also returned.
         target_index (list or None): target index list to partially extract
             dataset. If `None` (default), all examples are parsed.
+        task_index (int): Target task index in dataset for stratification.
+            (Stratified Splitter only)
     Returns (dict):
         Dictionary that contains dataset that is already splitted into train,
         valid and test dataset and 1-d numpy array with dtype=object(string)
@@ -73,6 +80,9 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             splitter = split_method_dict[split]()
         elif isinstance(split, BaseSplitter):
             splitter = split
+        else:
+            raise TypeError("split must be None, str or instance of"
+                            " BaseSplitter")
 
         if isinstance(splitter, ScaffoldSplitter):
             get_smiles = True
