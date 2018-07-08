@@ -37,23 +37,28 @@ class GraphAttentionNetworks(chainer.Chain):
         super(GraphAttentionNetworks, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         # n_message_layer = 1 if weight_tying else n_layers
+        n_message_layer = n_layers
         with self.init_scope():
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            self.weight = GraphLinear(hidden_dim, heads * hidden_dim)
-            self.att_weight = GraphLinear(hidden_dim * 2, 1)
-            # self.message_layers = chainer.ChainList(
-            #     *[GraphLinear(hidden_dim, self.NUM_EDGE_TYPE * hidden_dim)
-            #       for _ in range(n_message_layer)]
-            # )
+            # self.weight = GraphLinear(hidden_dim, heads * hidden_dim)
+            # self.att_weight = GraphLinear(hidden_dim * 2, 1)
+            self.message_layers = chainer.ChainList(
+                *[GraphLinear(hidden_dim, heads * hidden_dim)
+                  for _ in range(n_message_layer)]
+            )
+            self.attenstion_layers = chainer.ChainList(
+                *[GraphLinear(hidden_dim * 2, 1)
+                  for _ in range(n_message_layer)]
+            )
             # self.update_layer = links.GRU(2 * hidden_dim, hidden_dim)
             # Readout
             self.i_layers = chainer.ChainList(
-                *[GraphLinear(3 * hidden_dim, out_dim)
+                *[GraphLinear(2 * hidden_dim, out_dim)
                     for _ in range(n_readout_layer)]
             )
             self.j_layers = chainer.ChainList(
-                *[GraphLinear(2 * hidden_dim, out_dim)
+                *[GraphLinear(hidden_dim, out_dim)
                     for _ in range(n_readout_layer)]
             )
         self.out_dim = out_dim
@@ -64,45 +69,11 @@ class GraphAttentionNetworks(chainer.Chain):
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
 
-    def readout(self, h, h0, step=0):
-        # --- Readout part ---
-        index = step if self.concat_hidden else 0
-        # h, h0: (minibatch, atom, ch)
-        g = functions.sigmoid(
-            self.i_layers[index](functions.concat((h, h0), axis=2))) \
-            * self.j_layers[index](h)
-        print(g.shape)
-        g = functions.sum(g, axis=1)  # sum along atom's axis
-        print(g.shape)
-        return g
-
-    def __call__(self, atom_array, adj):
-        """Forward propagation
-
-        Args:
-            atom_array (numpy.ndarray): minibatch of molecular which is
-                represented with atom IDs (representing C, O, S, ...)
-                `atom_array[mol_index, atom_index]` represents `mol_index`-th
-                molecule's `atom_index`-th atomic number
-            adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
-                information
-
-        Returns:
-            ~chainer.Variable: minibatch of fingerprint
-        """
-        # x: minibatch, atom, channel
-        if atom_array.dtype == self.xp.int32:
-            x = self.embed(atom_array)  # (minibatch, max_num_atoms)
-        else:
-            x = atom_array
-
+    def update(self, x_org, w_adj, step=0):
         # (minibatch, atom, channel)
-        x = self.embed(atom_array)
-        z0 = functions.copy(x, -1)
-        # (minibatch, atom, channel)
-        mb, atom, ch = x.shape
+        mb, atom, ch = x_org.shape
         # (minibatch, atom, heads * out_dim)
-        test = self.weight(x)
+        test = self.message_layers[step](x_org)
 
         # concat all pairs of atom
         # (minibatch, 1, atom, heads * out_dim)
@@ -122,19 +93,15 @@ class GraphAttentionNetworks(chainer.Chain):
         z = functions.reshape(z, (mb * self.heads, atom * atom,
                                   self.hidden_dim * 2))
         # (minibatch * heads, atom, atom, 1)
-        z = self.att_weight(z)
+        z = self.attenstion_layers[step](z)
         # (minibatch * heads, atom, atom)
         z = functions.reshape(z, (mb * self.heads, atom, atom))
         z = functions.leaky_relu(z)
         z = functions.reshape(z, (self.heads, mb, atom, atom))
 
-        if isinstance(adj, Variable):
-            w_adj = adj.data
-        else:
-            w_adj = adj
-        w_adj = Variable(w_adj, requires_grad=False)
         cond = w_adj.array.astype(numpy.bool)
         cond = numpy.broadcast_to(cond, z.array.shape)
+        # TODO(mottodora): find better way to ignore non connected
         z = functions.where(cond, z,
                             numpy.broadcast_to(numpy.array(-10000),
                                                z.array.shape)
@@ -143,6 +110,49 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, atom)
         z = functions.mean(z, axis=0)
         # (minibatch, atom, out_dim)
-        z = functions.matmul(z, test)
-        z = self.readout(z, z0)
+        z = functions.matmul(z, x_org)
         return z
+
+    def readout(self, h, h0, step=0):
+        # --- Readout part ---
+        index = step if self.concat_hidden else 0
+        # h, h0: (minibatch, atom, ch)
+        g = functions.sigmoid(
+            self.i_layers[index](functions.concat((h, h0), axis=2))) \
+            * self.j_layers[index](h)
+        g = functions.sum(g, axis=1)  # sum along atom's axis
+        return g
+
+    def __call__(self, atom_array, adj):
+        """Forward propagation
+
+        Args:
+            atom_array (numpy.ndarray): minibatch of molecular which is
+                represented with atom IDs (representing C, O, S, ...)
+                `atom_array[mol_index, atom_index]` represents `mol_index`-th
+                molecule's `atom_index`-th atomic number
+            adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
+                information
+
+        Returns:
+            ~chainer.Variable: minibatch of fingerprint
+        """
+        # x: minibatch, atom, channel
+        if atom_array.dtype == self.xp.int32:
+            h = self.embed(atom_array)  # (minibatch, max_num_atoms)
+        else:
+            h = atom_array
+
+        h0 = functions.copy(h, -1)
+
+        if isinstance(adj, Variable):
+            w_adj = adj.data
+        else:
+            w_adj = adj
+        w_adj = Variable(w_adj, requires_grad=False)
+
+        for step in range(self.n_layers):
+            h = self.update(h, w_adj, step)
+
+        g = self.readout(h, h0)
+        return g
