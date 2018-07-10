@@ -6,7 +6,9 @@ import numpy
 from chainer.dataset import download
 
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
-from chainer_chemistry.dataset import splitters
+from chainer_chemistry.dataset.splitters import split_method_dict
+from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
+from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config # NOQA
@@ -15,9 +17,9 @@ _root = 'pfnet/chainer/molnet'
 
 
 def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
-                       split='random', frac_train=.8, frac_valid=.1,
+                       split=None, frac_train=.8, frac_valid=.1,
                        frac_test=.1, seed=777, return_smiles=False,
-                       target_index=None):
+                       target_index=None, task_index=0, **kwargs):
     """Downloads, caches and preprocess MoleculeNet dataset.
 
     Args:
@@ -30,10 +32,17 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             It should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
+        split (str or BaseSplitter or None): How to split dataset into train,
+         validation and test. If `None`, this functions use the splitter that
+          is recommended by MoleculeNet. Additionally You can use an instance
+           of BaseSplitter or choose it from 'random', 'stratified' and
+           'scaffold'.
         return_smiles (bool): If set to ``True``,
             smiles array is also returned.
         target_index (list or None): target index list to partially extract
             dataset. If `None` (default), all examples are parsed.
+        task_index (int): Target task index in dataset for stratification.
+            (Stratified Splitter only)
     Returns (dict):
         Dictionary that contains dataset that is already splitted into train,
         valid and test dataset and 1-d numpy array with dtype=object(string)
@@ -65,21 +74,35 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                            smiles_col=dataset_config['smiles_columns'],
                            postprocess_label=postprocess_label)
     if dataset_config['dataset_type'] == 'one_file_csv':
+        split = dataset_config['split'] if split is None else split
+
+        if isinstance(split, str):
+            splitter = split_method_dict[split]()
+        elif isinstance(split, BaseSplitter):
+            splitter = split
+        else:
+            raise TypeError("split must be None, str or instance of"
+                            " BaseSplitter")
+
+        if isinstance(splitter, ScaffoldSplitter):
+            get_smiles = True
+        else:
+            get_smiles = return_smiles
+
         result = parser.parse(get_molnet_filepath(dataset_name),
-                              return_smiles=return_smiles,
-                              target_index=target_index)
+                              return_smiles=get_smiles,
+                              target_index=target_index, **kwargs)
         dataset = result['dataset']
-        if split == 'random':
-            splitter = splitters.RandomSplitter()
+        smiles = result['smiles']
         train_ind, valid_ind, test_ind = \
-            splitter.train_valid_test_split(dataset)
+            splitter.train_valid_test_split(dataset, smiles_list=smiles,
+                                            task_index=task_index, **kwargs)
         train = NumpyTupleDataset(*dataset.features[train_ind])
         valid = NumpyTupleDataset(*dataset.features[valid_ind])
         test = NumpyTupleDataset(*dataset.features[test_ind])
 
         result['dataset'] = (train, valid, test)
         if return_smiles:
-            smiles = result['smiles']
             train_smiles = smiles[train_ind]
             valid_smiles = smiles[valid_ind]
             test_smiles = smiles[test_ind]

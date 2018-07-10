@@ -7,3 +7,9 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter # NOQ
 from chainer_chemistry.dataset.splitters.random_splitter import RandomSplitter # NOQA
 from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.dataset.splitters.stratified_splitter import StratifiedSplitter # NOQA
+
+split_method_dict = {
+    'random': RandomSplitter,
+    'stratified': StratifiedSplitter,
+    'scaffold': ScaffoldSplitter,
+}
