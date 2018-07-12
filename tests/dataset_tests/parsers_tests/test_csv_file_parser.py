@@ -109,18 +109,18 @@ def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
     assert smiles[2] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_csv_file_parser_target_index(csv_file, mols, label_a):
+def test_csv_file_parser_target_index(csv_file_invalid, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
     parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    result = parser.parse(csv_file, return_smiles=True, target_index=[0, 2],
-                          return_is_successful=True)
+    result = parser.parse(csv_file_invalid, return_smiles=True,
+                          target_index=[1, 2, 4], return_is_successful=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 2
     is_successful = result['is_successful']
-    assert numpy.alltrue(is_successful)
-    assert len(is_successful) == 2
+    assert numpy.array_equal(is_successful, numpy.array([True, False, True]))
+    assert len(is_successful) == 3
 
     # As we want test CSVFileParser, we assume
     # NFPPreprocessor works as documented.
