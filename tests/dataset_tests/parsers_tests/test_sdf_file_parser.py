@@ -36,7 +36,6 @@ def sdf_file_long(tmpdir):
                    'Cc1ccccc1', 'CC1=CC2CC(CC1)O2']:
         mol = Chem.MolFromSmiles(smiles)
         writer.write(mol)
-    print('fname', fname)
     return fname
 
 
@@ -127,7 +126,6 @@ def test_sdf_file_parser_return_is_successful(sdf_file_long, mols):
     assert len(dataset) == 3
     is_successful = result['is_successful']
     assert len(is_successful) == 5
-    # print('is_successful', is_successful)
     assert numpy.alltrue(is_successful[[1, 3, 4]])
     assert numpy.alltrue(~is_successful[[0, 2]])
 
