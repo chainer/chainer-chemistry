@@ -192,8 +192,8 @@ See output of ``python train_qm9.py --help``.
 
 Using your own dataset
 ========================
-You can use your own dataset in Chainer Chemistry.
-`example/own_dataset <https://github.com/pfnet-research/chainer-chemistry/tree/master/examples/own_dataset/>`_ shows an example.
+You can use your own dataset in Chainer Chemistry
+`example/custom_dataset <https://github.com/pfnet-research/chainer-chemistry/tree/master/examples/custom_dataset/>`_ shows an example.
 
 Reference
 ========================
