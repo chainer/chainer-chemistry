@@ -2,6 +2,7 @@ import chainer
 from chainer import cuda
 from chainer import functions
 from chainer import links
+from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
@@ -95,13 +96,22 @@ class GGNN(chainer.Chain):
         out_h = functions.reshape(out_h, (mb, atom, ch))
         return out_h
 
-    def readout(self, h, h0, step=0):
+    def readout(self, h, h0, step=0, is_real_node=None):
         # --- Readout part ---
+        # `is_real_node`: shape (minibatch, atom)
+        #     this is boolean flag indicating each node is real atom (True) or
+        #     extended virtual node (False)
+
         index = step if self.concat_hidden else 0
         # h, h0: (minibatch, atom, ch)
         g = functions.sigmoid(
             self.i_layers[index](functions.concat((h, h0), axis=2))) \
             * self.j_layers[index](h)
+        if is_real_node is not None:
+            mask = self.xp.broadcast_to(
+                is_real_node[:, :, None], g.shape)
+            g = functions.where(mask, g, self.xp.zeros(
+                g.shape, dtype=self.xp.float32))
         g = functions.sum(g, axis=1)  # sum along atom's axis
         return g
 
@@ -125,16 +135,22 @@ class GGNN(chainer.Chain):
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array
+
+        if isinstance(adj, Variable):
+            adj_array = adj.data
+        else:
+            adj_array = adj
+        is_real_node = self.xp.sum(adj_array, axis=(1, 2)) > 0
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
         g_list = []
         for step in range(self.n_layers):
             h = self.update(h, adj, step)
             if self.concat_hidden:
-                g = self.readout(h, h0, step)
+                g = self.readout(h, h0, step, is_real_node)
                 g_list.append(g)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout(h, h0, 0)
+            g = self.readout(h, h0, 0, is_real_node)
             return g
