@@ -1,4 +1,4 @@
-from typing import Iterable
+from collections import Iterable
 
 import numpy
 import six
