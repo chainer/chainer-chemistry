@@ -8,7 +8,7 @@ gpu=${1:--1}
 for method in nfp ggnn schnet weavenet rsgcn
 do
     python train_custom_dataset.py \
-        --datafile dataset.csv \
+        --datafile dataset_train.csv \
         --method ${method} \
         --label value1 \
         --conv-layers 1 \

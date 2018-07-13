@@ -113,7 +113,8 @@ def parse_arguments():
 
     # Set up the argument parser.
     parser = ArgumentParser(description='Regression on a custom dataset')
-    parser.add_argument('--datafile', '-d', type=str, default='dataset.csv',
+    parser.add_argument('--datafile', '-d', type=str,
+                        default='dataset_train.csv',
                         help='csv file containing the dataset')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
@@ -175,7 +176,7 @@ def main():
 
     # Split the dataset into training and validation.
     train_data_size = int(len(dataset) * args.train_data_ratio)
-    train, val = split_dataset_random(dataset, train_data_size, args.seed)
+    train, valid = split_dataset_random(dataset, train_data_size, args.seed)
 
     # Set up the predictor.
     predictor = set_up_predictor(args.method, args.unit_num,
@@ -183,8 +184,8 @@ def main():
 
     # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
-    val_iter = iterators.SerialIterator(val, args.batchsize, repeat=False,
-                                        shuffle=False)
+    valid_iter = iterators.SerialIterator(valid, args.batchsize, repeat=False,
+                                          shuffle=False)
 
     # Set up the regressor.
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
@@ -201,7 +202,7 @@ def main():
 
     # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
+    trainer.extend(E.Evaluator(valid_iter, regressor, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
