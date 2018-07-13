@@ -1,12 +1,10 @@
-import os
-
 import numpy
 import pandas
 import pytest
 from rdkit import Chem
 import six
 
-from chainer_chemistry.dataset.parsers import CSVFileParser
+from chainer_chemistry.dataset.parsers import DataFrameParser
 from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
 
 
@@ -29,26 +27,12 @@ def label_a():
 
 
 @pytest.fixture()
-def csv_file(tmpdir, mol_smiles, label_a):
-    fname = os.path.join(str(tmpdir), 'test.csv')
+def data_frame(mol_smiles, label_a):
     df = pandas.DataFrame({
         'smiles': mol_smiles,
         'labelA': label_a
     })
-    df.to_csv(fname)
-    return fname
-
-
-@pytest.fixture()
-def csv_file_invalid(tmpdir):
-    """CSV file with invalid SMILES"""
-    fname = os.path.join(str(tmpdir), 'test_invalid.csv')
-    df = pandas.DataFrame({
-        'smiles': ['var', 'CN=C=O', 'hoge', 'Cc1ccccc1', 'CC1=CC2CC(CC1)O2'],
-        'labelA': [0., 2.1, 0., 5.3, -1.2],
-    })
-    df.to_csv(fname)
-    return fname
+    return df
 
 
 def check_input_features(actual, expect):
@@ -66,11 +50,12 @@ def check_features(actual, expect_input_features, expect_label):
     assert actual[-1] == expect_label
 
 
-def test_csv_file_parser_not_return_smiles(csv_file, mols):
+def test_data_frame_parser_not_return_smiles(data_frame, mols):
+    """Test default behavior"""
     preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, smiles_col='smiles')
+    parser = DataFrameParser(preprocessor, smiles_col='smiles')
     # Actually, `dataset, smiles = parser.parse(..)` is enough.
-    result = parser.parse(csv_file, return_smiles=False)
+    result = parser.parse(data_frame, return_smiles=False)
     dataset = result['dataset']
     smiles = result['smiles']
     is_successful = result['is_successful']
@@ -78,24 +63,24 @@ def test_csv_file_parser_not_return_smiles(csv_file, mols):
     assert smiles is None
     assert is_successful is None
 
-    # As we want test CSVFileParser, we assume
+    # As we want test DataFrameParser, we assume
     # NFPPreprocessor works as documented.
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
         check_input_features(dataset[i], expect)
 
 
-def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
+def test_data_frame_parser_return_smiles(data_frame, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    result = parser.parse(csv_file, return_smiles=True)
+    parser = DataFrameParser(preprocessor, labels='labelA',
+                             smiles_col='smiles')
+    result = parser.parse(data_frame, return_smiles=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 3
 
-    # As we want test CSVFileParser, we assume
-    # NFPPreprocessor works as documented.
+    # We assume NFPPreprocessor works as documented.
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
         check_features(dataset[i], expect, label_a[i])
@@ -109,21 +94,21 @@ def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
     assert smiles[2] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_csv_file_parser_target_index(csv_file_invalid, mols, label_a):
+def test_data_frame_parser_target_index(data_frame, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    result = parser.parse(csv_file_invalid, return_smiles=True,
-                          target_index=[1, 2, 4], return_is_successful=True)
+    parser = DataFrameParser(preprocessor, labels='labelA',
+                             smiles_col='smiles')
+    result = parser.parse(data_frame, return_smiles=True, target_index=[0, 2],
+                          return_is_successful=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 2
     is_successful = result['is_successful']
-    assert numpy.array_equal(is_successful, numpy.array([True, False, True]))
-    assert len(is_successful) == 3
+    assert numpy.alltrue(is_successful)
+    assert len(is_successful) == 2
 
-    # As we want test CSVFileParser, we assume
-    # NFPPreprocessor works as documented.
+    # We assume NFPPreprocessor works as documented.
     expect = preprocessor.get_input_features(mols[0])
     check_features(dataset[0], expect, label_a[0])
 
@@ -138,20 +123,16 @@ def test_csv_file_parser_target_index(csv_file_invalid, mols, label_a):
     assert smiles[1] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_csv_file_parser_extract_total_num(csv_file):
-    preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, labels='labelA', smiles_col='smiles')
-    num = parser.extract_total_num(csv_file)
-    assert num == 3
-
-
-def test_csv_parser_return_is_successful(csv_file_invalid, mols, label_a):
+def test_data_frame_parser_return_is_successful(mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, labels='labelA',
-                           smiles_col='smiles')
-    result = parser.parse(csv_file_invalid, return_smiles=True,
-                          return_is_successful=True)
+    parser = DataFrameParser(preprocessor, labels='labelA',
+                             smiles_col='smiles')
+    df = pandas.DataFrame({
+        'smiles': ['var', 'CN=C=O', 'hoge', 'Cc1ccccc1', 'CC1=CC2CC(CC1)O2'],
+        'labelA': [0., 2.1, 0., 5.3, -1.2],
+    })
+    result = parser.parse(df, return_smiles=True, return_is_successful=True)
 
     dataset = result['dataset']
     # smiles = result['smiles']
@@ -166,6 +147,14 @@ def test_csv_parser_return_is_successful(csv_file_invalid, mols, label_a):
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
         check_features(dataset[i], expect, label_a[i])
+
+
+def test_data_frame_parser_extract_total_num(data_frame):
+    """test `labels` option and retain_smiles=True."""
+    preprocessor = NFPPreprocessor()
+    parser = DataFrameParser(preprocessor)
+    num = parser.extract_total_num(data_frame)
+    assert num == 3
 
 
 if __name__ == '__main__':

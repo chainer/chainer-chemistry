@@ -1,42 +1,23 @@
-import os
-
 import numpy
 import pytest
 from rdkit import Chem
 import six
 
-from chainer_chemistry.dataset.parsers import SDFFileParser
+from chainer_chemistry.dataset.parsers import SmilesParser
 from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
 
 
 @pytest.fixture
-def mols():
-    mol1 = Chem.MolFromSmiles('CN=C=O')
-    mol2 = Chem.MolFromSmiles('Cc1ccccc1')
-    mol3 = Chem.MolFromSmiles('CC1=CC2CC(CC1)O2')
-    return [mol1, mol2, mol3]
+def mol_smiles():
+    mol_smiles1 = 'CN=C=O'
+    mol_smiles2 = 'Cc1ccccc1'
+    mol_smiles3 = 'CC1=CC2CC(CC1)O2'
+    return [mol_smiles1, mol_smiles2, mol_smiles3]
 
 
-@pytest.fixture()
-def sdf_file(tmpdir, mols):
-    # Chem.AllChem.Compute2DCoords(mol1)
-    fname = os.path.join(str(tmpdir), 'test.sdf')
-    writer = Chem.SDWriter(fname)
-    for mol in mols:
-        writer.write(mol)
-    return fname
-
-
-@pytest.fixture()
-def sdf_file_long(tmpdir):
-    """SDFFile with long smiles (ccc...)"""
-    fname = os.path.join(str(tmpdir), 'test_long.sdf')
-    writer = Chem.SDWriter(fname)
-    for smiles in ['CCCCCCCCCCCC', 'CN=C=O', 'CCCCCCCCCCCCCCCC',
-                   'Cc1ccccc1', 'CC1=CC2CC(CC1)O2']:
-        mol = Chem.MolFromSmiles(smiles)
-        writer.write(mol)
-    return fname
+@pytest.fixture
+def mols(mol_smiles):
+    return [Chem.MolFromSmiles(smiles) for smiles in mol_smiles]
 
 
 def check_input_features(actual, expect):
@@ -45,10 +26,10 @@ def check_input_features(actual, expect):
         numpy.testing.assert_array_equal(d, e)
 
 
-def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
+def test_smiles_parser_not_return_smiles(mol_smiles, mols):
     preprocessor = NFPPreprocessor()
-    parser = SDFFileParser(preprocessor)
-    result = parser.parse(sdf_file, return_smiles=False)
+    parser = SmilesParser(preprocessor)
+    result = parser.parse(mol_smiles, return_smiles=False)
     dataset = result['dataset']
     smiles = result['smiles']
     is_successful = result['is_successful']
@@ -56,22 +37,23 @@ def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     assert smiles is None
     assert is_successful is None
 
-    # As we want test SDFFileParser, we assume
+    # As we want test CSVFileParser, we assume
     # NFPPreprocessor works as documented.
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
         check_input_features(dataset[i], expect)
 
 
-def test_sdf_file_parser_return_smiles(sdf_file, mols):
+def test_smiles_parser_return_smiles(mol_smiles, mols):
+    """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
-    parser = SDFFileParser(preprocessor)
-    result = parser.parse(sdf_file, return_smiles=True)
+    parser = SmilesParser(preprocessor)
+    result = parser.parse(mol_smiles, return_smiles=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 3
 
-    # As we want test SDFFileParser, we assume
+    # As we want test CSVFileParser, we assume
     # NFPPreprocessor works as documented.
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
@@ -86,10 +68,11 @@ def test_sdf_file_parser_return_smiles(sdf_file, mols):
     assert smiles[2] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_sdf_file_parser_target_index(sdf_file, mols):
+def test_smiles_parser_target_index(mol_smiles, mols):
+    """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
-    parser = SDFFileParser(preprocessor)
-    result = parser.parse(sdf_file, return_smiles=True, target_index=[0, 2],
+    parser = SmilesParser(preprocessor)
+    result = parser.parse(mol_smiles, return_smiles=True, target_index=[0, 2],
                           return_is_successful=True)
     dataset = result['dataset']
     smiles = result['smiles']
@@ -98,7 +81,7 @@ def test_sdf_file_parser_target_index(sdf_file, mols):
     assert numpy.alltrue(is_successful)
     assert len(is_successful) == 2
 
-    # As we want test SDFFileParser, we assume
+    # As we want test CSVFileParser, we assume
     # NFPPreprocessor works as documented.
     expect = preprocessor.get_input_features(mols[0])
     check_input_features(dataset[0], expect)
@@ -114,15 +97,16 @@ def test_sdf_file_parser_target_index(sdf_file, mols):
     assert smiles[1] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_sdf_file_parser_return_is_successful(sdf_file_long, mols):
+def test_smiles_parser_return_is_successful(mols):
     """test `labels` option and retain_smiles=True."""
-    preprocessor = NFPPreprocessor(max_atoms=10)
-    parser = SDFFileParser(preprocessor)
-    result = parser.parse(sdf_file_long,
-                          return_smiles=True, return_is_successful=True)
+    preprocessor = NFPPreprocessor()
+    parser = SmilesParser(preprocessor)
+    mol_smiles_with_invalid = [
+        'var', 'CN=C=O', 'hoge', 'Cc1ccccc1', 'CC1=CC2CC(CC1)O2']
+    result = parser.parse(mol_smiles_with_invalid, return_smiles=True,
+                          return_is_successful=True)
 
     dataset = result['dataset']
-    # smiles = result['smiles']
     assert len(dataset) == 3
     is_successful = result['is_successful']
     assert len(is_successful) == 5
@@ -135,10 +119,10 @@ def test_sdf_file_parser_return_is_successful(sdf_file_long, mols):
         check_input_features(dataset[i], expect)
 
 
-def test_sdf_file_parser_extract_total_num(sdf_file):
+def test_smiles_parser_extract_total_num(mol_smiles):
     preprocessor = NFPPreprocessor()
-    parser = SDFFileParser(preprocessor)
-    num = parser.extract_total_num(sdf_file)
+    parser = SmilesParser(preprocessor)
+    num = parser.extract_total_num(mol_smiles)
     assert num == 3
 
 

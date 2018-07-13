@@ -9,38 +9,52 @@ from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionE
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
+import traceback
 
-class SDFFileParser(BaseFileParser):
-    """sdf file parser
+
+class DataFrameParser(BaseFileParser):
+    """data frame parser
+
+    This FileParser parses pandas dataframe.
+    It should contain column which contain SMILES as input, and
+    label column which is the target to predict.
 
     Args:
         preprocessor (BasePreprocessor): preprocessor instance
-        labels (str or list): labels column
+        labels (str or list or None): labels column
+        smiles_col (str): smiles column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
         logger:
     """
 
-    def __init__(self, preprocessor, labels=None, postprocess_label=None,
-                 postprocess_fn=None, logger=None):
-        super(SDFFileParser, self).__init__(preprocessor)
-        self.labels = labels
+    def __init__(self, preprocessor,
+                 labels=None,
+                 smiles_col='smiles',
+                 postprocess_label=None, postprocess_fn=None,
+                 logger=None):
+        super(DataFrameParser, self).__init__(preprocessor)
+        if isinstance(labels, str):
+            labels = [labels, ]
+        self.labels = labels  # type: list
+        self.smiles_col = smiles_col
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False, target_index=None,
+    def parse(self, df, return_smiles=False, target_index=None,
               return_is_successful=False):
-        """parse sdf file using `preprocessor`
+        """parse DataFrame using `preprocessor`
 
-        Note that label is extracted from preprocessor's method.
+        Label is extracted from `labels` columns and input features are
+        extracted from smiles information in `smiles` column.
 
         Args:
-            filepath (str): file path to be parsed.
-            return_smiles (bool): If set to True, this function returns
-                preprocessed dataset and smiles list.
-                If set to False, this function returns preprocessed dataset and
-                `None`.
+            df (pandas.DataFrame): dataframe to be parsed.
+            return_smiles (bool): If set to `True`, smiles list is returned in
+                the key 'smiles', it is a list of SMILES from which input
+                features are successfully made.
+                If set to `False`, `None` is returned in the key 'smiles'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
             return_is_successful (bool): If set to `True`, boolean list is
@@ -58,58 +72,51 @@ class SDFFileParser(BaseFileParser):
         smiles_list = []
         is_successful_list = []
 
+        # counter = 0
         if isinstance(pp, MolPreprocessor):
-            mol_supplier = Chem.SDMolSupplier(filepath)
-
-            if target_index is None:
-                target_index = list(range(len(mol_supplier)))
+            if target_index is not None:
+                df = df.iloc[target_index]
 
             features = None
+            smiles_index = df.columns.get_loc(self.smiles_col)
+            if self.labels is None:
+                labels_index = []  # dummy list
+            else:
+                labels_index = [df.columns.get_loc(c) for c in self.labels]
 
-            total_count = len(mol_supplier)
+            total_count = df.shape[0]
             fail_count = 0
             success_count = 0
-            for index in tqdm(target_index):
-                # `mol_supplier` does not accept numpy.integer, we must use int
-                mol = mol_supplier[int(index)]
-
-                if mol is None:
-                    fail_count += 1
-                    if return_is_successful:
-                        is_successful_list.append(False)
-                    continue
+            for row in tqdm(df.itertuples(index=False), total=df.shape[0]):
+                smiles = row[smiles_index]
+                # TODO(Nakago): Check.
+                # currently it assumes list
+                labels = [row[i] for i in labels_index]
                 try:
-                    # Labels need to be extracted from `mol` before standardize
-                    # smiles.
-                    if self.labels is not None:
-                        label = pp.get_label(mol, self.labels)
-                        if self.postprocess_label is not None:
-                            label = self.postprocess_label(label)
-
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is None:
+                        fail_count += 1
+                        if return_is_successful:
+                            is_successful_list.append(False)
+                        continue
                     # Note that smiles expression is not unique.
                     # we should re-obtain smiles from `mol`, so that the
                     # smiles order does not contradict with input features'
                     # order.
                     # Here, `smiles` and `standardized_smiles` expresses
                     # same molecule, but the expression may be different!
-                    smiles = Chem.MolToSmiles(mol)
-                    mol = Chem.MolFromSmiles(smiles)
                     standardized_smiles, mol = pp.prepare_smiles_and_mol(mol)
                     input_features = pp.get_input_features(mol)
 
-                    # Initialize features: list of list
-                    if features is None:
-                        if isinstance(input_features, tuple):
-                            num_features = len(input_features)
-                        else:
-                            num_features = 1
-                        if self.labels is not None:
-                            num_features += 1
-                        features = [[] for _ in range(num_features)]
+                    # Extract label
+                    if self.postprocess_label is not None:
+                        labels = self.postprocess_label(labels)
 
                     if return_smiles:
                         assert standardized_smiles == Chem.MolToSmiles(mol)
                         smiles_list.append(standardized_smiles)
+                        # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
+                        #              .format(smiles, standardized_smiles))
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
@@ -118,12 +125,22 @@ class SDFFileParser(BaseFileParser):
                         is_successful_list.append(False)
                     continue
                 except Exception as e:
-                    logger.warning('parse() error, type: {}, {}'
+                    logger.warning('parse(), type: {}, {}'
                                    .format(type(e).__name__, e.args))
+                    logger.info(traceback.format_exc())
                     fail_count += 1
                     if return_is_successful:
                         is_successful_list.append(False)
                     continue
+                # Initialize features: list of list
+                if features is None:
+                    if isinstance(input_features, tuple):
+                        num_features = len(input_features)
+                    else:
+                        num_features = 1
+                    if self.labels is not None:
+                        num_features += 1
+                    features = [[] for _ in range(num_features)]
 
                 if isinstance(input_features, tuple):
                     for i in range(len(input_features)):
@@ -131,20 +148,19 @@ class SDFFileParser(BaseFileParser):
                 else:
                     features[0].append(input_features)
                 if self.labels is not None:
-                    features[len(features) - 1].append(label)
+                    features[len(features) - 1].append(labels)
                 success_count += 1
                 if return_is_successful:
                     is_successful_list.append(True)
-
             ret = []
 
             for feature in features:
                 try:
                     feat_array = numpy.asarray(feature)
                 except ValueError:
-                    # Temporal work around to convert object-type list into
-                    # numpy array.
-                    # See, https://goo.gl/kgJXwb
+                    # Temporal work around.
+                    # See,
+                    # https://stackoverflow.com/questions/26885508/why-do-i-get-error-trying-to-cast-np-arraysome-list-valueerror-could-not-broa
                     feat_array = numpy.empty(len(feature), dtype=numpy.ndarray)
                     feat_array[:] = feature[:]
                 ret.append(feat_array)
@@ -152,8 +168,7 @@ class SDFFileParser(BaseFileParser):
             logger.info('Preprocess finished. FAIL {}, SUCCESS {}, TOTAL {}'
                         .format(fail_count, success_count, total_count))
         else:
-            # Spec not finalized yet for general case
-            result = pp.process(filepath)
+            raise NotImplementedError
 
         smileses = numpy.array(smiles_list) if return_smiles else None
         if return_is_successful:
@@ -173,7 +188,7 @@ class SDFFileParser(BaseFileParser):
                 "smiles": smileses,
                 "is_successful": is_successful}
 
-    def extract_total_num(self, filepath):
+    def extract_total_num(self, df):
         """Extracts total number of data which can be parsed
 
         We can use this method to determine the value fed to `target_index`
@@ -183,10 +198,9 @@ class SDFFileParser(BaseFileParser):
         the final dataset size.
 
         Args:
-            filepath (str): file path of to check the total number.
+            df (pandas.DataFrame): dataframe to be parsed.
 
         Returns (int): total number of dataset can be parsed.
 
         """
-        mol_supplier = Chem.SDMolSupplier(filepath)
-        return len(mol_supplier)
+        return len(df)
