@@ -4,7 +4,7 @@ This example performs regression on the QM9 dataset.
 
 ## Dependencies
 
-To run the example, the following packages also need to be installed:
+Before running the example, the following packages also need to be installed:
 
 - [`matplotlib`](https://matplotlib.org/)
 - [`seaborn`](https://seaborn.pydata.org/)
@@ -12,7 +12,7 @@ To run the example, the following packages also need to be installed:
 
 ## How to run the code
 
-### Training a model
+### Train a model
 
 To train a model, run the following:
 
@@ -44,3 +44,24 @@ On the GPU:
 ```
 python predict_qm9.py -g 0 [-i /path/to/training/result/directory]
 ```
+
+### Evaluation of implemented models
+
+To evaluate the performance of the currently implemented models, run the
+following:
+
+On the CPU:
+```
+bash evaluate_models_qm9.sh [epoch]
+```
+
+On the GPU:
+```
+bash evaluate_models_qm9.sh [epoch] 0
+```
+
+This scripts start the training process for a number of `epoch` epochs per
+model. Inference is then performed and evaluation metrics are reported. For
+regression tasks (such as with QM9), these are MAE and RMSE. One plot per
+metric is then createad (saved as `eval_[metric]_qm9.png` in the example
+directory), which outputs these values as reported by the diffent models.
