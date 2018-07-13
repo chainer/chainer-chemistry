@@ -80,13 +80,21 @@ class NFPReadout(chainer.Chain):
         self.in_channels = in_channels
         self.out_size = out_size
 
-    def __call__(self, h):
+    def __call__(self, h, is_real_node=None):
         # input  h shape (minibatch, atom, ch)
+        # input  is_real_node shape (minibatch, atom)
+        #     this is boolean flag indicating each node is real atom (True) or
+        #     extended virtual node (False)
         # return i shape (minibatch, ch)
 
         # --- Readout part ---
         i = self.output_weight(h)
         i = functions.softmax(i, axis=2)  # softmax along channel axis
+        if is_real_node is not None:
+            mask = self.xp.broadcast_to(
+                is_real_node[:, :, None], i.shape)
+            i = functions.where(mask, i, self.xp.zeros(
+                i.shape, dtype=self.xp.float32))
         i = functions.sum(i, axis=1)  # sum along atom's axis
         return i
 
@@ -155,14 +163,18 @@ class NFP(chainer.Chain):
         else:
             adj_array = adj
         degree_mat = self.xp.sum(adj_array, axis=1)
-        # deg_condst: (minibatch, atom, ch)
+        # is_real_node: we consider the node as "virtual node" when it is not
+        # connected to any other node by looking `adj_array`.
+        is_real_node = degree_mat > 0
+        # deg_conds: (minibatch, atom, ch)
         deg_conds = [self.xp.broadcast_to(
             ((degree_mat - degree) == 0)[:, :, None], h.shape)
             for degree in range(1, self.num_degree_type + 1)]
         g_list = []
+
         for update, readout in zip(self.layers, self.read_out_layers):
             h = update(h, adj, deg_conds)
-            dg = readout(h)
+            dg = readout(h, is_real_node)
             g = g + dg
             if self.concat_hidden:
                 g_list.append(g)
