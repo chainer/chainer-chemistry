@@ -187,3 +187,20 @@ class DataFrameParser(BaseFileParser):
         return {"dataset": dataset,
                 "smiles": smileses,
                 "is_successful": is_successful}
+
+    def extract_total_num(self, df):
+        """Extracts total number of data which can be parsed
+
+        We can use this method to determine the value fed to `target_index`
+        option of `parse` method. For example, if we want to extract input
+        feature from 10% of whole dataset, we need to know how many samples
+        are in a file. The returned value of this method may not to be same as
+        the final dataset size.
+
+        Args:
+            df (pandas.DataFrame): dataframe to be parsed.
+
+        Returns (int): total number of dataset can be parsed.
+
+        """
+        return len(df)

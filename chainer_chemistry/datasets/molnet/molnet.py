@@ -34,10 +34,10 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             If it is None, default `AtomicNumberPreprocessor` is used.
         labels (str or list): List of target labels.
         split (str or BaseSplitter or None): How to split dataset into train,
-         validation and test. If `None`, this functions use the splitter that
-          is recommended by MoleculeNet. Additionally You can use an instance
-           of BaseSplitter or choose it from 'random', 'stratified' and
-           'scaffold'.
+            validation and test. If `None`, this functions use the splitter
+            that is recommended by MoleculeNet. Additionally You can use an
+            instance of BaseSplitter or choose it from 'random', 'stratified'
+            and 'scaffold'.
         return_smiles (bool): If set to ``True``,
             smiles array is also returned.
         target_index (list or None): target index list to partially extract
@@ -45,7 +45,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         task_index (int): Target task index in dataset for stratification.
             (Stratified Splitter only)
     Returns (dict):
-        Dictionary that contains dataset that is already splitted into train,
+        Dictionary that contains dataset that is already split into train,
         valid and test dataset and 1-d numpy array with dtype=object(string)
         which is a vector of smiles for each example or `None`.
 
@@ -83,7 +83,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             splitter = split
         else:
             raise TypeError("split must be None, str or instance of"
-                            " BaseSplitter")
+                            " BaseSplitter, but got {}".format(type(split)))
 
         if isinstance(splitter, ScaffoldSplitter):
             get_smiles = True
@@ -129,7 +129,8 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         result['smiles'] = (train_result['smiles'], valid_result['smiles'],
                             test_result['smiles'])
     else:
-        raise NotImplementedError
+        raise NotImplementedError('dataset_type {} is not implemented yet'
+                                  .format(dataset_config['dataset_type']))
     return result
 
 
@@ -179,9 +180,10 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
     Returns (str): filepath for specific MoleculeNet dataset
 
     """
-    if filetype not in ['onefile', 'train', 'valid', 'test']:
-        raise ValueError("Please choose filetype from {}".format(
-            ['onefile', 'train', 'valid', 'test']))
+    filetype_supported = ['onefile', 'train', 'valid', 'test']
+    if filetype not in filetype_supported:
+        raise ValueError("filetype {} not supported, please choose filetype "
+                         "from {}".format(filetype, filetype_supported))
     if filetype == 'onefile':
         url_key = 'url'
     else:
