@@ -217,8 +217,8 @@ def test_get_molnet_qm7_dataset_with_smiles():
         assert len(smileses[i]) == expect_qm7_lengths[i]
 
 
-def test_get_molnet_bbbp_dataset_by_raw_df():
-    datasets = molnet.get_molnet_raw_dataframe('bbbp')
+def test_get_molnet_bbbp_dataframe():
+    datasets = molnet.get_molnet_dataframe('bbbp')
     assert isinstance(datasets, pandas.DataFrame)
     assert len(datasets) == 2050
 
