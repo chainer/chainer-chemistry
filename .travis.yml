@@ -26,7 +26,7 @@ install:
   - pip install codecov
   - pip install mock
   - conda install pip pytest pytest-cov
-  - conda install -c rdkit rdkit
+  - conda install -c rdkit rdkit==2017.09.3.0
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
       pip install --pre chainer;
     else

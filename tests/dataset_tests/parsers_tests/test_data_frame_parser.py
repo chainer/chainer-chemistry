@@ -149,5 +149,13 @@ def test_data_frame_parser_return_is_successful(mols, label_a):
         check_features(dataset[i], expect, label_a[i])
 
 
+def test_data_frame_parser_extract_total_num(data_frame):
+    """test `labels` option and retain_smiles=True."""
+    preprocessor = NFPPreprocessor()
+    parser = DataFrameParser(preprocessor)
+    num = parser.extract_total_num(data_frame)
+    assert num == 3
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-s', '-v'])

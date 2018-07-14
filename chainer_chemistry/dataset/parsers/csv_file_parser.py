@@ -29,7 +29,8 @@ class CSVFileParser(DataFrameParser):
             postprocess_label=postprocess_label, postprocess_fn=postprocess_fn,
             logger=logger)
 
-    def parse(self, filepath, return_smiles=False, target_index=None):
+    def parse(self, filepath, return_smiles=False, target_index=None,
+              return_is_successful=False):
         """parse csv file using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -43,6 +44,10 @@ class CSVFileParser(DataFrameParser):
                 `None`.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
+            return_is_successful (bool): If set to `True`, boolean list is
+                returned in the key 'is_successful'. It represents
+                preprocessing has succeeded or not for each SMILES.
+                If set to False, `None` is returned in the key 'is_success'.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -50,8 +55,9 @@ class CSVFileParser(DataFrameParser):
 
         """
         df = pandas.read_csv(filepath)
-        return super(CSVFileParser, self).parse(df, return_smiles,
-                                                target_index)
+        return super(CSVFileParser, self).parse(
+            df, return_smiles=return_smiles, target_index=target_index,
+            return_is_successful=return_is_successful)
 
     def extract_total_num(self, filepath):
         """Extracts total number of data which can be parsed
