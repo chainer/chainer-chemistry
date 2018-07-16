@@ -48,16 +48,15 @@ molnet_default_config = {
         "task_type": 'classification',
         "tasks": ["p_np"],
     },
-    # TODO(motoki): There are many separating ways for chembl dataset
-    # TODO(motoki): only use 5thresh dataset(sparse dataset is not used.)
+    # TODO(mottodora): There are many separating ways for chembl dataset
+    # TODO(mottodora): only use 5thresh dataset(sparse dataset is not used.)
+    # TODO(mottodora): support mix dataset type in example
     "chembl": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'chembl_5thresh.csv.gz',
         "smiles_columns": 'smiles',
-        "metrics": {'binary_accuracy': F.binary_accuracy,
-                    'roc_auc': ROCAUCEvaluator},
         "split": 'random',
-        "task_type": 'classification',
+        "task_type": 'mix',
         "tasks": chembl_tasks,
     },
     "clearance": {
