@@ -23,6 +23,10 @@ from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_confi
 from chainer_chemistry.training.extensions import BatchEvaluator
 
 
+def regression_loss_fun(x, t):
+    return mean_squared_error(x, t, ignore_nan=True)
+
+
 class GraphConvPredictor(chainer.Chain):
 
     def __init__(self, graph_conv, mlp=None):
@@ -176,8 +180,7 @@ def main():
     # loss_fun = molnet_default_config[dataset_name]['loss']
     task_type = molnet_default_config[dataset_name]['task_type']
     if task_type == 'regression':
-        def loss_fun(x, t):
-            return mean_squared_error(x, t, ignore_nan=True)
+        loss_fun = regression_loss_fun
         model = Regressor(predictor, lossfun=loss_fun, metrics_fun=metrics_fun,
                           device=args.gpu)
         # TODO(nakago): Use standard scaler for regression task
@@ -213,7 +216,8 @@ def main():
             # print_report_targets.append('train/main/roc_auc')
             trainer.extend(metric_fun(
                 val_iter, model, device=args.gpu, eval_func=predictor,
-                converter=concat_mols, name='val', raise_value_error=False))
+                converter=concat_mols, name='val',
+                raise_value_error=False))
             print_report_targets.append('val/main/' + metric_name)
         else:
             raise TypeError
@@ -223,9 +227,9 @@ def main():
     trainer.run()
 
     # --- save model ---
-    # protocol = args.protocol
-    # model.save_pickle(os.path.join(args.out, args.model_filename),
-    #                   protocol=protocol)
+    protocol = args.protocol
+    model.save_pickle(os.path.join(args.out, args.model_filename),
+                      protocol=protocol)
 
 
 if __name__ == '__main__':
