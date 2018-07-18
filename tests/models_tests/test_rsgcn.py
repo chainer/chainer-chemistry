@@ -6,6 +6,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.rsgcn import RSGCN
+from chainer_chemistry.utils.extend import extend_node, extend_adj
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
@@ -105,6 +106,24 @@ def test_forward_cpu_graph_invariant(model, data):
         permute_y_actual = cuda.to_cpu(model(
             permute_atom_data, permute_adj_data).data)
     assert numpy.allclose(y_actual, permute_y_actual, rtol=1.e-4, atol=1.e-5)
+
+
+def test_forward_cpu_input_size_invariant(model, data):
+    # This RSGCN uses dropout, so we need to forward with test mode
+    # to remove stochastic calculation.
+    atom_data, adj_data = data[0], data[1]
+    with chainer.using_config('train', False):
+        y_actual = cuda.to_cpu(model(atom_data, adj_data).data)
+
+    # Set bigger size than original `atom_size`.
+    atom_data_ex = extend_node(atom_data, out_size=8)
+    adj_data_ex = extend_adj(adj_data, out_size=8)
+    # print('size', atom_data.shape, adj_data.shape,
+    #       atom_data_ex.shape, adj_data_ex.shape)
+    with chainer.using_config('train', False):
+        y_actual_ex = cuda.to_cpu(model(
+            atom_data_ex, adj_data_ex).data)
+    assert numpy.allclose(y_actual, y_actual_ex, rtol=1.e-4, atol=1.e-5)
 
 
 if __name__ == '__main__':
