@@ -97,7 +97,10 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         smiles = result['smiles']
         train_ind, valid_ind, test_ind = \
             splitter.train_valid_test_split(dataset, smiles_list=smiles,
-                                            task_index=task_index, **kwargs)
+                                            task_index=task_index,
+                                            frac_train=frac_train,
+                                            frac_valid=frac_valid,
+                                            frac_test=frac_test, **kwargs)
         train = NumpyTupleDataset(*dataset.features[train_ind])
         valid = NumpyTupleDataset(*dataset.features[valid_ind])
         test = NumpyTupleDataset(*dataset.features[test_ind])

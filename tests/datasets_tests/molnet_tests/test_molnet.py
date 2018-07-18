@@ -9,6 +9,7 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets import molnet
 
 expect_bbbp_lengths = [1633, 203, 203]
+expect_bbbp_lengths2 = [1021, 611, 407]
 expect_clearance_lengths = [669, 83, 85]
 expect_qm7_lengths = [5468, 683, 683]
 
@@ -61,6 +62,37 @@ def test_get_molnet_bbbp_dataset():
         assert label.shape[0] == 1
         assert label.dtype == numpy.int32
         assert len(dataset) == expect_bbbp_lengths[i]
+
+
+# bbbp is one of classification task dataset
+@pytest.mark.slow
+def test_get_molnet_bbbp_dataset_change_split_ratio():
+    # test default behavior
+    pp = AtomicNumberPreprocessor()
+    datasets = molnet.get_molnet_dataset('bbbp', preprocessor=pp,
+                                         frac_train=0.5, frac_valid=0.3,
+                                         frac_test=0.2)
+    assert 'smiles' in datasets.keys()
+    assert 'dataset' in datasets.keys()
+    datasets = datasets['dataset']
+    assert len(datasets) == 3
+    assert type(datasets[0]) == NumpyTupleDataset
+    assert type(datasets[1]) == NumpyTupleDataset
+    assert type(datasets[2]) == NumpyTupleDataset
+
+    # Test each train, valid and test dataset
+    for i, dataset in enumerate(datasets):
+        # --- Test dataset is correctly obtained ---
+        index = numpy.random.choice(len(dataset), None)
+        atoms, label = dataset[index]
+
+        assert atoms.ndim == 1  # (atom, )
+        assert atoms.dtype == numpy.int32
+        # (atom from, atom to) or (edge_type, atom from, atom to)
+        assert label.ndim == 1
+        assert label.shape[0] == 1
+        assert label.dtype == numpy.int32
+        assert len(dataset) == expect_bbbp_lengths2[i]
 
 
 @pytest.mark.slow
