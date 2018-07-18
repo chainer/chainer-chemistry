@@ -29,7 +29,8 @@ class SDFFileParser(BaseFileParser):
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, filepath, return_smiles=False, target_index=None):
+    def parse(self, filepath, return_smiles=False, target_index=None,
+              return_is_successful=False):
         """parse sdf file using `preprocessor`
 
         Note that label is extracted from preprocessor's method.
@@ -42,6 +43,10 @@ class SDFFileParser(BaseFileParser):
                 `None`.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
+            return_is_successful (bool): If set to `True`, boolean list is
+                returned in the key 'is_successful'. It represents
+                preprocessing has succeeded or not for each SMILES.
+                If set to False, `None` is returned in the key 'is_success'.
 
         Returns (dict): dictionary that contains Dataset, 1-d numpy array with
             dtype=object(string) which is a vector of smiles for each example
@@ -51,6 +56,7 @@ class SDFFileParser(BaseFileParser):
         logger = self.logger
         pp = self.preprocessor
         smiles_list = []
+        is_successful_list = []
 
         if isinstance(pp, MolPreprocessor):
             mol_supplier = Chem.SDMolSupplier(filepath)
@@ -68,7 +74,9 @@ class SDFFileParser(BaseFileParser):
                 mol = mol_supplier[int(index)]
 
                 if mol is None:
-                    total_count -= 1
+                    fail_count += 1
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 try:
                     # Labels need to be extracted from `mol` before standardize
@@ -106,10 +114,15 @@ class SDFFileParser(BaseFileParser):
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
                 except Exception as e:
                     logger.warning('parse() error, type: {}, {}'
                                    .format(type(e).__name__, e.args))
+                    fail_count += 1
+                    if return_is_successful:
+                        is_successful_list.append(False)
                     continue
 
                 if isinstance(input_features, tuple):
@@ -120,6 +133,8 @@ class SDFFileParser(BaseFileParser):
                 if self.labels is not None:
                     features[len(features) - 1].append(label)
                 success_count += 1
+                if return_is_successful:
+                    is_successful_list.append(True)
 
             ret = []
 
@@ -141,16 +156,22 @@ class SDFFileParser(BaseFileParser):
             result = pp.process(filepath)
 
         smileses = numpy.array(smiles_list) if return_smiles else None
+        if return_is_successful:
+            is_successful = numpy.array(is_successful_list)
+        else:
+            is_successful = None
 
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            return {"dataset": NumpyTupleDataset(*result), "smiles": smileses}
+            dataset = NumpyTupleDataset(*result)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-                result = NumpyTupleDataset(result)
-            return {"dataset": NumpyTupleDataset(result), "smiles": smileses}
+            dataset = NumpyTupleDataset(result)
+        return {"dataset": dataset,
+                "smiles": smileses,
+                "is_successful": is_successful}
 
     def extract_total_num(self, filepath):
         """Extracts total number of data which can be parsed

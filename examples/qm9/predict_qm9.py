@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import argparse
+import json
 import os
 import pickle
 
@@ -29,7 +30,7 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 # These import is necessary for pickle to work
 from sklearn.preprocessing import StandardScaler  # NOQA
 from train_qm9 import GraphConvPredictor  # NOQA
-from train_qm9 import ScaledAbsError  # NOQA
+from train_qm9 import MeanAbsError, RootMeanSqrError  # NOQA
 
 
 def main():
@@ -101,11 +102,10 @@ def main():
         ss = None
 
     train_data_size = int(len(dataset) * train_data_ratio)
-    train, val = split_dataset_random(dataset, train_data_size, seed)
+    train, test = split_dataset_random(dataset, train_data_size, seed)
 
     regressor = Regressor.load_pickle(
-        os.path.join(args.in_dir, args.model_filename),
-        device=args.gpu)  # type: Regressor
+        os.path.join(args.in_dir, args.model_filename), device=args.gpu)
 
     # We need to feed only input features `x` to `predict`/`predict_proba`.
     # This converter extracts only inputs (x1, x2, ...) from the features which
@@ -125,13 +125,13 @@ def main():
             return x
 
     print('Predicting...')
-    y_pred = regressor.predict(val, converter=extract_inputs,
+    y_pred = regressor.predict(test, converter=extract_inputs,
                                postprocess_fn=postprocess_fn)
 
     print('y_pred.shape = {}, y_pred[:5, 0] = {}'
           .format(y_pred.shape, y_pred[:5, 0]))
 
-    t = concat_mols(val, device=-1)[-1]
+    t = concat_mols(test, device=-1)[-1]
     n_eval = 10
 
     # Construct dataframe
@@ -155,10 +155,13 @@ def main():
     # --- evaluate ---
     # To calc loss/accuracy, we can use `Evaluator`, `ROCAUCEvaluator`
     print('Evaluating...')
-    val_iterator = SerialIterator(val, 16, repeat=False, shuffle=False)
+    test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(
-        val_iterator, regressor, converter=concat_mols, device=args.gpu)()
+        test_iterator, regressor, converter=concat_mols, device=args.gpu)()
     print('Evaluation result: ', eval_result)
+
+    with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
+        json.dump(eval_result, f)
 
 
 if __name__ == '__main__':

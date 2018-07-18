@@ -48,29 +48,6 @@ by running the following command:
 python train_tox21.py -h
 ```
 
-### Inference with a trained model
-
-With CPU:
-```
-python inference_tox21.py [-i /path/to/training/result/directory]
-```
-
-With GPU:
-```
-python inference_tox21.py -g 0 [-i /path/to/training/result/directory]
-```
-
-This script loads trained parameters of a model and
-makes a prediction for the test dataset of Tox21 with the model.
-It loads parameters and other configurations from directory specified by `-i` option,
-whose default value is same as that of `-o` option of `train_tox21.py`.
-The prediction results are saved in the current directory as a `npy` file.
-As with training, we can specify GPU/CPU to use by `-g` option.
-
-The full options available including `-g` and `-i` are found
-by running the following command `python inference_tox21.py -h`.
-
-
 ### Inference with a trained model using Classifier
 
 As of v0.3.0, `Classifier` class is introduced which supports `predict` and
