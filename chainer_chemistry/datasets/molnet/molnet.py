@@ -129,13 +129,13 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         result['smiles'] = (train_result['smiles'], valid_result['smiles'],
                             test_result['smiles'])
     else:
-        raise NotImplementedError('dataset_type {} is not implemented yet'
-                                  .format(dataset_config['dataset_type']))
+        raise ValueError('dataset_type={} is not supported'
+                         .format(dataset_config['dataset_type']))
     return result
 
 
-def get_molnet_raw_dataframe(dataset_name):
-    """Downloads and caches MoleculeNet dataset without preprocessing.
+def get_molnet_dataframe(dataset_name):
+    """Downloads, caches and get the dataframe of MoleculeNet dataset.
 
     Args:
         dataset_name (str): MoleculeNet dataset name. If you want to know the
@@ -162,7 +162,8 @@ def get_molnet_raw_dataframe(dataset_name):
         test_df = pandas.read_csv(get_molnet_filepath(dataset_name, 'test'))
         return train_df, valid_df, test_df
     else:
-        raise NotImplementedError
+        raise ValueError('dataset_type={} is not supported'
+                         .format(dataset_config['dataset_type']))
 
 
 def get_molnet_filepath(dataset_name, filetype='onefile',
