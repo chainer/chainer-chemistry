@@ -1,6 +1,7 @@
 import os
 
-import numpy as np
+import numpy
+import pandas
 import pytest
 
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
@@ -50,15 +51,15 @@ def test_get_molnet_bbbp_dataset():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to)
         assert label.ndim == 1
         assert label.shape[0] == 1
-        assert label.dtype == np.int32
+        assert label.dtype == numpy.int32
         assert len(dataset) == expect_bbbp_lengths[i]
 
 
@@ -79,14 +80,14 @@ def test_get_molnet_bbbp_dataset_with_smiles():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to) assert label.ndim == 1 # NOQA
         assert label.shape[0] == 1
-        assert label.dtype == np.int32
+        assert label.dtype == numpy.int32
         assert len(dataset) == expect_bbbp_lengths[i]
         assert len(smileses[i]) == expect_bbbp_lengths[i]
 
@@ -105,15 +106,15 @@ def test_get_molnet_clearance_dataset():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to)
         assert label.ndim == 1
         assert label.shape[0] == 1
-        assert label.dtype == np.float32
+        assert label.dtype == numpy.float32
 
         # --- Test number of dataset ---
         assert len(dataset) == expect_clearance_lengths[i]
@@ -135,15 +136,15 @@ def test_get_molnet_clearance_dataset_with_return_smiles_enabled():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to)
         assert label.ndim == 1
         assert label.shape[0] == 1
-        assert label.dtype == np.float32
+        assert label.dtype == numpy.float32
 
         # --- Test number of dataset ---
         assert len(dataset) == expect_clearance_lengths[i]
@@ -167,15 +168,15 @@ def test_get_molnet_qm7_dataset():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to)
         assert label.ndim == 1
         assert label.shape[0] == 1
-        assert label.dtype == np.float32
+        assert label.dtype == numpy.float32
 
         # --- Test number of dataset ---
         assert len(dataset) == expect_qm7_lengths[i]
@@ -201,19 +202,25 @@ def test_get_molnet_qm7_dataset_with_smiles():
     # Test each train, valid and test dataset
     for i, dataset in enumerate(datasets):
         # --- Test dataset is correctly obtained ---
-        index = np.random.choice(len(dataset), None)
+        index = numpy.random.choice(len(dataset), None)
         atoms, label = dataset[index]
 
         assert atoms.ndim == 1  # (atom, )
-        assert atoms.dtype == np.int32
+        assert atoms.dtype == numpy.int32
         # (atom from, atom to) or (edge_type, atom from, atom to)
         assert label.ndim == 1
         assert label.shape[0] == 1
-        assert label.dtype == np.float32
+        assert label.dtype == numpy.float32
 
         # --- Test number of dataset ---
         assert len(dataset) == expect_qm7_lengths[i]
         assert len(smileses[i]) == expect_qm7_lengths[i]
+
+
+def test_get_molnet_bbbp_dataframe():
+    datasets = molnet.get_molnet_dataframe('bbbp')
+    assert isinstance(datasets, pandas.DataFrame)
+    assert len(datasets) == 2050
 
 
 if __name__ == '__main__':

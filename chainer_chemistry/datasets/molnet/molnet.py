@@ -3,6 +3,7 @@ import os
 import shutil
 
 import numpy
+import pandas
 from chainer.dataset import download
 
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
@@ -125,9 +126,41 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         result['smiles'] = (train_result['smiles'], valid_result['smiles'],
                             test_result['smiles'])
     else:
-        raise NotImplementedError('dataset_type {} is not implemented yet'
-                                  .format(dataset_config['dataset_type']))
+        raise ValueError('dataset_type={} is not supported'
+                         .format(dataset_config['dataset_type']))
     return result
+
+
+def get_molnet_dataframe(dataset_name):
+    """Downloads, caches and get the dataframe of MoleculeNet dataset.
+
+    Args:
+        dataset_name (str): MoleculeNet dataset name. If you want to know the
+            detail of MoleculeNet, please refer to
+            `official site <http://moleculenet.ai/datasets-1>`_
+            If you would like to know what dataset_name is available for
+            chainer_chemistry, please refer to `molnet_config.py`.
+    Returns (pandas.DataFrame or tuple):
+        DataFrame of dataset without any preprocessing. When the files of
+        dataset are seprated, this function returns multiple DataFrame.
+
+    """
+    if dataset_name not in molnet_default_config:
+        raise ValueError("We don't support {} dataset. Please choose from {}".
+                         format(dataset_name,
+                                list(molnet_default_config.keys())))
+    dataset_config = molnet_default_config[dataset_name]
+    if dataset_config['dataset_type'] == 'one_file_csv':
+        df = pandas.read_csv(get_molnet_filepath(dataset_name))
+        return df
+    elif dataset_config['dataset_type'] == 'separate_csv':
+        train_df = pandas.read_csv(get_molnet_filepath(dataset_name, 'train'))
+        valid_df = pandas.read_csv(get_molnet_filepath(dataset_name, 'valid'))
+        test_df = pandas.read_csv(get_molnet_filepath(dataset_name, 'test'))
+        return train_df, valid_df, test_df
+    else:
+        raise ValueError('dataset_type={} is not supported'
+                         .format(dataset_config['dataset_type']))
 
 
 def get_molnet_filepath(dataset_name, filetype='onefile',
