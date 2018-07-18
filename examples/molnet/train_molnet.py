@@ -1,5 +1,4 @@
 import argparse
-import inspect
 import os
 import types
 
@@ -207,7 +206,7 @@ def main():
         if isinstance(metric_fun, types.FunctionType):
             print_report_targets.append('main/' + metric_name)
             print_report_targets.append('validation/main/' + metric_name)
-        elif BatchEvaluator in inspect.getmro(metric_fun):
+        elif issubclass(metric_fun, BatchEvaluator):
             # Evaluation for train data takes time, skip for now.
             # trainer.extend(metric_fun(
             #     train_iter, model, device=args.gpu, eval_func=predictor,
@@ -220,7 +219,8 @@ def main():
                 raise_value_error=False))
             print_report_targets.append('val/main/' + metric_name)
         else:
-            raise TypeError
+            raise TypeError('{} is not supported for metrics function.'
+                            .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
