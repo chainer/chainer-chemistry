@@ -100,7 +100,8 @@ Chainer Chemistry is tested under following version of other library.
 | Chainer Chemistry   | Chainer         | RdKit          |
 | ------------------: | --------------: | -------------: |
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
-| master branch       | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
+| v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
+| master branch       | v3.0 ~ v4.0     | 2017.09.3.0    |
 
 [Footnote]
 
