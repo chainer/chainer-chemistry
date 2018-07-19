@@ -1,13 +1,16 @@
 import argparse
 import os
+import types
 
 import chainer
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
 from chainer.training import extensions as E
+import chainer.functions as F
 import numpy
 
+from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry import datasets as D
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
 from chainer_chemistry.models.prediction import Classifier
@@ -16,7 +19,11 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
-from chainer_chemistry.training.extensions import ROCAUCEvaluator
+from chainer_chemistry.training.extensions import BatchEvaluator
+
+
+def regression_loss_fun(x, t):
+    return mean_squared_error(x, t, ignore_nan=True)
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -132,12 +139,14 @@ def main():
         print('Train NFP model...')
         predictor = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
                                        n_layers=conv_layers),
-                                   MLP(out_dim=class_num, hidden_dim=n_unit))
+                                       MLP(out_dim=class_num,
+                                           hidden_dim=n_unit))
     elif method == 'ggnn':
         print('Train GGNN model...')
         predictor = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
-                                        n_layers=conv_layers),
-                                   MLP(out_dim=class_num, hidden_dim=n_unit))
+                                            n_layers=conv_layers),
+                                       MLP(out_dim=class_num,
+                                           hidden_dim=n_unit))
     elif method == 'schnet':
         print('Train SchNet model...')
         predictor = GraphConvPredictor(
@@ -164,14 +173,18 @@ def main():
     val_iter = iterators.SerialIterator(val, args.batchsize,
                                         repeat=False, shuffle=False)
 
-    metrics_fun = molnet_default_config[dataset_name]['metrics']
-    loss_fun = molnet_default_config[dataset_name]['loss']
+    metrics = molnet_default_config[dataset_name]['metrics']
+    metrics_fun = {k: v for k, v in metrics.items()
+                   if isinstance(v, types.FunctionType)}
+    # loss_fun = molnet_default_config[dataset_name]['loss']
     task_type = molnet_default_config[dataset_name]['task_type']
     if task_type == 'regression':
+        loss_fun = regression_loss_fun
         model = Regressor(predictor, lossfun=loss_fun, metrics_fun=metrics_fun,
                           device=args.gpu)
         # TODO(nakago): Use standard scaler for regression task
     elif task_type == 'classification':
+        loss_fun = F.sigmoid_cross_entropy
         model = Classifier(predictor, lossfun=loss_fun,
                            metrics_fun=metrics_fun, device=args.gpu)
     else:
@@ -189,20 +202,25 @@ def main():
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
     print_report_targets = ['epoch', 'main/loss', 'validation/main/loss']
-    if metrics_fun is not None and type(metrics_fun) == dict:
-        for m_k in metrics_fun.keys():
-            print_report_targets.append('main/'+m_k)
-            print_report_targets.append('validation/main/'+m_k)
-    if task_type == 'classification':
-        # Evaluation for train data takes time, skip for now.
-        # trainer.extend(ROCAUCEvaluator(
-        #     train_iter, model, device=args.gpu, eval_func=predictor,
-        #     converter=concat_mols, name='train', raise_value_error=False))
-        # print_report_targets.append('train/main/roc_auc')
-        trainer.extend(ROCAUCEvaluator(
-            val_iter, model, device=args.gpu, eval_func=predictor,
-            converter=concat_mols, name='val', raise_value_error=False))
-        print_report_targets.append('val/main/roc_auc')
+    for metric_name, metric_fun in metrics.items():
+        if isinstance(metric_fun, types.FunctionType):
+            print_report_targets.append('main/' + metric_name)
+            print_report_targets.append('validation/main/' + metric_name)
+        elif issubclass(metric_fun, BatchEvaluator):
+            # Evaluation for train data takes time, skip for now.
+            # trainer.extend(metric_fun(
+            #     train_iter, model, device=args.gpu, eval_func=predictor,
+            #     converter=concat_mols, name='train',
+            #     raise_value_error=False))
+            # print_report_targets.append('train/main/roc_auc')
+            trainer.extend(metric_fun(
+                val_iter, model, device=args.gpu, eval_func=predictor,
+                converter=concat_mols, name='val',
+                raise_value_error=False))
+            print_report_targets.append('val/main/' + metric_name)
+        else:
+            raise TypeError('{} is not supported for metrics function.'
+                            .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
