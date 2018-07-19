@@ -1,0 +1,24 @@
+[
+    {
+        "main/loss": 0.6801284762145786,
+        "main/accuracy": 0.6976757117437722,
+        "validation/main/loss": 0.5350227802991867,
+        "validation/main/accuracy": 0.7970334112644195,
+        "train/main/roc_auc": 0.7834553801234735,
+        "val/main/roc_auc": 0.37037037037037035,
+        "epoch": 1,
+        "iteration": 562,
+        "elapsed_time": 378.4814646889911
+    },
+    {
+        "main/loss": 0.509641965974036,
+        "main/accuracy": 0.749554367201426,
+        "validation/main/loss": 0.534439766407013,
+        "validation/main/accuracy": 0.8067108273506165,
+        "train/main/roc_auc": 0.8185141267449563,
+        "val/main/roc_auc": 0.36342592592592593,
+        "epoch": 2,
+        "iteration": 1123,
+        "elapsed_time": 460.4485820798082
+    }
+]
