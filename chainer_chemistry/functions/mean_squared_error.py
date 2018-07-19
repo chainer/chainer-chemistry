@@ -58,6 +58,7 @@ class MeanSquaredError(function_node.FunctionNode):
 
 def mean_squared_error(x0, x1, ignore_nan=False):
     """Mean squared error function.
+
     This function computes mean squared error between two variables. The mean
     is taken over the minibatch. Note that the error is not scaled by 1/2.
 

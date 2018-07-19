@@ -8,7 +8,7 @@ import sys
 
 import chainer
 from chainer.datasets import split_dataset_random
-from chainer import functions as F, cuda, Variable
+from chainer import functions as F, cuda, Variable  # NOQA
 from chainer import iterators
 from chainer import optimizers
 from chainer import serializers
@@ -167,8 +167,8 @@ def main():
         raise ValueError('[ERROR] Invalid method {}'.format(method))
 
     train_iter = iterators.SerialIterator(train, args.batchsize)
-    val_iter = iterators.SerialIterator(val, args.batchsize,
-                                repeat=False, shuffle=False)
+    val_iter = iterators.SerialIterator(
+        val, args.batchsize, repeat=False, shuffle=False)
 
     regressor = Regressor(
         model, lossfun=F.mean_squared_error,

@@ -3,7 +3,7 @@ import numpy
 from chainer.dataset import convert
 from sklearn import metrics
 
-from chainer_chemistry.training.extensions.batch_evaluator import BatchEvaluator # NOQA
+from chainer_chemistry.training.extensions.batch_evaluator import BatchEvaluator  # NOQA
 
 
 def _to_list(a):

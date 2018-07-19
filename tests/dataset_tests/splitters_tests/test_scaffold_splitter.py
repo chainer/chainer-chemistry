@@ -2,11 +2,10 @@ import numpy
 import pandas
 import pytest
 
-from chainer_chemistry.dataset.parsers.data_frame_parser import DataFrameParser # NOQA
-# from chainer_chemistry.dataset.preprocessors import NFPPreprocessor
+from chainer_chemistry.dataset.parsers.data_frame_parser import DataFrameParser  # NOQA
 from chainer_chemistry.dataset.preprocessors import AtomicNumberPreprocessor
-from chainer_chemistry.dataset.splitters.scaffold_splitter import generate_scaffold # NOQA
-from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
+from chainer_chemistry.dataset.splitters.scaffold_splitter import generate_scaffold  # NOQA
+from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter  # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 

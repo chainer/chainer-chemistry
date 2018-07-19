@@ -5,8 +5,8 @@ import pandas
 import pytest
 
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
-from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets import molnet
+from chainer_chemistry.datasets import NumpyTupleDataset
 
 expect_bbbp_lengths = [1633, 203, 203]
 expect_bbbp_lengths2 = [1021, 611, 407]

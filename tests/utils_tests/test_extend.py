@@ -1,9 +1,7 @@
 import numpy
 import pytest
 
-from chainer_chemistry.utils.extend import extend_node, extend_adj
-from chainer_chemistry.utils.permutation import permute_adj
-from chainer_chemistry.utils.permutation import permute_node
+from chainer_chemistry.utils.extend import extend_node, extend_adj  # NOQA
 
 
 batchsize = 2
