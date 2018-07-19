@@ -2,23 +2,25 @@ import argparse
 import os
 import types
 
+import numpy
+
 import chainer
+import chainer.functions as F
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
-from chainer.training import extensions as E
-import chainer.functions as F
-import numpy
 
-from chainer_chemistry.functions import mean_squared_error
+from chainer.training import extensions as E
+
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
+from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
+from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
-from chainer_chemistry.dataset.converters import concat_mols
-from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.training.extensions import BatchEvaluator
 
 

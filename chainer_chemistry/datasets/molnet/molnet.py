@@ -4,15 +4,16 @@ import shutil
 
 import numpy
 import pandas
+
 from chainer.dataset import download
 
-from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
-from chainer_chemistry.dataset.splitters import split_method_dict
-from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
-from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter # NOQA
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
-from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config # NOQA
+from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
+from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter  # NOQA
+from chainer_chemistry.dataset.splitters import split_method_dict
+from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 _root = 'pfnet/chainer/molnet'
 
