@@ -62,11 +62,11 @@ molnet_default_config = {
     "clearance": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'clearance.csv',
-        "smiles_columns": 'smiles',
+        "smiles_columns": 'smile',
         "metrics": {'RMSE': rmse},
         "split": 'random',
         "task_type": 'regression',
-        "tasks": ["exp"],
+        "tasks": ["target"],
     },
     "clintox": {
         "dataset_type": 'one_file_csv',
