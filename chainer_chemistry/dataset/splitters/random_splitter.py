@@ -1,4 +1,5 @@
 import numpy
+
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 
 

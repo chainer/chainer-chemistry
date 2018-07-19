@@ -26,7 +26,7 @@ for n, (label, _y) in enumerate(zip(x, y)):
     ax.annotate(
         s='{:.3f}'.format(abs(_y)),
         xy=(_y, n),
-        ha='right',va='center',
+        ha='right', va='center',
         xytext=(-5, 0),
         textcoords='offset points',
         color='white'
@@ -34,4 +34,3 @@ for n, (label, _y) in enumerate(zip(x, y)):
 plt.title("Performance on tox21")
 plt.xlabel("ROC-AUC")
 plt.savefig('eval_results_tox21.png')
-
