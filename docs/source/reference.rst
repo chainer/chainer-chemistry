@@ -12,3 +12,4 @@ API Reference
    links
    models
    utils
+   training
