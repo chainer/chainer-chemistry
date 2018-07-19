@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup_requires = []
 install_requires = [
-    'chainer>=2.0',
+    'chainer>=3.0',
     'pandas',
     'scikit-learn',
     'scipy',
