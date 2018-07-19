@@ -35,7 +35,12 @@ install:
   - pip install --no-cache-dir -e .
 
 script:
-  - pytest --cov=./ -m "not (gpu or slow)" tests
+  - if [ "${TRAVIS_EVENT_TYPE}" = "cron" ]; then
+      pytest --cov=./ -m "not gpu" tests;
+      (cd examples && bash -x test_examples.sh -1);
+    else
+      pytest --cov=./ -m "not (gpu or slow)" tests;
+    fi
 
 after_success:
   - codecov
