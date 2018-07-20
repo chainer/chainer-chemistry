@@ -10,7 +10,7 @@ import sys
 
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
-from chainer import functions as F, cuda, Variable
+from chainer import functions as F, cuda, Variable  # NOQA
 from chainer import iterators
 from chainer import optimizers
 from chainer import serializers

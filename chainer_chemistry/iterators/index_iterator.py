@@ -9,13 +9,12 @@ class IndexIterator(iterator.Iterator):
     IndexIterator is used internally in `BalancedSerialIterator`, as each
     label's index iterator
 
-        Args:
-            index_list (list): list of int which represents indices.
-            shuffle (bool): shuffle flag. If True, indices specified by
-                `index_list` will be randomly shuffled.
-            num (int): number of indices to be extracted when `___next___` is
-                called.
-
+    Args:
+        index_list (list): list of int which represents indices.
+        shuffle (bool): shuffle flag. If True, indices specified by
+            ``index_list`` will be randomly shuffled.
+        num (int): number of indices to be extracted when ``___next___`` is
+            called.
     """
 
     def __init__(self, index_list, shuffle=True, num=0):

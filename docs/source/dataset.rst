@@ -35,6 +35,8 @@ Parsers
    chainer_chemistry.dataset.parsers.BaseParser
    chainer_chemistry.dataset.parsers.CSVFileParser
    chainer_chemistry.dataset.parsers.SDFFileParser
+   chainer_chemistry.dataset.parsers.DataFrameParser
+   chainer_chemistry.dataset.parsers.SmilesParser
 
 
 Preprocessors
@@ -89,3 +91,4 @@ Splitters
 
    chainer_chemistry.dataset.splitters.RandomSplitter
    chainer_chemistry.dataset.splitters.StratifiedSplitter
+   chainer_chemistry.dataset.splitters.ScaffoldSplitter

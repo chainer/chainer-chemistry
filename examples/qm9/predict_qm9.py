@@ -21,11 +21,11 @@ from chainer.datasets import split_dataset_random
 from chainer import Variable
 import numpy  # NOQA
 
-from chainer_chemistry import datasets as D
-from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.models.prediction import Regressor
 
 # These import is necessary for pickle to work
 from sklearn.preprocessing import StandardScaler  # NOQA

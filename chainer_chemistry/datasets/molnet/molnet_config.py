@@ -2,8 +2,8 @@ import chainer.functions as F
 import chainer_chemistry
 from chainer_chemistry.datasets.molnet.chembl_tasks import chembl_tasks
 from chainer_chemistry.datasets.molnet.toxcast_tasks import toxcast_tasks
-from chainer_chemistry.training.extensions.prc_auc_evaluator import PRCAUCEvaluator # NOQA
-from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator # NOQA
+from chainer_chemistry.training.extensions.prc_auc_evaluator import PRCAUCEvaluator  # NOQA
+from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 molnet_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/datasets/'
 
@@ -62,11 +62,11 @@ molnet_default_config = {
     "clearance": {
         "dataset_type": 'one_file_csv',
         "url": molnet_base + 'clearance.csv',
-        "smiles_columns": 'smiles',
+        "smiles_columns": 'smile',
         "metrics": {'RMSE': rmse},
         "split": 'random',
         "task_type": 'regression',
-        "tasks": ["exp"],
+        "tasks": ["target"],
     },
     "clintox": {
         "dataset_type": 'one_file_csv',

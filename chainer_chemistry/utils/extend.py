@@ -1,8 +1,7 @@
 from collections import Iterable
 from logging import getLogger
-
-import numpy
 import six
+
 from chainer import cuda
 
 
