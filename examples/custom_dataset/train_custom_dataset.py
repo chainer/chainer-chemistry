@@ -10,11 +10,12 @@ import sys
 
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
-from chainer import functions as F, cuda, Variable  # NOQA
-from chainer import iterators
+from chainer import functions as F
+from chainer import cuda
+from chainer import iterators as I
 from chainer import optimizers
-from chainer import serializers
 from chainer import training
+from chainer import Variable
 from chainer.training import extensions as E
 from sklearn.preprocessing import StandardScaler
 
@@ -142,6 +143,8 @@ def parse_arguments():
                         help='ratio of training data w.r.t the dataset')
     parser.add_argument('--protocol', type=int, default=2,
                         help='pickle protocol version')
+    parser.add_argument('--model-filename', type=str, default='regressor.pkl',
+                        help='saved model filename')
     return parser.parse_args()
 
 
@@ -153,7 +156,7 @@ def main():
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        sys.exit("Error: No target label is specified.")
+        sys.exit("Error: No target label was specified.")
 
     # Dataset preparation. Postprocessing is required for the regression task.
     def postprocess_label(label_list):
@@ -183,8 +186,8 @@ def main():
                                  args.conv_layers, class_num)
 
     # Set up the iterators.
-    train_iter = iterators.SerialIterator(train, args.batchsize)
-    valid_iter = iterators.SerialIterator(valid, args.batchsize, repeat=False,
+    train_iter = I.SerialIterator(train, args.batchsize)
+    valid_iter = I.SerialIterator(valid, args.batchsize, repeat=False,
                                           shuffle=False)
 
     # Set up the regressor.
@@ -213,9 +216,9 @@ def main():
     trainer.run()
 
     # Save the regressor's parameters.
-    model_path = os.path.join(args.out, 'model.npz')
-    print('saving trained model to {}'.format(model_path))
-    serializers.save_npz(model_path, regressor)
+    model_path = os.path.join(args.out, args.model_filename)
+    print('Saving the trained model to {}'.format(model_path))
+    regressor.save_pickle(model_path, protocol=args.protocol)
 
     # Save the standard scaler's parameters.
     if ss is not None:
