@@ -82,7 +82,7 @@ def main():
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        sys.exit("Error: No target label was specified.")
+        raise ValueError(" No target label was specified.")
 
     # Dataset preparation. Postprocessing is required for the regression task.
     def postprocess_label(label_list):
@@ -108,21 +108,6 @@ def main():
     # Set up the regressor.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
-
-    # Extracts only inputs (x1, x2, ...) from the features which consist of
-    # input `x` and label `t` (x1, x2, ..., t).
-    def extract_inputs(batch, device=None):
-        return concat_mols(batch, device=device)[:-1]
-
-    def postprocess_fn(x):
-        if ss is not None:
-            # Rescale model's output.
-            if isinstance(x, Variable):
-                x = x.data
-                scaled_x = ss.inverse_transform(cuda.to_cpu(x))
-                return scaled_x
-        else:
-            return x
 
     # Perform the prediction.
     print('Evaluating...')
