@@ -1,31 +1,37 @@
 #!/usr/bin/env bash
 
 set -e
-methods=(nfp ggnn schnet weavenet rsgcn)
 
-# gpu id given from first argument, default value is -1
-gpu=${1:--1}
+# List of available graph convolution methods.
+methods=(nfp ggnn schnet weavenet rsgcn)
+# Number of training epochs (default: 1).
+epoch=${1:-1}
+# GPU identifier; set it to -1 to train on the CPU (default).
+gpu=${2:--1}
 
 for method in ${methods[@]}
 do
+    # Train with the current method.
     python train_custom_dataset.py \
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
         --gpu ${gpu} \
-        --epoch 1 \
+        --epoch ${epoch} \
         --unit-num 10 \
         --out eval_${method}
 
+    # Run inference on the test set.
     python predict_custom_dataset.py \
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
         --gpu ${gpu} \
-        --epoch 1 \
+        --epoch ${epoch} \
         --unit-num 10 \
         --in-dir eval_${method} \
         --out eval_${method}
 done
 
-python plot.py --prefix ${prefix} --methods ${methods[@]}
+# Create plot showing the evaluation performance.
+python plot.py --prefix eval_ --methods ${methods[@]}
