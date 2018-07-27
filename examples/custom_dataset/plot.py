@@ -1,4 +1,5 @@
-#! -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
 import argparse
 import json
 import matplotlib.pyplot as plt
@@ -33,7 +34,7 @@ def main():
     parser.add_argument('--methods', nargs='+', required=True)
     args = parser.parse_args()
 
-    metrics = ['abs_error']
+    metrics = ['mean_abs_error', 'root_mean_sqr_error']
     x = args.methods
     y = {metric: [] for metric in metrics}
 
