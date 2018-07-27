@@ -28,14 +28,14 @@ from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, Re
 
 class GraphConvPredictor(chainer.Chain):
     def __init__(self, graph_conv, mlp=None):
-        """Initialize GraphConvPredictor
+        """Initializes the graph convolution predictor.
 
         Args:
-            graph_conv: graph convolution network to obtain molecule feature
-                        representation
-            mlp: multi layer perceptron, used as final connected layer.
-                It can be `None` if no operation is necessary after
-                `graph_conv` calculation.
+            graph_conv: The graph convolution network required to obtain
+                        molecule eature representation.
+            mlp: Multi layer perceptron; used as the final fully connected
+                 layer. Set it to `None` if no operation is necessary
+                 after the `graph_conv` calculation.
         """
 
         super(GraphConvPredictor, self).__init__()
@@ -47,14 +47,65 @@ class GraphConvPredictor(chainer.Chain):
             self.mlp = mlp
 
     def __call__(self, atoms, adjs):
-        x = self.graph_conv(atoms, adjs)
+        h = self.graph_conv(atoms, adjs)
         if self.mlp:
-            x = self.mlp(x)
-        return x
+            h = self.mlp(h)
+        return h
+
+
+class MeanAbsError(object):
+    def __init__(self, scaler=None):
+        """Initializes the (scaled) mean absolute error metric object.
+
+        Args:
+            scaler: Standard label scaler.
+        """
+        self.scaler = scaler
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scaler is not None:
+            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        else:
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+
+
+class RootMeanSqrError(object):
+    def __init__(self, scaler=None):
+        """Initializes the (scaled) root mean square error metric object.
+
+        Args:
+            scaler: Standard label scaler.
+        """
+        self.scaler = scaler
+
+    def __call__(self, x0, x1):
+        if isinstance(x0, Variable):
+            x0 = cuda.to_cpu(x0.data)
+        if isinstance(x1, Variable):
+            x1 = cuda.to_cpu(x1.data)
+        if self.scaler is not None:
+            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
+            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
+            diff = scaled_x0 - scaled_x1
+        else:
+            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
+        return numpy.sqrt(numpy.mean(numpy.power(diff, 2), axis=0)[0])
 
 
 class ScaledAbsError(object):
     def __init__(self, scaler=None):
+        """Initializes the (scaled) absolute error object.
+
+        Args:
+            scaler: Standard label scaler.
+        """
         self.scaler = scaler
 
     def __call__(self, x0, x1):
@@ -72,6 +123,20 @@ class ScaledAbsError(object):
 
 
 def set_up_predictor(method, n_unit, conv_layers, class_num):
+    """Sets up the graph convolution network  predictor.
+
+    Args:
+        method: Method name. Currently supported ones are `nfp`, `ggnn`,
+                `schnet`, `weavenet` and `rsgcn`.
+        n_unit: Number of hidden units.
+        conv_layers: Number of convolutional layers for the graph convolution
+                     network.
+        class_num: Number of output classes.
+
+    Returns:
+        An instance of the selected predictor.
+    """
+
     predictor = None
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
 
@@ -103,7 +168,6 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         predictor = GraphConvPredictor(rsgcn, mlp)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
-
     return predictor
 
 
@@ -156,7 +220,7 @@ def main():
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        sys.exit("Error: No target label was specified.")
+        raise ValueError('No target label was specified.')
 
     # Dataset preparation. Postprocessing is required for the regression task.
     def postprocess_label(label_list):
@@ -171,29 +235,28 @@ def main():
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
-        ss = StandardScaler()
-        labels = ss.fit_transform(dataset.get_datasets()[-1])
+        scaler = StandardScaler()
+        labels = scaler.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
     else:
-        ss = None
+        scaler = None
 
     # Split the dataset into training and validation.
     train_data_size = int(len(dataset) * args.train_data_ratio)
-    train, valid = split_dataset_random(dataset, train_data_size, args.seed)
+    train, _ = split_dataset_random(dataset, train_data_size, args.seed)
 
     # Set up the predictor.
     predictor = set_up_predictor(args.method, args.unit_num,
                                  args.conv_layers, class_num)
 
-    # Set up the iterators.
+    # Set up the iterator.
     train_iter = I.SerialIterator(train, args.batchsize)
-    valid_iter = I.SerialIterator(valid, args.batchsize, repeat=False,
-                                          shuffle=False)
 
     # Set up the regressor.
+    metrics_fun={'mean_abs_error': MeanAbsError(scaler=scaler),
+                 'root_mean_sqr_error': RootMeanSqrError(scaler=scaler)}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
-                          metrics_fun={'abs_error': ScaledAbsError(scaler=ss)},
-                          device=args.gpu)
+                          metrics_fun=metrics_fun, device=args.gpu)
 
     # Set up the optimizer.
     optimizer = optimizers.Adam()
@@ -204,26 +267,24 @@ def main():
                                        converter=concat_mols)
 
     # Set up the trainer.
+    print('Training...')
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(valid_iter, regressor, device=args.gpu,
-                               converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
-                                  'validation/main/loss',
-                                  'validation/main/abs_error', 'elapsed_time']))
+    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/mean_abs_error',
+                                  'main/root_mean_sqr_error', 'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
 
     # Save the regressor's parameters.
     model_path = os.path.join(args.out, args.model_filename)
-    print('Saving the trained model to {}'.format(model_path))
+    print('Saving the trained model to {}...'.format(model_path))
     regressor.save_pickle(model_path, protocol=args.protocol)
 
     # Save the standard scaler's parameters.
-    if ss is not None:
+    if scaler is not None:
         with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
-            pickle.dump(ss, f, protocol=args.protocol)
+            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':
