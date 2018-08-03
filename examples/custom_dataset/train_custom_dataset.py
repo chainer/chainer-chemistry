@@ -32,7 +32,7 @@ class GraphConvPredictor(chainer.Chain):
 
         Args:
             graph_conv: The graph convolution network required to obtain
-                        molecule eature representation.
+                        molecule feature representation.
             mlp: Multi layer perceptron; used as the final fully connected
                  layer. Set it to `None` if no operation is necessary
                  after the `graph_conv` calculation.
