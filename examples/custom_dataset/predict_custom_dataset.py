@@ -6,33 +6,44 @@ import chainer
 import json
 import numpy
 import os
+import pandas
 import pickle
 
 from argparse import ArgumentParser
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-import pandas
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
 
 from chainer import cuda
-from chainer.datasets import split_dataset_random
 from chainer import Variable
 
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry.datasets import NumpyTupleDataset
 
-# These import is necessary for pickle to work
+# These imports are necessary for pickle to work.
 from sklearn.preprocessing import StandardScaler  # NOQA
 from train_custom_dataset import GraphConvPredictor  # NOQA
-from train_custom_dataset import ScaledAbsError  # NOQA
+from train_custom_dataset import MeanAbsError, RootMeanSqrError  # NOQA
+
+
+class ScaledGraphConvPredictor(GraphConvPredictor):
+    def __init__(self, *args, **kwargs):
+        """Initializes the (scaled) graph convolution predictor. This uses
+        a standard scaler to rescale the predicted labels.
+        """
+        super(ScaledGraphConvPredictor, self).__init__(*args, **kwargs)
+
+    def __call__(self, atoms, adjs):
+        h = super(ScaledGraphConvPredictor, self).__call__(atoms, adjs)
+        scaler_available = hasattr(self, 'scaler')
+        numpy_data = isinstance(h.data, numpy.ndarray)
+
+        if scaler_available:
+            h = self.scaler.inverse_transform(cuda.to_cpu(h.data))
+            if not numpy_data:
+                h = cuda.to_gpu(h)
+        return Variable(h)
 
 
 def parse_arguments():
@@ -82,32 +93,33 @@ def main():
         labels = args.label
         class_num = len(labels) if isinstance(labels, list) else 1
     else:
-        raise ValueError(" No target label was specified.")
+        raise ValueError('No target label was specified.')
 
-    # Dataset preparation. Postprocessing is required for the regression task.
+    # Dataset preparation.
     def postprocess_label(label_list):
         return numpy.asarray(label_list, dtype=numpy.float32)
 
-    # Apply a preprocessor to the dataset.
     print('Preprocessing dataset...')
     preprocessor = preprocess_method_dict[args.method]()
     parser = CSVFileParser(preprocessor, postprocess_label=postprocess_label,
                            labels=labels, smiles_col='SMILES')
     dataset = parser.parse(args.datafile)['dataset']
 
-    # Scale the label values, if necessary.
+    # Load the standard scaler parameters, if necessary.
     if args.scale == 'standardize':
-        ss = StandardScaler()
-        labels = ss.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+        with open(os.path.join(args.in_dir, 'scaler.pkl'), mode='rb') as f:
+            scaler = pickle.load(f)
     else:
-        ss = None
-
+        scaler = None
     test = dataset
 
+    print('Predicting...')
     # Set up the regressor.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
+    scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
+    scaled_predictor.scaler = scaler
+    regressor.predictor = scaled_predictor
 
     # Perform the prediction.
     print('Evaluating...')
