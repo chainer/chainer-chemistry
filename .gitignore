@@ -94,8 +94,17 @@ ENV/
 examples/tox21/input/
 examples/qm9/input/
 examples/molnet/input/
+result/
 
 # emacs
 *~
+
+# VSCode
+.vscode/
+
+# Visual Studio
+.vs/
+*.sln
+*.pyproj
 
 .pytest_cache
