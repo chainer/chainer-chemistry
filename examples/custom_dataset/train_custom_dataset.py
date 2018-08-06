@@ -237,9 +237,9 @@ def main():
     if args.scale == 'standardize':
         scaler = StandardScaler()
         labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
     else:
         scaler = None
+    dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
 
     # Split the dataset into training and validation.
     train_data_size = int(len(dataset) * args.train_data_ratio)
