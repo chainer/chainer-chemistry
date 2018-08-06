@@ -18,6 +18,10 @@ def rmse(x, t):
     return F.sqrt(mse)
 
 
+def r2_score(x, t):
+    return chainer_chemistry.functions.r2_score(x, t, ignore_nan=True)
+
+
 molnet_default_config = {
     "bace_Class": {
         "dataset_type": 'one_file_csv',
@@ -205,6 +209,18 @@ molnet_default_config = {
              'PCBA-902', 'PCBA-903', 'PCBA-904', 'PCBA-912', 'PCBA-914',
              'PCBA-915', 'PCBA-924', 'PCBA-925', 'PCBA-926', 'PCBA-927',
              'PCBA-938', 'PCBA-995'],
+    },
+    # TODO(natsukium): only use core dataset
+    #                  (full, refined dataset are not used.)
+    "pdbbind": {
+        "dataset_type": 'one_file_csv',
+        "url": 'https://s3-us-west-1.amazonaws.com/deepchem.io/datasets/' \
+               + 'pdbbind_core_df.csv.gz',
+        "smiles_columns": 'smiles',
+        "metrics": {'R2': r2_score},
+        "split": 'time',
+        "task_type": 'regression',
+        "tasks": ["label"],
     },
     "ppb": {
         "dataset_type": 'one_file_csv',
