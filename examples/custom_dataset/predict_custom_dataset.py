@@ -2,11 +2,9 @@
 
 from __future__ import print_function
 
-import chainer
 import json
 import numpy
 import os
-import pandas
 import pickle
 
 from argparse import ArgumentParser
@@ -91,7 +89,6 @@ def main():
 
     if args.label:
         labels = args.label
-        class_num = len(labels) if isinstance(labels, list) else 1
     else:
         raise ValueError('No target label was specified.')
 

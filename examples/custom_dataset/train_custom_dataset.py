@@ -6,16 +6,15 @@ import chainer
 import numpy
 import os
 import pickle
-import sys
 
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
-from chainer import functions as F
 from chainer import cuda
-from chainer import iterators as I
+from chainer import functions as F
 from chainer import optimizers
 from chainer import training
 from chainer import Variable
+from chainer.iterators import SerialIterator
 from chainer.training import extensions as E
 from sklearn.preprocessing import StandardScaler
 
@@ -126,7 +125,7 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
     """Sets up the graph convolution network  predictor.
 
     Args:
-        method: Method name. Currently supported ones are `nfp`, `ggnn`,
+        method: Method name. Currently, the supported ones are `nfp`, `ggnn`,
                 `schnet`, `weavenet` and `rsgcn`.
         n_unit: Number of hidden units.
         conv_layers: Number of convolutional layers for the graph convolution
@@ -250,11 +249,11 @@ def main():
                                  args.conv_layers, class_num)
 
     # Set up the iterator.
-    train_iter = I.SerialIterator(train, args.batchsize)
+    train_iter = SerialIterator(train, args.batchsize)
 
     # Set up the regressor.
-    metrics_fun={'mean_abs_error': MeanAbsError(scaler=scaler),
-                 'root_mean_sqr_error': RootMeanSqrError(scaler=scaler)}
+    metrics_fun = {'mean_abs_error': MeanAbsError(scaler=scaler),
+                   'root_mean_sqr_error': RootMeanSqrError(scaler=scaler)}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
                           metrics_fun=metrics_fun, device=args.gpu)
 
