@@ -98,4 +98,12 @@ examples/molnet/input/
 # emacs
 *~
 
+# VSCode
+.vscode/
+
+# Visual Studio
+.vs/
+*.sln
+*.pyproj
+
 .pytest_cache
