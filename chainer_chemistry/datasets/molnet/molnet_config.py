@@ -6,6 +6,8 @@ from chainer_chemistry.training.extensions.prc_auc_evaluator import PRCAUCEvalua
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 molnet_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/datasets/'
+featurized_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/' \
+                  + 'featurized_datasets/'
 
 
 def mae(x, t):
@@ -210,13 +212,21 @@ molnet_default_config = {
              'PCBA-915', 'PCBA-924', 'PCBA-925', 'PCBA-926', 'PCBA-927',
              'PCBA-938', 'PCBA-995'],
     },
-    # TODO(natsukium): only use core dataset
+    # TODO(natsukium): only use core dataset for raw data
     #                  (full, refined dataset are not used.)
     "pdbbind": {
+        "subset": ["core", "full", "refined"],
         "dataset_type": 'one_file_csv',
-        "url": 'https://s3-us-west-1.amazonaws.com/deepchem.io/datasets/' \
-               + 'pdbbind_core_df.csv.gz',
+        "url": {'core': 'https://s3-us-west-1.amazonaws.com/deepchem.io/' \
+                        + 'datasets/pdbbind_core_df.csv.gz',
+                'core_grid': featurized_base + 'core_grid.tar.gz',
+                'full_grid': featurized_base + 'full_grid.tar.gz',
+                'refined_grid': featurized_base + 'refined_grid.tar.gz',
+                'core_smiles': molnet_base + 'core_smiles_labels.csv',
+                'full_smiles': molnet_base + 'full_smiles_labels.csv',
+                'refined_smiles': molnet_base + 'refined_smiles_labels.csv'},
         "smiles_columns": 'smiles',
+        "pdb_id_column": 'pdb_id',
         "metrics": {'R2': r2_score},
         "split": 'time',
         "task_type": 'regression',
