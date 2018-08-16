@@ -83,7 +83,7 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, atom, heads, out_dim)
         h_i = functions.broadcast_to(h_i, (mb, atom, atom,
                                            self.heads, self.hidden_dim))
-        device_id = cuda.get_device_from_array(h_i).id
+        device_id = cuda.get_device_from_array(h_i.array).id
         h_j = functions.copy(h_i, device_id)
         h_j = functions.transpose(h_j, (0, 2, 1, 3, 4))
 
@@ -153,7 +153,8 @@ class GraphAttentionNetworks(chainer.Chain):
         else:
             h = atom_array
 
-        h0 = functions.copy(h, -1)
+        device_id = cuda.get_device_from_array(h.array).id
+        h0 = functions.copy(h, device_id)
 
         if isinstance(adj, Variable):
             w_adj = adj.data
