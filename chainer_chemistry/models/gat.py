@@ -1,6 +1,5 @@
-import numpy
 import chainer
-# from chainer import cuda
+import chainer.backends.cuda as cuda
 from chainer import functions
 from chainer import Variable
 # from chainer import links
@@ -70,6 +69,7 @@ class GraphAttentionNetworks(chainer.Chain):
         self.negative_slope = negative_slope
 
     def update(self, h, adj, step=0):
+        xp = self.xp
         # (minibatch, atom, channel)
         mb, atom, ch = h.shape
         # (minibatch, atom, heads * out_dim)
@@ -83,7 +83,8 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, atom, heads, out_dim)
         h_i = functions.broadcast_to(h_i, (mb, atom, atom,
                                            self.heads, self.hidden_dim))
-        h_j = functions.copy(h_i, -1)
+        device_id = cuda.get_device_from_array(h_i).id
+        h_j = functions.copy(h_i, device_id)
         h_j = functions.transpose(h_j, (0, 2, 1, 3, 4))
 
         # (minibatch, atom, atom, heads, out_dim * 2)
@@ -104,13 +105,12 @@ class GraphAttentionNetworks(chainer.Chain):
         e = functions.leaky_relu(e)
         # z = functions.reshape(z, (self.heads, mb, atom, atom))
 
-        cond = adj.array.astype(numpy.bool)
-        cond = numpy.broadcast_to(cond, e.array.shape)
+        cond = adj.array.astype(xp.bool)
+        cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
         e = functions.where(cond, e,
-                            numpy.broadcast_to(numpy.array(-10000),
-                                               e.array.shape)
-                            .astype(numpy.float32))
+                            xp.broadcast_to(xp.array(-10000), e.array.shape)
+                            .astype(xp.float32))
         # (heads, minibatch, atom, atom)
         alpha = functions.softmax(e)
         # (minibatch, heads, atom, atom)
