@@ -69,49 +69,59 @@ class GraphAttentionNetworks(chainer.Chain):
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
 
-    def update(self, x_org, w_adj, step=0):
+    def update(self, h, adj, step=0):
         # (minibatch, atom, channel)
-        mb, atom, ch = x_org.shape
+        mb, atom, ch = h.shape
         # (minibatch, atom, heads * out_dim)
-        test = self.message_layers[step](x_org)
+        h = self.message_layers[step](h)
+        # (minibatch, atom, heads, out_dim)
+        h = functions.reshape(h, (mb, atom, self.heads, self.hidden_dim))
 
         # concat all pairs of atom
-        # (minibatch, 1, atom, heads * out_dim)
-        x = functions.expand_dims(test, axis=1)
-        # (minibatch, atom, atom, heads * out_dim)
-        x = functions.broadcast_to(x, (mb, atom, atom,
-                                       self.heads * self.hidden_dim))
-        y = functions.copy(x, -1)
-        y = functions.transpose(y, (0, 2, 1, 3))
-        # (minibatch, atom, atom, heads * out_dim)
-        x = functions.broadcast_to(x, (mb, atom, atom,
-                                       self.heads * self.hidden_dim))
-        # (minibatch, atom, atom, heads * out_dim * 2)
-        z = functions.concat([x, y], axis=3)
+        # (minibatch, 1, atom, heads, out_dim)
+        h_i = functions.expand_dims(h, axis=1)
+        # (minibatch, atom, atom, heads, out_dim)
+        h_i = functions.broadcast_to(h_i, (mb, atom, atom,
+                                           self.heads, self.hidden_dim))
+        h_j = functions.copy(h_i, -1)
+        h_j = functions.transpose(h_j, (0, 2, 1, 3, 4))
 
-        # (minibatch * heads, atom, atom, out_dim * 2)
-        z = functions.reshape(z, (mb * self.heads, atom * atom,
+        # (minibatch, atom, atom, heads, out_dim * 2)
+        e = functions.concat([h_i, h_j], axis=4)
+
+        # (minibatch, heads, atom, atom, out_dim * 2)
+        e = functions.transpose(e, (0, 3, 1, 2, 4))
+        # (minibatch * heads, atom * atom, out_dim * 2)
+        e = functions.reshape(e, (mb * self.heads, atom * atom,
                                   self.hidden_dim * 2))
-        # (minibatch * heads, atom, atom, 1)
-        z = self.attenstion_layers[step](z)
-        # (minibatch * heads, atom, atom)
-        z = functions.reshape(z, (mb * self.heads, atom, atom))
-        z = functions.leaky_relu(z)
-        z = functions.reshape(z, (self.heads, mb, atom, atom))
+        # (minibatch * heads, atom * atom, 1)
+        e = self.attenstion_layers[step](e)
 
-        cond = w_adj.array.astype(numpy.bool)
-        cond = numpy.broadcast_to(cond, z.array.shape)
+        # (minibatch, heads, atom, atom)
+        e = functions.reshape(e, (mb, self.heads, atom, atom))
+        # (heads, minibatch, atom, atom)
+        e = functions.transpose(e, (1, 0, 2, 3))
+        e = functions.leaky_relu(e)
+        # z = functions.reshape(z, (self.heads, mb, atom, atom))
+
+        cond = adj.array.astype(numpy.bool)
+        cond = numpy.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
-        z = functions.where(cond, z,
+        e = functions.where(cond, e,
                             numpy.broadcast_to(numpy.array(-10000),
-                                               z.array.shape)
+                                               e.array.shape)
                             .astype(numpy.float32))
-        z = functions.softmax(z)
-        # (minibatch, atom, atom)
-        z = functions.mean(z, axis=0)
+        # (heads, minibatch, atom, atom)
+        alpha = functions.softmax(e)
+        # (minibatch, heads, atom, atom)
+        alpha = functions.transpose(alpha, (1, 0, 2, 3))
+        # (minibatch, heads, atom, out_dim)
+        h = functions.transpose(h, (0, 2, 1, 3))
+        # (minibatch, heads, atom, out_dim)
+        h_new = functions.matmul(alpha, h)
         # (minibatch, atom, out_dim)
-        z = functions.matmul(z, x_org)
-        return z
+        h_new = functions.mean(h_new, axis=1)
+        return h_new
 
     def readout(self, h, h0, step=0):
         # --- Readout part ---
