@@ -28,7 +28,7 @@ class GraphAttentionNetworks(chainer.Chain):
         weight_tying (bool): enable weight_tying or not
 
     """
-    # NUM_EDGE_TYPE = 4
+    NUM_EDGE_TYPE = 4
 
     def __init__(self, out_dim, hidden_dim=16, heads=2, negative_slope=0.2,
                  n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
@@ -43,7 +43,8 @@ class GraphAttentionNetworks(chainer.Chain):
             # self.weight = GraphLinear(hidden_dim, heads * hidden_dim)
             # self.att_weight = GraphLinear(hidden_dim * 2, 1)
             self.message_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim, heads * hidden_dim)
+                *[GraphLinear(hidden_dim,
+                              self.NUM_EDGE_TYPE * heads * hidden_dim)
                   for _ in range(n_message_layer)]
             )
             self.attenstion_layers = chainer.ChainList(
@@ -72,63 +73,78 @@ class GraphAttentionNetworks(chainer.Chain):
         xp = self.xp
         # (minibatch, atom, channel)
         mb, atom, ch = h.shape
-        # (minibatch, atom, heads * out_dim)
+        # (minibatch, atom, EDGE_TYPE * heads * out_dim)
         h = self.message_layers[step](h)
-        # (minibatch, atom, heads, out_dim)
-        h = functions.reshape(h, (mb, atom, self.heads, self.hidden_dim))
+        # (minibatch, atom, EDGE_TYPE, heads, out_dim)
+        h = functions.reshape(h, (mb, atom, self.NUM_EDGE_TYPE, self.heads,
+                                  self.hidden_dim))
 
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
-        h_i = functions.reshape(h, (mb, 1, atom, self.heads, self.hidden_dim))
+        h_i = functions.reshape(h, (mb, 1, atom, self.NUM_EDGE_TYPE,
+                                    self.heads, self.hidden_dim))
         # (minibatch, atom, atom, heads, out_dim)
-        h_i = functions.broadcast_to(h_i, (mb, atom, atom,
+        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.NUM_EDGE_TYPE,
                                            self.heads, self.hidden_dim))
 
-        # (minibatch, atom, 1, heads, out_dim)
-        h_j = functions.reshape(h, (mb, atom, 1, self.heads, self.hidden_dim))
-        # (minibatch, atom, atom, heads, out_dim)
-        h_j = functions.broadcast_to(h_j, (mb, atom, atom,
+        # (minibatch, atom, 1, EDGE_TYPE, heads, out_dim)
+        h_j = functions.reshape(h, (mb, atom, 1, self.NUM_EDGE_TYPE,
+                                    self.heads, self.hidden_dim))
+        # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim)
+        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.NUM_EDGE_TYPE,
                                            self.heads, self.hidden_dim))
 
-        # (minibatch, atom, atom, heads, out_dim * 2)
-        e = functions.concat([h_i, h_j], axis=4)
+        # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim * 2)
+        e = functions.concat([h_i, h_j], axis=5)
 
-        # (minibatch, heads, atom, atom, out_dim * 2)
-        e = functions.transpose(e, (0, 3, 1, 2, 4))
-        # (minibatch * heads, atom * atom, out_dim * 2)
-        e = functions.reshape(e, (mb * self.heads, atom * atom,
-                                  self.hidden_dim * 2))
-        # (minibatch * heads, atom * atom, 1)
+        # (minibatch, EDGE_TYPE, heads, atom, atom, out_dim * 2)
+        e = functions.transpose(e, (0, 3, 4, 1, 2, 5))
+        # (minibatch * EDGE_TYPE * heads, atom * atom, out_dim * 2)
+        e = functions.reshape(e, (mb * self.NUM_EDGE_TYPE * self.heads,
+                                  atom * atom, self.hidden_dim * 2))
+        # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
         e = self.attenstion_layers[step](e)
 
-        # (minibatch, heads, atom, atom)
-        e = functions.reshape(e, (mb, self.heads, atom, atom))
+        # (minibatch, EDGE_TYPE, heads, atom, atom)
+        e = functions.reshape(e, (mb, self.NUM_EDGE_TYPE, self.heads, atom,
+                                  atom))
         e = functions.leaky_relu(e)
 
+        # (minibatch, EDGE_TYPE, atom, atom)
         cond = adj.array.astype(xp.bool)
-        cond = xp.reshape(cond, (mb, 1, atom, atom))
+        # (minibatch, EDGE_TYPE, 1, atom, atom)
+        cond = xp.reshape(cond, (mb, self.NUM_EDGE_TYPE, 1, atom, atom))
+        # (minibatch, EDGE_TYPE, heads, atom, atom)
         cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
         e = functions.where(cond, e,
                             xp.broadcast_to(xp.array(-10000), e.array.shape)
                             .astype(xp.float32))
         # (minibatch, heads, atom, atom)
-        alpha = functions.softmax(e, axis=3)
-        # (minibatch, heads, atom, out_dim)
-        h = functions.transpose(h, (0, 2, 1, 3))
-        # (minibatch, heads, atom, out_dim)
+        alpha = functions.softmax(e, axis=4)
+
+        # before: (minibatch, atom, EDGE_TYPE, heads, out_dim)
+        # after: (minibatch, EDGE_TYPE, heads, atom, out_dim)
+        h = functions.transpose(h, (0, 2, 3, 1, 4))
+        # (minibatch, EDGE_TYPE, heads, atom, out_dim)
         h_new = functions.matmul(alpha, h)
-        # (minibatch, atom, out_dim)
+        h_new = functions.sum(h_new, axis=1)
+        # (minibatch, EDGE_TYPE, atom, out_dim)
         h_new = functions.mean(h_new, axis=1)
         return h_new
 
-    def readout(self, h, h0, step=0):
+    def readout(self, h, h0, step=0, is_real_node=None):
         # --- Readout part ---
         index = step if self.concat_hidden else 0
         # h, h0: (minibatch, atom, ch)
         g = functions.sigmoid(
             self.i_layers[index](functions.concat((h, h0), axis=2))) \
             * self.j_layers[index](h)
+        if is_real_node is not None:
+            mask = self.xp.broadcast_to(
+                is_real_node[:, :, None], g.shape)
+            g = functions.where(mask, g, self.xp.zeros(
+                g.shape, dtype=self.xp.float32))
         g = functions.sum(g, axis=1)  # sum along atom's axis
         return g
 
@@ -159,10 +175,11 @@ class GraphAttentionNetworks(chainer.Chain):
             w_adj = adj.data
         else:
             w_adj = adj
+        is_real_node = self.xp.sum(w_adj, axis=(1, 2)) > 0
         w_adj = Variable(w_adj, requires_grad=False)
 
         for step in range(self.n_layers):
             h = self.update(h, w_adj, step)
 
-        g = self.readout(h, h0)
+        g = self.readout(h, h0, is_real_node)
         return g
