@@ -79,13 +79,16 @@ class GraphAttentionNetworks(chainer.Chain):
 
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
-        h_i = functions.expand_dims(h, axis=1)
+        h_i = functions.reshape(h, (mb, 1, atom, self.heads, self.hidden_dim))
         # (minibatch, atom, atom, heads, out_dim)
         h_i = functions.broadcast_to(h_i, (mb, atom, atom,
                                            self.heads, self.hidden_dim))
-        device_id = cuda.get_device_from_array(h_i.array).id
-        h_j = functions.copy(h_i, device_id)
-        h_j = functions.transpose(h_j, (0, 2, 1, 3, 4))
+
+        # (minibatch, atom, 1, heads, out_dim)
+        h_j = functions.reshape(h, (mb, atom, 1, self.heads, self.hidden_dim))
+        # (minibatch, atom, atom, heads, out_dim)
+        h_j = functions.broadcast_to(h_j, (mb, atom, atom,
+                                           self.heads, self.hidden_dim))
 
         # (minibatch, atom, atom, heads, out_dim * 2)
         e = functions.concat([h_i, h_j], axis=4)
@@ -100,21 +103,17 @@ class GraphAttentionNetworks(chainer.Chain):
 
         # (minibatch, heads, atom, atom)
         e = functions.reshape(e, (mb, self.heads, atom, atom))
-        # (heads, minibatch, atom, atom)
-        e = functions.transpose(e, (1, 0, 2, 3))
         e = functions.leaky_relu(e)
-        # z = functions.reshape(z, (self.heads, mb, atom, atom))
 
         cond = adj.array.astype(xp.bool)
+        cond = xp.reshape(cond, (mb, 1, atom, atom))
         cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
         e = functions.where(cond, e,
                             xp.broadcast_to(xp.array(-10000), e.array.shape)
                             .astype(xp.float32))
-        # (heads, minibatch, atom, atom)
-        alpha = functions.softmax(e)
         # (minibatch, heads, atom, atom)
-        alpha = functions.transpose(alpha, (1, 0, 2, 3))
+        alpha = functions.softmax(e, axis=3)
         # (minibatch, heads, atom, out_dim)
         h = functions.transpose(h, (0, 2, 1, 3))
         # (minibatch, heads, atom, out_dim)
