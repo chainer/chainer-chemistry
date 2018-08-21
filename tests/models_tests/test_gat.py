@@ -14,9 +14,15 @@ batch_size = 2
 num_edge_type = 4
 
 
+@pytest.fixture(params=[True, False])
+def concat_heads_params(request):
+    return request.param
+
+
 @pytest.fixture
-def model():
-    return GraphAttentionNetworks(out_dim=out_dim)
+def model(concat_heads_params):
+    return GraphAttentionNetworks(out_dim=out_dim,
+                                  concat_heads=concat_heads_params)
 
 
 @pytest.fixture

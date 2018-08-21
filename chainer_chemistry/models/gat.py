@@ -29,42 +29,44 @@ class GraphAttentionNetworks(chainer.Chain):
 
     """
 
-    def __init__(self, out_dim, hidden_dim=16, heads=2, negative_slope=0.2,
+    def __init__(self, out_dim, hidden_dim=16, heads=8, negative_slope=0.2,
                  n_edge_type=4, n_layers=4, dropout_ratio=-1,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True):
+                 concat_heads=False, weight_tying=True):
         super(GraphAttentionNetworks, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
-        # n_message_layer = 1 if weight_tying else n_layers
         n_message_layer = n_layers
         with self.init_scope():
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            # self.weight = GraphLinear(hidden_dim, heads * hidden_dim)
-            # self.att_weight = GraphLinear(hidden_dim * 2, 1)
             self.message_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim, n_edge_type * heads * hidden_dim)
-                  for _ in range(n_message_layer)]
+                *[GraphLinear(hidden_dim * heads,
+                              n_edge_type * hidden_dim * heads)
+                  if i > 0 and concat_heads else
+                  GraphLinear(hidden_dim, n_edge_type * hidden_dim * heads)
+                  for i in range(n_message_layer)]
             )
             self.attenstion_layers = chainer.ChainList(
                 *[GraphLinear(hidden_dim * 2, 1)
                   for _ in range(n_message_layer)]
             )
-            # self.update_layer = links.GRU(2 * hidden_dim, hidden_dim)
             # Readout
             self.i_layers = chainer.ChainList(
-                *[GraphLinear(2 * hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
+                *[GraphLinear(hidden_dim + heads * hidden_dim, out_dim)
+                  if concat_heads else GraphLinear(2 * hidden_dim, out_dim)
+                  for _ in range(n_readout_layer)]
             )
             self.j_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
+                *[GraphLinear(heads * hidden_dim, out_dim)
+                  if concat_heads else GraphLinear(hidden_dim, out_dim)
+                  for _ in range(n_readout_layer)]
             )
         self.out_dim = out_dim
         self.heads = heads
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.concat_hidden = concat_hidden
+        self.concat_heads = concat_heads
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
         self.n_edge_type = n_edge_type
@@ -79,7 +81,6 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, EDGE_TYPE, heads, out_dim)
         h = functions.reshape(h, (mb, atom, self.n_edge_type, self.heads,
                                   self.hidden_dim))
-
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
         h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_type,
@@ -119,7 +120,7 @@ class GraphAttentionNetworks(chainer.Chain):
         cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
         e = functions.where(cond, e,
-                            xp.broadcast_to(xp.array(-10000), e.array.shape)
+                            xp.broadcast_to(xp.array(-xp.inf), e.array.shape)
                             .astype(xp.float32))
         # (minibatch, heads, atom, atom)
         alpha = functions.softmax(e, axis=4)
@@ -131,9 +132,16 @@ class GraphAttentionNetworks(chainer.Chain):
         h = functions.transpose(h, (0, 2, 3, 1, 4))
         # (minibatch, EDGE_TYPE, heads, atom, out_dim)
         h_new = functions.matmul(alpha, h)
+        # (minibatch, heads, atom, out_dim)
         h_new = functions.sum(h_new, axis=1)
-        # (minibatch, EDGE_TYPE, atom, out_dim)
-        h_new = functions.mean(h_new, axis=1)
+        if self.concat_heads:
+            # (heads, minibatch, atom, out_dim)
+            h_new = functions.transpose(h_new, (1, 0, 2, 3))
+            # (minibatch, atom, heads * out_dim)
+            h_new = functions.concat(h_new, axis=2)
+        else:
+            # (minibatch, atom, out_dim)
+            h_new = functions.mean(h_new, axis=1)
         return h_new
 
     def readout(self, h, h0, step=0, is_real_node=None):
@@ -181,8 +189,17 @@ class GraphAttentionNetworks(chainer.Chain):
         is_real_node = self.xp.sum(w_adj, axis=(1, 2)) > 0
         w_adj = Variable(w_adj, requires_grad=False)
 
+        g_list = []
         for step in range(self.n_layers):
+            print(step)
+            print(h.array.shape)
             h = self.update(h, w_adj, step)
+            if self.concat_hidden:
+                g = self.readout(h, h0, step, is_real_node)
+                g_list.append(g)
 
-        g = self.readout(h, h0, is_real_node)
-        return g
+        if self.concat_hidden:
+            return functions.concat(g_list, axis=1)
+        else:
+            g = self.readout(h, h0, is_real_node)
+            return g
