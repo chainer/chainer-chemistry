@@ -5,8 +5,7 @@ set -e
 # gpu id given from first argument, default value is -1
 gpu=${1:--1}
 
-# for method in nfp ggnn schnet weavenet rsgcn gat
-for method in gat
+for method in nfp ggnn schnet weavenet rsgcn gat
 do
     # QM9
     if [ ! -f "input" ]; then
