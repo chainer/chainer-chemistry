@@ -8,7 +8,8 @@ gpu=${1:--1}
 # Preprocessor parse result must contain both pos/neg samples
 tox21_num_data=100
 
-for method in nfp ggnn schnet weavenet rsgcn
+# for method in nfp ggnn schnet weavenet rsgcn gat
+for method in gat
 do
     if [ ! -f "input" ]; then
         rm -rf input

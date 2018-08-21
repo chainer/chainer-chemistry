@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'gat']
     label_names = D.get_tox21_label_names()
     iterator_type = ['serial', 'balanced']
 
@@ -171,6 +171,7 @@ def main():
 
     classifier.save_pickle(os.path.join(args.out, args.model_filename),
                            protocol=args.protocol)
+
 
 if __name__ == '__main__':
     main()

@@ -9,7 +9,7 @@ from chainer.training import extensions as E
 import numpy
 
 from chainer_chemistry import datasets as D
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, GAT  # NOQA
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
@@ -53,7 +53,7 @@ class GraphConvPredictor(chainer.Chain):
 
 
 def main():
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'gat']
     dataset_names = list(molnet_default_config.keys())
 
     parser = argparse.ArgumentParser(description='molnet example')
@@ -156,6 +156,11 @@ def main():
         print('Train RSGCN model...')
         predictor = GraphConvPredictor(
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'gat':
+        print('Train GAT model...')
+        predictor = GraphConvPredictor(
+            GAT(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))

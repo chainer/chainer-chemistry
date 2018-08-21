@@ -19,7 +19,7 @@ from chainer import Variable
 import numpy
 
 from chainer_chemistry import datasets as D
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
+from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, GAT  # NOQA
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
@@ -81,7 +81,7 @@ class ScaledAbsError(object):
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'gat']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -190,6 +190,11 @@ def main():
         print('Train RSGCN model...')
         model = GraphConvPredictor(
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'gat':
+        print('Train RSGCN model...')
+        model = GraphConvPredictor(
+            GAT(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
