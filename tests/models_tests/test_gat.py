@@ -15,14 +15,9 @@ num_edge_type = 4
 
 
 @pytest.fixture(params=[True, False])
-def concat_heads_params(request):
-    return request.param
-
-
-@pytest.fixture
-def model(concat_heads_params):
+def model(request):
     return GraphAttentionNetworks(out_dim=out_dim,
-                                  concat_heads=concat_heads_params)
+                                  concat_heads=request.param)
 
 
 @pytest.fixture
@@ -31,9 +26,6 @@ def data():
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)
-    # adj_data = numpy.random.randint(
-    #     0, high=2, size=(batch_size, atom_size, atom_size)
-    # ).astype(numpy.float32)
     adj_data = numpy.random.randint(
         0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
     ).astype(numpy.float32)

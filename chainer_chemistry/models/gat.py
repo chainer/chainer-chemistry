@@ -191,8 +191,6 @@ class GraphAttentionNetworks(chainer.Chain):
 
         g_list = []
         for step in range(self.n_layers):
-            print(step)
-            print(h.array.shape)
             h = self.update(h, w_adj, step)
             if self.concat_hidden:
                 g = self.readout(h, h0, step, is_real_node)
