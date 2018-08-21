@@ -30,8 +30,9 @@ class GraphAttentionNetworks(chainer.Chain):
     """
 
     def __init__(self, out_dim, hidden_dim=16, heads=2, negative_slope=0.2,
-                 n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True, n_edge_type=4):
+                 n_edge_type=4, n_layers=4, dropout_ratio=-1,
+                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
+                 weight_tying=True):
         super(GraphAttentionNetworks, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         # n_message_layer = 1 if weight_tying else n_layers
@@ -67,6 +68,7 @@ class GraphAttentionNetworks(chainer.Chain):
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
         self.n_edge_type = n_edge_type
+        self.dropout_ratio = dropout_ratio
 
     def update(self, h, adj, step=0):
         xp = self.xp
@@ -121,6 +123,8 @@ class GraphAttentionNetworks(chainer.Chain):
                             .astype(xp.float32))
         # (minibatch, heads, atom, atom)
         alpha = functions.softmax(e, axis=4)
+        if self.dropout_ratio >= 0:
+            alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
 
         # before: (minibatch, atom, EDGE_TYPE, heads, out_dim)
         # after: (minibatch, EDGE_TYPE, heads, atom, out_dim)
