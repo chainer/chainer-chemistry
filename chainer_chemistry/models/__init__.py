@@ -6,7 +6,7 @@ from chainer_chemistry.models import prediction  # NOQA
 from chainer_chemistry.models import schnet  # NOQA
 from chainer_chemistry.models import weavenet  # NOQA
 
-from chainer_chemistry.models.gat import GraphAttentionNetworks  # NOQA
+from chainer_chemistry.models.gat import GAT  # NOQA
 from chainer_chemistry.models.ggnn import GGNN  # NOQA
 from chainer_chemistry.models.mlp import MLP  # NOQA
 from chainer_chemistry.models.nfp import NFP  # NOQA

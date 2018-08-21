@@ -2,15 +2,13 @@ import chainer
 import chainer.backends.cuda as cuda
 from chainer import functions
 from chainer import Variable
-# from chainer import links
 
-# import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links import GraphLinear
 
 
-class GraphAttentionNetworks(chainer.Chain):
+class GAT(chainer.Chain):
     """Graph Attention Networks (GAT)
 
     See: Veličković, Petar, et al. (2017).\
@@ -23,27 +21,34 @@ class GraphAttentionNetworks(chainer.Chain):
             associated to each atom
         n_layers (int): number of layers
         n_atom_types (int): number of types of atoms
+        n_heads (int): number of multi-head-attentions.
+        n_edge_type (int): number of edge types.
+        drop_out_ratio (float): dropout ratio of the normalized attention
+            coefficients
+        negative_slope (float): LeakyRELU angle of the negative slope
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
+        concat_heads (bool) : Whether to concat or average multi-head
+            attentions
         weight_tying (bool): enable weight_tying or not
 
     """
 
-    def __init__(self, out_dim, hidden_dim=16, heads=8, negative_slope=0.2,
-                 n_edge_type=4, n_layers=4, dropout_ratio=-1,
+    def __init__(self, out_dim, hidden_dim=16, n_heads=8, negative_slope=0.2,
+                 n_edge_type=4, n_layers=4, dropout_ratio=-1.,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  concat_heads=False, weight_tying=True):
-        super(GraphAttentionNetworks, self).__init__()
+        super(GAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = n_layers
         with self.init_scope():
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.message_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim * heads,
-                              n_edge_type * hidden_dim * heads)
+                *[GraphLinear(hidden_dim * n_heads,
+                              n_edge_type * hidden_dim * n_heads)
                   if i > 0 and concat_heads else
-                  GraphLinear(hidden_dim, n_edge_type * hidden_dim * heads)
+                  GraphLinear(hidden_dim, n_edge_type * hidden_dim * n_heads)
                   for i in range(n_message_layer)]
             )
             self.attenstion_layers = chainer.ChainList(
@@ -52,17 +57,17 @@ class GraphAttentionNetworks(chainer.Chain):
             )
             # Readout
             self.i_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim + heads * hidden_dim, out_dim)
+                *[GraphLinear(hidden_dim + n_heads * hidden_dim, out_dim)
                   if concat_heads else GraphLinear(2 * hidden_dim, out_dim)
                   for _ in range(n_readout_layer)]
             )
             self.j_layers = chainer.ChainList(
-                *[GraphLinear(heads * hidden_dim, out_dim)
+                *[GraphLinear(n_heads * hidden_dim, out_dim)
                   if concat_heads else GraphLinear(hidden_dim, out_dim)
                   for _ in range(n_readout_layer)]
             )
         self.out_dim = out_dim
-        self.heads = heads
+        self.n_heads = n_heads
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         self.concat_hidden = concat_hidden
@@ -79,22 +84,22 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, EDGE_TYPE * heads * out_dim)
         h = self.message_layers[step](h)
         # (minibatch, atom, EDGE_TYPE, heads, out_dim)
-        h = functions.reshape(h, (mb, atom, self.n_edge_type, self.heads,
+        h = functions.reshape(h, (mb, atom, self.n_edge_type, self.n_heads,
                                   self.hidden_dim))
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
         h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_type,
-                                    self.heads, self.hidden_dim))
+                                    self.n_heads, self.hidden_dim))
         # (minibatch, atom, atom, heads, out_dim)
         h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.n_edge_type,
-                                           self.heads, self.hidden_dim))
+                                           self.n_heads, self.hidden_dim))
 
         # (minibatch, atom, 1, EDGE_TYPE, heads, out_dim)
         h_j = functions.reshape(h, (mb, atom, 1, self.n_edge_type,
-                                    self.heads, self.hidden_dim))
+                                    self.n_heads, self.hidden_dim))
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim)
         h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.n_edge_type,
-                                           self.heads, self.hidden_dim))
+                                           self.n_heads, self.hidden_dim))
 
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim * 2)
         e = functions.concat([h_i, h_j], axis=5)
@@ -102,13 +107,13 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, EDGE_TYPE, heads, atom, atom, out_dim * 2)
         e = functions.transpose(e, (0, 3, 4, 1, 2, 5))
         # (minibatch * EDGE_TYPE * heads, atom * atom, out_dim * 2)
-        e = functions.reshape(e, (mb * self.n_edge_type * self.heads,
+        e = functions.reshape(e, (mb * self.n_edge_type * self.n_heads,
                                   atom * atom, self.hidden_dim * 2))
         # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
         e = self.attenstion_layers[step](e)
 
         # (minibatch, EDGE_TYPE, heads, atom, atom)
-        e = functions.reshape(e, (mb, self.n_edge_type, self.heads, atom,
+        e = functions.reshape(e, (mb, self.n_edge_type, self.n_heads, atom,
                                   atom))
         e = functions.leaky_relu(e)
 

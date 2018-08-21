@@ -82,8 +82,8 @@ installed when you install it by `pip` command.
 Also, it uses following library, you need to manually install it.
 
  - [`rdkit`](https://github.com/rdkit/rdkit)
- 
-See the [official document](http://www.rdkit.org/docs/Install.html) 
+
+See the [official document](http://www.rdkit.org/docs/Install.html)
 for installation.
 If you have setup `anaconda`, you may install `rdkit` by following command.
 
@@ -97,9 +97,10 @@ Currently, following graph convolutional neural networks are implemented.
 - NFP: Neural fingerprint [2, 3]
 - GGNN: Gated Graph Neural Network [4, 3]
 - WeaveNet: [5, 3]
-- SchNet: [6] 
+- SchNet: [6]
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
  \* The name is not from original paper, see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming
+- GAT: Graph Attention Networks [12]
 
 ## Supported dataset
 
@@ -175,3 +176,4 @@ If you are new to chainer, here is a tutorial to start with:
 [10] Kipf, Thomas N. and Welling, Max. Semi-Supervised Classification with Graph Convolutional Networks. *International Conference on Learning Representations (ICLR)*, 2017.
 
 [11] Zhenqin Wu, Bharath Ramsundar, Evan N. Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S. Pappu, Karl Leswing, Vijay Pande, MoleculeNet: A Benchmark for Molecular Machine Learning, arXiv preprint, arXiv: 1703.00564, 2017.
+[12] Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2017). Graph Attention Networks. arXiv preprint arXiv:1710.10903.
