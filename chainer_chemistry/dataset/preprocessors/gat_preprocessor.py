@@ -5,8 +5,8 @@ from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
-class GGNNPreprocessor(MolPreprocessor):
-    """GGNN Preprocessor
+class GATPreprocessor(MolPreprocessor):
+    """GAT Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
@@ -22,7 +22,7 @@ class GGNNPreprocessor(MolPreprocessor):
     """
 
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
-        super(GGNNPreprocessor, self).__init__(add_Hs=add_Hs)
+        super(GATPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be less or equal to '
                              'out_size {}'.format(max_atoms, out_size))

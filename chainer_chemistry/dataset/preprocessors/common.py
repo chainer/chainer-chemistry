@@ -112,3 +112,47 @@ def construct_adj_matrix(mol, out_size=-1, self_connection=True):
                          'of atoms in the input molecules (={})'
                          '.'.format(out_size, s0))
     return adj_array
+
+
+def construct_discrete_edge_matrix(mol, out_size=-1):
+    """construct discrete edge matrix
+
+    Args:
+        mol (Chem.Mol):
+        out_size (int):
+
+    Returns (numpy.ndarray):
+
+    """
+
+    if mol is None:
+        raise MolFeatureExtractionError('mol is None')
+    N = mol.GetNumAtoms()
+
+    if out_size < 0:
+        size = N
+    elif out_size >= N:
+        size = out_size
+    else:
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
+
+    adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
+    for i in range(N):
+        for j in range(N):
+            bond = mol.GetBondBetweenAtoms(i, j)  # type: Chem.Bond
+            if bond is not None:
+                bond_type = str(bond.GetBondType())
+                if bond_type == 'SINGLE':
+                    adjs[0, i, j] = 1.0
+                elif bond_type == 'DOUBLE':
+                    adjs[1, i, j] = 1.0
+                elif bond_type == 'TRIPLE':
+                    adjs[2, i, j] = 1.0
+                elif bond_type == 'AROMATIC':
+                    adjs[3, i, j] = 1.0
+                else:
+                    raise ValueError("[ERROR] Unknown bond type {}"
+                                     .format(bond_type))
+    return adjs
