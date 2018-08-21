@@ -11,7 +11,7 @@ from chainer_chemistry.utils.permutation import permute_node
 atom_size = 5
 out_dim = 4
 batch_size = 2
-num_edge_type = GraphAttentionNetworks.NUM_EDGE_TYPE
+num_edge_type = 4
 
 
 @pytest.fixture

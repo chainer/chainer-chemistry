@@ -28,11 +28,10 @@ class GraphAttentionNetworks(chainer.Chain):
         weight_tying (bool): enable weight_tying or not
 
     """
-    NUM_EDGE_TYPE = 4
 
     def __init__(self, out_dim, hidden_dim=16, heads=2, negative_slope=0.2,
                  n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True):
+                 weight_tying=True, n_edge_type=4):
         super(GraphAttentionNetworks, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         # n_message_layer = 1 if weight_tying else n_layers
@@ -43,8 +42,7 @@ class GraphAttentionNetworks(chainer.Chain):
             # self.weight = GraphLinear(hidden_dim, heads * hidden_dim)
             # self.att_weight = GraphLinear(hidden_dim * 2, 1)
             self.message_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim,
-                              self.NUM_EDGE_TYPE * heads * hidden_dim)
+                *[GraphLinear(hidden_dim, n_edge_type * heads * hidden_dim)
                   for _ in range(n_message_layer)]
             )
             self.attenstion_layers = chainer.ChainList(
@@ -68,6 +66,7 @@ class GraphAttentionNetworks(chainer.Chain):
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
+        self.n_edge_type = n_edge_type
 
     def update(self, h, adj, step=0):
         xp = self.xp
@@ -76,22 +75,22 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, atom, EDGE_TYPE * heads * out_dim)
         h = self.message_layers[step](h)
         # (minibatch, atom, EDGE_TYPE, heads, out_dim)
-        h = functions.reshape(h, (mb, atom, self.NUM_EDGE_TYPE, self.heads,
+        h = functions.reshape(h, (mb, atom, self.n_edge_type, self.heads,
                                   self.hidden_dim))
 
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
-        h_i = functions.reshape(h, (mb, 1, atom, self.NUM_EDGE_TYPE,
+        h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_type,
                                     self.heads, self.hidden_dim))
         # (minibatch, atom, atom, heads, out_dim)
-        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.NUM_EDGE_TYPE,
+        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.n_edge_type,
                                            self.heads, self.hidden_dim))
 
         # (minibatch, atom, 1, EDGE_TYPE, heads, out_dim)
-        h_j = functions.reshape(h, (mb, atom, 1, self.NUM_EDGE_TYPE,
+        h_j = functions.reshape(h, (mb, atom, 1, self.n_edge_type,
                                     self.heads, self.hidden_dim))
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim)
-        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.NUM_EDGE_TYPE,
+        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.n_edge_type,
                                            self.heads, self.hidden_dim))
 
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim * 2)
@@ -100,20 +99,20 @@ class GraphAttentionNetworks(chainer.Chain):
         # (minibatch, EDGE_TYPE, heads, atom, atom, out_dim * 2)
         e = functions.transpose(e, (0, 3, 4, 1, 2, 5))
         # (minibatch * EDGE_TYPE * heads, atom * atom, out_dim * 2)
-        e = functions.reshape(e, (mb * self.NUM_EDGE_TYPE * self.heads,
+        e = functions.reshape(e, (mb * self.n_edge_type * self.heads,
                                   atom * atom, self.hidden_dim * 2))
         # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
         e = self.attenstion_layers[step](e)
 
         # (minibatch, EDGE_TYPE, heads, atom, atom)
-        e = functions.reshape(e, (mb, self.NUM_EDGE_TYPE, self.heads, atom,
+        e = functions.reshape(e, (mb, self.n_edge_type, self.heads, atom,
                                   atom))
         e = functions.leaky_relu(e)
 
         # (minibatch, EDGE_TYPE, atom, atom)
         cond = adj.array.astype(xp.bool)
         # (minibatch, EDGE_TYPE, 1, atom, atom)
-        cond = xp.reshape(cond, (mb, self.NUM_EDGE_TYPE, 1, atom, atom))
+        cond = xp.reshape(cond, (mb, self.n_edge_type, 1, atom, atom))
         # (minibatch, EDGE_TYPE, heads, atom, atom)
         cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
