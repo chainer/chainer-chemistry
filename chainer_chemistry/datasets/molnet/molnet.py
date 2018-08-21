@@ -1,6 +1,8 @@
+import joblib
 from logging import getLogger
 import os
 import shutil
+import tarfile
 
 import numpy
 import pandas
@@ -21,7 +23,8 @@ _root = 'pfnet/chainer/molnet'
 def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                        split=None, frac_train=.8, frac_valid=.1,
                        frac_test=.1, seed=777, return_smiles=False,
-                       target_index=None, task_index=0, **kwargs):
+                       return_pdb_id=False, target_index=None, task_index=0,
+                       subset='core', **kwargs):
     """Downloads, caches and preprocess MoleculeNet dataset.
 
     Args:
@@ -72,8 +75,14 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             label_list[numpy.isnan(label_list)] = -1
             return label_list.astype(numpy.int32)
 
+    if 'pdb_id_column' in dataset_config:
+        pdb_id_col = dataset_config['pdb_id_column']
+    else:
+        pdb_id_col = None
+
     parser = CSVFileParser(preprocessor, labels=labels,
                            smiles_col=dataset_config['smiles_columns'],
+                           pdb_id_col=pdb_id_col,
                            postprocess_label=postprocess_label)
     if dataset_config['dataset_type'] == 'one_file_csv':
         split = dataset_config['split'] if split is None else split
@@ -91,11 +100,18 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         else:
             get_smiles = return_smiles
 
-        result = parser.parse(get_molnet_filepath(dataset_name),
-                              return_smiles=get_smiles,
-                              target_index=target_index, **kwargs)
-        dataset = result['dataset']
-        smiles = result['smiles']
+        if preprocessor == 'grid':
+            result = {}
+            dataset = get_grid_featurized_pdbbind_dataset(subset)
+            smiles = None
+        else:
+            result = parser.parse(get_molnet_filepath(dataset_name),
+                                  return_smiles=get_smiles,
+                                  return_pdb_id=return_pdb_id,
+                                  target_index=target_index, **kwargs)
+            dataset = result['dataset']
+            smiles = result['smiles']
+            pdb_id = result['pdb_id']
         train_ind, valid_ind, test_ind = \
             splitter.train_valid_test_split(dataset, smiles_list=smiles,
                                             task_index=task_index,
@@ -114,6 +130,13 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             result['smiles'] = (train_smiles, valid_smiles, test_smiles)
         else:
             result['smiles'] = None
+        if return_pdb_id:
+            train_pdb_id = pdb_id[train_ind]
+            valid_pdb_id = pdb_id[valid_ind]
+            test_pdb_id = pdb_id[test_ind]
+            result['pdb_id'] = (train_pdb_id, valid_pdb_id, test_pdb_id)
+        else:
+            result['pdb_id'] = None
     elif dataset_config['dataset_type'] == 'separate_csv':
         result = {}
         train_result = parser.parse(get_molnet_filepath(dataset_name, 'train'),
@@ -190,7 +213,10 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
         url_key = 'url'
     else:
         url_key = filetype + '_url'
-    file_url = molnet_default_config[dataset_name][url_key]
+    if dataset_name == 'pdbbind':
+        file_url = molnet_default_config[dataset_name][url_key]['core']
+    else:
+        file_url = molnet_default_config[dataset_name][url_key]
     file_name = file_url.split('/')[-1]
     cache_path = _get_molnet_filepath(file_name)
     if not os.path.exists(cache_path):
@@ -236,3 +262,73 @@ def download_dataset(dataset_url, save_filepath):
     shutil.move(download_file_path, save_filepath)
     # pandas can load gzipped or tarball csv file
     return True
+
+
+def get_grid_featurized_pdbbind_dataset(subset):
+    """Downloads and caches grid featurized PDBBind dataset.
+
+    Args:
+        subset (str): subset name of PDBBind dataset.
+
+    Returns (NumpyTupleDataset):
+        grid featurized PDBBind dataset.
+
+    """
+    x_path, y_path = get_grid_featurized_pdbbind_filepath(subset)
+    x = joblib.load(x_path).astype('i')
+    y = joblib.load(y_path).astype('f')
+    dataset = NumpyTupleDataset(x, y)
+    return dataset
+
+
+def get_grid_featurized_pdbbind_dirpath(subset, download_if_not_exist=True):
+    """Construct a directory path which stores grid featurized PDBBind dataset.
+
+    This method check whether the file exist or not, and downloaded it if
+    necessary.
+
+    Args:
+        subset (str): subset name of PDBBind dataset.
+        download_if_not_exist (bool): Download a file if it does not exist.
+
+    Returns (str): directory path for specific subset of PDBBind dataset.
+
+    """
+    subset_supported = ['core', 'full', 'refined']
+    if subset not in subset_supported:
+        raise ValueError("subset {} not supported, please choose filetype "
+                         "from {}".format(subset, subset_supported))
+    file_url = \
+        molnet_default_config['pdbbind']['url']['{}_grid'.format(subset)]
+    file_name = file_url.split('/')[-1]
+    cache_path = _get_molnet_filepath(file_name)
+    if not os.path.exists(cache_path):
+        if download_if_not_exist:
+            is_successful = download_dataset(file_url,
+                                             save_filepath=cache_path)
+            if not is_successful:
+                logger = getLogger(__name__)
+                logger.warning('Download failed.')
+    return cache_path
+
+
+def get_grid_featurized_pdbbind_filepath(subset):
+    """Construct a filepath which stores featurized PDBBind dataset in joblib
+
+    This method does not check if the file is already downloaded or not.
+
+    Args:
+        subset (str): subset name of PDBBind dataset
+
+    Returns:
+        x_path (str): filepath for feature vectors
+        y_path (str): filepath for -logKd/Ki
+
+    """
+    dirpath = get_grid_featurized_pdbbind_dirpath(subset=subset)
+    savedir = '/'.join(dirpath.split('/')[:-1]) + '/'
+    with tarfile.open(dirpath, 'r:gz') as tar:
+        tar.extractall(savedir)
+        x_path = savedir + subset + '_grid/shard-0-X.joblib'
+        y_path = savedir + subset + '_grid/shard-0-y.joblib'
+    return x_path, y_path

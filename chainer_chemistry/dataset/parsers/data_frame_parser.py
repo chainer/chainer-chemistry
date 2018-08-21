@@ -23,6 +23,7 @@ class DataFrameParser(BaseFileParser):
         preprocessor (BasePreprocessor): preprocessor instance
         labels (str or list or None): labels column
         smiles_col (str): smiles column
+        pdb_id_col (str): PDB ID column
         postprocess_label (Callable): post processing function if necessary
         postprocess_fn (Callable): post processing function if necessary
         logger:
@@ -31,6 +32,7 @@ class DataFrameParser(BaseFileParser):
     def __init__(self, preprocessor,
                  labels=None,
                  smiles_col='smiles',
+                 pdb_id_col=None,
                  postprocess_label=None, postprocess_fn=None,
                  logger=None):
         super(DataFrameParser, self).__init__(preprocessor)
@@ -38,12 +40,13 @@ class DataFrameParser(BaseFileParser):
             labels = [labels, ]
         self.labels = labels  # type: list
         self.smiles_col = smiles_col
+        self.pdb_id_col = pdb_id_col
         self.postprocess_label = postprocess_label
         self.postprocess_fn = postprocess_fn
         self.logger = logger or getLogger(__name__)
 
-    def parse(self, df, return_smiles=False, target_index=None,
-              return_is_successful=False):
+    def parse(self, df, return_smiles=False, return_pdb_id=False,
+              target_index=None, return_is_successful=False):
         """parse DataFrame using `preprocessor`
 
         Label is extracted from `labels` columns and input features are
@@ -55,6 +58,9 @@ class DataFrameParser(BaseFileParser):
                 the key 'smiles', it is a list of SMILES from which input
                 features are successfully made.
                 If set to `False`, `None` is returned in the key 'smiles'.
+            return_pdb_id (bool): If set to `True`, PDB ID list is returned in
+                the key 'pdb_id'.
+                If set to `False`, `None` is returned in the key 'pdb_id'.
             target_index (list or None): target index list to partially extract
                 dataset. If None (default), all examples are parsed.
             return_is_successful (bool): If set to `True`, boolean list is
@@ -70,6 +76,7 @@ class DataFrameParser(BaseFileParser):
         logger = self.logger
         pp = self.preprocessor
         smiles_list = []
+        pdb_id_list = []
         is_successful_list = []
 
         # counter = 0
@@ -79,6 +86,8 @@ class DataFrameParser(BaseFileParser):
 
             features = None
             smiles_index = df.columns.get_loc(self.smiles_col)
+            if self.pdb_id_col is not None:
+                pdb_id_index = df.columns.get_loc(self.pdb_id_col)
             if self.labels is None:
                 labels_index = []  # dummy list
             else:
@@ -89,6 +98,8 @@ class DataFrameParser(BaseFileParser):
             success_count = 0
             for row in tqdm(df.itertuples(index=False), total=df.shape[0]):
                 smiles = row[smiles_index]
+                if return_pdb_id:
+                    pdb_id = row[pdb_id_index].lower()
                 # TODO(Nakago): Check.
                 # currently it assumes list
                 labels = [row[i] for i in labels_index]
@@ -117,6 +128,8 @@ class DataFrameParser(BaseFileParser):
                         smiles_list.append(standardized_smiles)
                         # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
                         #              .format(smiles, standardized_smiles))
+                    if return_pdb_id:
+                        pdb_id_list.append(pdb_id)
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
@@ -171,6 +184,7 @@ class DataFrameParser(BaseFileParser):
             raise NotImplementedError
 
         smileses = numpy.array(smiles_list) if return_smiles else None
+        pdb_ids = numpy.array(pdb_id_list) if return_pdb_id else None
         if return_is_successful:
             is_successful = numpy.array(is_successful_list)
         else:
@@ -186,6 +200,7 @@ class DataFrameParser(BaseFileParser):
             dataset = NumpyTupleDataset(result)
         return {"dataset": dataset,
                 "smiles": smileses,
+                "pdb_id": pdb_ids,
                 "is_successful": is_successful}
 
     def extract_total_num(self, df):
