@@ -32,7 +32,7 @@ Below code is an example to install `rdkit` by `conda` command provided by
 
 ```bash
 pip install chainer-chemistry
-conda install -c rdkit rdkit
+conda install -c rdkit rdkit==2017.09.3.0
 ```
 
 ### 2. Run example training code
