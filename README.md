@@ -170,6 +170,13 @@ If you are new to chainer, here is a tutorial to start with:
 
  - Chainer Notebooks: hands on tutorial - [mitmul/chainer-handson](https://github.com/mitmul/chainer-handson)
 
+## Research projects using Chainer Chemistry
+
+If you use Chainer Chemistry in your research project, it is welcome to send PR to add your project in this list!
+
+ - BayesGrad: Explaining Predictions of Graph Convolutional Networks<br/>
+ [paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad)
+
 ## Reference
 
 [1] Seiya Tokui, Kenta Oono, Shohei Hido, and Justin Clayton. Chainer: a next-generation open source framework for deep learning. In *Proceedings of Workshop on Machine Learning Systems (LearningSys) in Advances in Neural Information Processing System (NIPS) 28*, 2015.
