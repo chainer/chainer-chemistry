@@ -192,7 +192,7 @@ def main():
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'gat':
-        print('Train RSGCN model...')
+        print('Train GAT model...')
         model = GraphConvPredictor(
             GAT(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))

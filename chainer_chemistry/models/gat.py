@@ -22,7 +22,7 @@ class GAT(chainer.Chain):
         n_layers (int): number of layers
         n_atom_types (int): number of types of atoms
         n_heads (int): number of multi-head-attentions.
-        n_edge_type (int): number of edge types.
+        n_edge_types (int): number of edge types.
         drop_out_ratio (float): dropout ratio of the normalized attention
             coefficients
         negative_slope (float): LeakyRELU angle of the negative slope
@@ -35,7 +35,7 @@ class GAT(chainer.Chain):
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_heads=8, negative_slope=0.2,
-                 n_edge_type=4, n_layers=4, dropout_ratio=-1.,
+                 n_edge_types=4, n_layers=4, dropout_ratio=-1.,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  concat_heads=False, weight_tying=True):
         super(GAT, self).__init__()
@@ -46,9 +46,9 @@ class GAT(chainer.Chain):
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.message_layers = chainer.ChainList(
                 *[GraphLinear(hidden_dim * n_heads,
-                              n_edge_type * hidden_dim * n_heads)
+                              n_edge_types * hidden_dim * n_heads)
                   if i > 0 and concat_heads else
-                  GraphLinear(hidden_dim, n_edge_type * hidden_dim * n_heads)
+                  GraphLinear(hidden_dim, n_edge_types * hidden_dim * n_heads)
                   for i in range(n_message_layer)]
             )
             self.attenstion_layers = chainer.ChainList(
@@ -74,7 +74,7 @@ class GAT(chainer.Chain):
         self.concat_heads = concat_heads
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
-        self.n_edge_type = n_edge_type
+        self.n_edge_types = n_edge_types
         self.dropout_ratio = dropout_ratio
 
     def update(self, h, adj, step=0):
@@ -84,21 +84,21 @@ class GAT(chainer.Chain):
         # (minibatch, atom, EDGE_TYPE * heads * out_dim)
         h = self.message_layers[step](h)
         # (minibatch, atom, EDGE_TYPE, heads, out_dim)
-        h = functions.reshape(h, (mb, atom, self.n_edge_type, self.n_heads,
+        h = functions.reshape(h, (mb, atom, self.n_edge_types, self.n_heads,
                                   self.hidden_dim))
         # concat all pairs of atom
         # (minibatch, 1, atom, heads, out_dim)
-        h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_type,
+        h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_types,
                                     self.n_heads, self.hidden_dim))
         # (minibatch, atom, atom, heads, out_dim)
-        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.n_edge_type,
+        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.n_edge_types,
                                            self.n_heads, self.hidden_dim))
 
         # (minibatch, atom, 1, EDGE_TYPE, heads, out_dim)
-        h_j = functions.reshape(h, (mb, atom, 1, self.n_edge_type,
+        h_j = functions.reshape(h, (mb, atom, 1, self.n_edge_types,
                                     self.n_heads, self.hidden_dim))
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim)
-        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.n_edge_type,
+        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.n_edge_types,
                                            self.n_heads, self.hidden_dim))
 
         # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim * 2)
@@ -107,25 +107,25 @@ class GAT(chainer.Chain):
         # (minibatch, EDGE_TYPE, heads, atom, atom, out_dim * 2)
         e = functions.transpose(e, (0, 3, 4, 1, 2, 5))
         # (minibatch * EDGE_TYPE * heads, atom * atom, out_dim * 2)
-        e = functions.reshape(e, (mb * self.n_edge_type * self.n_heads,
+        e = functions.reshape(e, (mb * self.n_edge_types * self.n_heads,
                                   atom * atom, self.hidden_dim * 2))
         # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
         e = self.attenstion_layers[step](e)
 
         # (minibatch, EDGE_TYPE, heads, atom, atom)
-        e = functions.reshape(e, (mb, self.n_edge_type, self.n_heads, atom,
+        e = functions.reshape(e, (mb, self.n_edge_types, self.n_heads, atom,
                                   atom))
         e = functions.leaky_relu(e)
 
         # (minibatch, EDGE_TYPE, atom, atom)
         cond = adj.array.astype(xp.bool)
         # (minibatch, EDGE_TYPE, 1, atom, atom)
-        cond = xp.reshape(cond, (mb, self.n_edge_type, 1, atom, atom))
+        cond = xp.reshape(cond, (mb, self.n_edge_types, 1, atom, atom))
         # (minibatch, EDGE_TYPE, heads, atom, atom)
         cond = xp.broadcast_to(cond, e.array.shape)
         # TODO(mottodora): find better way to ignore non connected
         e = functions.where(cond, e,
-                            xp.broadcast_to(xp.array(-xp.inf), e.array.shape)
+                            xp.broadcast_to(xp.array(-10000), e.array.shape)
                             .astype(xp.float32))
         # (minibatch, heads, atom, atom)
         alpha = functions.softmax(e, axis=4)
