@@ -27,6 +27,18 @@ def sdf_file(tmpdir, mols):
     return fname
 
 
+@pytest.fixture()
+def sdf_file_long(tmpdir):
+    """SDFFile with long smiles (ccc...)"""
+    fname = os.path.join(str(tmpdir), 'test_long.sdf')
+    writer = Chem.SDWriter(fname)
+    for smiles in ['CCCCCCCCCCCC', 'CN=C=O', 'CCCCCCCCCCCCCCCC',
+                   'Cc1ccccc1', 'CC1=CC2CC(CC1)O2']:
+        mol = Chem.MolFromSmiles(smiles)
+        writer.write(mol)
+    return fname
+
+
 def check_input_features(actual, expect):
     assert len(actual) == len(expect)
     for d, e in six.moves.zip(actual, expect):
@@ -39,8 +51,10 @@ def test_sdf_file_parser_not_return_smiles(sdf_file, mols):
     result = parser.parse(sdf_file, return_smiles=False)
     dataset = result['dataset']
     smiles = result['smiles']
+    is_successful = result['is_successful']
     assert len(dataset) == 3
     assert smiles is None
+    assert is_successful is None
 
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.
@@ -75,10 +89,14 @@ def test_sdf_file_parser_return_smiles(sdf_file, mols):
 def test_sdf_file_parser_target_index(sdf_file, mols):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
-    result = parser.parse(sdf_file, return_smiles=True, target_index=[0, 2])
+    result = parser.parse(sdf_file, return_smiles=True, target_index=[0, 2],
+                          return_is_successful=True)
     dataset = result['dataset']
     smiles = result['smiles']
     assert len(dataset) == 2
+    is_successful = result['is_successful']
+    assert numpy.alltrue(is_successful)
+    assert len(is_successful) == 2
 
     # As we want test SDFFileParser, we assume
     # NFPPreprocessor works as documented.
@@ -96,14 +114,32 @@ def test_sdf_file_parser_target_index(sdf_file, mols):
     assert smiles[1] == 'CC1=CC2CC(CC1)O2'
 
 
+def test_sdf_file_parser_return_is_successful(sdf_file_long, mols):
+    """test `labels` option and retain_smiles=True."""
+    preprocessor = NFPPreprocessor(max_atoms=10)
+    parser = SDFFileParser(preprocessor)
+    result = parser.parse(sdf_file_long,
+                          return_smiles=True, return_is_successful=True)
+
+    dataset = result['dataset']
+    # smiles = result['smiles']
+    assert len(dataset) == 3
+    is_successful = result['is_successful']
+    assert len(is_successful) == 5
+    assert numpy.alltrue(is_successful[[1, 3, 4]])
+    assert numpy.alltrue(~is_successful[[0, 2]])
+
+    # We assume NFPPreprocessor works as documented.
+    for i in range(3):
+        expect = preprocessor.get_input_features(mols[i])
+        check_input_features(dataset[i], expect)
+
+
 def test_sdf_file_parser_extract_total_num(sdf_file):
     preprocessor = NFPPreprocessor()
     parser = SDFFileParser(preprocessor)
     num = parser.extract_total_num(sdf_file)
     assert num == 3
-
-# TODO(oono)
-# test with non-default options of SDFFileParser
 
 
 if __name__ == '__main__':

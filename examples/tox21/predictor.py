@@ -1,9 +1,6 @@
 import chainer
-from chainer import cuda
 from chainer import functions as F
-from chainer import iterators as I
 
-from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.models import GGNN
 from chainer_chemistry.models import MLP
 from chainer_chemistry.models import NFP

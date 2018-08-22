@@ -19,8 +19,8 @@ from rdkit import RDLogger
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
 from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
-from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
 from chainer_chemistry.models.prediction import Classifier
+from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
 
 import data
 import predictor

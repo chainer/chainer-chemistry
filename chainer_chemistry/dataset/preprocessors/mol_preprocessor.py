@@ -26,11 +26,11 @@ class MolPreprocessor(BasePreprocessor):
         # we should re-obtain smiles from `mol`, so that the
         # smiles order does not contradict with input_features'
         # order.
-        smiles = Chem.MolToSmiles(mol)
+        smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
         mol = Chem.MolFromSmiles(smiles)
         if self.add_Hs:
             mol = Chem.AddHs(mol)
-            smiles = Chem.MolToSmiles(mol)
+            smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
         return smiles, mol
 
     def get_label(self, mol, label_names=None):

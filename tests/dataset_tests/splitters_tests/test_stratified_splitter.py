@@ -1,7 +1,7 @@
 import numpy
 import pytest
 
-from chainer_chemistry.dataset.splitters.stratified_splitter import StratifiedSplitter # NOQA
+from chainer_chemistry.dataset.splitters.stratified_splitter import StratifiedSplitter  # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 
@@ -146,9 +146,9 @@ def test_regression_split(reg_dataset):
     train = NumpyTupleDataset(*reg_dataset.features[train_ind])
     valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
     test = NumpyTupleDataset(*reg_dataset.features[test_ind])
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
-    assert 47.5 < test.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0
+    assert 45.0 < test.features[:, -1].mean() < 55.0
 
     train_ind, valid_ind, test_ind = splitter._split(reg_dataset,
                                                      frac_train=0.5,
@@ -162,9 +162,9 @@ def test_regression_split(reg_dataset):
     train = NumpyTupleDataset(*reg_dataset.features[train_ind])
     valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
     test = NumpyTupleDataset(*reg_dataset.features[test_ind])
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
-    assert 47.5 < test.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0
+    assert 45.0 < test.features[:, -1].mean() < 55.0
 
 
 def test_classification_split_fix_seed(cls_dataset):
@@ -268,9 +268,9 @@ def test_train_valid_test_regression_split(reg_dataset):
     train = NumpyTupleDataset(*reg_dataset.features[train_ind])
     valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
     test = NumpyTupleDataset(*reg_dataset.features[test_ind])
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
-    assert 47.5 < test.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0
+    assert 45.0 < test.features[:, -1].mean() < 55.0
 
 
 def test_train_valid_test_regression_split_return_dataset(reg_dataset):
@@ -283,9 +283,9 @@ def test_train_valid_test_regression_split_return_dataset(reg_dataset):
     assert len(train) == 80
     assert len(valid) == 10
     assert len(test) == 10
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
-    assert 47.5 < test.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0
+    assert 45.0 < test.features[:, -1].mean() < 55.0
 
 
 def test_train_valid_classification_split(cls_dataset):
@@ -365,8 +365,8 @@ def test_train_valid_regression_split(reg_dataset):
 
     train = NumpyTupleDataset(*reg_dataset.features[train_ind])
     valid = NumpyTupleDataset(*reg_dataset.features[valid_ind])
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0
 
 
 def test_train_valid_regression_split_return_dataset(reg_dataset):
@@ -376,5 +376,5 @@ def test_train_valid_regression_split_return_dataset(reg_dataset):
     assert type(valid) == NumpyTupleDataset
     assert len(train) == 90
     assert len(valid) == 10
-    assert 47.5 < train.features[:, -1].mean() < 52.5
-    assert 47.5 < valid.features[:, -1].mean() < 52.5
+    assert 45.0 < train.features[:, -1].mean() < 55.0
+    assert 45.0 < valid.features[:, -1].mean() < 55.0

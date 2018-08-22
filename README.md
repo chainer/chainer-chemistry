@@ -87,8 +87,26 @@ See the [official document](http://www.rdkit.org/docs/Install.html)
 for installation.
 If you have setup `anaconda`, you may install `rdkit` by following command.
 
-```conda install -c rdkit rdkit```
+```conda install -c rdkit rdkit==2017.09.3.0```
 
+Note that we support specified version of RdKit.
+Latest version RdKit behavior may be different from supported version, 
+and it is not supported.
+
+### Version table
+
+Chainer Chemistry is tested under following version of other library.
+
+| Chainer Chemistry   | Chainer         | RdKit          |
+| ------------------: | --------------: | -------------: |
+| v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
+| v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
+| master branch       | v3.0 ~ v4.0     | 2017.09.3.0    |
+
+[Footnote]
+
+*1: We used `FunctionNode` in [this PR](https://github.com/pfnet-research/chainer-chemistry/pull/190),
+which is introduced after chainer v3. See [this issue](https://github.com/pfnet-research/chainer-chemistry/issues/192) for details.
 
 ## Supported model
 

@@ -3,8 +3,8 @@ import pytest
 from rdkit import Chem
 
 from chainer_chemistry.dataset.parsers.sdf_file_parser import SDFFileParser
-from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
+from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
 from chainer_chemistry.datasets import get_tox21_filepath
 
 
