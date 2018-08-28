@@ -211,6 +211,8 @@ def main():
     input_features = preprocessor.get_input_features(mol)
     atoms, adjs = concat_mols([input_features], device=args.gpu)
     prediction = model(atoms, adjs).data[0]
+    if scaler is not None:
+        prediction = scaler.inverse_transform(prediction)
     print('Prediction for {}:'.format(smiles))
     for i, label in enumerate(args.label):
         print('{}: {}'.format(label, prediction[i]))
