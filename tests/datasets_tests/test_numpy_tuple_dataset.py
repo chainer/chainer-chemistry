@@ -55,8 +55,9 @@ class TestNumpyTupleDataset(object):
             for a, e in six.moves.zip(tuple_a, tuple_e):
                 numpy.testing.assert_array_equal(a, e)
 
-    @pytest.mark.parametrize('index', [numpy.asarray([2, 0]),
-                                       numpy.asarray([1])])
+    @pytest.mark.parametrize('index', [
+        numpy.asarray([2, 0]), numpy.asarray([1]),
+        numpy.asarray([], dtype=numpy.int32)])
     def test_get_item_ndarray_index(self, long_data, index):
         dataset = NumpyTupleDataset(*long_data)
         actual = dataset[index]
