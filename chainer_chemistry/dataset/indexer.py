@@ -159,16 +159,24 @@ class BaseFeatureIndexer(BaseIndexer):
                 res = [self.extract_feature(i, j) for i in
                        six.moves.range(current, stop, step)]
         elif isinstance(data_index, (list, numpy.ndarray)):
-            if isinstance(data_index[0], (bool, numpy.bool, numpy.bool_)):
-                # Access by bool flag list
-                if len(data_index) != self.dataset_length:
-                    raise ValueError('Feature index wrong length {} instead of'
-                                     ' {}'.format(len(data_index),
-                                                  self.dataset_length))
-                data_index = numpy.argwhere(data_index).ravel()
+            if len(data_index) == 0:
+                try:
+                    # HACKING
+                    return self.extract_feature_by_slice(slice(0, 0, 1), j)
+                except ExtractBySliceNotSupportedError:
+                    res = []
+            else:
+                if isinstance(data_index[0], (bool, numpy.bool, numpy.bool_)):
+                    # Access by bool flag list
+                    if len(data_index) != self.dataset_length:
+                        raise ValueError('Feature index wrong length {} instead of'
+                                         ' {}'.format(len(data_index),
+                                                      self.dataset_length))
+                    data_index = numpy.argwhere(data_index).ravel()
 
-            res = [self.extract_feature(i, j) for i in data_index]
+                res = [self.extract_feature(i, j) for i in data_index]
         else:
+            # `data_index` is expected to be `int`
             return self.extract_feature(data_index, j)
         try:
             feature = numpy.asarray(res)

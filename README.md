@@ -32,7 +32,7 @@ Below code is an example to install `rdkit` by `conda` command provided by
 
 ```bash
 pip install chainer-chemistry
-conda install -c rdkit rdkit
+conda install -c rdkit rdkit==2017.09.3.0
 ```
 
 ### 2. Run example training code
@@ -169,6 +169,13 @@ Links for other Chainer projects:
 If you are new to chainer, here is a tutorial to start with:
 
  - Chainer Notebooks: hands on tutorial - [mitmul/chainer-handson](https://github.com/mitmul/chainer-handson)
+
+## Research projects using Chainer Chemistry
+
+If you use Chainer Chemistry in your research project, it is welcome to send PR to add your project in this list!
+
+ - BayesGrad: Explaining Predictions of Graph Convolutional Networks<br/>
+ [paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad)
 
 ## Reference
 
