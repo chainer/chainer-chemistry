@@ -5,8 +5,15 @@ This example shows how to train models with your own dataset stored in the CSV f
 A regression task is performed using [`Regressor`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Regressor.html#chainer_chemistry.models.Regressor). For a classification setting that makes use of [`Classifier`](http://chainer-chemistry.readthedocs.io/en/stable/generated/chainer_chemistry.models.Classifier.html#chainer_chemistry.models.Classifier), 
 please refer to the `tox21` example.
 
-## How to run the code
+## Dependencies
 
+Before running the example, the following packages also need to be installed:
+
+- [`matplotlib`](https://matplotlib.org/)
+- [`seaborn`](https://seaborn.pydata.org/)
+- [`scikit-learn`](http://scikit-learn.org/stable/)
+
+## How to run the code
 
 ### Dataset preparation
 
