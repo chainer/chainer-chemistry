@@ -23,7 +23,7 @@ def save_evaluation_plot(x, y, metric, filename):
             textcoords='offset points',
             color='white')
 
-    plt.title('Performance on custom dataset')
+    plt.title('Performance on own dataset')
     plt.xlabel(metric)
     plt.savefig(filename)
 
@@ -46,7 +46,7 @@ def main():
 
     for metric in metrics:
         save_evaluation_plot(
-            x, y[metric], metric, 'eval_' + metric + '_custom.png')
+            x, y[metric], metric, 'eval_' + metric + '_own.png')
 
 
 if __name__ == "__main__":

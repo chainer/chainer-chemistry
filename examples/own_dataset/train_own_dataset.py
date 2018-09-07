@@ -176,7 +176,7 @@ def parse_arguments():
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
-    parser = ArgumentParser(description='Regression on a custom dataset')
+    parser = ArgumentParser(description='Regression on own dataset')
     parser.add_argument('--datafile', '-d', type=str,
                         default='dataset_train.csv',
                         help='csv file containing the dataset')

@@ -21,8 +21,8 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 
 # These imports are necessary for pickle to work.
 from sklearn.preprocessing import StandardScaler  # NOQA
-from train_custom_dataset import GraphConvPredictor  # NOQA
-from train_custom_dataset import MeanAbsError, RootMeanSqrError  # NOQA
+from train_own_dataset import GraphConvPredictor  # NOQA
+from train_own_dataset import MeanAbsError, RootMeanSqrError  # NOQA
 
 
 class ScaledGraphConvPredictor(GraphConvPredictor):
@@ -50,7 +50,7 @@ def parse_arguments():
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
-    parser = ArgumentParser(description='Regression on a custom dataset')
+    parser = ArgumentParser(description='Regression on own dataset')
     parser.add_argument('--datafile', '-d', type=str,
                         default='dataset_test.csv',
                         help='csv file containing the dataset')

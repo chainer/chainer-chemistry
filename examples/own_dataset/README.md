@@ -8,7 +8,7 @@ please refer to the tox21 example.
 
 ## Usage
 ```
-python train_custom_dataset.py --datafile dataset_train.csv --label value1 value2
+python train_own_dataset.py --datafile dataset_train.csv --label value1 value2
 ```
 
 The `--label` option specifies which columns in `dataset_train.csv` are trained.

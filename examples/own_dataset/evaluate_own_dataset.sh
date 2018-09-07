@@ -12,7 +12,7 @@ gpu=${2:--1}
 for method in ${methods[@]}
 do
     # Train with the current method.
-    python train_custom_dataset.py \
+    python train_own_dataset.py \
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
@@ -22,7 +22,7 @@ do
         --out eval_${method}
 
     # Run inference on the test set.
-    python predict_custom_dataset.py \
+    python predict_own_dataset.py \
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
