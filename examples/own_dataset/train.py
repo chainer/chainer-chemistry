@@ -96,6 +96,7 @@ def main():
     parser.add_argument('--seed', '-s', type=int, default=777)
     parser.add_argument('--train-data-ratio', '-t', type=float, default=0.7)
     parser.add_argument('--protocol', type=int, default=2)
+    parser.add_argument('--predict', type=str, default=None)
     args = parser.parse_args()
 
     seed = args.seed
@@ -107,29 +108,36 @@ def main():
     else:
         sys.exit("Error: No target label is specified.")
 
-    # Dataset preparation
-    # Postprocess is required for regression task
-    def postprocess_label(label_list):
-        return numpy.asarray(label_list, dtype=numpy.float32)
+    if args.predict is None:
+        # Dataset preparation
+        # Postprocess is required for regression task
+        def postprocess_label(label_list):
+            return numpy.asarray(label_list, dtype=numpy.float32)
 
-    print('Preprocessing dataset...')
-    preprocessor = preprocess_method_dict[method]()
-    parser = CSVFileParser(preprocessor,
-                           postprocess_label=postprocess_label,
-                           labels=labels, smiles_col='SMILES')
-    dataset = parser.parse(args.datafile)["dataset"]
+        print('Preprocessing dataset...')
+        preprocessor = preprocess_method_dict[method]()
+        parser = CSVFileParser(preprocessor,
+                            postprocess_label=postprocess_label,
+                            labels=labels, smiles_col='SMILES')
+        dataset = parser.parse(args.datafile)["dataset"]
 
-    if args.scale == 'standardize':
-        # Standard Scaler for labels
-        scaler = StandardScaler()
-        labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+        if args.scale == 'standardize':
+            # Standard Scaler for labels
+            scaler = StandardScaler()
+            labels = scaler.fit_transform(dataset.get_datasets()[-1])
+            dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+        else:
+            # Not use scaler
+            scaler = None
+
+        train_data_size = int(len(dataset) * train_data_ratio)
+        train, val = split_dataset_random(dataset, train_data_size, seed)
     else:
-        # Not use scaler
-        scaler = None
-
-    train_data_size = int(len(dataset) * train_data_ratio)
-    train, val = split_dataset_random(dataset, train_data_size, seed)
+        if args.scale == 'standardize':
+            with open(os.path.join(args.out, 'scaler.pkl'), mode='rb') as f:
+                scaler = pickle.load(f)
+        else:
+            scaler = None
 
     # Network
     n_unit = args.unit_num
@@ -166,45 +174,55 @@ def main():
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
 
-    train_iter = iterators.SerialIterator(train, args.batchsize)
-    val_iter = iterators.SerialIterator(
-        val, args.batchsize, repeat=False, shuffle=False)
+    if args.predict is None:
+        train_iter = iterators.SerialIterator(train, args.batchsize)
+        val_iter = iterators.SerialIterator(
+            val, args.batchsize, repeat=False, shuffle=False)
 
     regressor = Regressor(
         model, lossfun=F.mean_squared_error,
         metrics_fun={'abs_error': ScaledAbsError(scaler=scaler)},
         device=args.gpu)
 
-    optimizer = optimizers.Adam()
-    optimizer.setup(regressor)
+    if args.predict is None:
+        optimizer = optimizers.Adam()
+        optimizer.setup(regressor)
 
-    updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
-                                       converter=concat_mols)
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
-                               converter=concat_mols))
-    trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
-    trainer.extend(E.LogReport())
-    # Note that original scale absolute errors are reported in
-    # (validation/)main/abs_error
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
-                                  'validation/main/loss',
-                                  'validation/main/abs_error',
-                                  'elapsed_time']))
-    trainer.extend(E.ProgressBar())
-    trainer.run()
+        updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
+                                        converter=concat_mols)
+        trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
+        trainer.extend(E.Evaluator(val_iter, regressor, device=args.gpu,
+                                converter=concat_mols))
+        trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
+        trainer.extend(E.LogReport())
+        # Note that original scale absolute errors are reported in
+        # (validation/)main/abs_error
+        trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
+                                    'validation/main/loss',
+                                    'validation/main/abs_error',
+                                    'elapsed_time']))
+        trainer.extend(E.ProgressBar())
+        trainer.run()
 
-    # --- save regressor's parameters ---
-    protocol = args.protocol
-    model_path = os.path.join(args.out, 'model.npz')
-    print('saving trained model to {}'.format(model_path))
-    serializers.save_npz(model_path, regressor)
-    if scaler is not None:
-        with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
-            pickle.dump(scaler, f, protocol=protocol)
+        # --- save regressor's parameters ---
+        protocol = args.protocol
+        model_path = os.path.join(args.out, 'model.npz')
+        print('saving trained model to {}'.format(model_path))
+        serializers.save_npz(model_path, regressor)
+        if scaler is not None:
+            with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
+                pickle.dump(scaler, f, protocol=protocol)
 
-    # Example of prediction using trained model
-    smiles = 'c1ccccc1'
+        # Example of prediction using trained model
+        smiles = 'c1ccccc1'
+    else:
+        # --- load regressor's parameters ---
+        protocol = args.protocol
+        model_path = os.path.join(args.out, 'model.npz')
+        print('loading trained model from {}'.format(model_path))
+        serializers.load_npz(model_path, regressor)
+        smiles = args.predict
+
     mol = Chem.MolFromSmiles(smiles)
     preprocessor = preprocess_method_dict[method]()
     standardized_smiles, mol = preprocessor.prepare_smiles_and_mol(mol)
