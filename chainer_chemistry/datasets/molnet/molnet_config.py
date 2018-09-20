@@ -212,25 +212,29 @@ molnet_default_config = {
              'PCBA-915', 'PCBA-924', 'PCBA-925', 'PCBA-926', 'PCBA-927',
              'PCBA-938', 'PCBA-995'],
     },
-    # TODO(natsukium): only use core dataset for raw data
-    #                  (full, refined dataset are not used.)
-    "pdbbind": {
+    "pdbbind_smiles": {
         "subset": ["core", "full", "refined"],
         "dataset_type": 'one_file_csv',
-        "url": {'core': 'https://s3-us-west-1.amazonaws.com/deepchem.io/' \
-                        + 'datasets/pdbbind_core_df.csv.gz',
-                'core_grid': featurized_base + 'core_grid.tar.gz',
-                'full_grid': featurized_base + 'full_grid.tar.gz',
-                'refined_grid': featurized_base + 'refined_grid.tar.gz',
-                'core_smiles': molnet_base + 'core_smiles_labels.csv',
-                'full_smiles': molnet_base + 'full_smiles_labels.csv',
-                'refined_smiles': molnet_base + 'refined_smiles_labels.csv'},
+        "url": {'core': molnet_base + 'core_smiles_labels.csv',
+                'full': molnet_base + 'full_smiles_labels.csv',
+                'refined': molnet_base + 'refined_smiles_labels.csv'},
         "smiles_columns": 'smiles',
-        "pdb_id_column": 'pdb_id',
         "metrics": {'R2': r2_score},
         "split": 'time',
         "task_type": 'regression',
-        "tasks": ["label"],
+        "tasks": ["-logKd/Ki"],
+    },
+    "pdbbind_grid": {
+        "pdbbind_subset": ["core", "full", "refined"],
+        "dataset_type": 'joblib',
+        "url": {'core': featurized_base + 'core_grid.tar.gz',
+                'full': featurized_base + 'full_grid.tar.gz',
+                'refined': featurized_base + 'refined_grid.tar.gz'},
+        "smiles_columns": '',
+        "metrics": {'R2': r2_score},
+        "split": 'time',
+        "task_type": 'regression',
+        "tasks": ["-logKd/Ki"],
     },
     "ppb": {
         "dataset_type": 'one_file_csv',

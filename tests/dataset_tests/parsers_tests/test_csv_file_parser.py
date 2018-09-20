@@ -29,24 +29,7 @@ def label_a():
 
 
 @pytest.fixture()
-def pdb_id():
-    return ['1alk', '5xne', '5YY5']
-
-
-@pytest.fixture()
-def csv_file(tmpdir, mol_smiles, label_a, pdb_id):
-    fname = os.path.join(str(tmpdir), 'test.csv')
-    df = pandas.DataFrame({
-        'smiles': mol_smiles,
-        'labelA': label_a,
-        'pdb_id': pdb_id
-    })
-    df.to_csv(fname)
-    return fname
-
-
-@pytest.fixture()
-def csv_file_no_pdbid(tmpdir, mol_smiles, label_a):
+def csv_file(tmpdir, mol_smiles, label_a):
     fname = os.path.join(str(tmpdir), 'test.csv')
     df = pandas.DataFrame({
         'smiles': mol_smiles,
@@ -126,27 +109,6 @@ def test_csv_file_parser_return_smiles(csv_file, mols, label_a):
     assert smiles[2] == 'CC1=CC2CC(CC1)O2'
 
 
-def test_csv_file_parser_not_return_smiles_no_pdbid(
-        csv_file_no_pdbid, mols):
-    """Test default behavior"""
-    preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, smiles_col='smiles')
-    # Actually, `dataset, smiles = parser.parse(..)` is enough.
-    result = parser.parse(csv_file_no_pdbid, return_smiles=False)
-    dataset = result['dataset']
-    smiles = result['smiles']
-    is_successful = result['is_successful']
-    assert len(dataset) == 3
-    assert smiles is None
-    assert is_successful is None
-
-    # As we want test DataFrameParser, we assume
-    # NFPPreprocessor works as documented.
-    for i in range(3):
-        expect = preprocessor.get_input_features(mols[i])
-        check_input_features(dataset[i], expect)
-
-
 def test_csv_file_parser_target_index(csv_file_invalid, mols, label_a):
     """test `labels` option and retain_smiles=True."""
     preprocessor = NFPPreprocessor()
@@ -204,36 +166,6 @@ def test_csv_parser_return_is_successful(csv_file_invalid, mols, label_a):
     for i in range(3):
         expect = preprocessor.get_input_features(mols[i])
         check_features(dataset[i], expect, label_a[i])
-
-
-def test_data_frame_parser_not_return_pdb_id(csv_file):
-    """Test default behavior"""
-    preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, pdb_id_col='pdb_id')
-    # Actually, `dataset, smiles = parser.parse(..)` is enough.
-    result = parser.parse(csv_file, return_pdb_id=False)
-    dataset = result['dataset']
-    pdb_id = result['pdb_id']
-    is_successful = result['is_successful']
-    assert len(dataset) == 3
-    assert pdb_id is None
-    assert is_successful is None
-
-
-def test_data_frame_parser_return_pdb_id(csv_file, pdb_id, label_a):
-    """test `labels` option and retain_smiles=True."""
-    preprocessor = NFPPreprocessor()
-    parser = CSVFileParser(preprocessor, labels='labelA',
-                           pdb_id_col='pdb_id')
-    result = parser.parse(csv_file, return_pdb_id=True)
-    dataset = result['dataset']
-    pdb_id = result['pdb_id']
-    assert len(dataset) == 3
-
-    assert len(pdb_id) == len(dataset)
-    assert pdb_id[0] == '1alk'
-    assert pdb_id[1] == '5xne'
-    assert pdb_id[2] == '5yy5'
 
 
 if __name__ == '__main__':
