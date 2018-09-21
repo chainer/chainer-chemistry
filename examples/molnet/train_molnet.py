@@ -1,10 +1,9 @@
 import argparse
+import chainer
+import numpy
 import os
 import types
 
-import numpy
-
-import chainer
 import chainer.functions as F
 from chainer import iterators
 from chainer import optimizers
@@ -29,23 +28,15 @@ def regression_loss_fun(x, t):
 
 
 class GraphConvPredictor(chainer.Chain):
-
     def __init__(self, graph_conv, mlp=None):
-        """Graph Convolution Predictor
-
-        It sequentially combines graph convolution network and multi layer
-        perceptron.
-        `graph_conv` gathers the each node's feature to extract graph feature,
-        `mlp` processed the extracted graph feature to calculate final output.
-
+        """Initializes the graph convolution predictor.
         Args:
-            graph_conv: graph convolution network to obtain molecule feature
-                        representation
-            mlp: multi layer perceptron, used as final connected layer.
-                It can be `None` if no operation is necessary after
-                `graph_conv` calculation.
+            graph_conv: The graph convolution network required to obtain
+                        molecule feature representation.
+            mlp: Multi layer perceptron; used as the final fully connected
+                 layer. Set it to `None` if no operation is necessary
+                 after the `graph_conv` calculation.
         """
-
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
             self.graph_conv = graph_conv
@@ -61,37 +52,104 @@ class GraphConvPredictor(chainer.Chain):
         return x
 
 
-def main():
+def parse_arguments():
+    # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
     dataset_names = list(molnet_default_config.keys())
 
+    # Set up the argument parser.
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
-                        default='nfp')
+                        help='method name', default='nfp')
     parser.add_argument('--label', '-l', type=str, default='',
-                        help='target label for regression, empty string means '
-                        'to predict all property at once')
-    parser.add_argument('--conv-layers', '-c', type=int, default=4)
-    parser.add_argument('--batchsize', '-b', type=int, default=32)
-    parser.add_argument('--gpu', '-g', type=int, default=-1)
-    parser.add_argument('--out', '-o', type=str, default='result')
-    parser.add_argument('--epoch', '-e', type=int, default=20)
-    parser.add_argument('--unit-num', '-u', type=int, default=16)
+                        help='target label for regression; empty string means '
+                        'predicting all properties at once')
+    parser.add_argument('--conv-layers', '-c', type=int, default=4,
+                        help='number of convolution layers')
+    parser.add_argument('--batchsize', '-b', type=int, default=32,
+                        help='batch size')
+    parser.add_argument('--gpu', '-g', type=int, default=-1,
+                        help='id of gpu to use; negative value means running'
+                        'the code on cpu')
+    parser.add_argument('--out', '-o', type=str, default='result',
+                        help='path to save the computed model to')
+    parser.add_argument('--epoch', '-e', type=int, default=20,
+                        help='number of epochs')
+    parser.add_argument('--unit-num', '-u', type=int, default=16,
+                        help='number of units in one layer of the model')
     parser.add_argument('--dataset', '-d', type=str, choices=dataset_names,
-                        default='bbbp')
-    parser.add_argument('--protocol', type=int, default=2)
-    parser.add_argument('--model-filename', type=str, default='regressor.pkl')
+                        default='bbbp',
+                        help='name of the dataset that training is run on')
+    parser.add_argument('--protocol', type=int, default=2,
+                        help='pickle protocol version')
     parser.add_argument('--num-data', type=int, default=-1,
-                        help='Number of data to be parsed from parser.'
-                             '-1 indicates to parse all data.')
-    args = parser.parse_args()
+                        help='amount of data to be parsed; -1 indicates '
+                        'parsing all data.')
+    return parser.parse_args()
+
+
+def set_up_predictor(method, n_unit, conv_layers, class_num):
+    """Sets up the predictor, consisting of a graph convolution network and
+    a multilayer perceptron.
+    Args:
+        method: Method name. Currently, the supported ones are `nfp`, `ggnn`,
+                `schnet`, `weavenet` and `rsgcn`.
+        n_unit: Number of hidden units.
+        conv_layers: Number of convolutional layers for the graph convolution
+                     network.
+        class_num: Number of output classes.
+    Returns:
+        An instance of the selected predictor.
+    """
+
+    predictor = None
+    mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
+
+    if method == 'nfp':
+        print('Training an NFP predictor...')
+        nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        predictor = GraphConvPredictor(nfp, mlp)
+    elif method == 'ggnn':
+        print('Training a GGNN predictor...')
+        ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        predictor = GraphConvPredictor(ggnn, mlp)
+    elif method == 'schnet':
+        print('Training an SchNet predictor...')
+        schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
+                        n_layers=conv_layers)
+        predictor = GraphConvPredictor(schnet, None)
+    elif method == 'weavenet':
+        print('Training a WeaveNet predictor...')
+        n_atom = 20
+        n_sub_layer = 1
+        weave_channels = [50] * conv_layers
+
+        weavenet = WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
+                            n_sub_layer=n_sub_layer, n_atom=n_atom)
+        predictor = GraphConvPredictor(weavenet, mlp)
+    elif method == 'rsgcn':
+        print('Training an RSGCN predictor...')
+        rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        predictor = GraphConvPredictor(rsgcn, mlp)
+    else:
+        raise ValueError('[ERROR] Invalid method: {}'.format(method))
+    return predictor
+
+
+def main():
+    # Parse the arguments.
+    args = parse_arguments()
+
+    # Set up some useful variables that will be used later on.
     dataset_name = args.dataset
     method = args.method
     num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
-    print('Use {} dataset'.format(dataset_name))
 
+    print('Using dataset: {}...'.format(dataset_name))
+
+    # Set up some useful variables that will be used later on.
     if args.label:
         labels = args.label
         cache_dir = os.path.join('input', '{}_{}_{}'.format(dataset_name,
@@ -103,82 +161,58 @@ def main():
                                                              method))
         class_num = len(molnet_default_config[args.dataset]['tasks'])
 
-    # Dataset preparation
+    # Get the file paths corresponding to the cached dataset, based on the
+    # amount of data samples that need to be parsed from the original dataset.
     def get_dataset_paths(cache_dir, num_data):
         filepaths = []
         for filetype in ['train', 'valid', 'test']:
-            filename = filetype+'_data'
             if num_data >= 0:
-                filename += '_' + str(num_data)
-            filename += '.npz'
-            filepath = os.path.join(cache_dir, filename)
-            filepaths.append(filepath)
+                filename = '{}_data_{}.npz'.format(filetype, str(num_data))
+            else:
+                filename = '{}_data.npz'.format(filetype)
+            filepaths.append(os.path.join(cache_dir, filename))
         return filepaths
     filepaths = get_dataset_paths(cache_dir, num_data)
-    if all([os.path.exists(fpath) for fpath in filepaths]):
+
+    # Load the cached dataset.
+    if all([os.path.exists(path) for path in filepaths]):
         datasets = []
-        for fpath in filepaths:
-            print('load from cache {}'.format(fpath))
-            datasets.append(NumpyTupleDataset.load(fpath))
+        for path in filepaths:
+            print('Loading cached dataset from {}.'.format(path))
+            datasets.append(NumpyTupleDataset.load(path))
     else:
-        print('preprocessing dataset...')
+        print('Preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
-        # only use first 100 for debug if num_data >= 0
+
+        # Select the first `num_data` samples from the dataset.
         target_index = numpy.arange(num_data) if num_data >= 0 else None
         datasets = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
                                                labels=labels,
                                                target_index=target_index)
+        # Cache the loaded dataset.
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
         datasets = datasets['dataset']
-        for i, fpath in enumerate(filepaths):
-            NumpyTupleDataset.save(fpath, datasets[i])
+        for i, path in enumerate(filepaths):
+            NumpyTupleDataset.save(path, datasets[i])
 
-    train, val, _ = datasets
+    # Split the dataset into training and validation.
+    train, valid, _ = datasets
 
-    # Network
-    if method == 'nfp':
-        print('Train NFP model...')
-        predictor = GraphConvPredictor(NFP(out_dim=n_unit, hidden_dim=n_unit,
-                                       n_layers=conv_layers),
-                                       MLP(out_dim=class_num,
-                                           hidden_dim=n_unit))
-    elif method == 'ggnn':
-        print('Train GGNN model...')
-        predictor = GraphConvPredictor(GGNN(out_dim=n_unit, hidden_dim=n_unit,
-                                            n_layers=conv_layers),
-                                       MLP(out_dim=class_num,
-                                           hidden_dim=n_unit))
-    elif method == 'schnet':
-        print('Train SchNet model...')
-        predictor = GraphConvPredictor(
-            SchNet(out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers),
-            None)
-    elif method == 'weavenet':
-        print('Train WeaveNet model...')
-        n_atom = 20
-        n_sub_layer = 1
-        weave_channels = [50] * conv_layers
-        predictor = GraphConvPredictor(
-            WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
-                     n_sub_layer=n_sub_layer, n_atom=n_atom),
-            MLP(out_dim=class_num, hidden_dim=n_unit))
-    elif method == 'rsgcn':
-        print('Train RSGCN model...')
-        predictor = GraphConvPredictor(
-            RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
-            MLP(out_dim=class_num, hidden_dim=n_unit))
-    else:
-        raise ValueError('[ERROR] Invalid method {}'.format(method))
+    # Set up the predictor.
+    predictor = set_up_predictor(method, n_unit, conv_layers, class_num)
 
+    # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
-    val_iter = iterators.SerialIterator(val, args.batchsize,
-                                        repeat=False, shuffle=False)
+    valid_iter = iterators.SerialIterator(valid, args.batchsize, repeat=False,
+                                          shuffle=False)
 
+    # Load metrics for the current dataset.
     metrics = molnet_default_config[dataset_name]['metrics']
     metrics_fun = {k: v for k, v in metrics.items()
                    if isinstance(v, types.FunctionType)}
     # loss_fun = molnet_default_config[dataset_name]['loss']
+
     task_type = molnet_default_config[dataset_name]['task_type']
     if task_type == 'regression':
         loss_fun = regression_loss_fun
@@ -190,48 +224,54 @@ def main():
         model = Classifier(predictor, lossfun=loss_fun,
                            metrics_fun=metrics_fun, device=args.gpu)
     else:
-        raise NotImplementedError(
-            'Not implemented task_type = {}'.format(task_type))
+        raise ValueError('Invalid task type ({}) encountered when processing '
+                         'dataset ({}).'.format(task_type, dataset_name))
 
+    # Set up the optimizer.
     optimizer = optimizers.Adam()
     optimizer.setup(model)
 
+    # Set up the updater.
     updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
                                        converter=concat_mols)
+
+    # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(val_iter, model, device=args.gpu,
+    trainer.extend(E.Evaluator(valid_iter, model, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
+
+    # Report various metrics.
     print_report_targets = ['epoch', 'main/loss', 'validation/main/loss']
     for metric_name, metric_fun in metrics.items():
         if isinstance(metric_fun, types.FunctionType):
             print_report_targets.append('main/' + metric_name)
             print_report_targets.append('validation/main/' + metric_name)
         elif issubclass(metric_fun, BatchEvaluator):
-            # Evaluation for train data takes time, skip for now.
-            # trainer.extend(metric_fun(
-            #     train_iter, model, device=args.gpu, eval_func=predictor,
-            #     converter=concat_mols, name='train',
-            #     raise_value_error=False))
-            # print_report_targets.append('train/main/roc_auc')
-            trainer.extend(metric_fun(
-                val_iter, model, device=args.gpu, eval_func=predictor,
-                converter=concat_mols, name='val',
-                raise_value_error=False))
+            trainer.extend(metric_fun(valid_iter, model, device=args.gpu,
+                                      eval_func=predictor,
+                                      converter=concat_mols, name='val',
+                                      raise_value_error=False))
             print_report_targets.append('val/main/' + metric_name)
         else:
-            raise TypeError('{} is not supported for metrics function.'
+            raise TypeError('{} is not a supported metrics function.'
                             .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
+
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
     trainer.run()
 
-    # --- save model ---
-    protocol = args.protocol
-    model.save_pickle(os.path.join(args.out, args.model_filename),
-                      protocol=protocol)
+    # Set the model's filename based on the task type.
+    task_type = molnet_default_config[dataset_name]['task_type']
+    model_filename = {'classification': 'classifier.pkl',
+                      'regression': 'regressor.pkl'}
+
+    # Save the model's parameters.
+    model_path = os.path.join(args.out, model_filename[task_type])
+    print('Saving the trained model to {}...'.format(model_path))
+    model.save_pickle(model_path, protocol=args.protocol)
 
 
 if __name__ == '__main__':
