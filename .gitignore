@@ -95,6 +95,12 @@ examples/tox21/input/
 examples/qm9/input/
 examples/molnet/input/
 
+# Trained models and plots
+examples/tox21/eval_*
+examples/qm9/eval_*
+examples/molnet/eval_*
+examples/own_dataset/eval_*
+
 # emacs
 *~
 
