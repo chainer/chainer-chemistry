@@ -117,7 +117,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
 
         result = parser.parse(get_molnet_filepath(dataset_name),
                               return_smiles=get_smiles,
-                              target_index=target_index)
+                              target_index=target_index, **kwargs)
         dataset = result['dataset']
         smiles = result['smiles']
         train_ind, valid_ind, test_ind = \
