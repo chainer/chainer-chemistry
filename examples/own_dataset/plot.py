@@ -15,7 +15,7 @@ def save_evaluation_plot(x, y, metric, filename):
 
     for n, (label, _y) in enumerate(zip(x, y)):
         ax.annotate(
-            s='{:.3f}'.format(abs(_y)),
+            '{:.3f}'.format(abs(_y)),
             xy=(_y, n),
             ha='right',
             va='center',
