@@ -162,26 +162,6 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
         ch = bond_type_to_channel[bond_type]
         i = bond.GetBeginAtomIdx()
         j = bond.GetEndAtomIdx()
-        # print('{} {} {}'.format(i, j, bond_type))
         adjs[ch, i, j] = 1.0
         adjs[ch, j, i] = 1.0
-
-    adjs_test = numpy.zeros((4, size, size), dtype=numpy.float32)
-    for i in range(N):
-        for j in range(N):
-            bond = mol.GetBondBetweenAtoms(i, j)  # type: Chem.Bond
-            if bond is not None:
-                bond_type = str(bond.GetBondType())
-                if bond_type == 'SINGLE':
-                    adjs_test[0, i, j] = 1.0
-                elif bond_type == 'DOUBLE':
-                    adjs_test[1, i, j] = 1.0
-                elif bond_type == 'TRIPLE':
-                    adjs_test[2, i, j] = 1.0
-                elif bond_type == 'AROMATIC':
-                    adjs_test[3, i, j] = 1.0
-                else:
-                    raise ValueError("[ERROR] Unknown bond type {}"
-                                     .format(bond_type))
-    assert numpy.allclose(adjs, adjs_test)
     return adjs
