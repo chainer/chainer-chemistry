@@ -1,67 +1,6 @@
-from logging import getLogger
-import os
-import shutil
-
-from chainer.dataset import download
 import numpy
-import pandas
 
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
-
-
-def get_year_table_filepath(download_if_no_exist=True):
-    """Construct a file path which stores year table.
-
-    This method check whether the file exist or not, and downloaded it if
-    necessary.
-
-    Args:
-        download_if_not_exist (bool): Download a file if it does not exist.
-
-    Returns (str): filepath for year table
-
-    """
-    url = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/datasets/' \
-          'pdbbind_year.csv'
-    file_name = url.split('/')[-1]
-    cache_path = _get_year_table_filepath(file_name)
-    if not os.path.exists(cache_path):
-        if download_if_no_exist:
-            is_successful = download_year_table(url, save_filepath=cache_path)
-            if not is_successful:
-                logger = getLogger(__name__)
-                logger.warning('Download failed.')
-    return cache_path
-
-
-def _get_year_table_filepath(file_name):
-    """Construct a filepath which stores year table in csv.
-
-    This method does not check if the file is already downloaded or not.
-
-    Args:
-        file_name (str): file name of year table
-
-    Returns (str): filepath for one of year table
-
-    """
-    cache_root = download.get_dataset_directory('pfnet/chainer/molnet')
-    cache_path = os.path.join(cache_root, file_name)
-    return cache_path
-
-
-def download_year_table(url, save_filepath):
-    """Download and caches PDBBind year table.
-
-    Args:
-        url (str): URL of year table
-        save_filepath (str): filepath for year table
-
-    Returns (bool): If success downloading, returning `True`.
-    """
-    download_file_path = download.cached_download(url)
-    shutil.move(download_file_path, save_filepath)
-    return True
 
 
 class TimeSplitter(BaseSplitter):
@@ -72,19 +11,13 @@ class TimeSplitter(BaseSplitter):
         numpy.testing.assert_almost_equal(
             frac_train + frac_valid + frac_test, 1.)
 
-        df = pandas.read_csv(get_year_table_filepath(), header=None)
-        years = {}
-        ids = df[0]
-
-        for i in range(df.shape[0]):
-            years[df[0][i]] = int(df[1][i])
+        time_list = kwargs.get('time_list')
 
         train_cutoff = int(frac_train * len(dataset))
         valid_cutoff = int((frac_train + frac_valid) * len(dataset))
 
-        data_year = [years[ids[i]] for i in range(len(dataset))]
         index = [idx for idx, _ in sorted(
-            zip(range(len(dataset)), data_year), key=lambda x: x[1])]
+            enumerate(time_list), key=lambda x: x[1])][:len(dataset)]
 
         train_index = index[:train_cutoff]
         valid_index = index[train_cutoff:valid_cutoff]
@@ -93,8 +26,8 @@ class TimeSplitter(BaseSplitter):
         return numpy.array(train_index), numpy.array(valid_index), \
             numpy.array(test_index)
 
-    def train_valid_test_split(self, dataset, frac_train=0.8, frac_valid=0.1,
-                               frac_test=0.1, converter=None,
+    def train_valid_test_split(self, dataset, time_list=None, frac_train=0.8,
+                               frac_valid=0.1, frac_test=0.1, converter=None,
                                return_index=True, **kwargs):
         """Split dataset into train, valid and test set.
 
@@ -103,19 +36,15 @@ class TimeSplitter(BaseSplitter):
         Args:
             dataset(NumpyTupleDataset, numpy.ndarray):
                 Dataset.
-            labels(numpy.ndarray):
-                Target label. If `None`, this function assumes that dataset is
-                an instance of `NumpyTupleDataset`.
-            labels_axis(int):
-                Dataset feature axis in NumpyTupleDataset.
-            task_index(int):
-                Target task index in dataset for stratification.
-            seed (int):
-                Random seed.
+            time_list(list):
+                Time list corresponding to dataset.
             frac_train(float):
                 Fraction of dataset put into training data.
             frac_valid(float):
                 Fraction of dataset put into validation data.
+            frac_test(float):
+                Fraction of dataset put into test data.
+            converter(callable):
             return_index(bool):
                 If `True`, this function returns only indexes. If `False`, this
                 function returns splitted dataset.
@@ -137,13 +66,13 @@ class TimeSplitter(BaseSplitter):
             >>> print(len(train), len(valid))
             8, 1, 1
         """
-
         return super(TimeSplitter, self).train_valid_test_split(
             dataset, frac_train, frac_valid, frac_test, converter,
-            return_index, **kwargs)
+            return_index, time_list=time_list, **kwargs)
 
-    def train_valid_split(self, dataset, frac_train=0.9, frac_valid=0.1,
-                          converter=None, return_index=True, **kwargs):
+    def train_valid_split(self, dataset, time_list=None, frac_train=0.9,
+                          frac_valid=0.1, converter=None, return_index=True,
+                          **kwargs):
         """Split dataset into train and valid set.
 
         Split indices are generated by splitting based on time order.
@@ -151,19 +80,13 @@ class TimeSplitter(BaseSplitter):
         Args:
             dataset(NumpyTupleDataset, numpy.ndarray):
                 Dataset.
-            labels(numpy.ndarray):
-                Target label. If `None`, this function assumes that dataset is
-                an instance of `NumpyTupleDataset`.
-            labels_axis(int):
-                Dataset feature axis in NumpyTupleDataset.
-            task_index(int):
-                Target task index in dataset for stratification.
-            seed (int):
-                Random seed.
+            time_list(list):
+                Time list corresponding to dataset.
             frac_train(float):
                 Fraction of dataset put into training data.
             frac_valid(float):
                 Fraction of dataset put into validation data.
+            converter(callable):
             return_index(bool):
                 If `True`, this function returns only indexes. If `False`, this
                 function returns splitted dataset.
@@ -185,6 +108,6 @@ class TimeSplitter(BaseSplitter):
             >>> print(len(train), len(valid))
             9, 1
         """
-
         return super(TimeSplitter, self).train_valid_split(
-            dataset, frac_train, frac_valid, converter, return_index, **kwargs)
+            dataset, frac_train, frac_valid, converter, return_index,
+            time_list=time_list, **kwargs)
