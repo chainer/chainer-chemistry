@@ -23,15 +23,13 @@ class MolPreprocessor(BasePreprocessor):
         Returns (tuple): (`smiles`, `mol`)
         """
         # Note that smiles expression is not unique.
-        # we should re-obtain smiles from `mol`, so that the
-        # smiles order does not contradict with input_features'
-        # order.
-        smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
-        mol = Chem.MolFromSmiles(smiles)
+        # we obtain canonical smiles which is unique in `mol`
+        canonical_smiles = Chem.MolToSmiles(mol, isomericSmiles=False,
+                                            canonical=True)
+        mol = Chem.MolFromSmiles(canonical_smiles)
         if self.add_Hs:
             mol = Chem.AddHs(mol)
-            smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
-        return smiles, mol
+        return canonical_smiles, mol
 
     def get_label(self, mol, label_names=None):
         """Extracts label information from a molecule.

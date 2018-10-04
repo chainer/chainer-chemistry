@@ -87,14 +87,10 @@ class SDFFileParser(BaseFileParser):
                             label = self.postprocess_label(label)
 
                     # Note that smiles expression is not unique.
-                    # we should re-obtain smiles from `mol`, so that the
-                    # smiles order does not contradict with input features'
-                    # order.
-                    # Here, `smiles` and `standardized_smiles` expresses
-                    # same molecule, but the expression may be different!
+                    # we obtain canonical smiles
                     smiles = Chem.MolToSmiles(mol)
                     mol = Chem.MolFromSmiles(smiles)
-                    standardized_smiles, mol = pp.prepare_smiles_and_mol(mol)
+                    canonical_smiles, mol = pp.prepare_smiles_and_mol(mol)
                     input_features = pp.get_input_features(mol)
 
                     # Initialize features: list of list
@@ -108,8 +104,8 @@ class SDFFileParser(BaseFileParser):
                         features = [[] for _ in range(num_features)]
 
                     if return_smiles:
-                        assert standardized_smiles == Chem.MolToSmiles(mol)
-                        smiles_list.append(standardized_smiles)
+                        assert canonical_smiles == Chem.MolToSmiles(mol)
+                        smiles_list.append(canonical_smiles)
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
