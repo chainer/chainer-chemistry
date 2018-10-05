@@ -100,12 +100,8 @@ class DataFrameParser(BaseFileParser):
                             is_successful_list.append(False)
                         continue
                     # Note that smiles expression is not unique.
-                    # we should re-obtain smiles from `mol`, so that the
-                    # smiles order does not contradict with input features'
-                    # order.
-                    # Here, `smiles` and `standardized_smiles` expresses
-                    # same molecule, but the expression may be different!
-                    standardized_smiles, mol = pp.prepare_smiles_and_mol(mol)
+                    # we obtain canonical smiles
+                    canonical_smiles, mol = pp.prepare_smiles_and_mol(mol)
                     input_features = pp.get_input_features(mol)
 
                     # Extract label
@@ -113,8 +109,8 @@ class DataFrameParser(BaseFileParser):
                         labels = self.postprocess_label(labels)
 
                     if return_smiles:
-                        assert standardized_smiles == Chem.MolToSmiles(mol)
-                        smiles_list.append(standardized_smiles)
+                        assert canonical_smiles == Chem.MolToSmiles(mol)
+                        smiles_list.append(canonical_smiles)
                         # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
                         #              .format(smiles, standardized_smiles))
                 except MolFeatureExtractionError as e:
