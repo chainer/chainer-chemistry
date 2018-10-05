@@ -1,6 +1,7 @@
 """Common preprocess method is gethered in this file"""
 
 import numpy
+from rdkit import Chem
 from rdkit.Chem import rdmolops
 
 
@@ -149,20 +150,18 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
             'out_size {} is smaller than number of atoms in mol {}'
             .format(out_size, N))
     adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
-    for i in range(N):
-        for j in range(N):
-            bond = mol.GetBondBetweenAtoms(i, j)  # type: Chem.Bond
-            if bond is not None:
-                bond_type = str(bond.GetBondType())
-                if bond_type == 'SINGLE':
-                    adjs[0, i, j] = 1.0
-                elif bond_type == 'DOUBLE':
-                    adjs[1, i, j] = 1.0
-                elif bond_type == 'TRIPLE':
-                    adjs[2, i, j] = 1.0
-                elif bond_type == 'AROMATIC':
-                    adjs[3, i, j] = 1.0
-                else:
-                    raise ValueError("[ERROR] Unknown bond type {}"
-                                     .format(bond_type))
+
+    bond_type_to_channel = {
+        Chem.BondType.SINGLE: 0,
+        Chem.BondType.DOUBLE: 1,
+        Chem.BondType.TRIPLE: 2,
+        Chem.BondType.AROMATIC: 3
+    }
+    for bond in mol.GetBonds():
+        bond_type = bond.GetBondType()
+        ch = bond_type_to_channel[bond_type]
+        i = bond.GetBeginAtomIdx()
+        j = bond.GetEndAtomIdx()
+        adjs[ch, i, j] = 1.0
+        adjs[ch, j, i] = 1.0
     return adjs
