@@ -285,12 +285,14 @@ class WeaveNetPreprocessor(MolPreprocessor):
             `MolFeatureExtractionError`.
             If True, even the atom is not in `atom_list`, `atom_type` is set
             as "unknown" atom.
+        kekulize (bool): If True, Kekulizes the molecule.
     """
 
     def __init__(self, max_atoms=WEAVE_DEFAULT_NUM_MAX_ATOMS, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
-                 include_unknown_atom=False):
-        super(WeaveNetPreprocessor, self).__init__(add_Hs=add_Hs)
+                 include_unknown_atom=False, kekulize=False):
+        super(WeaveNetPreprocessor, self).__init__(
+            add_Hs=add_Hs, kekulize=kekulize)
         zero_padding = True
         if zero_padding and max_atoms <= 0:
             raise ValueError('max_atoms must be set to positive value when '
