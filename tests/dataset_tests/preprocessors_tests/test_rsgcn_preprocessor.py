@@ -2,10 +2,9 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainer_chemistry.dataset.parsers.sdf_file_parser import SDFFileParser
+from chainer_chemistry.dataset.parsers import SmilesParser
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
-from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.fixture
@@ -74,13 +73,12 @@ def test_rsgcn_preprocessor(mol):
         ret_adj_array, expect_adj_array, rtol=1e-03, atol=1e-03)
 
 
-@pytest.mark.slow
-def test_rsgcn_preprocessor_with_tox21():
+def test_rsgcn_preprocessor_default():
     preprocessor = RSGCNPreprocessor()
 
-    # labels=None as default, and label information is not returned.
-    dataset = SDFFileParser(preprocessor)\
-        .parse(get_tox21_filepath('train'))['dataset']
+    dataset = SmilesParser(preprocessor).parse(
+        ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1'])['dataset']
+
     index = numpy.random.choice(len(dataset), None)
     atoms, adjacency = dataset[index]
 
@@ -96,4 +94,4 @@ def test_rsgcn_preprocessor_assert_raises():
 
 
 if __name__ == '__main__':
-    pytest.main()
+    pytest.main([__file__, '-v', '-s'])

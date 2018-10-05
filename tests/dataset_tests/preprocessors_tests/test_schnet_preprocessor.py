@@ -2,9 +2,8 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainer_chemistry.dataset.parsers import SDFFileParser
+from chainer_chemistry.dataset.parsers import SmilesParser
 from chainer_chemistry.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
-from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.fixture
@@ -35,12 +34,11 @@ def test_schnet_preprocessor(mol, pp):
     # numpy.testing.assert_array_equal(actual_adj_array, expect_adj_array)
 
 
-@pytest.mark.slow
-def test_schnet_preprocessor_with_tox21():
+def test_schnet_preprocessor_default():
     preprocessor = SchNetPreprocessor()
 
-    dataset = SDFFileParser(preprocessor, postprocess_label=None
-                            ).parse(get_tox21_filepath('train'))['dataset']
+    dataset = SmilesParser(preprocessor).parse(
+        ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1'])['dataset']
 
     index = numpy.random.choice(len(dataset), None)
     atoms, adjs = dataset[index]
