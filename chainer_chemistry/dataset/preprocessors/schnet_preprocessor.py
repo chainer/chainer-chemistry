@@ -61,11 +61,6 @@ class SchNetPreprocessor(MolPreprocessor):
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
-        number of atoms is more than this value, this data is simply
-        ignored.
-        Setting negative value indicates no limit for max atoms.
-        zero_padding (bool): True
-        max_atoms (int): Max number of atoms for each molecule, if the
             number of atoms is more than this value, this data is simply
             ignored.
             Setting negative value indicates no limit for max atoms.
@@ -74,11 +69,15 @@ class SchNetPreprocessor(MolPreprocessor):
             If the number of atoms in the molecule is less than this value,
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
+        add_Hs (bool): If True, implicit Hs are added.
+        kekulize (bool): If True, Kekulizes the molecule.
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
-        super(SchNetPreprocessor, self).__init__(add_Hs=add_Hs)
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
+                 kekulize=False):
+        super(SchNetPreprocessor, self).__init__(
+            add_Hs=add_Hs, kekulize=kekulize)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be less or equal to '
                              'out_size {}'.format(max_atoms, out_size))
