@@ -15,6 +15,7 @@ from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter  # NOQA
 from chainer_chemistry.dataset.splitters import split_method_dict
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
+from chainer_chemistry.datasets.molnet.pdbbind_time import get_pdbbind_time
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 _root = 'pfnet/chainer/molnet'
@@ -24,7 +25,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                        split=None, frac_train=.8, frac_valid=.1,
                        frac_test=.1, seed=777, return_smiles=False,
                        return_pdb_id=False, target_index=None, task_index=0,
-                       pdbbind_subset='core', **kwargs):
+                       **kwargs):
     """Downloads, caches and preprocess MoleculeNet dataset.
 
     Args:
@@ -51,9 +52,6 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             dataset. If `None` (default), all examples are parsed.
         task_index (int): Target task index in dataset for stratification.
             (Stratified Splitter only)
-        pdbbind_subset (str): PDBbind dataset subset name. If you want to know
-            the detail of subset, please refer to `official site
-            <http://www.pdbbind.org.cn/download/pdbbind_2017_intro.pdf>`
     Returns (dict):
         Dictionary that contains dataset that is already split into train,
         valid and test dataset and 1-d numpy array with dtype=object(string)
@@ -66,10 +64,13 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                                 list(molnet_default_config.keys())))
 
     if dataset_name == 'pdbbind_grid':
+        pdbbind_subset = kwargs.get('pdbbind_subset')
         return get_pdbbind_grid(pdbbind_subset, split=split,
                                 frac_train=frac_train, frac_valid=frac_valid,
                                 frac_test=frac_test, task_index=task_index)
     if dataset_name == 'pdbbind_smiles':
+        pdbbind_subset = kwargs.get('pdbbind_subset')
+        time_list = kwargs.get('time_list')
         return get_pdbbind_smiles(pdbbind_subset, preprocessor=preprocessor,
                                   labels=labels, split=split,
                                   frac_train=frac_train, frac_valid=frac_valid,
@@ -77,7 +78,8 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
                                   return_smiles=return_smiles,
                                   return_pdb_id=return_pdb_id,
                                   target_index=target_index,
-                                  task_index=task_index)
+                                  task_index=task_index,
+                                  time_list=time_list)
 
     dataset_config = molnet_default_config[dataset_name]
     labels = labels or dataset_config['tasks']
@@ -192,7 +194,7 @@ def get_molnet_dataframe(dataset_name):
 
 
 def get_molnet_filepath(dataset_name, filetype='onefile',
-                        download_if_not_exist=True, subset=None):
+                        download_if_not_exist=True, pdbbind_subset=None):
     """Construct a file path which stores MoleculeNet dataset.
 
     This method check whether the file exist or not, and downloaded it if
@@ -215,7 +217,7 @@ def get_molnet_filepath(dataset_name, filetype='onefile',
     else:
         url_key = filetype + '_url'
     if dataset_name == 'pdbbind_smiles':
-        file_url = molnet_default_config[dataset_name][url_key][subset]
+        file_url = molnet_default_config[dataset_name][url_key][pdbbind_subset]
     else:
         file_url = molnet_default_config[dataset_name][url_key]
     file_name = file_url.split('/')[-1]
@@ -265,14 +267,17 @@ def download_dataset(dataset_url, save_filepath):
     return True
 
 
-def get_pdbbind_smiles(subset, preprocessor=None, labels=None,
+def get_pdbbind_smiles(pdbbind_subset, preprocessor=None, labels=None,
                        split=None, frac_train=.8, frac_valid=.1,
                        frac_test=.1, return_smiles=False, return_pdb_id=True,
-                       target_index=None, task_index=0, **kwargs):
+                       target_index=None, task_index=0, time_list=None,
+                       **kwargs):
     """Downloads, caches and preprocess PDBbind dataset.
 
     Args:
-        subset (str): PDBbind dataset subset name.
+        pdbbind_subset (str): PDBbind dataset subset name. If you want to know
+            the detail of subset, please refer to `official site
+            <http://www.pdbbind.org.cn/download/pdbbind_2017_intro.pdf>`
         preprocessor (BasePreprocessor): Preprocessor.
             It should be chosen based on the network to be trained.
             If it is None, default `AtomicNumberPreprocessor` is used.
@@ -320,7 +325,8 @@ def get_pdbbind_smiles(subset, preprocessor=None, labels=None,
         raise TypeError("split must be None, str or instance of"
                         " BaseSplitter, but got {}".format(type(split)))
 
-    result = parser.parse(get_molnet_filepath('pdbbind_smiles', subset=subset),
+    result = parser.parse(get_molnet_filepath('pdbbind_smiles',
+                                              pdbbind_subset=pdbbind_subset),
                           return_smiles=return_smiles,
                           return_is_successful=True,
                           target_index=target_index)
@@ -330,13 +336,15 @@ def get_pdbbind_smiles(subset, preprocessor=None, labels=None,
 
     if return_pdb_id:
         df = pandas.read_csv(
-            get_molnet_filepath('pdbbind_smiles', subset=subset))
+            get_molnet_filepath('pdbbind_smiles',
+                                pdbbind_subset=pdbbind_subset))
         pdb_id = df['id'][is_successful]
     else:
         pdb_id = None
 
     train_ind, valid_ind, test_ind = \
-        splitter.train_valid_test_split(dataset, smiles_list=smiles,
+        splitter.train_valid_test_split(dataset, time_list=time_list,
+                                        smiles_list=smiles,
                                         task_index=task_index,
                                         frac_train=frac_train,
                                         frac_valid=frac_valid,
@@ -365,12 +373,14 @@ def get_pdbbind_smiles(subset, preprocessor=None, labels=None,
     return result
 
 
-def get_pdbbind_grid(subset, split=None, frac_train=.8, frac_valid=.1,
+def get_pdbbind_grid(pdbbind_subset, split=None, frac_train=.8, frac_valid=.1,
                      frac_test=.1, task_index=0, **kwargs):
     """Downloads, caches and grid-featurize PDBbind dataset.
 
     Args:
-        subset (str): PDBbind dataset subset name.
+        pdbbind_subset (str): PDBbind dataset subset name. If you want to know
+            the detail of subset, please refer to `official site
+            <http://www.pdbbind.org.cn/download/pdbbind_2017_intro.pdf>`
         split (str or BaseSplitter or None): How to split dataset into train,
             validation and test. If `None`, this functions use the splitter
             that is recommended by MoleculeNet. Additionally You can use an
@@ -385,7 +395,7 @@ def get_pdbbind_grid(subset, split=None, frac_train=.8, frac_valid=.1,
 
     """
     result = {}
-    dataset = get_grid_featurized_pdbbind_dataset(subset)
+    dataset = get_grid_featurized_pdbbind_dataset(pdbbind_subset)
     if split is None:
         split = molnet_default_config['pdbbind_grid']['split']
     if isinstance(split, str):
@@ -395,8 +405,10 @@ def get_pdbbind_grid(subset, split=None, frac_train=.8, frac_valid=.1,
     else:
         raise TypeError("split must be None, str, or instance of"
                         " BaseSplitter, but got {}".format(type(split)))
+    time_list = get_pdbbind_time()
     train_ind, valid_ind, test_ind = \
-        splitter.train_valid_test_split(dataset, smiles_list=None,
+        splitter.train_valid_test_split(dataset, time_list=time_list,
+                                        smiles_list=None,
                                         task_index=task_index,
                                         frac_train=frac_train,
                                         frac_valid=frac_valid,

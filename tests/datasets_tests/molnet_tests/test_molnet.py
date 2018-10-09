@@ -11,8 +11,8 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 expect_bbbp_lengths = [1633, 203, 203]
 expect_bbbp_lengths2 = [1021, 611, 407]
 expect_clearance_lengths = [669, 83, 85]
-expect_pdbbind_lengths = [134, 17, 17]
-expect_featurized_pdbbind_lengths = [151, 19, 19]
+expect_pdbbind_lengths = [134, 16, 18]
+expect_featurized_pdbbind_lengths = [151, 18, 20]
 expect_qm7_lengths = [5468, 683, 683]
 
 
@@ -218,8 +218,10 @@ def test_get_molnet_clearance_dataset_with_return_smiles_enabled():
 def test_get_molnet_pdbbind_dataset():
     # test default behavior
     pp = AtomicNumberPreprocessor()
+    time_list = numpy.random.randint(1000, size=168).tolist()
     datasets = molnet.get_molnet_dataset('pdbbind_smiles', preprocessor=pp,
-                                         pdbbind_subset='core')
+                                         pdbbind_subset='core',
+                                         time_list=time_list, split='random')
     assert 'smiles' in datasets.keys()
     assert 'dataset' in datasets.keys()
     assert 'pdb_id' in datasets.keys()
@@ -250,9 +252,11 @@ def test_get_molnet_pdbbind_dataset():
 def test_get_molnet_pdbbind_dataset_with_pdb_id():
     # test default behavior
     pp = AtomicNumberPreprocessor()
+    time_list = numpy.random.randint(1000, size=168).tolist()
     datasets = molnet.get_molnet_dataset('pdbbind_smiles', preprocessor=pp,
                                          pdbbind_subset='core',
-                                         return_pdb_id=True)
+                                         return_pdb_id=True,
+                                         time_list=time_list, split='random')
     assert 'smiles' in datasets.keys()
     assert 'dataset' in datasets.keys()
     assert 'pdb_id' in datasets.keys()
@@ -282,7 +286,8 @@ def test_get_molnet_pdbbind_dataset_with_pdb_id():
 @pytest.mark.slow
 def test_get_molnet_grid_featurized_pdbbind_dataset():
     # test default behavioer
-    datasets = molnet.get_molnet_dataset('pdbbind_grid', pdbbind_subset='core')
+    datasets = molnet.get_molnet_dataset('pdbbind_grid', pdbbind_subset='core',
+                                         split='random')
     assert 'dataset' in datasets.keys()
     datasets = datasets['dataset']
     assert len(datasets) == 3
