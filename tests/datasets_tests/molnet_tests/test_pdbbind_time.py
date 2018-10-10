@@ -1,8 +1,11 @@
 import os
 
+import pytest
+
 from chainer_chemistry.datasets.molnet import pdbbind_time
 
 
+@pytest.mark.slow
 def test_get_pdbbind_time_filepath():
     filepath = pdbbind_time.get_pdbbind_time_filepath(
         download_if_not_exist=False)
