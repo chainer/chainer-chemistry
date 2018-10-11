@@ -161,7 +161,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
     return result
 
 
-def get_molnet_dataframe(dataset_name):
+def get_molnet_dataframe(dataset_name, pdbbind_subset=None):
     """Downloads, caches and get the dataframe of MoleculeNet dataset.
 
     Args:
@@ -170,6 +170,9 @@ def get_molnet_dataframe(dataset_name):
             `official site <http://moleculenet.ai/datasets-1>`_
             If you would like to know what dataset_name is available for
             chainer_chemistry, please refer to `molnet_config.py`.
+        pdbbind_subset (str): PDBbind dataset subset name. If you want to know
+            the detail of subset, please refer to `official site
+            <http://www.pdbbind.org.cn/download/pdbbind_2017_intro.pdf>`
     Returns (pandas.DataFrame or tuple):
         DataFrame of dataset without any preprocessing. When the files of
         dataset are seprated, this function returns multiple DataFrame.
@@ -179,9 +182,13 @@ def get_molnet_dataframe(dataset_name):
         raise ValueError("We don't support {} dataset. Please choose from {}".
                          format(dataset_name,
                                 list(molnet_default_config.keys())))
+    if dataset_name == 'pdbbind_grid':
+        raise ValueError('pdbbind_grid dataset is not supported. Please ',
+                         'choose pdbbind_smiles dataset.')
     dataset_config = molnet_default_config[dataset_name]
     if dataset_config['dataset_type'] == 'one_file_csv':
-        df = pandas.read_csv(get_molnet_filepath(dataset_name))
+        df = pandas.read_csv(get_molnet_filepath(
+            dataset_name, pdbbind_subset=pdbbind_subset))
         return df
     elif dataset_config['dataset_type'] == 'separate_csv':
         train_df = pandas.read_csv(get_molnet_filepath(dataset_name, 'train'))

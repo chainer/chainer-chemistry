@@ -384,6 +384,19 @@ def test_get_molnet_bbbp_dataframe():
     assert len(datasets) == 2050
 
 
+def test_get_molnet_pdbbind_smiles_dataframe():
+    datasets = molnet.get_molnet_dataframe('pdbbind_smiles',
+                                           pdbbind_subset='core')
+    assert isinstance(datasets, pandas.DataFrame)
+    assert len(datasets) == 168
+
+
+def test_get_molnet_pdbbind_grid_dataframe():
+    with pytest.raises(ValueError):
+        datasets = molnet.get_molnet_dataframe('pdbbind_grid',  # NOQA
+                                               pdbbind_subset='core')
+
+
 if __name__ == '__main__':
     args = [__file__, '-v', '-s']
     pytest.main(args=args)
