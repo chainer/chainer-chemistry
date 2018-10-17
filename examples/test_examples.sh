@@ -15,7 +15,7 @@ cd qm9 && bash -x test_qm9.sh ${gpu} && cd ..
 
 # Own dataset
 echo --- Testing on own dataset ---
-cd own_dataset && bash -x evaluate_own_dataset.sh ${gpu} && cd ..
+cd own_dataset && bash -x test_own_dataset.sh ${gpu} && cd ..
 
 # MolNet
 echo --- Testing MolNet dataset ---
