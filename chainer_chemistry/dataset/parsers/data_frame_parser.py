@@ -109,10 +109,7 @@ class DataFrameParser(BaseFileParser):
                         labels = self.postprocess_label(labels)
 
                     if return_smiles:
-                        assert canonical_smiles == Chem.MolToSmiles(mol)
                         smiles_list.append(canonical_smiles)
-                        # logger.debug('[DEBUG] smiles {}, standard_smiles {}'
-                        #              .format(smiles, standardized_smiles))
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
