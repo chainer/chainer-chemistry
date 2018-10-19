@@ -7,7 +7,6 @@ import numpy
 import os
 import types
 
-import chainer.functions as F
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
@@ -18,12 +17,11 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -180,34 +178,34 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
     return dataset_parts
 
 
-#def standardize_dataset_labels(datasets):
-#    """Standardizes (scales) the dataset labels.
-#    Args:
-#        datasets: Tuple containing the datasets.
-#    Returns:
-#        Datasets with standardized labels and the scaler object.
-#    """
-#    scaler = StandardScaler()
+# def standardize_dataset_labels(datasets):
+#     """Standardizes (scales) the dataset labels.
+#     Args:
+#         datasets: Tuple containing the datasets.
+#     Returns:
+#         Datasets with standardized labels and the scaler object.
+#     """
+#     scaler = StandardScaler()
 #
-#    # Collect all labels in order to apply scaling over the entire dataset.
-#    labels = None
-#    offsets = []
-#    for dataset in datasets:
-#        if labels is None:
-#            labels = dataset.get_datasets()[-1]
-#        else:
-#            labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
-#        offsets.append(len(labels))
+#     # Collect all labels in order to apply scaling over the entire dataset.
+#     labels = None
+#     offsets = []
+#     for dataset in datasets:
+#         if labels is None:
+#             labels = dataset.get_datasets()[-1]
+#         else:
+#             labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
+#         offsets.append(len(labels))
 #
-#    labels = scaler.fit_transform(labels)
+#     labels = scaler.fit_transform(labels)
 #
-#    # Replace the old labels with the new ones.
-#    for i, dataset in enumerate(datasets):
-#        start = 0 if i == 0 else offsets[i - 1]
-#        end = offsets[i]
-#        dataset = NumpyTupleDataset(
-#                *(dataset.get_datasets()[:-1] + (labels[start:end, :],)))
-#    return datasets, scaler
+#     # Replace the old labels with the new ones.
+#     for i, dataset in enumerate(datasets):
+#         start = 0 if i == 0 else offsets[i - 1]
+#         end = offsets[i]
+#         dataset = NumpyTupleDataset(
+#                 *(dataset.get_datasets()[:-1] + (labels[start:end, :],)))
+#     return datasets, scaler
 
 
 def main():

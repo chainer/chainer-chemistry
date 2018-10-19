@@ -5,19 +5,13 @@ import argparse
 import json
 import numpy
 import os
-import pandas
-import pickle
 
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer import cuda
-from chainer.datasets import split_dataset_random
-from chainer import Variable
 
 from chainer_chemistry.dataset.converters import concat_mols
-from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
@@ -79,7 +73,7 @@ def main():
     dataset_cache_path = dataset_part_filename('test', num_data)
     if os.path.exists(dataset_cache_path):
         print('Loading cached dataset from {}.'.format(dataset_cache_path))
-        dataset = NumpyTupleDataset.load(dataset_cache_path)
+        test = NumpyTupleDataset.load(dataset_cache_path)
     else:
         _, _, test = download_entire_dataset(dataset_name, num_data, labels,
                                              method, cache_dir)
@@ -93,7 +87,6 @@ def main():
 #    else:
 #        print('No standard scaling was selected.')
 #        scaler = None
-
 
     # Model-related data is stored this directory.
     model_dir = os.path.join(args.in_dir, os.path.basename(cache_dir))
