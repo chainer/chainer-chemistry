@@ -10,13 +10,11 @@ datasets=(bace_Class bace_pIC50 bbbp clintox delaney HIV hopv lipo \
 # GPU identifier; set it to -1 to train on the CPU (default).
 gpu=${1:--1}
 
+# Remove directories with previously trained models.
+[ -d input ] && rm -rf input
+
 for dataset in ${datasets[@]}
 do
-    # Remove directories with previously trained models.
-    if [ -d "input" ]; then
-        rm -rf input
-    fi
-
     # Run the training script for the current dataset.
     python train_molnet.py \
         --dataset $dataset \
