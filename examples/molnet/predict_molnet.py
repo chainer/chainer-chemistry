@@ -17,7 +17,7 @@ from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 
 # These import is necessary for pickle to work
-from sklearn.preprocessing import StandardScaler  # NOQA
+# from sklearn.preprocessing import StandardScaler  # NOQA
 from train_molnet import GraphConvPredictor  # NOQA
 from train_molnet import dataset_part_filename
 from train_molnet import download_entire_dataset
@@ -70,10 +70,11 @@ def main():
                                                              method))
 
     # Load the cached dataset.
-    dataset_cache_path = dataset_part_filename('test', num_data)
-    if os.path.exists(dataset_cache_path):
-        print('Loading cached dataset from {}.'.format(dataset_cache_path))
-        test = NumpyTupleDataset.load(dataset_cache_path)
+    filename = dataset_part_filename('test', num_data)
+    path = os.path.join(cache_dir, filename)
+    if os.path.exists(path):
+        print('Loading cached dataset from {}.'.format(path))
+        test = NumpyTupleDataset.load(path)
     else:
         _, _, test = download_entire_dataset(dataset_name, num_data, labels,
                                              method, cache_dir)

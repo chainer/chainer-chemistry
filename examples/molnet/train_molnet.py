@@ -173,8 +173,9 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
         os.makedirs(cache_dir)
 
     for i, part in enumerate(['train', 'valid', 'test']):
-        filename = os.path.join(cache_dir, part)
-        NumpyTupleDataset.save(filename, dataset_parts[i])
+        filename = dataset_part_filename(part, num_data)
+        path = os.path.join(cache_dir, filename)
+        NumpyTupleDataset.save(path, dataset_parts[i])
     return dataset_parts
 
 
@@ -237,18 +238,19 @@ def main():
         class_num = len(molnet_default_config[args.dataset]['tasks'])
 
     # Load the train and validation parts of the dataset.
-    dataset_parts = ['train', 'valid', 'test']
-    filenames = [dataset_part_filename(p, num_data) for p in dataset_parts]
+    filenames = [dataset_part_filename(p, num_data)
+                 for p in ['train', 'valid']]
 
-    if all([os.path.exists(filename) for filename in filenames]):
+    paths = [os.path.join(cache_dir, f) for f in filenames]
+    if all([os.path.exists(path) for path in paths]):
         dataset_parts = []
-        for filename in filenames:
-            print('Loading cached dataset from {}.'.format(filename))
-            dataset_parts.append(NumpyTupleDataset.load(filename))
+        for path in paths:
+            print('Loading cached dataset from {}.'.format(path))
+            dataset_parts.append(NumpyTupleDataset.load(path))
     else:
         dataset_parts = download_entire_dataset(dataset_name, num_data, labels,
                                                 method, cache_dir)
-    train, valid, _ = dataset_parts
+    train, valid = dataset_parts[0], dataset_parts[1]
 
 #    # Scale the label values, if necessary.
 #    if args.scale == 'standardize':

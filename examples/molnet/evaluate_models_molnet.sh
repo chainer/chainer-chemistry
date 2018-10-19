@@ -10,9 +10,6 @@ methods=(nfp)
 # GPU identifier; set it to -1 to train on the CPU (default).
 gpu=${1:--1}
 
-# Remove directories with previously downloaded datasets.
-[ -d input ] && rm -rf input
-
 # Remove directories with previously trained models.
 [ -d result ] && rm -rf result
 
