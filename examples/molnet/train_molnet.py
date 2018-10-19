@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+from __future__ import print_function
+
 import argparse
 import chainer
 import numpy
@@ -10,7 +13,6 @@ from chainer import optimizers
 from chainer import training
 
 from chainer.training import extensions as E
-
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
@@ -21,10 +23,7 @@ from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # 
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator
-
-
-def regression_loss_fun(x, t):
-    return mean_squared_error(x, t, ignore_nan=True)
+from sklearn.preprocessing import StandardScaler
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -53,11 +52,11 @@ class GraphConvPredictor(chainer.Chain):
 
 
 def parse_arguments():
-    # Lists of supported preprocessing methods/models.
+    # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
     dataset_names = list(molnet_default_config.keys())
+#    scale_list = ['standardize', 'none']
 
-    # Set up the argument parser.
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
@@ -85,6 +84,8 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
+#    parser.add_argument('--scale', type=str, choices=scale_list,
+#                        help='label scaling method', default='standardize')
     return parser.parse_args()
 
 
@@ -92,8 +93,7 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
     """Sets up the predictor, consisting of a graph convolution network and
     a multilayer perceptron.
     Args:
-        method: Method name. Currently, the supported ones are `nfp`, `ggnn`,
-                `schnet`, `weavenet` and `rsgcn`.
+        method: Method name. See `parse_arguments`.
         n_unit: Number of hidden units.
         conv_layers: Number of convolutional layers for the graph convolution
                      network.
@@ -136,8 +136,81 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
     return predictor
 
 
+def dataset_part_filename(dataset_part, num_data):
+    """Returns the filename corresponding to a train/valid/test parts of a
+    dataset, based on the amount of data samples that need to be parsed.
+    Args:
+        dataset_part: String containing any of the following 'train', 'valid'
+                      or 'test'.
+        num_data: Amount of data samples to be parsed from the dataset.
+    """
+    if num_data >= 0:
+        return '{}_data_{}.npz'.format(dataset_part, str(num_data))
+    return '{}_data.npz'.format(dataset_part)
+
+
+def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
+    """Downloads the train/valid/test parts of a dataset and stores them in the
+    cache directory.
+    Args:
+        dataset_name: Dataset to be downloaded.
+        num_data: Amount of data samples to be parsed from the dataset.
+        labels: Target labels for regression.
+        method: Method name. See `parse_arguments`.
+        cache_dir: Directory to store the dataset to.
+    """
+
+    print('Downloading {}...'.format(dataset_name))
+    preprocessor = preprocess_method_dict[method]()
+
+    # Select the first `num_data` samples from the dataset.
+    target_index = numpy.arange(num_data) if num_data >= 0 else None
+    dataset_parts = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
+                                                labels=labels,
+                                                target_index=target_index)
+    dataset_parts = dataset_parts['dataset']
+
+    # Cache the downloaded dataset.
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+
+    for i, part in enumerate(['train', 'valid', 'test']):
+        filename = os.path.join(cache_dir, part)
+        NumpyTupleDataset.save(filename, dataset_parts[i])
+    return dataset_parts
+
+
+#def standardize_dataset_labels(datasets):
+#    """Standardizes (scales) the dataset labels.
+#    Args:
+#        datasets: Tuple containing the datasets.
+#    Returns:
+#        Datasets with standardized labels and the scaler object.
+#    """
+#    scaler = StandardScaler()
+#
+#    # Collect all labels in order to apply scaling over the entire dataset.
+#    labels = None
+#    offsets = []
+#    for dataset in datasets:
+#        if labels is None:
+#            labels = dataset.get_datasets()[-1]
+#        else:
+#            labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
+#        offsets.append(len(labels))
+#
+#    labels = scaler.fit_transform(labels)
+#
+#    # Replace the old labels with the new ones.
+#    for i, dataset in enumerate(datasets):
+#        start = 0 if i == 0 else offsets[i - 1]
+#        end = offsets[i]
+#        dataset = NumpyTupleDataset(
+#                *(dataset.get_datasets()[:-1] + (labels[start:end, :],)))
+#    return datasets, scaler
+
+
 def main():
-    # Parse the arguments.
     args = parse_arguments()
 
     # Set up some useful variables that will be used later on.
@@ -146,6 +219,10 @@ def main():
     num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
+
+    task_type = molnet_default_config[dataset_name]['task_type']
+    model_filename = {'classification': 'classifier.pkl',
+                      'regression': 'regressor.pkl'}
 
     print('Using dataset: {}...'.format(dataset_name))
 
@@ -161,43 +238,30 @@ def main():
                                                              method))
         class_num = len(molnet_default_config[args.dataset]['tasks'])
 
-    # Get the file paths corresponding to the cached dataset, based on the
-    # amount of data samples that need to be parsed from the original dataset.
-    def get_dataset_paths(cache_dir, num_data):
-        filepaths = []
-        for filetype in ['train', 'valid', 'test']:
-            if num_data >= 0:
-                filename = '{}_data_{}.npz'.format(filetype, str(num_data))
-            else:
-                filename = '{}_data.npz'.format(filetype)
-            filepaths.append(os.path.join(cache_dir, filename))
-        return filepaths
-    filepaths = get_dataset_paths(cache_dir, num_data)
+    # Load the train and validation parts of the dataset.
+    dataset_parts = ['train', 'valid', 'test']
+    filenames = [dataset_part_filename(p, num_data) for p in dataset_parts]
 
-    # Load the cached dataset.
-    if all([os.path.exists(path) for path in filepaths]):
-        datasets = []
-        for path in filepaths:
-            print('Loading cached dataset from {}.'.format(path))
-            datasets.append(NumpyTupleDataset.load(path))
+    if all([os.path.exists(filename) for filename in filenames]):
+        dataset_parts = []
+        for filename in filenames:
+            print('Loading cached dataset from {}.'.format(filename))
+            dataset_parts.append(NumpyTupleDataset.load(filename))
     else:
-        print('Preprocessing dataset...')
-        preprocessor = preprocess_method_dict[method]()
+        dataset_parts = download_entire_dataset(dataset_name, num_data, labels,
+                                                method, cache_dir)
+    train, valid, _ = dataset_parts
 
-        # Select the first `num_data` samples from the dataset.
-        target_index = numpy.arange(num_data) if num_data >= 0 else None
-        datasets = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
-                                               labels=labels,
-                                               target_index=target_index)
-        # Cache the loaded dataset.
-        if not os.path.exists(cache_dir):
-            os.makedirs(cache_dir)
-        datasets = datasets['dataset']
-        for i, path in enumerate(filepaths):
-            NumpyTupleDataset.save(path, datasets[i])
-
-    # Split the dataset into training and validation.
-    train, valid, _ = datasets
+#    # Scale the label values, if necessary.
+#    if args.scale == 'standardize':
+#        if task_type == 'regression':
+#            print('Applying standard scaling to the labels.')
+#            datasets, scaler = standardize_dataset_labels(datasets)
+#        else:
+#            print('Label scaling is not available for classification tasks.')
+#    else:
+#        print('No label scaling was selected.')
+#        scaler = None
 
     # Set up the predictor.
     predictor = set_up_predictor(method, n_unit, conv_layers, class_num)
@@ -211,16 +275,13 @@ def main():
     metrics = molnet_default_config[dataset_name]['metrics']
     metrics_fun = {k: v for k, v in metrics.items()
                    if isinstance(v, types.FunctionType)}
-    # loss_fun = molnet_default_config[dataset_name]['loss']
+    loss_fun = molnet_default_config[dataset_name]['loss']
 
-    task_type = molnet_default_config[dataset_name]['task_type']
     if task_type == 'regression':
-        loss_fun = regression_loss_fun
-        model = Regressor(predictor, lossfun=loss_fun, metrics_fun=metrics_fun,
-                          device=args.gpu)
-        # TODO(nakago): Use standard scaler for regression task
+        model = Regressor(predictor, lossfun=loss_fun,
+                          metrics_fun=metrics_fun, device=args.gpu)
+        # TODO: Use standard scaler for regression task
     elif task_type == 'classification':
-        loss_fun = F.sigmoid_cross_entropy
         model = Classifier(predictor, lossfun=loss_fun,
                            metrics_fun=metrics_fun, device=args.gpu)
     else:
@@ -231,12 +292,17 @@ def main():
     optimizer = optimizers.Adam()
     optimizer.setup(model)
 
+    # Save model-related output to this directory.
+    model_dir = os.path.join(args.out, os.path.basename(cache_dir))
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
     # Set up the updater.
     updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
                                        converter=concat_mols)
 
     # Set up the trainer.
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
+    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=model_dir)
     trainer.extend(E.Evaluator(valid_iter, model, device=args.gpu,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
@@ -263,15 +329,17 @@ def main():
     trainer.extend(E.ProgressBar())
     trainer.run()
 
-    # Set the model's filename based on the task type.
-    task_type = molnet_default_config[dataset_name]['task_type']
-    model_filename = {'classification': 'classifier.pkl',
-                      'regression': 'regressor.pkl'}
-
     # Save the model's parameters.
-    model_path = os.path.join(args.out, model_filename[task_type])
+    model_path = os.path.join(model_dir,  model_filename[task_type])
     print('Saving the trained model to {}...'.format(model_path))
     model.save_pickle(model_path, protocol=args.protocol)
+
+#    # Save the standard scaler's parameters.
+#    if scaler is not None:
+#        scaler_path = os.path.join(model_dir, 'scaler.pkl')
+#        print('Saving standard scaler parameters to {}.'.format(scaler_path))
+#        with open(scaler_path, mode='wb') as f:
+#            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':
