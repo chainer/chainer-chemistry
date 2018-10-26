@@ -104,7 +104,6 @@ class SDFFileParser(BaseFileParser):
                         features = [[] for _ in range(num_features)]
 
                     if return_smiles:
-                        assert canonical_smiles == Chem.MolToSmiles(mol)
                         smiles_list.append(canonical_smiles)
                 except MolFeatureExtractionError as e:
                     # This is expected error that extracting feature failed,
