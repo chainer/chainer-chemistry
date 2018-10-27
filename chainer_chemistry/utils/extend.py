@@ -45,7 +45,7 @@ def extend_adj(adj, out_size, axis=None, value=0):
         adj (numpy.ndarray): the array whose `axis` to be extended.
             first axis is considered as "batch" axis.
         out_size (int): target output size for specified `axis`.
-        axis (int or None): node feature axis to be extended. Default is None,
+        axis (list or None): node feature axis to be extended. Default is None,
             in this case `axis=[-1, -2]` is used to extend last 2 axes.
         value (int or float): value to be filled for extended place.
 

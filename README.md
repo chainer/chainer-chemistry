@@ -13,175 +13,124 @@ Any materials are take free for PFN people, of course!!
   <img src="assets/chainer-chemistry-overview.png" alt="Chainer Chemistry Overview" width="600" />
 </p>
 
-Chainer Chemistry is a collection of tools to train and run neural networks for 
-tasks in biology and chemistry using Chainer[1].
+Chainer Chemistry is a deep learning framework (based on Chainer) with
+applications in Biology and Chemistry. It supports various state-of-the-art
+models (especially GCNN - Graph Convolutional Neural Network) for chemical property prediction.
 
-It supports various state-of-the-art deep learning neural network models 
-(especially Graph Convolution Neural Network) 
-for chemical molecule property prediction.
+For more information, please refer to the [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
+Also, a quick introduction to deep learning for molecules and Chainer Chemistry
+is available [here](https://www.slideshare.net/KentaOono/deep-learning-for-molecules-introduction-to-chainer-chemistry-93288837).
 
-For more information, you can refer to [documentation](http://chainer-chemistry.readthedocs.io/en/latest/index.html).
-Also, a gentle introduction to deep learning for molecules and Chainer Chemistry is available [here (SlideShare)](https://www.slideshare.net/KentaOono/deep-learning-for-molecules-introduction-to-chainer-chemistry-93288837)).
+## Dependencies
 
-## Quick start
-
-### 1. Installation
-
-Chainer Chemistry can be installed by `pip` command.
-
-Note that it uses [rdkit](https://github.com/rdkit/rdkit),
-Open-Source Cheminformatics Software.
-Below code is an example to install `rdkit` by `conda` command provided by
-[anaconda](https://www.anaconda.com/what-is-anaconda/).
-
-```bash
-pip install chainer-chemistry
-conda install -c rdkit rdkit==2017.09.3.0
-```
-
-### 2. Run example training code
-
-[The official repository](https://github.com/pfnet-research/chainer-chemistry) provides examples
-several graph convolution networks with the Tox21 and QM9 datasets
-(the Tox21 example has inference code as well). You can obtain the code by cloning
-the repository:
-
-```bash
-git clone https://github.com/pfnet-research/chainer-chemistry.git
-```
-
-The following code is how to train Neural Fingerprint (NFP) with the Tox21 dataset on CPU:
-
-```
-cd chainer-chemistry/examples/tox21
-python train_tox21.py --method=nfp  --gpu=-1  # set --gpu=0 if you have GPU
-```
-
-## Installation
-
-Usual users can install this library via PyPI:
-```
-pip install chainer-chemistry
-```
-
-Chainer Chemistry is still in experimental development.
-If you would like to use latest sources.
-please install master branch with the command:
-
-```
-git clone https://github.com/pfnet-research/chainer-chemistry.git
-pip install -e chainer-chemistry
-```
-
-### Dependencies
-
-Following packages are required to install Chainer Chemistry and are automatically
-installed when you install it by `pip` command.
+Chainer Chemistry depends on the following packages:
 
  - [`chainer`](https://docs.chainer.org/en/stable/index.html)
  - [`pandas`](https://pandas.pydata.org)
  - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
 
-Also, it uses following library, you need to manually install it.
+These are automatically added to the system when installing the library via the
+`pip` command (see _Installation_). However, the following  needs to be
+installed manually:
 
- - [`rdkit`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
  
-See the [official document](http://www.rdkit.org/docs/Install.html) 
-for installation.
-If you have setup `anaconda`, you may install `rdkit` by following command.
+Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
+for more information regarding the installation steps.
 
-```conda install -c rdkit rdkit==2017.09.3.0```
+Note that only the following versions of Chainer Chemistry's dependencies are
+currently supported:
 
-Note that we support specified version of RdKit.
-Latest version RdKit behavior may be different from supported version, 
-and it is not supported.
-
-### Version table
-
-Chainer Chemistry is tested under following version of other library.
-
-| Chainer Chemistry   | Chainer         | RdKit          |
+| Chainer Chemistry   | Chainer         | RDKit          |
 | ------------------: | --------------: | -------------: |
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
 | master branch       | v3.0 ~ v4.0     | 2017.09.3.0    |
 
-[Footnote]
+## Installation
 
-*1: We used `FunctionNode` in [this PR](https://github.com/pfnet-research/chainer-chemistry/pull/190),
-which is introduced after chainer v3. See [this issue](https://github.com/pfnet-research/chainer-chemistry/issues/192) for details.
+Chainer Chemistry can be installed using the `pip` command, as follows:
 
-## Supported model
+```
+pip install chainer-chemistry
+```
 
-Currently, following graph convolutional neural networks are implemented.
+If you would like to use the latest sources, please checkout the master branch
+and install with the following commands:
 
-- NFP: Neural fingerprint [2, 3]
+```
+git clone https://github.com/pfnet-research/chainer-chemistry.git
+pip install -e chainer-chemistry
+```
+
+## Sample Code
+
+Sample code is provided with this repository. This includes, but is not limited
+to, the following:
+
+- Training a new model on a given dataset
+- Performing inference on a given dataset, using a pretrained model
+- Evaluating and reporting performance metrics of different models on a given
+dataset
+
+Please refer to the `examples` directory for more information.
+
+## Supported Models
+
+The following graph convolutional neural networks are currently supported:
+
+- NFP: Neural Fingerprint [2, 3]
 - GGNN: Gated Graph Neural Network [4, 3]
-- WeaveNet: [5, 3]
-- SchNet: [6] 
+- WeaveNet [5, 3]
+- SchNet [6] 
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
- \* The name is not from original paper, see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming
+ \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
 
-## Supported dataset
+## Supported Datasets
 
-Currently, following dataset is supported.
+The following datasets are currently supported:
 
 - QM9 [7, 8]
 - Tox21 [9]
 - MoleculeNet [11]
+- User (own) dataset
 
-## Evaluation
-![tox21-evaluation](https://user-images.githubusercontent.com/29328746/39457687-974ad4ce-4d2a-11e8-9305-f6ca607af9dc.png)
+## Research Projects
 
-This image is the result of `examples/tox21/evaluate_models_tox21.sh`.
-Note that we do not guarantee reproducibility of papers in which each model is proposed and hence this result doesn't imply the performance of models themselves.
+If you use Chainer Chemistry in your research, feel free to submit a
+pull request and add the name of your project to this list:
+
+ - BayesGrad: Explaining Predictions of Graph Convolutional Networks ([paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad))
+
+## Useful Links
+
+Chainer Chemistry:
+
+ - [Documentation](https://chainer-chemistry.readthedocs.io)
+ - [Research Blog](https://preferredresearch.jp/2017/12/18/chainer-chemistry-beta-release/)
+
+Other Chainer frameworks:
+
+ - [Chainer: A Flexible Framework of Neural Networks for Deep Learning](https://chainer.org/)
+ - [ChainerRL: Deep Reinforcement Learning Library Built on Top of Chainer](https://github.com/chainer/chainerrl)
+ - [ChainerCV: A Library for Deep Learning in Computer Vision](https://github.com/chainer/chainercv)
+ - [ChainerMN: Scalable Distributed Deep Learning with Chainer](https://github.com/chainer/chainermn)
+ - [ChainerUI: User Interface for Chainer](https://github.com/chainer/chainerui)
 
 ## License
 
-MIT License. 
+This project is released under the MIT License. Please refer to the
+[this page](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE)
+for more information.
 
-We provide no warranty or support for this implementation.
-Each model performance is not guaranteed, and may not achieve the score reported in each paper.
-Use it at your own risk.
+Please note that Chainer Chemistry is still in experimental development.
+We continuously strive to improve its functionality and performance, but at
+this stage we cannot guarantee the reproducibility of any results published in
+papers. Use the library at your own risk.
 
-Please see the [LICENSE](https://github.com/pfnet-research/chainer-chemistry/blob/master/LICENSE) file for details.
 
-## Links
-
-Links for Chainer Chemistry:
-
- - Document: [https://chainer-chemistry.readthedocs.io](https://chainer-chemistry.readthedocs.io)
- - Blog: [Release Chainer Chemistry: A library for Deep Learning in Biology and Chemistry](https://preferredresearch.jp/2017/12/18/chainer-chemistry-beta-release/)
-
-Links for other Chainer projects:
-
- - Chainer: A flexible framework of neural networks for deep learning
-   - Official page: [Website](https://chainer.org/)
-   - Github: [chainer/chainer](https://github.com/chainer/chainer)
- - ChainerRL: Deep reinforcement learning library built on top of Chainer - [chainer/chainerrl](https://github.com/chainer/chainerrl)
- - ChainerCV: A Library for Deep Learning in Computer Vision - [chainer/chainercv](https://github.com/chainer/chainercv)
- - ChainerMN: Scalable distributed deep learning with Chainer - [chainer/chainermn](https://github.com/chainer/chainermn)
- - ChainerUI: User Interface for Chainer - [chainer/chainerui](https://github.com/chainer/chainerui)
- - PaintsChainer: Line drawing colorization using chainer
-   - Official page: [Website](https://paintschainer.preferred.tech)
-   - Github: [pfnet/PaintsChainer](https://github.com/pfnet/PaintsChainer)
- - CuPy: NumPy-like API accelerated with CUDA
-   - Official page: [Website](https://cupy.chainer.org/)
-   - Github: [cupy/cupy](https://github.com/cupy/cupy)
- 
-If you are new to chainer, here is a tutorial to start with:
-
- - Chainer Notebooks: hands on tutorial - [mitmul/chainer-handson](https://github.com/mitmul/chainer-handson)
-
-## Research projects using Chainer Chemistry
-
-If you use Chainer Chemistry in your research project, it is welcome to send PR to add your project in this list!
-
- - BayesGrad: Explaining Predictions of Graph Convolutional Networks<br/>
- [paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad)
-
-## Reference
+## References
 
 [1] Seiya Tokui, Kenta Oono, Shohei Hido, and Justin Clayton. Chainer: a next-generation open source framework for deep learning. In *Proceedings of Workshop on Machine Learning Systems (LearningSys) in Advances in Neural Information Processing System (NIPS) 28*, 2015.
 

@@ -6,6 +6,8 @@ from chainer_chemistry.training.extensions.prc_auc_evaluator import PRCAUCEvalua
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
 molnet_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/datasets/'
+featurized_base = 'http://deepchem.io.s3-website-us-west-1.amazonaws.com/' \
+                  + 'featurized_datasets/'
 
 
 def mae(x, t):
@@ -16,6 +18,10 @@ def mae(x, t):
 def rmse(x, t):
     mse = chainer_chemistry.functions.mean_squared_error(x, t, ignore_nan=True)
     return F.sqrt(mse)
+
+
+def r2_score(x, t):
+    return chainer_chemistry.functions.r2_score(x, t, ignore_nan=True)
 
 
 molnet_default_config = {
@@ -205,6 +211,30 @@ molnet_default_config = {
              'PCBA-902', 'PCBA-903', 'PCBA-904', 'PCBA-912', 'PCBA-914',
              'PCBA-915', 'PCBA-924', 'PCBA-925', 'PCBA-926', 'PCBA-927',
              'PCBA-938', 'PCBA-995'],
+    },
+    "pdbbind_smiles": {
+        "subset": ["core", "full", "refined"],
+        "dataset_type": 'one_file_csv',
+        "url": {'core': molnet_base + 'core_smiles_labels.csv',
+                'full': molnet_base + 'full_smiles_labels.csv',
+                'refined': molnet_base + 'refined_smiles_labels.csv'},
+        "smiles_columns": 'smiles',
+        "metrics": {'R2': r2_score},
+        "split": 'time',
+        "task_type": 'regression',
+        "tasks": ["-logKd/Ki"],
+    },
+    "pdbbind_grid": {
+        "pdbbind_subset": ["core", "full", "refined"],
+        "dataset_type": 'joblib',
+        "url": {'core': featurized_base + 'core_grid.tar.gz',
+                'full': featurized_base + 'full_grid.tar.gz',
+                'refined': featurized_base + 'refined_grid.tar.gz'},
+        "smiles_columns": '',
+        "metrics": {'R2': r2_score},
+        "split": 'time',
+        "task_type": 'regression',
+        "tasks": ["-logKd/Ki"],
     },
     "ppb": {
         "dataset_type": 'one_file_csv',

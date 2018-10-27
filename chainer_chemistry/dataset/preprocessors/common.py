@@ -1,6 +1,7 @@
 """Common preprocess method is gethered in this file"""
 
 import numpy
+from rdkit import Chem
 from rdkit.Chem import rdmolops
 
 
@@ -85,7 +86,9 @@ def construct_adj_matrix(mol, out_size=-1, self_connection=True):
             If True, diagonal element of adjacency matrix is filled with 1.
 
     Returns:
-        numpy.ndarray: the adjcent matrix of the input molecule.
+        adj_array (numpy.ndarray): The adjacent matrix of the input molecule.
+            It is 2-dimensional array with shape (atoms1, atoms2), where
+            atoms1 & atoms2 represent from and to of the edge respectively.
             If ``out_size`` is non-negative, the returned
             its size is equal to that value. Otherwise,
             it is equal to the number of atoms in the the molecule.
@@ -107,8 +110,58 @@ def construct_adj_matrix(mol, out_size=-1, self_connection=True):
                                 dtype=numpy.float32)
         adj_array[:s0, :s1] = adj
     else:
-        raise ValueError('`out_size` (={}) must be negative or '
-                         'larger than or equal to the number '
-                         'of atoms in the input molecules (={})'
-                         '.'.format(out_size, s0))
+        raise ValueError(
+            '`out_size` (={}) must be negative or larger than or equal to the '
+            'number of atoms in the input molecules (={}).'
+            .format(out_size, s0))
     return adj_array
+
+
+def construct_discrete_edge_matrix(mol, out_size=-1):
+    """Returns the edge-type dependent adjacency matrix of the given molecule.
+
+    Args:
+        mol (rdkit.Chem.Mol): Input molecule.
+        out_size (int): The size of the returned matrix.
+            If this option is negative, it does not take any effect.
+            Otherwise, it must be larger than the number of atoms
+            in the input molecules. In that case, the adjacent
+            matrix is expanded and zeros are padded to right
+            columns and bottom rows.
+
+    Returns:
+        adj_array (numpy.ndarray): The adjacent matrix of the input molecule.
+            It is 3-dimensional array with shape (edge_type, atoms1, atoms2),
+            where edge_type represents the bond type,
+            atoms1 & atoms2 represent from and to of the edge respectively.
+            If ``out_size`` is non-negative, its size is equal to that value.
+            Otherwise, it is equal to the number of atoms in the the molecule.
+    """
+    if mol is None:
+        raise MolFeatureExtractionError('mol is None')
+    N = mol.GetNumAtoms()
+
+    if out_size < 0:
+        size = N
+    elif out_size >= N:
+        size = out_size
+    else:
+        raise ValueError(
+            'out_size {} is smaller than number of atoms in mol {}'
+            .format(out_size, N))
+    adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
+
+    bond_type_to_channel = {
+        Chem.BondType.SINGLE: 0,
+        Chem.BondType.DOUBLE: 1,
+        Chem.BondType.TRIPLE: 2,
+        Chem.BondType.AROMATIC: 3
+    }
+    for bond in mol.GetBonds():
+        bond_type = bond.GetBondType()
+        ch = bond_type_to_channel[bond_type]
+        i = bond.GetBeginAtomIdx()
+        j = bond.GetEndAtomIdx()
+        adjs[ch, i, j] = 1.0
+        adjs[ch, j, i] = 1.0
+    return adjs
