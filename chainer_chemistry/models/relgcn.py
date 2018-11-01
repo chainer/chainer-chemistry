@@ -144,8 +144,8 @@ class RelGCN(chainer.Chain):
                  scale_adj=False):
 
         super(RelGCN, self).__init__()
-        ch_list = ch_list or [16, 128, 64]
-        # ch_list = [in_channels] + ch_list
+        if ch_list is None:
+            ch_list = [16, 128, 64]
         with self.init_scope():
             if input_type == 'int':
                 self.embed = EmbedAtomID(out_size=ch_list[0],
