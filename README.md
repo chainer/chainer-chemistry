@@ -82,6 +82,7 @@ The following graph convolutional neural networks are currently supported:
 - SchNet [6] 
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
  \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
+- RelGCN: Relational Graph Convolutional Network [12]
 
 ## Supported Datasets
 
@@ -149,3 +150,5 @@ papers. Use the library at your own risk.
 [10] Kipf, Thomas N. and Welling, Max. Semi-Supervised Classification with Graph Convolutional Networks. *International Conference on Learning Representations (ICLR)*, 2017.
 
 [11] Zhenqin Wu, Bharath Ramsundar, Evan N. Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S. Pappu, Karl Leswing, Vijay Pande, MoleculeNet: A Benchmark for Molecular Machine Learning, arXiv preprint, arXiv: 1703.00564, 2017.
+
+[12] Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling. Modeling Relational Data with Graph Convolutional Networks. *Extended Semantic Web Conference (ESWC)*, 2018.
