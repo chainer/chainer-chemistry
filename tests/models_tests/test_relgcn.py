@@ -52,7 +52,7 @@ def test_forward_gpu(model, data):
 def test_backward_cpu(model, data):
     atom_data, adj_data, y_grad = data
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
-                                  atol=1e0, rtol=1e0)
+                                  atol=1e-3, rtol=1e-3)
 
 
 @pytest.mark.gpu
@@ -60,7 +60,7 @@ def test_backward_gpu(model, data):
     atom_data, adj_data, y_grad = [cuda.to_gpu(d) for d in data]
     model.to_gpu()
     gradient_check.check_backward(model, (atom_data, adj_data), y_grad,
-                                  atol=1e0, rtol=1e0)
+                                  atol=1e-3, rtol=1e-3)
 
 
 def test_forward_cpu_invariant(model, data):
@@ -77,8 +77,9 @@ def test_forward_cpu_invariant(model, data):
 
 def test_rescale_adj(data):
     adj = data[1]
-    norm = numpy.linalg.norm(rescale_adj(adj).data)
-    numpy.testing.assert_allclose(norm, numpy.float32(1), rtol=1e-1)
+    numpy.testing.assert_allclose(rescale_adj(adj).data.sum(axis=(1, 2)),
+                                  numpy.ones((batch_size, atom_size)),
+                                  atol=1e-5, rtol=1e-5)
 
 
 if __name__ == '__main__':
