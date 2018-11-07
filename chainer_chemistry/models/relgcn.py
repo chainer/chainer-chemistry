@@ -8,6 +8,19 @@ from chainer_chemistry.links.graph_linear import GraphLinear
 
 
 def rescale_adj(adj):
+    """Normalize adjacency matrix
+    It ensures that activations are on a similar scale irrespective of
+    the number of neighbors
+
+    Args:
+        adj (:class:`chainer.Variable`, or :class:`numpy.ndarray` \
+        or :class:`cupy.ndarray`):
+            adjacency matrix
+
+    Returns:
+        :class:`chainer.Variable`: normalized adjacency matrix
+
+    """
     xp = cuda.get_array_module(adj)
     num_neighbors = functions.sum(adj, axis=(1, 2))
     base = xp.ones(num_neighbors.shape, dtype=xp.float32)
@@ -105,10 +118,6 @@ class RelGCNReadout(chainer.Chain):
             (batchsize, ch)
             F_n : Graph level representation
 
-        Notes:
-            I think they just incorporate "no edge" as one of the
-            categories of relations, i've made it a separate tensor
-            just to simplify some implementation, might change later
         """
         if x is None:
             in_feat = h
