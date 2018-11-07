@@ -1,6 +1,6 @@
 set -eu
 
-methods=(nfp ggnn schnet weavenet rsgcn)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn)
 prefix=eval_
 
 epoch=${1:-1}

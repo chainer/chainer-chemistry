@@ -22,7 +22,8 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, Regressor  # NOQA
+from chainer_chemistry.models import (
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, Regressor)
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -165,6 +166,12 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         print('Training an RSGCN predictor...')
         rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         predictor = GraphConvPredictor(rsgcn, mlp)
+    elif method == 'relgcn':
+        print('Training an RelGCN predictor...')
+        num_edge_type = 4
+        relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
+                        scale_adj=True)
+        predictor = GraphConvPredictor(relgcn, None)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
     return predictor
@@ -172,7 +179,7 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
