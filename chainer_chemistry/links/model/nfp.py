@@ -9,7 +9,7 @@ import numpy
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry import links
+from chainer_chemistry.links import GraphLinear
 
 
 class NFPUpdate(chainer.Chain):
@@ -26,7 +26,7 @@ class NFPUpdate(chainer.Chain):
         num_degree_type = max_degree + 1
         with self.init_scope():
             self.graph_linears = chainer.ChainList(
-                *[links.GraphLinear(in_channels, out_channels)
+                *[GraphLinear(in_channels, out_channels)
                   for _ in range(num_degree_type)]
             )
         self.max_degree = max_degree
