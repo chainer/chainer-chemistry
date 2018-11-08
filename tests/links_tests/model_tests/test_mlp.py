@@ -3,7 +3,7 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainer_chemistry.models.mlp import MLP
+from chainer_chemistry.links.model.mlp import MLP
 
 batch_size = 2
 hidden_dim = 16

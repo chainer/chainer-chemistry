@@ -5,7 +5,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.models.rsgcn import RSGCN
+from chainer_chemistry.links.model.rsgcn import RSGCN
 from chainer_chemistry.utils.extend import extend_node, extend_adj  # NOQA
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node

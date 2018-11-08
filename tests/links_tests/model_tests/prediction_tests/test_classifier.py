@@ -4,27 +4,38 @@ import pytest
 
 import chainer
 from chainer import cuda
+from chainer import functions
 from chainer import links
 from chainer import reporter
 
-from chainer_chemistry.models.prediction import Regressor
+from chainer_chemistry.links.model.prediction.classifier import Classifier
+
+
+# testing.parameterize takes a list of dictionaries.
+# Currently, we cannot set a function to the value of the dictionaries.
+# As a workaround, we wrap the function and invoke it in __call__ method.
+# See issue #1337 for detail.
+class AccuracyWithIgnoreLabel(object):
+
+    def __call__(self, y, t):
+        return functions.accuracy(y, t, ignore_label=1)
 
 
 class DummyPredictor(chainer.Chain):
     def __call__(self, x):
-        return 2 * x
+        return x
 
 
 @pytest.mark.parametrize(
-    'metrics_fun', [None, chainer.functions.mean_absolute_error,
-                    {'user_key': chainer.functions.mean_absolute_error}])
+    'metrics_fun', [AccuracyWithIgnoreLabel(), None,
+                    {'user_key': AccuracyWithIgnoreLabel()}])
 @pytest.mark.parametrize('compute_metrics', [True, False])
-class TestRegressor(object):
+class TestClassifier(object):
 
     def setup_method(self, method):
         self.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
-        self.t = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
-        self.y = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
+        self.t = numpy.random.randint(3, size=5).astype(numpy.int32)
+        self.y = numpy.random.uniform(-1, 1, (5, 7)).astype(numpy.float32)
 
     def check_call(
             self, gpu, label_key, args, kwargs, model_args, model_kwargs,
@@ -32,7 +43,7 @@ class TestRegressor(object):
         init_kwargs = {'label_key': label_key}
         if metrics_fun is not None:
             init_kwargs['metrics_fun'] = metrics_fun
-        link = Regressor(chainer.Link(), **init_kwargs)
+        link = Classifier(chainer.Link(), **init_kwargs)
 
         if gpu:
             xp = cuda.cupy
@@ -127,8 +138,8 @@ class TestRegressor(object):
     def test_report_key(self, metrics_fun, compute_metrics):
         repo = chainer.Reporter()
 
-        link = Regressor(predictor=DummyPredictor(),
-                         metrics_fun=metrics_fun)
+        link = Classifier(predictor=DummyPredictor(),
+                          metrics_fun=metrics_fun)
         link.compute_metrics = compute_metrics
         repo.add_observer('target', link)
         with repo:
@@ -144,7 +155,7 @@ class TestRegressor(object):
             elif isinstance(metrics_fun, dict):
                 assert set(['target/loss', 'target/user_key']) == actual_keys
             elif callable(metrics_fun):
-                assert set(['target/loss', 'target/metrics']) == actual_keys
+                assert set(['target/loss', 'target/accuracy']) == actual_keys
             else:
                 raise TypeError()
         else:
@@ -155,7 +166,7 @@ class TestInvalidArgument(object):
 
     @classmethod
     def setup_class(cls):
-        cls.link = Regressor(links.Linear(10, 3))
+        cls.link = Classifier(links.Linear(10, 3))
         cls.x = numpy.random.uniform(-1, 1, (5, 10)).astype(numpy.float32)
 
     def check_invalid_argument(self):
@@ -182,10 +193,10 @@ class TestInvalidLabelKey(object):
 
     def test_invalid_label_key_type(self):
         with pytest.raises(TypeError):
-            Regressor(links.Linear(10, 3), label_key=None)
+            Classifier(links.Linear(10, 3), label_key=None)
 
     def check_invalid_key(self, gpu, label_key):
-        link = Regressor(links.Linear(10, 3), label_key=label_key)
+        link = Classifier(links.Linear(10, 3), label_key=label_key)
         if gpu:
             link.to_gpu()
         x = chainer.Variable(link.xp.asarray(self.x))
@@ -214,27 +225,45 @@ class TestInvalidLabelKey(object):
         self.check_invalid_key(True, 't')
 
 
-class TestRegressorPrediction(object):
+class TestClassifierPrediction(object):
 
     @classmethod
     def setup_class(cls):
         cls.predictor = DummyPredictor()
         cls.x = numpy.array([[0., 1.], [-1., -2.], [4., 0.]],
                             dtype=numpy.float32)
-        cls.t = cls.x * 2
+        cls.t = numpy.array([1, 0, 0], dtype=numpy.int32)
 
     def test_predict_cpu(self):
-        clf = Regressor(self.predictor)
+        clf = Classifier(self.predictor)
         actual_t = clf.predict(self.x)
-        assert actual_t.shape == (3, 2)
-        assert actual_t.dtype == numpy.float32
+        assert actual_t.shape == (3,)
+        assert actual_t.dtype == numpy.int32
         assert numpy.alltrue(actual_t == self.t)
 
     @pytest.mark.gpu
     def test_predict_gpu(self):
-        clf = Regressor(self.predictor, device=0)
+        clf = Classifier(self.predictor, device=0)
         actual_t = clf.predict(self.x)
         assert numpy.alltrue(actual_t == self.t)
+
+    def check_predict_proba(self, device):
+        clf = Classifier(self.predictor, device=device)
+        actual_y = clf.predict_proba(self.x)
+        assert actual_y.shape == (3, 2)
+        assert actual_y.dtype == numpy.float32
+        assert numpy.alltrue(0 <= actual_y)
+        assert numpy.alltrue(actual_y <= 1.)
+
+        actual_t = numpy.argmax(actual_y, axis=1)
+        assert numpy.alltrue(actual_t == self.t)
+
+    def test_predict_proba_cpu(self):
+        self.check_predict_proba(-1)
+
+    @pytest.mark.gpu
+    def test_predict_proba_gpu(self):
+        self.check_predict_proba(0)
 
 
 if __name__ == '__main__':
