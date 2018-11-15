@@ -8,7 +8,7 @@ from chainer import functions
 from chainer import links
 from chainer import reporter
 
-from chainer_chemistry.links.model.prediction.classifier import Classifier
+from chainer_chemistry.models.prediction.classifier import Classifier
 
 
 # testing.parameterize takes a list of dictionaries.

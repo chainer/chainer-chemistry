@@ -5,7 +5,7 @@ from chainer import cuda
 import numpy
 import pytest
 
-from chainer_chemistry.links.model.prediction.base import BaseForwardModel
+from chainer_chemistry.models.prediction.base import BaseForwardModel
 
 
 class DummyForwardModel(BaseForwardModel):

@@ -4,7 +4,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links.model.weavenet import WeaveNet
+from chainer_chemistry.models.weavenet import WeaveNet
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 

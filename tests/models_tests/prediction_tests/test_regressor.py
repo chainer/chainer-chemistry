@@ -7,7 +7,7 @@ from chainer import cuda
 from chainer import links
 from chainer import reporter
 
-from chainer_chemistry.links.model.prediction.regressor import Regressor
+from chainer_chemistry.models.prediction.regressor import Regressor
 
 
 class DummyPredictor(chainer.Chain):
