@@ -1,5 +1,6 @@
 import chainer
 from chainer.dataset.convert import concat_examples
+from chainer import cuda
 from chainer import reporter
 
 from chainer_chemistry.models.prediction.base import BaseForwardModel
@@ -112,13 +113,19 @@ class Regressor(BaseForwardModel):
         self.metrics = None
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
-        reporter.report({'loss': self.loss}, self)
+
+        # When the reported data is a numpy array, the loss and metrics values
+        # are scalars. When the reported data is a cupy array, sometimes the
+        # same values become arrays instead. This seems to be a bug inside the
+        # reporter class, which needs to be addressed and fixed. Until then,
+        # the reported values will be converted to numpy arrays.
+        reporter.report({'loss': cuda.to_cpu(self.loss.data)}, self)
 
         if self.compute_metrics:
             # Note: self.metrics_fun is `dict`,
             # which is different from original chainer implementation
-            self.metrics = {key: value(self.y, t) for key, value in
-                            self.metrics_fun.items()}
+            self.metrics = {key: cuda.to_cpu(value(self.y, t))
+                            for key, value in self.metrics_fun.items()}
             reporter.report(self.metrics, self)
         return self.loss
 
