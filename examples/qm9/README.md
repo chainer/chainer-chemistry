@@ -52,12 +52,12 @@ following:
 
 On the CPU:
 ```
-bash evaluate_models_qm9.sh [epoch]
+bash evaluate_models_qm9.sh -1 [epoch]
 ```
 
 On the GPU:
 ```
-bash evaluate_models_qm9.sh [epoch] 0
+bash evaluate_models_qm9.sh 0 [epoch]
 ```
 
 This scripts start the training process for a number of `epoch` epochs per
