@@ -54,9 +54,9 @@ Type `python test_own_dataset.py --help` to see the complete set of options.
 
 To evaluate the performance of the currently implemented models, run the following:
 ```
-bash evaluate_own_dataset.sh [epoch] [gpu_id]
+bash evaluate_own_dataset.sh [gpu_id] [epoch]
 ```
-where `epoch` is the number of training epochs and `gpu_id` is the identifier of your GPU. 
+where `gpu_id` is the identifier of your GPU and `epoch` is the number of training epochs.
 To run the code on CPU, set `gpu_id` to `-1`.
 
 The scripts start the training process. Inference is then performed and evaluation metrics are reported. 
