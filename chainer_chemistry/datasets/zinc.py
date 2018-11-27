@@ -108,12 +108,7 @@ def download_and_extract_zinc250k(save_filepath):
     logger.info('Extracting ZINC250k dataset...')
     download_file_path = download.cached_download(download_url)
     df = pandas.read_csv(download_file_path)
-    print('df', df.shape)
+    # 'smiles' column contains '\n', need to remove it.
     df['smiles'] = df['smiles'].apply(_remove_new_line)
     df.to_csv(save_filepath, columns=_smiles_column_names + _label_names)
-    print(save_filepath, 'df', df.shape)
     return True
-
-
-if __name__ == '__main__':
-    download_and_extract_zinc250k('tmp1.csv')
