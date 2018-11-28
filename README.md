@@ -42,7 +42,7 @@ currently supported:
 | ------------------: | --------------: | -------------: |
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
-| master branch       | v3.0 ~ v4.0     | 2017.09.3.0    |
+| master branch       | v3.0 ~ v5.0     | 2017.09.3.0    |
 
 ## Installation
 
@@ -90,6 +90,7 @@ The following datasets are currently supported:
 - QM9 [7, 8]
 - Tox21 [9]
 - MoleculeNet [11]
+- ZINC (only 250k dataset) [12, 13]
 - User (own) dataset
 
 ## Research Projects
@@ -149,3 +150,7 @@ papers. Use the library at your own risk.
 [10] Kipf, Thomas N. and Welling, Max. Semi-Supervised Classification with Graph Convolutional Networks. *International Conference on Learning Representations (ICLR)*, 2017.
 
 [11] Zhenqin Wu, Bharath Ramsundar, Evan N. Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S. Pappu, Karl Leswing, Vijay Pande, MoleculeNet: A Benchmark for Molecular Machine Learning, arXiv preprint, arXiv: 1703.00564, 2017.
+
+[12] J. J. Irwin, T. Sterling, M. M. Mysinger, E. S. Bolstad, and R. G. Coleman. Zinc: a free tool to discover chemistry for biology. *Journal of chemical information and modeling*, 52(7):1757–1768, 2012.
+
+[13] Preprocessed csv file downloaded from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv

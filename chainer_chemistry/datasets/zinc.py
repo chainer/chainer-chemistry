@@ -1,36 +1,30 @@
-import glob
 from logging import getLogger
 import os
-import shutil
-import tarfile
-import tempfile
 
 from chainer.dataset import download
 import numpy
 import pandas
-from tqdm import tqdm
 
 from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 
-download_url = 'https://ndownloader.figshare.com/files/3195389'
-file_name = 'qm9.csv'
+download_url = 'https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv'  # NOQA
+file_name_250k = 'zinc250k.csv'
 
-_root = 'pfnet/chainer/qm9'
+_root = 'pfnet/chainer/zinc'
 
-_label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
-                'zpve', 'U0', 'U', 'H', 'G', 'Cv']
-_smiles_column_names = ['SMILES1', 'SMILES2']
+_label_names = ['logP', 'qed', 'SAS']
+_smiles_column_names = ['smiles']
 
 
-def get_qm9_label_names():
-    """Returns label names of QM9 datasets."""
+def get_zinc250k_label_names():
+    """Returns label names of ZINC250k datasets."""
     return _label_names
 
 
-def get_qm9(preprocessor=None, labels=None, return_smiles=False,
-            target_index=None):
-    """Downloads, caches and preprocesses QM9 dataset.
+def get_zinc250k(preprocessor=None, labels=None, return_smiles=False,
+                 target_index=None):
+    """Downloads, caches and preprocesses Zinc 250K dataset.
 
     Args:
         preprocessor (BasePreprocessor): Preprocessor.
@@ -47,7 +41,7 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False,
         `preprocess_method`.
 
     """
-    labels = labels or get_qm9_label_names()
+    labels = labels or get_zinc250k_label_names()
     if isinstance(labels, str):
         labels = [labels, ]
 
@@ -58,8 +52,8 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False,
     if preprocessor is None:
         preprocessor = AtomicNumberPreprocessor()
     parser = CSVFileParser(preprocessor, postprocess_label=postprocess_label,
-                           labels=labels, smiles_col='SMILES1')
-    result = parser.parse(get_qm9_filepath(), return_smiles=return_smiles,
+                           labels=labels, smiles_col='smiles')
+    result = parser.parse(get_zinc250k_filepath(), return_smiles=return_smiles,
                           target_index=target_index)
 
     if return_smiles:
@@ -68,8 +62,8 @@ def get_qm9(preprocessor=None, labels=None, return_smiles=False,
         return result['dataset']
 
 
-def get_qm9_filepath(download_if_not_exist=True):
-    """Construct a filepath which stores qm9 dataset for config_name
+def get_zinc250k_filepath(download_if_not_exist=True):
+    """Construct a filepath which stores ZINC250k dataset for config_name
 
     This method check whether the file exist or not,  and downloaded it if
     necessary.
@@ -78,55 +72,43 @@ def get_qm9_filepath(download_if_not_exist=True):
         download_if_not_exist (bool): If `True` download dataset
             if it is not downloaded yet.
 
-    Returns (str): file path for qm9 dataset (formatted to csv)
+    Returns (str): file path for ZINC250k dataset (csv format)
 
     """
-    cache_path = _get_qm9_filepath()
+    cache_path = _get_zinc250k_filepath()
     if not os.path.exists(cache_path):
         if download_if_not_exist:
-            is_successful = download_and_extract_qm9(save_filepath=cache_path)
+            is_successful = download_and_extract_zinc250k(
+                save_filepath=cache_path)
             if not is_successful:
                 logger = getLogger(__name__)
                 logger.warning('Download failed.')
     return cache_path
 
 
-def _get_qm9_filepath():
-    """Construct a filepath which stores QM9 dataset in csv
+def _get_zinc250k_filepath():
+    """Construct a filepath which stores ZINC250k dataset in csv
 
     This method does not check if the file is already downloaded or not.
 
-    Returns (str): filepath for qm9 dataset
+    Returns (str): filepath for ZINC250k dataset
 
     """
     cache_root = download.get_dataset_directory(_root)
-    cache_path = os.path.join(cache_root, file_name)
+    cache_path = os.path.join(cache_root, file_name_250k)
     return cache_path
 
 
-def download_and_extract_qm9(save_filepath):
+def _remove_new_line(s):
+    return s.replace('\n', '')
+
+
+def download_and_extract_zinc250k(save_filepath):
     logger = getLogger(__name__)
-    logger.warning('Extracting QM9 dataset, it takes time...')
+    logger.info('Extracting ZINC250k dataset...')
     download_file_path = download.cached_download(download_url)
-    tf = tarfile.open(download_file_path, 'r')
-    temp_dir = tempfile.mkdtemp()
-    tf.extractall(temp_dir)
-    file_re = os.path.join(temp_dir, '*.xyz')
-    file_pathes = glob.glob(file_re)
-    # Make sure the order is sorted
-    file_pathes.sort()
-    ls = []
-    for path in tqdm(file_pathes):
-        with open(path, 'r') as f:
-            data = [line.strip() for line in f]
-
-        num_atom = int(data[0])
-        properties = list(map(float, data[1].split('\t')[1:]))
-        smiles = data[3 + num_atom].split('\t')
-        new_ls = smiles + properties
-        ls.append(new_ls)
-
-    df = pandas.DataFrame(ls, columns=_smiles_column_names + _label_names)
-    df.to_csv(save_filepath)
-    shutil.rmtree(temp_dir)
+    df = pandas.read_csv(download_file_path)
+    # 'smiles' column contains '\n', need to remove it.
+    df['smiles'] = df['smiles'].apply(_remove_new_line)
+    df.to_csv(save_filepath, columns=_smiles_column_names + _label_names)
     return True
