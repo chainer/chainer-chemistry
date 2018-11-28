@@ -21,6 +21,7 @@ def test_get_zinc_filepath_without_download():
     assert not os.path.exists(filepath)
 
 
+@pytest.mark.slow
 def test_get_zinc_filepath_with_download():
     filepath = zinc.get_zinc250k_filepath(download_if_not_exist=False)
     if os.path.exists(filepath):
@@ -52,6 +53,7 @@ def test_get_zinc():
     assert len(dataset) == ZINC250K_NUM_DATASET
 
 
+@pytest.mark.slow
 def test_get_zinc_smiles():
     # test smiles extraction and dataset order
     pp = AtomicNumberPreprocessor()
