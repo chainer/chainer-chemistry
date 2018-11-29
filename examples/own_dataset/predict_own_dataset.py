@@ -46,7 +46,7 @@ class ScaledGraphConvPredictor(GraphConvPredictor):
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.

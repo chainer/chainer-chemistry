@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO)
 
 def main():
     # Supported preprocessing/network list
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     label_names = D.get_tox21_label_names()
     iterator_type = ['serial', 'balanced']
 

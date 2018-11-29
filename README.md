@@ -82,6 +82,7 @@ The following graph convolutional neural networks are currently supported:
 - SchNet [6] 
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
  \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
+- RelGCN: Relational Graph Convolutional Network [14]
 
 ## Supported Datasets
 
@@ -154,3 +155,5 @@ papers. Use the library at your own risk.
 [12] J. J. Irwin, T. Sterling, M. M. Mysinger, E. S. Bolstad, and R. G. Coleman. Zinc: a free tool to discover chemistry for biology. *Journal of chemical information and modeling*, 52(7):1757–1768, 2012.
 
 [13] Preprocessed csv file downloaded from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv
+
+[14] Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling. Modeling Relational Data with Graph Convolutional Networks. *Extended Semantic Web Conference (ESWC)*, 2018.

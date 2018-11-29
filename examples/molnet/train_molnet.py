@@ -18,7 +18,8 @@ from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.functions import mean_squared_error
-from chainer_chemistry.models import MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN  # NOQA
+from chainer_chemistry.models import (
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator
@@ -62,7 +63,7 @@ class GraphConvPredictor(chainer.Chain):
 
 
 def main():
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     dataset_names = list(molnet_default_config.keys())
 
     parser = argparse.ArgumentParser(description='molnet example')
@@ -168,6 +169,13 @@ def main():
         predictor = GraphConvPredictor(
             RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers),
             MLP(out_dim=class_num, hidden_dim=n_unit))
+    elif method == 'relgcn':
+        print('Train RelGCN model...')
+        num_edge_type = 4
+        predictor = GraphConvPredictor(
+            RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
+                   scale_adj=True),
+            None)
     else:
         raise ValueError('[ERROR] Invalid method {}'.format(method))
 
