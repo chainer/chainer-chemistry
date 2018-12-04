@@ -1,7 +1,7 @@
 set -eu
 
 gpu=-1
-methods=(nfp ggnn schnet weavenet rsgcn)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn)
 prefix=eval_
 
 for method in ${methods[@]}

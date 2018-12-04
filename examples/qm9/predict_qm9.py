@@ -54,7 +54,7 @@ class ScaledGraphConvPredictor(GraphConvPredictor):
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -84,7 +84,6 @@ def parse_arguments():
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
     return parser.parse_args()
-
 
 
 def main():
@@ -164,7 +163,7 @@ def main():
     df_dict = {}
     for i, l in enumerate(labels):
         df_dict.update({'y_pred_{}'.format(l): y_pred[:, i],
-                        't_{}'.format(l): t[:, i],})
+                        't_{}'.format(l): t[:, i], })
     df = pandas.DataFrame(df_dict)
 
     # Show a prediction/ground truth table with 5 random examples.
