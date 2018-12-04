@@ -16,13 +16,14 @@ class GGNNReadout(chainer.Chain):
             each layer and the result is concatenated
         nobias (bool): If ``True``, then this function does not use
             the bias
-        activate (~chainer.Function or ~chainer.FunctionNode
-                  or NoneType):
-            You can use this class for RelGCN with functions.tanh
+        activate_fn (~chainer.Function or ~chainer.FunctionNode):
+            activate function
+            It can be replaced with the functions.identity.
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4,
-                 concat_hidden=False, nobias=False, activate=None):
+                 concat_hidden=False, nobias=False,
+                 activate_fn=functions.tanh):
         super(GGNNReadout, self).__init__()
         n_layer = n_layers if concat_hidden else 1
         with self.init_scope():
@@ -37,7 +38,7 @@ class GGNNReadout(chainer.Chain):
         self.n_layers = n_layers
         self.concat_hidden = concat_hidden
         self.nobias = nobias
-        self.activate = functions.identity if activate is None else activate
+        self.activate_fn = activate_fn
 
     def __call__(self, h, h0=None, step=0):
         # --- Readout part ---
@@ -46,8 +47,7 @@ class GGNNReadout(chainer.Chain):
         h1 = functions.concat((h, h0), axis=2) if h0 is not None else h
 
         g1 = functions.sigmoid(self.i_layers[index](h1))
-        h2 = h if self.activate == functions.identity else h1
-        g2 = self.activate(self.j_layers[index](h2))
+        g2 = self.activate_fn(self.j_layers[index](h1))
         # sum along atom's axis
-        g = self.activate(functions.sum(g1 * g2, axis=1))
+        g = self.activate_fn(functions.sum(g1 * g2, axis=1))
         return g
