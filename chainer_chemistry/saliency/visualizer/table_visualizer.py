@@ -1,8 +1,8 @@
 import numpy
 import matplotlib.pyplot as plt
 
-from chainer_saliency.visualizer.base_visualizer import BaseVisualizer
-from chainer_saliency.visualizer.common import abs_max_scaler
+from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
+from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
 
 
 class TableVisualizer(BaseVisualizer):
@@ -10,7 +10,7 @@ class TableVisualizer(BaseVisualizer):
     def visualize(self, saliency, feature_names=None, save_filepath=None,
                   num_visualize=-1, scaler=abs_max_scaler,
                   sort='descending', title='Feature Importance', color='b',
-                  xlabel='Importance'):  # legend='',
+                  xlabel='Importance'):
         # --- type check ---
         assert saliency.ndim == 1
         num_total_feat = saliency.shape[0]

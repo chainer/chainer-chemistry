@@ -5,8 +5,8 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 
 
-from chainer_saliency.visualizer.base_visualizer import BaseVisualizer
-from chainer_saliency.visualizer.common import red_blue_cmap, abs_max_scaler
+from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
+from chainer_chemistry.saliency.visualizer.common import red_blue_cmap, abs_max_scaler  # NOQA
 
 
 def _convert_to_2d(axes, nrows, ncols):
@@ -33,19 +33,22 @@ def is_visible(begin, end):
 
 class MolVisualier(BaseVisualizer):
 
+    def __init__(self, logger=None):
+        self.logger = logger(__name__)
+
     def visualize(self, saliency, mol, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
                   scaler=abs_max_scaler, legend=''):
-        num_atoms = mol.GetNumAtoms()
         rdDepictor.Compute2DCoords(mol)
         Chem.SanitizeMol(mol)
         Chem.Kekulize(mol)
-        n_atoms = mol.GetNumAtoms()
-        if num_atoms != n_atoms:
-            import IPython; IPython.embed()
+        num_atoms = mol.GetNumAtoms()
 
         # --- type check ---
-        assert saliency.ndim == 1
+        if not saliency.ndim == 1:
+            raise ValueError("[ERROR] Unexpected value saliency.shape={}"
+                             .format(saliency.shape))
+
         # Cut saliency array for unnecessary tail part
         saliency = saliency[:num_atoms]
         if scaler is not None:
@@ -54,7 +57,7 @@ class MolVisualier(BaseVisualizer):
 
         abs_saliency = numpy.abs(saliency)
         if visualize_ratio < 1.0:
-            threshold_index = int(n_atoms * visualize_ratio)
+            threshold_index = int(num_atoms * visualize_ratio)
             idx = numpy.argsort(abs_saliency)
             idx = numpy.flip(idx, axis=0)
             # set threshold to top `visualize_ratio` saliency
@@ -63,7 +66,8 @@ class MolVisualier(BaseVisualizer):
         else:
             threshold = numpy.min(saliency)
 
-        highlight_atoms = list(map(lambda g: g.__int__(), numpy.where(abs_saliency >= threshold)[0]))
+        highlight_atoms = list(map(lambda g: g.__int__(), numpy.where(
+            abs_saliency >= threshold)[0]))
         atom_colors = {i: color_fn(e) for i, e in enumerate(saliency)}
         bondlist = [bond.GetIdx() for bond in mol.GetBonds()]
 
@@ -71,7 +75,8 @@ class MolVisualier(BaseVisualizer):
             begin = saliency[bond.GetBeginAtomIdx()]
             end = saliency[bond.GetEndAtomIdx()]
             return color_fn(is_visible(begin, end))
-        bondcolorlist = {i: color_bond(bond) for i, bond in enumerate(mol.GetBonds())}
+        bondcolorlist = {i: color_bond(bond)
+                         for i, bond in enumerate(mol.GetBonds())}
         drawer = rdMolDraw2D.MolDraw2DSVG(500, 375)
         drawer.DrawMolecule(
             mol, highlightAtoms=highlight_atoms,
@@ -82,15 +87,16 @@ class MolVisualier(BaseVisualizer):
         if save_filepath:
             extention = save_filepath.split('.')[-1]
             if extention == 'svg':
-                print('saving svg to {}'.format(save_filepath))
                 with open(save_filepath, 'w') as f:
                     f.write(svg)
             elif extention == 'png':
-                import cairosvg
-                print('saving png to {}'.format(save_filepath))
-                # cairosvg.svg2png(
-                #     url=svg_save_filepath, write_to=save_filepath)
-                # print('svg type', type(svg))
+                # TODO: check it is possible without cairosvg or not
+                try:
+                    import cairosvg
+                except ImportError as e:
+                    print('cairosvg is not installed! '
+                          'Please install cairosvg to save by png format.')
+                    raise e
                 cairosvg.svg2png(bytestring=svg, write_to=save_filepath)
             else:
                 raise ValueError(
@@ -104,9 +110,9 @@ class MolVisualier(BaseVisualizer):
 class SmilesVisualizer(MolVisualier):
 
     def visualize(self, saliency, smiles, save_filepath=None,
-                  visualize_ratio=1.0, color_fn=red_blue_cmap, scaler=abs_max_scaler, legend='',
-                  add_Hs=False, use_canonical_smiles=True):
-
+                  visualize_ratio=1.0, color_fn=red_blue_cmap,
+                  scaler=abs_max_scaler, legend='', add_Hs=False,
+                  use_canonical_smiles=True):
         mol = Chem.MolFromSmiles(smiles)
         if use_canonical_smiles:
             smiles = Chem.MolToSmiles(mol, canonical=True)
@@ -114,5 +120,6 @@ class SmilesVisualizer(MolVisualier):
         if add_Hs:
             mol = Chem.AddHs(mol)
         super(SmilesVisualizer, self).visualize(
-            saliency, mol, save_filepath=save_filepath, visualize_ratio=visualize_ratio,
-            color_fn=color_fn, scaler=scaler, legend=legend,)
+            saliency, mol, save_filepath=save_filepath,
+            visualize_ratio=visualize_ratio, color_fn=color_fn, scaler=scaler,
+            legend=legend)

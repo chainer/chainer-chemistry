@@ -16,8 +16,14 @@ class VariableMonitorLinkHook(chainer.LinkHook):
 
     def __init__(self, target_link, name='VariableMonitorLinkHook',
                  timing='post', extract_fn=None):
-        assert isinstance(target_link, chainer.Link)
-        assert timing in ['pre', 'post']
+        if not isinstance(target_link, chainer.Link):
+            raise TypeError('target_link must be instance of chainer.Link!'
+                            'actual {}'.format(type(target_link)))
+        if timing not in ['pre', 'post']:
+            raise ValueError(
+                "[ERROR] Unexpected value timing={}, "
+                "must be either pre or post"
+                .format(timing))
         super(VariableMonitorLinkHook, self).__init__()
         self.target_link = target_link
 
@@ -31,7 +37,8 @@ class VariableMonitorLinkHook(chainer.LinkHook):
             elif timing == 'post':
                 extract_fn = _default_extract_post
             else:
-                raise ValueError("[ERROR] Unexpected value timing={}".format(timing))
+                raise ValueError("[ERROR] Unexpected value timing={}"
+                                 .format(timing))
         self.extract_fn = extract_fn
         self.process_fns = OrderedDict()  # Additional process, if necessary
 
@@ -39,9 +46,10 @@ class VariableMonitorLinkHook(chainer.LinkHook):
         self.result = None
 
     def add_process(self, key, fn):
-        assert isinstance(key, str)
-        assert callable(fn)
-        # self.process.update({key: fn})
+        if not isinstance(key, str):
+            raise TypeError('key must be str, actual {}'.format(type(key)))
+        if not callable(fn):
+            raise TypeError('fn must be callable')
         self.process_fns[key] = fn
 
     def delete_process(self, key):
@@ -49,7 +57,6 @@ class VariableMonitorLinkHook(chainer.LinkHook):
 
     def forward_preprocess(self, args):
         if self.timing == 'pre' and args.link is self.target_link:
-            # print('[DEBUG] matched at {}'.format(args.link.name))
             self.result = self.extract_fn(self, args)
             if self.process_fns is not None:
                 for key, fn in self.process_fns.items():

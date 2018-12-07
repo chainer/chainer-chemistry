@@ -1,4 +1,3 @@
-import warnings
 from abc import ABCMeta
 from abc import abstractmethod
 from future.utils import with_metaclass
@@ -80,11 +79,11 @@ class GaussianNoiseSampler(object):
             pass
         elif self.mode == 'relative':
             # `scale_axis` is used to calculate `max` and `min` of target_array
-            # As default, all axes except batch axis are treated as `scale_axis`.
+            # As default, all axes except batch axis are used.
             scale_axis = tuple(range(1, target_array.ndim))
-            noise = noise * (xp.max(target_array, axis=scale_axis, keepdims=True)
-                             - xp.min(target_array, axis=scale_axis, keepdims=True))
-            # print('[DEBUG] noise', noise.shape)
+            vmax = xp.max(target_array, axis=scale_axis, keepdims=True)
+            vmin = xp.min(target_array, axis=scale_axis, keepdims=True)
+            noise = noise * (vmax - vmin)
         else:
             raise ValueError("[ERROR] Unexpected value mode={}"
                              .format(self.mode))
@@ -127,7 +126,8 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
         elif method == 'square':
             h = saliency_arrays ** 2
         else:
-            raise ValueError("[ERROR] Unexpected value method={}".format(method))
+            raise ValueError("[ERROR] Unexpected value method={}"
+                             .format(method))
 
         if ch_axis is not None:
             h = numpy.sum(h, axis=ch_axis)
@@ -196,28 +196,25 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
             # --- Main saliency computation ----
             if noise_sampler is None:
                 # VanillaGrad computation
-                result = self._compute_core(*inputs)
+                outputs = self._compute_core(*inputs)
             else:
                 # SmoothGrad computation
                 if self.target_extractor is None:
                     # inputs[0] is considered as "target_var"
                     noise = noise_sampler.sample(inputs[0].array)
                     inputs[0].array += noise
-                    result = self._compute_core(*inputs)
+                    outputs = self._compute_core(*inputs)
                 # inputs[self.target_key].data += noise
                 else:
                     # Add process to LinkHook
                     def add_noise(hook, args, target_var):
                         noise = noise_sampler.sample(target_var.array)
                         target_var.array += noise
-
-                    self.target_extractor.add_process('/saliency/add_noise', add_noise)
-                    result = self._compute_core(*inputs)
+                    self.target_extractor.add_process('/saliency/add_noise',
+                                                      add_noise)
+                    outputs = self._compute_core(*inputs)
                     self.target_extractor.delete_process('/saliency/add_noise')
-            outputs = result
             # --- Main saliency computation end ---
-            # outputs = fn(*inputs)
-            # outputs = self._compute_core(target_var, output_var)
 
             # Init
             if retain_inputs:
@@ -245,8 +242,6 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
                 in_array) for in_array in input_list]
 
         result = [_concat(output) for output in output_list]
-
-        # result = [numpy.concatenate(output) for output in output_list]
         if len(result) == 1:
             return result[0]
         else:

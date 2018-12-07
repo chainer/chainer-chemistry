@@ -4,11 +4,14 @@ import matplotlib.cm as cm
 
 from chainer import cuda
 
-from chainer_saliency.visualizer.base_visualizer import BaseVisualizer
-from chainer_saliency.visualizer.common import abs_max_scaler
+from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
+from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
 
 
 class ImageVisualizer(BaseVisualizer):
+
+    def __init__(self, logger=None):
+        self.logger = logger(__name__)
 
     def visualize(self, saliency, image=None, save_filepath=None,
                   scaler=abs_max_scaler, title='Image saliency map',
@@ -40,9 +43,10 @@ class ImageVisualizer(BaseVisualizer):
                 raise ValueError("[ERROR] Unexpected value image.shape={}"
                                  .format(image.shape))
             if image.shape[:2] != saliency_image.shape[:2]:
-                print('[WARNING] saliency and image height or width is different\n'
-                      'saliency_image.shape {}, image.shape [}'
-                      .format(saliency_image.shape, image.shape))
+                self.logger.warning(
+                    'saliency and image height or width is different\n'
+                    'saliency_image.shape {}, image.shape [}'
+                    .format(saliency_image.shape, image.shape))
 
         # Normalize to [-1, 1] or [0, 1]
         if scaler is not None:

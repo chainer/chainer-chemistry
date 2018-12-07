@@ -1,6 +1,6 @@
 import numpy
 
-from chainer_saliency.calculator.gradient_calculator import GradientCalculator
+from chainer_chemistry.saliency.calculator.gradient_calculator import GradientCalculator  # NOQA
 
 
 class IntegratedGradientsCalculator(GradientCalculator):
@@ -34,9 +34,11 @@ class IntegratedGradientsCalculator(GradientCalculator):
                 interpolated_inputs = base + alpha * diff
                 target_var.array[:] = interpolated_inputs
 
-            self.target_extractor.add_process('/saliency/interpolate_target_var', interpolate_target_var)
+            self.target_extractor.add_process(
+                '/saliency/interpolate_target_var', interpolate_target_var)
             total_grads += super(
                 IntegratedGradientsCalculator, self)._compute_core(*inputs)[0]
-            self.target_extractor.delete_process('/saliency/interpolate_target_var')
+            self.target_extractor.delete_process(
+                '/saliency/interpolate_target_var')
         saliency = total_grads * diff / self.steps
         return saliency,

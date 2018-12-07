@@ -1,7 +1,6 @@
 import numpy
 
 
-# Default color function
 def red_blue_cmap(x):
     # return in RGB order
     if x > 0:
