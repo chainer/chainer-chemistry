@@ -25,7 +25,7 @@ from train_molnet import download_entire_dataset
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
 #    scale_list = ['standardize', 'none']
     dataset_names = list(molnet_default_config.keys())
 

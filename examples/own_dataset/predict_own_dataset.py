@@ -46,7 +46,7 @@ class ScaledGraphConvPredictor(GraphConvPredictor):
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
@@ -123,12 +123,6 @@ def main():
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
                             device=args.gpu)()
-
-    # Prevents the loss function from becoming a cupy.core.core.ndarray object
-    # when using the GPU. This hack will be removed as soon as the cause of
-    # the issue is found and properly fixed.
-    loss = numpy.asscalar(cuda.to_cpu(eval_result['main/loss']))
-    eval_result['main/loss'] = loss
     print('Evaluation result: ', eval_result)
 
     with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:

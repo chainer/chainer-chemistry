@@ -31,7 +31,7 @@ class BaseForwardModel(link.Chain):
             -1 indicates to use in CPU.
 
     Attributes:
-        _device (int): Model's current device id
+        _dev_id (int): Model's current device id
 
     """
 
@@ -39,10 +39,10 @@ class BaseForwardModel(link.Chain):
         super(BaseForwardModel, self).__init__()
 
         self.inputs = None
-        self._device = None
+        self._dev_id = None
 
     def get_device(self):
-        return self._device
+        return self._dev_id
 
     def initialize(self, device=-1):
         """Initialization of the model.
@@ -58,12 +58,12 @@ class BaseForwardModel(link.Chain):
         self.update_device(device=device)
 
     def update_device(self, device=-1):
-        if self._device is None or self._device != device:
+        if self._dev_id is None or self._dev_id != device:
             # reset current state
             self.to_cpu()
 
             # update the model to specified device id
-            self._device = device
+            self._dev_id = device
             if device >= 0:
                 chainer.cuda.get_device_from_id(device).use()
                 self.to_gpu()  # Copy the model to the GPU
@@ -97,7 +97,7 @@ class BaseForwardModel(link.Chain):
         it = SerialIterator(data, batch_size=batchsize, repeat=False,
                             shuffle=False)
         for batch in it:
-            inputs = converter(batch, self._device)
+            inputs = converter(batch, self._dev_id)
             inputs = _to_tuple(inputs)
 
             if preprocess_fn:
