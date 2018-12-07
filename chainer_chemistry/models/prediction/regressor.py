@@ -4,7 +4,6 @@ from chainer import cuda
 from chainer import reporter
 from chainer.variable import Variable
 from chainer_chemistry.models.prediction.base import BaseForwardModel
-import cupy
 import numpy
 
 
@@ -71,11 +70,11 @@ class Regressor(BaseForwardModel):
         """Converts an input value to a scalar if its type is a numpy or cupy
         array, otherwise it returns the value as it is.
         """
-        if type(value) == cupy.core.core.ndarray:
+        if numpy.isscalar(value):
+            return value
+        if type(value) is not numpy.array:
             value = cuda.to_cpu(value)
-        if type(value) == numpy.array:
-            return numpy.asscalar(value)
-        return value
+        return numpy.asscalar(value)
 
     def __call__(self, *args, **kwargs):
         """Computes the loss value for an input and label pair.
