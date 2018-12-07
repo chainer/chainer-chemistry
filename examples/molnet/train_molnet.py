@@ -102,22 +102,21 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         An instance of the selected predictor.
     """
 
-    predictor = None
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
 
     if method == 'nfp':
         print('Training an NFP predictor...')
         nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(nfp, mlp)
+        return GraphConvPredictor(nfp, mlp)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
         ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(ggnn, mlp)
+        return GraphConvPredictor(ggnn, mlp)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
                         n_layers=conv_layers)
-        predictor = GraphConvPredictor(schnet, None)
+        return GraphConvPredictor(schnet, None)
     elif method == 'weavenet':
         print('Training a WeaveNet predictor...')
         n_atom = 20
@@ -126,20 +125,18 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
 
         weavenet = WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
                             n_sub_layer=n_sub_layer, n_atom=n_atom)
-        predictor = GraphConvPredictor(weavenet, mlp)
+        return GraphConvPredictor(weavenet, mlp)
     elif method == 'rsgcn':
         print('Training an RSGCN predictor...')
         rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(rsgcn, mlp)
+        return GraphConvPredictor(rsgcn, mlp)
     elif method == 'relgcn':
         print('Training an RelGCN predictor...')
         num_edge_type = 4
         relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
                         scale_adj=True)
-        predictor = GraphConvPredictor(relgcn, None)
-    else:
-        raise ValueError('[ERROR] Invalid method: {}'.format(method))
-    return predictor
+        return GraphConvPredictor(relgcn, None)
+    raise ValueError('[ERROR] Invalid method: {}'.format(method))
 
 
 def dataset_part_filename(dataset_part, num_data):
