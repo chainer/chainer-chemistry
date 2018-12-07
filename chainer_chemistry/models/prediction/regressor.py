@@ -2,7 +2,6 @@ import chainer
 from chainer.dataset.convert import concat_examples
 from chainer import cuda
 from chainer import reporter
-from chainer.variable import Variable
 from chainer_chemistry.models.prediction.base import BaseForwardModel
 import numpy
 
@@ -129,7 +128,8 @@ class Regressor(BaseForwardModel):
         # same values become arrays instead. This seems to be a bug inside the
         # reporter class, which needs to be addressed and fixed. Until then,
         # the reported values will be converted to numpy arrays.
-        reporter.report({'loss': Variable(cuda.to_cpu(self.loss.data))}, self)
+        reporter.report(
+            {'loss': self._convert_to_scalar(self.loss.data)}, self)
 
         if self.compute_metrics:
             # Note: self.metrics_fun is `dict`,

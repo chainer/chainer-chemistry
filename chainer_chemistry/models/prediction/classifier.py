@@ -6,7 +6,6 @@ from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
 from chainer import cuda
 from chainer import reporter
-from chainer.variable import Variable
 from chainer_chemistry.models.prediction.base import BaseForwardModel
 import numpy
 
@@ -169,7 +168,8 @@ class Classifier(BaseForwardModel):
         self.metrics = None
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
-        reporter.report({'loss': Variable(cuda.to_cpu(self.loss.data))}, self)
+        reporter.report(
+            {'loss': self._convert_to_scalar(self.loss.data)}, self)
         if self.compute_metrics:
             # Note: self.accuracy is `dict`, which is different from original
             # chainer implementation
