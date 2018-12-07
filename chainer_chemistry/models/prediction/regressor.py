@@ -4,8 +4,8 @@ from chainer import cuda
 from chainer import reporter
 from chainer.variable import Variable
 from chainer_chemistry.models.prediction.base import BaseForwardModel
-
 import numpy
+
 
 class Regressor(BaseForwardModel):
     """A simple regressor model.
