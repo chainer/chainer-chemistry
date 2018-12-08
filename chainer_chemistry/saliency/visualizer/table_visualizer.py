@@ -7,15 +7,43 @@ from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
 
 class TableVisualizer(BaseVisualizer):
 
+    """Saliency visualizer for table data"""
+
     def visualize(self, saliency, feature_names=None, save_filepath=None,
                   num_visualize=-1, scaler=abs_max_scaler,
                   sort='descending', title='Feature Importance', color='b',
                   xlabel='Importance'):
+        """Visualize or save `saliency` in bar plot.
+
+        Args:
+            saliency (numpy.ndarray): 1-dim saliency array (num_feature,)
+            feature_names (list or numpy.ndarray): Feature names of `saliency`
+            save_filepath (str or None): If specified, file is saved to path.
+            num_visualize (int): If positive value is set, only plot specified
+               number of features.
+            scaler (callable): function which takes `x` as input and outputs
+                scaled `x`, for plotting.
+            sort (str): Below sort options are supported.
+                none: not sort
+                ascending: plot in ascending order
+                descending: plot in descending order
+            title (str or None): title of plot
+            color (str): color of bar in plot
+            xlabel (str): x label legend
+
+        """
         # --- type check ---
-        assert saliency.ndim == 1
+        if saliency.ndim != 1:
+            raise ValueError("[ERROR] Unexpected value saliency.shape={}"
+                             .format(saliency.shape))
+
         num_total_feat = saliency.shape[0]
         if feature_names is not None:
-            assert len(feature_names) == num_total_feat
+            # type check
+            if len(feature_names) != num_total_feat:
+                raise ValueError(
+                    "feature_names={} must have same length with `saliency`"
+                    .format(feature_names))
         else:
             feature_names = numpy.arange(num_total_feat)
 

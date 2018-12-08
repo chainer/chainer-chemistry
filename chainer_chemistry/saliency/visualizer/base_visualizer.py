@@ -6,6 +6,8 @@ from future.utils import with_metaclass
 
 class BaseVisualizer(with_metaclass(ABCMeta, object)):
 
+    """Base saliency visualizer"""
+
     @abstractmethod
     def visualize(self, *args, **kwargs):
         raise NotImplementedError

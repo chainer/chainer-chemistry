@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import numpy
 
 from rdkit import Chem
@@ -33,12 +35,31 @@ def is_visible(begin, end):
 
 class MolVisualier(BaseVisualizer):
 
+    """Saliency visualizer for mol data
+
+    Args:
+        logger:
+    """
+
     def __init__(self, logger=None):
-        self.logger = logger(__name__)
+        self.logger = logger or getLogger(__name__)
 
     def visualize(self, saliency, mol, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
                   scaler=abs_max_scaler, legend=''):
+        """Visualize or save `saliency` with molecule
+
+        Args:
+            saliency (numpy.ndarray): 1-dim saliency array (num_node,)
+            mol (Chem.Mol): mol instance of this saliency
+            save_filepath (str or None): If specified, file is saved to path.
+            visualize_ratio (float): If set, only plot saliency color of top-X
+                atoms.
+            color_fn (callable): color function to show saliency
+            scaler (callable): function which takes `x` as input and outputs
+                scaled `x`, for plotting.
+            legend (str): legend for the plot
+        """
         rdDepictor.Compute2DCoords(mol)
         Chem.SanitizeMol(mol)
         Chem.Kekulize(mol)
@@ -46,7 +67,7 @@ class MolVisualier(BaseVisualizer):
 
         # --- type check ---
         if not saliency.ndim == 1:
-            raise ValueError("[ERROR] Unexpected value saliency.shape={}"
+            raise ValueError("Unexpected value saliency.shape={}"
                              .format(saliency.shape))
 
         # Cut saliency array for unnecessary tail part
@@ -113,6 +134,22 @@ class SmilesVisualizer(MolVisualier):
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
                   scaler=abs_max_scaler, legend='', add_Hs=False,
                   use_canonical_smiles=True):
+        """Visualize or save `saliency` with molecule
+
+        Args:
+            saliency (numpy.ndarray): 1-dim saliency array (num_node,)
+            smiles (str): smiles of the molecule.
+            save_filepath (str or None): If specified, file is saved to path.
+            visualize_ratio (float): If set, only plot saliency color of top-X
+                atoms.
+            color_fn (callable): color function to show saliency
+            scaler (callable): function which takes `x` as input and outputs
+                scaled `x`, for plotting.
+            legend (str): legend for the plot
+            add_Hs (bool): Add explicit H or not
+            use_canonical_smiles (bool): If `True`, smiles are converted to
+                canonical smiles before constructing `mol`
+        """
         mol = Chem.MolFromSmiles(smiles)
         if use_canonical_smiles:
             smiles = Chem.MolToSmiles(mol, canonical=True)

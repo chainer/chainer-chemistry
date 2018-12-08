@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import numpy
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -10,12 +12,37 @@ from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
 
 class ImageVisualizer(BaseVisualizer):
 
+    """Saliency visualizer for image data
+
+    Args:
+        logger:
+    """
+
     def __init__(self, logger=None):
-        self.logger = logger(__name__)
+        self.logger = logger or getLogger(__name__)
 
     def visualize(self, saliency, image=None, save_filepath=None,
                   scaler=abs_max_scaler, title='Image saliency map',
                   cmap=cm.jet, alpha=0.5, show_colorbar=False):
+        """Visualize or save `saliency` of image.
+
+        Args:
+            saliency (numpy.ndarray): Saliency array. Must be either
+                2-dim (h, w) or 3-dim (ch, h, w).
+            image (numpy.ndarray or PIL.Image or None): If set, image is drawn
+                in background, and saliency is shown in foreground.
+                If numpy array, must be in the order of 2-dim (h, w) or
+                3-dim (ch, h, w).
+            save_filepath (str or None): If specified, file is saved to path.
+            scaler (callable): function which takes `x` as input and outputs
+                scaled `x`, for plotting.
+            title (str or None): title of plot
+            cmap: color map used to plot saliency
+            alpha (float): alpha value of fore ground saliency. This option is
+                used only when `image` is set.
+            show_colorbar (bool): show colorbar in plot or not.
+
+        """
         # --- type check ---
         if saliency.ndim == 3:
             # (ch, h, w) -> (h, w, ch)
@@ -35,7 +62,7 @@ class ImageVisualizer(BaseVisualizer):
                 # Convert to (h, w, ch) order
                 if image.shape[0] == 3 or image.shape[0] == 4:
                     # Assume (ch, h, w) order -> (h, w, ch)
-                    image = numpy.transpose(image (1, 2, 0))
+                    image = numpy.transpose(image, (1, 2, 0))
             elif image.ndim == 2:
                 # (h, w) order
                 pass
