@@ -5,7 +5,9 @@ import chainer
 from chainer import Variable, cuda
 from chainer.links import Linear
 
-from chainer_chemistry.link_hooks import VariableMonitorLinkHook
+from chainer_chemistry.link_hooks import is_link_hooks_available
+if is_link_hooks_available:
+    from chainer_chemistry.link_hooks import VariableMonitorLinkHook
 
 
 class DummyModel(chainer.Chain):
@@ -28,6 +30,8 @@ def model():
     return DummyModel()
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_variable_monitor_link_hook_pre(model):
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
     x = Variable(x)
@@ -38,6 +42,8 @@ def test_variable_monitor_link_hook_pre(model):
     assert var is x
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_variable_monitor_link_hook_post(model):
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
     x = Variable(x)
@@ -48,6 +54,8 @@ def test_variable_monitor_link_hook_post(model):
     assert var is model.h
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_variable_monitor_link_hook_process(model):
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
     x = Variable(x)
@@ -69,6 +77,8 @@ def test_variable_monitor_link_hook_process(model):
     assert '_process_zeros' not in pre_hook.process_fns.keys()
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_variable_monitor_link_hook_assert_raises(model):
     with pytest.raises(TypeError):
         # target_link must be chainer.Link

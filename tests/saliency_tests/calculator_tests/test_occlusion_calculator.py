@@ -4,8 +4,10 @@ import pytest
 import chainer
 from chainer.links import Linear, Convolution2D  # NOQA
 
-from chainer_chemistry.link_hooks import VariableMonitorLinkHook
-from chainer_chemistry.saliency.calculator.occlusion_calculator import OcclusionCalculator  # NOQA
+from chainer_chemistry.link_hooks import is_link_hooks_available
+if is_link_hooks_available:
+    from chainer_chemistry.link_hooks import VariableMonitorLinkHook
+    from chainer_chemistry.saliency.calculator.occlusion_calculator import OcclusionCalculator  # NOQA
 
 
 class DummyModel(chainer.Chain):
@@ -32,6 +34,8 @@ class DummyCNNModel(chainer.Chain):
         return self.l1(x)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_occlusion_calculator():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
@@ -41,6 +45,8 @@ def test_occlusion_calculator():
     assert saliency.shape == (1, 1, 3)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_occlusion_calculator_cnn():
     model = DummyCNNModel()
     # x (1, 1, 3, 3): (bs, ch, h, w)
@@ -51,6 +57,8 @@ def test_occlusion_calculator_cnn():
     assert saliency.shape == (1, 1, 1, 3, 3)  # (M, bs, ch, h, w)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_occlusion_calculator_target_extractor():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)

@@ -4,9 +4,11 @@ import pytest
 import chainer
 from chainer.links import Linear
 
-from chainer_chemistry.link_hooks import VariableMonitorLinkHook
-from chainer_chemistry.saliency.calculator import GaussianNoiseSampler
-from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
+from chainer_chemistry.link_hooks import is_link_hooks_available
+if is_link_hooks_available:
+    from chainer_chemistry.link_hooks import VariableMonitorLinkHook
+    from chainer_chemistry.saliency.calculator import GaussianNoiseSampler
+    from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
 
 
 class DummyModel(chainer.Chain):
@@ -37,6 +39,8 @@ def model():
     return DummyModel()
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_base_calculator_compute(model):
     calculator = DummyCalculator(model)
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
@@ -46,6 +50,8 @@ def test_base_calculator_compute(model):
     assert numpy.allclose(saliency, x)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_base_calculator_compute_noise_sampler(model):
     calculator = DummyCalculator(model)
 
@@ -57,6 +63,8 @@ def test_base_calculator_compute_noise_sampler(model):
     assert not numpy.allclose(saliency[1], x)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_base_calculator_compute_target_extractor(model):
     # It should extract `target_var` as after `l1`, which is `model.h`.
     calculator = DummyCalculator(
@@ -67,6 +75,8 @@ def test_base_calculator_compute_target_extractor(model):
     assert numpy.allclose(saliency, model.h.array)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_base_calculator_aggregate():
     model = DummyModel()
     calculator = DummyCalculator(model)

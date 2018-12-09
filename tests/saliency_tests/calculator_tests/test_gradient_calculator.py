@@ -4,8 +4,10 @@ import pytest
 import chainer
 from chainer.links import Linear
 
-from chainer_chemistry.link_hooks import VariableMonitorLinkHook
-from chainer_chemistry.saliency.calculator.gradient_calculator import GradientCalculator  # NOQA
+from chainer_chemistry.link_hooks import is_link_hooks_available
+if is_link_hooks_available:
+    from chainer_chemistry.link_hooks import VariableMonitorLinkHook
+    from chainer_chemistry.saliency.calculator.gradient_calculator import GradientCalculator  # NOQA
 
 
 class DummyModel(chainer.Chain):
@@ -20,6 +22,8 @@ class DummyModel(chainer.Chain):
         return self.l1(x)
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_gradient_calculator():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
@@ -29,6 +33,8 @@ def test_gradient_calculator():
     assert numpy.allclose(saliency, numpy.array([[1, 3, 2]]))
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_gradient_calculator_multiply_target():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
@@ -38,6 +44,8 @@ def test_gradient_calculator_multiply_target():
     assert numpy.allclose(saliency, numpy.array([[1, 15, 16]]))
 
 
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_gradient_calculator_target_extractor():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
