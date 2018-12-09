@@ -1,13 +1,10 @@
-from abc import ABCMeta
-from abc import abstractmethod
-
-from future.utils import with_metaclass
-
-
-class BaseVisualizer(with_metaclass(ABCMeta, object)):
+class BaseVisualizer(object):
 
     """Base saliency visualizer"""
 
-    @abstractmethod
     def visualize(self, *args, **kwargs):
+        """Main visualization routine
+
+        Each concrete subclass should implement this method
+        """
         raise NotImplementedError

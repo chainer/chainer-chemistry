@@ -1,6 +1,3 @@
-from abc import ABCMeta
-from abc import abstractmethod
-from future.utils import with_metaclass
 import numpy
 
 import chainer
@@ -66,7 +63,7 @@ def delete_linkhook(linkhook, prefix=''):
     del link_hooks[name]
 
 
-class BaseCalculator(with_metaclass(ABCMeta, object)):
+class BaseCalculator(object):
 
     """Base class for saliency calculator
 
@@ -157,8 +154,11 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
         sampling_axis = _sampling_axis
         return numpy.mean(h, axis=sampling_axis)
 
-    @abstractmethod
     def _compute_core(self, *inputs):
+        """Core computation routine
+
+        Each concrete subclass should implement this method
+        """
         raise NotImplementedError
 
     def get_target_var(self):

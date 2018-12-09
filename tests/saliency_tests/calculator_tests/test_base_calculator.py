@@ -10,6 +10,13 @@ if is_link_hooks_available:
     from chainer_chemistry.saliency.calculator import GaussianNoiseSampler
     from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
 
+    class DummyCalculator(BaseCalculator):
+        """Dummy calculator which returns target_var"""
+
+        def _compute_core(self, *inputs):
+            self.model(*inputs)
+            return self.get_target_var()
+
 
 class DummyModel(chainer.Chain):
     def __init__(self):
@@ -24,14 +31,6 @@ class DummyModel(chainer.Chain):
         self.h = self.l1(x)
         out = self.h * 3
         return out
-
-
-class DummyCalculator(BaseCalculator):
-    """Dummy calculator which returns target_var"""
-
-    def _compute_core(self, *inputs):
-        self.model(*inputs)
-        return self.get_target_var()
 
 
 @pytest.fixture
