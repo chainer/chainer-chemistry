@@ -1,12 +1,13 @@
 import numpy
 
 import chainer
-from chainer import cuda, LinkHook
+from chainer import cuda
 from chainer.dataset.convert import concat_examples, _concat_arrays_with_padding  # NOQA
 from chainer.iterators import SerialIterator
 
 from chainer_chemistry.link_hooks import is_link_hooks_available
 if is_link_hooks_available:
+    from chainer import LinkHook
     from chainer_chemistry.link_hooks import VariableMonitorLinkHook
 
 _sampling_axis = 0
