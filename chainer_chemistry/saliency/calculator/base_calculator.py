@@ -8,6 +8,7 @@ from chainer import cuda, LinkHook
 from chainer.dataset.convert import concat_examples, _concat_arrays_with_padding  # NOQA
 from chainer.iterators import SerialIterator
 
+from chainer_chemistry.link_hooks import VariableMonitorLinkHook
 
 _sampling_axis = 0
 
@@ -65,6 +66,21 @@ def delete_linkhook(linkhook, prefix=''):
 
 class BaseCalculator(with_metaclass(ABCMeta, object)):
 
+    """Base class for saliency calculator
+
+    Args:
+        model (chainer.Chain): target model to calculate saliency.
+        target_extractor (VariableMonitorLinkHook or None):
+            It determines `target_var`, target variable to calculate saliency.
+            If `None`, first argument of input to the model is treated as
+            `target_var`.
+        output_extractor (VariableMonitorLinkHook or None):
+            It determines `output_var`, output variable to calculate saliency.
+            If `None`, output of the model is treated as `output_var`.
+        device (int or None): device id to calculate saliency.
+            If `None`, device id is inferred automatically from `model`.
+    """
+
     def __init__(self, model, target_extractor=None, output_extractor=None,
                  device=None):
         self.model = model  # type: chainer.Chain
@@ -72,7 +88,12 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
             self._device = device
         else:
             self._device = cuda.get_device_from_array(*model.params()).id
-        self.target_extractor = target_extractor
+        if target_extractor is None:
+            # First argument of input to the `model` is default target_var
+            self.target_extractor = VariableMonitorLinkHook(
+                self.model, timing='pre')
+        else:
+            self.target_extractor = target_extractor
         self.output_extractor = output_extractor
 
     def compute(self, data, M=1, batchsize=16,
@@ -111,14 +132,8 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
     def _compute_core(self, *inputs):
         raise NotImplementedError
 
-    def get_target_var(self, inputs):
-        if isinstance(self.target_extractor, LinkHook):
-            return self.target_extractor.get_variable()
-        else:
-            if isinstance(inputs, tuple):
-                return inputs[0]
-            else:
-                return inputs
+    def get_target_var(self):
+        return self.target_extractor.get_variable()
 
     def get_output_var(self, outputs):
         if isinstance(self.output_extractor, LinkHook):
@@ -172,21 +187,14 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
                 outputs = self._compute_core(*inputs)
             else:
                 # SmoothGrad computation
-                if self.target_extractor is None:
-                    # inputs[0] is considered as "target_var"
-                    noise = noise_sampler.sample(inputs[0].array)
-                    inputs[0].array += noise
-                    outputs = self._compute_core(*inputs)
-                # inputs[self.target_key].data += noise
-                else:
-                    # Add process to LinkHook
-                    def add_noise(hook, args, target_var):
-                        noise = noise_sampler.sample(target_var.array)
-                        target_var.array += noise
-                    self.target_extractor.add_process('/saliency/add_noise',
-                                                      add_noise)
-                    outputs = self._compute_core(*inputs)
-                    self.target_extractor.delete_process('/saliency/add_noise')
+                # Add process to LinkHook
+                def add_noise(hook, args, target_var):
+                    noise = noise_sampler.sample(target_var.array)
+                    target_var.array += noise
+                self.target_extractor.add_process('/saliency/add_noise',
+                                                  add_noise)
+                outputs = self._compute_core(*inputs)
+                self.target_extractor.delete_process('/saliency/add_noise')
             # --- Main saliency computation end ---
 
             # Init

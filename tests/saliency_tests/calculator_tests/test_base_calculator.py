@@ -29,7 +29,7 @@ class DummyCalculator(BaseCalculator):
 
     def _compute_core(self, *inputs):
         self.model(*inputs)
-        return self.get_target_var(inputs)
+        return self.get_target_var()
 
 
 @pytest.fixture

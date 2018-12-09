@@ -22,31 +22,23 @@ class IntegratedGradientsCalculator(GradientCalculator):
         self.model.cleargrads()
         # Need to forward once to get target_var
         outputs = self.eval_fun(*inputs)
-        target_var = self.get_target_var(inputs)
+        target_var = self.get_target_var()
         # output_var = self.get_output_var(outputs)
 
         base = self.baseline
         diff = target_var.array - base
 
         for alpha in numpy.linspace(0., 1., self.steps):
-            if self.target_extractor is None:
+            def interpolate_target_var(hook, args, _target_var):
                 interpolated_inputs = base + alpha * diff
-                inputs[0].array = interpolated_inputs
+                _target_var.array[:] = interpolated_inputs
 
-                total_grads += super(
-                    IntegratedGradientsCalculator, self)._compute_core(
-                    *inputs)[0]
-            else:
-                def interpolate_target_var(hook, args, _target_var):
-                    interpolated_inputs = base + alpha * diff
-                    _target_var.array[:] = interpolated_inputs
-
-                self.target_extractor.add_process(
-                    '/saliency/interpolate_target_var', interpolate_target_var)
-                total_grads += super(
-                    IntegratedGradientsCalculator, self)._compute_core(
-                    *inputs)[0]
-                self.target_extractor.delete_process(
-                    '/saliency/interpolate_target_var')
+            self.target_extractor.add_process(
+                '/saliency/interpolate_target_var', interpolate_target_var)
+            total_grads += super(
+                IntegratedGradientsCalculator, self)._compute_core(
+                *inputs)[0]
+            self.target_extractor.delete_process(
+                '/saliency/interpolate_target_var')
         saliency = total_grads * diff / self.steps
         return saliency,
