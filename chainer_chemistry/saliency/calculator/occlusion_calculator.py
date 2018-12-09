@@ -1,3 +1,4 @@
+import copy
 import itertools
 import six
 
@@ -26,7 +27,7 @@ class OcclusionCalculator(BaseCalculator):
             model, target_extractor=target_extractor,
             output_extractor=output_extractor, device=device)
 
-        self.eval_fun = eval_fun
+        self.eval_fun = eval_fun or model.__call__
         self.enable_backprop = enable_backprop
         self.slide_axis = _to_tuple(slide_axis)
         size = _to_tuple(size)
@@ -38,9 +39,9 @@ class OcclusionCalculator(BaseCalculator):
         # Usually, backward() is not necessary for calculating occlusion
         with chainer.using_config('enable_backprop', self.enable_backprop):
             original_result = self.eval_fun(*inputs)
-        # original_score = _extract_score(original_result)
-        target_var = self.target_extractor.get_variable()
-        original_score = self.output_extractor.get_variable()
+        target_var = self.get_target_var(inputs)
+        original_target_array = target_var.array.copy()
+        original_score = self.get_output_var(original_result)
 
         xp = cuda.get_array_module(target_var.array)
         value = 0.
@@ -65,30 +66,38 @@ class OcclusionCalculator(BaseCalculator):
             index = [colon] * target_dim
             for axis, size, start in zip(slide_axis, size, start_indices):
                 index[axis] = slice(start, start + size, 1)
-            return index
+            return tuple(index)
 
-        end_list = [target_var.data.shape[axis] - size for axis, size
+        end_list = [target_var.data.shape[axis] - size + 1 for axis, size
                     in zip(self.slide_axis, self.size)]
 
-        for start in itertools.product(*[six.moves.range(end) for end in end_list]):
+        for start in itertools.product(*[six.moves.range(end)
+                                         for end in end_list]):
             occlude_index = _extract_index(self.slide_axis, self.size, start)
-
-            def mask_target_var(hook, args, target_var):
-                target_var.array[occlude_index] = occlusion_window
-
-            # self.target_extractor.set_process(mask_target_var)
-            self.target_extractor.add_process(
-                '/saliency/mask_target_var', mask_target_var)
-            with chainer.using_config('enable_backprop', self.enable_backprop):
+            if self.target_extractor is None:
+                inputs[0].array = original_target_array.copy()
+                inputs[0].array[occlude_index] = occlusion_window
+                # inputs[0].array = inputs_tmp
                 occluded_result = self.eval_fun(*inputs)
-            occluded_score = self.output_extractor.get_variable()
-            self.target_extractor.delete_process(
-                '/saliency/mask_target_var', mask_target_var)
-            # occluded_score = _extract_score(occluded_result)
-            score_diff_var = original_score - occluded_score
-            # TODO: expand_dim dynamically
-            score_diff = xp.broadcast_to(score_diff_var.data[:, :, None],
-                                         occlusion_window_shape)
+            else:
+                def mask_target_var(hook, args, _target_var):
+                    _target_var.array = original_target_array.copy()
+                    _target_var.array[occlude_index] = occlusion_window
+
+                # self.target_extractor.set_process(mask_target_var)
+                self.target_extractor.add_process(
+                    '/saliency/mask_target_var', mask_target_var)
+                with chainer.using_config('enable_backprop', self.enable_backprop):
+                    occluded_result = self.eval_fun(*inputs)
+                    # occluded_result = self.eval_fun(*copy.deepcopy(inputs))
+                self.target_extractor.delete_process(
+                    '/saliency/mask_target_var')
+
+            occluded_score = self.get_output_var(occluded_result)
+            score_diff_var = original_score - occluded_score  # (bs, 1)
+            # expand_dim for ch_axis
+            score_diff = xp.reshape(score_diff_var.array,
+                                    occlusion_window_shape)
             occlusion_scores[occlude_index] += score_diff
         outputs = (occlusion_scores,)
         return outputs

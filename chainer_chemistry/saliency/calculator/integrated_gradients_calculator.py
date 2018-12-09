@@ -20,25 +20,33 @@ class IntegratedGradientsCalculator(GradientCalculator):
 
         total_grads = 0.
         self.model.cleargrads()
-        self.eval_fun(*inputs)  # Need to forward once to get target_var
-        target_var = self.target_extractor.get_variable()
-        # output_var = self.output_extractor.get_variable()
+        # Need to forward once to get target_var
+        outputs = self.eval_fun(*inputs)
+        target_var = self.get_target_var(inputs)
+        # output_var = self.get_output_var(outputs)
 
         base = self.baseline
         diff = target_var.array - base
 
         for alpha in numpy.linspace(0., 1., self.steps):
-            def interpolate_target_var(hook, args, target_var):
-                # target_var = args.out
-                # diff = target_var.array - base
+            if self.target_extractor is None:
                 interpolated_inputs = base + alpha * diff
-                target_var.array[:] = interpolated_inputs
+                inputs[0].array = interpolated_inputs
 
-            self.target_extractor.add_process(
-                '/saliency/interpolate_target_var', interpolate_target_var)
-            total_grads += super(
-                IntegratedGradientsCalculator, self)._compute_core(*inputs)[0]
-            self.target_extractor.delete_process(
-                '/saliency/interpolate_target_var')
+                total_grads += super(
+                    IntegratedGradientsCalculator, self)._compute_core(
+                    *inputs)[0]
+            else:
+                def interpolate_target_var(hook, args, _target_var):
+                    interpolated_inputs = base + alpha * diff
+                    _target_var.array[:] = interpolated_inputs
+
+                self.target_extractor.add_process(
+                    '/saliency/interpolate_target_var', interpolate_target_var)
+                total_grads += super(
+                    IntegratedGradientsCalculator, self)._compute_core(
+                    *inputs)[0]
+                self.target_extractor.delete_process(
+                    '/saliency/interpolate_target_var')
         saliency = total_grads * diff / self.steps
         return saliency,

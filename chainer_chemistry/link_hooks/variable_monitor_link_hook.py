@@ -64,7 +64,6 @@ class VariableMonitorLinkHook(chainer.LinkHook):
 
     def forward_postprocess(self, args):
         if self.timing == 'post' and args.link is self.target_link:
-            print('matched at {}'.format(args.link.name))
             self.result = self.extract_fn(self, args)
             if self.process_fns is not None:
                 for key, fn in self.process_fns.items():

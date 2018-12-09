@@ -15,6 +15,7 @@ class GradientCalculator(BaseCalculator):
         self.model.cleargrads()
         outputs = self.eval_fun(*inputs)
         target_var = self.get_target_var(inputs)
+        target_var.grad = None  # Need to reset grad beforehand of backward.
         output_var = self.get_output_var(outputs)
 
         output_var.backward(retain_grad=True)

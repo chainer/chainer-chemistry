@@ -63,33 +63,6 @@ def delete_linkhook(linkhook, prefix=''):
     del link_hooks[name]
 
 
-class GaussianNoiseSampler(object):
-    """Default noise sampler class for SmoothGrad"""
-
-    def __init__(self, mode='relative', scale=0.15):
-        self.mode = mode
-        self.scale = scale
-
-    def sample(self, target_array):
-        xp = cuda.get_array_module(target_array)
-        noise = xp.random.normal(
-            0, self.scale, target_array.shape)
-        if self.mode == 'absolute':
-            # `scale` is used as is
-            pass
-        elif self.mode == 'relative':
-            # `scale_axis` is used to calculate `max` and `min` of target_array
-            # As default, all axes except batch axis are used.
-            scale_axis = tuple(range(1, target_array.ndim))
-            vmax = xp.max(target_array, axis=scale_axis, keepdims=True)
-            vmin = xp.min(target_array, axis=scale_axis, keepdims=True)
-            noise = noise * (vmax - vmin)
-        else:
-            raise ValueError("[ERROR] Unexpected value mode={}"
-                             .format(self.mode))
-        return noise
-
-
 class BaseCalculator(with_metaclass(ABCMeta, object)):
 
     def __init__(self, model, target_extractor=None, output_extractor=None,
@@ -118,7 +91,7 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
             saliency_list.append(saliency_array)
         return numpy.stack(saliency_list, axis=_sampling_axis)
 
-    def aggregate(self, saliency_arrays, method='raw', ch_axis=2):
+    def aggregate(self, saliency_arrays, method='raw', ch_axis=None):
         if method == 'raw':
             h = saliency_arrays  # do nothing
         elif method == 'abs':
@@ -191,7 +164,7 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
                 inputs = preprocess_fn(*inputs)
                 inputs = _to_tuple(inputs)
 
-            inputs = (_to_variable(x) for x in inputs)
+            inputs = [_to_variable(x) for x in inputs]
 
             # --- Main saliency computation ----
             if noise_sampler is None:
