@@ -68,6 +68,8 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
 
     """Base class for saliency calculator
 
+    Use `compute`, `aggregate` method to calculate saliency.
+
     Args:
         model (chainer.Chain): target model to calculate saliency.
         target_extractor (VariableMonitorLinkHook or None):
@@ -100,6 +102,31 @@ class BaseCalculator(with_metaclass(ABCMeta, object)):
                 converter=concat_examples, retain_inputs=False,
                 preprocess_fn=None, postprocess_fn=None, train=False,
                 noise_sampler=None, ):
+        """computes saliency_samples
+
+        Args:
+            data: dataset to calculate saliency
+            M (int): sampling size. `M > 1` may be set with SmoothGrad or
+                BayesGrad configuration. See `train` and `noise_sampler`
+                description.
+            batchsize (int): batch size
+            converter (function): converter to make batch from `data`
+            retain_inputs (bool): retain input flag
+            preprocess_fn (function or None): preprocess function
+            postprocess_fn (function or None): postprocess function
+            train (bool): chainer.config.train flag. When the `model` contains
+                `dropout` (or other stochastic) function, `train=True`
+                 corresponds to calculate BayesGrad.
+            noise_sampler: noise sampler class with `sample` method.
+                If this is set, noise is added to `target_var`. It can be
+                used to calculate SmoothGrad.
+                If `None`, noise is not sampled.
+
+        Returns:
+            saliency_samples (numpy.ndarray): M samples of saliency array.
+                Its shape is (M,) + target_var.shape, i.e., sampling axis is
+                added to the first axis.
+        """
         saliency_list = []
         for _ in range(M):
             with chainer.using_config('train', train):

@@ -5,14 +5,33 @@ from chainer_chemistry.saliency.calculator.gradient_calculator import GradientCa
 
 class IntegratedGradientsCalculator(GradientCalculator):
 
+    """Integrated gradient saliency calculator
+
+    Use `compute`, `aggregate` method to calculate saliency.
+
+    Args:
+        model (chainer.Chain): target model to calculate saliency.
+        target_extractor (VariableMonitorLinkHook or None):
+            It determines `target_var`, target variable to calculate saliency.
+            If `None`, first argument of input to the model is treated as
+            `target_var`.
+        output_extractor (VariableMonitorLinkHook or None):
+            It determines `output_var`, output variable to calculate saliency.
+            If `None`, output of the model is treated as `output_var`.
+        eval_fun (callable): If
+        baseline (numpy.ndarray or None):
+            If `None`, baseline is set as 0.
+        steps (int): Number of separation to calculate integrated gradient.
+        device (int or None): device id to calculate saliency.
+            If `None`, device id is inferred automatically from `model`.
+    """
     def __init__(self, model, target_extractor=None, output_extractor=None,
-                 eval_fun=None, baseline=None, steps=25):
+                 eval_fun=None, baseline=None, steps=25, device=None):
 
         super(IntegratedGradientsCalculator, self).__init__(
             model, target_extractor=target_extractor,
             output_extractor=output_extractor, multiply_target=False,
-            eval_fun=eval_fun
-        )
+            eval_fun=eval_fun, device=device)
         self.baseline = baseline or 0.
         self.steps = steps
 

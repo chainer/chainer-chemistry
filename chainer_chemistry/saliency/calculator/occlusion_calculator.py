@@ -20,6 +20,28 @@ def _to_tuple(x):
 
 class OcclusionCalculator(BaseCalculator):
 
+    """Occlusion saliency calculator
+
+    Use `compute`, `aggregate` method to calculate saliency.
+
+    Args:
+        model (chainer.Chain): target model to calculate saliency.
+        target_extractor (VariableMonitorLinkHook or None):
+            It determines `target_var`, target variable to calculate saliency.
+            If `None`, first argument of input to the model is treated as
+            `target_var`.
+        output_extractor (VariableMonitorLinkHook or None):
+            It determines `output_var`, output variable to calculate saliency.
+            If `None`, output of the model is treated as `output_var`.
+        eval_fun (callable): If
+        enable_backprop (bool): chainer.config.enable_backprop option.
+        size (int or tuple): occlusion window size.
+            If `int`, window has same size along `slide_axis`.
+            If `tuple`, its length must be same with `slide_axis`.
+        slide_axis (int or tuple): slide axis which occlusion window moves.
+        device (int or None): device id to calculate saliency.
+            If `None`, device id is inferred automatically from `model`.
+    """
     def __init__(self, model, target_extractor=None, output_extractor=None,
                  eval_fun=None, device=None,
                  enable_backprop=False, size=1, slide_axis=(2, 3)):
