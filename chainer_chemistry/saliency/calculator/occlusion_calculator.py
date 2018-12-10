@@ -25,7 +25,7 @@ class OcclusionCalculator(BaseCalculator):
 
     See: Matthew D Zeiler and Rob Fergus (2014).
         Visualizing and understanding convolutional networks.
-        In European conference on computer vision, pp. 818–833. Springer.
+        In European conference on computer vision, pp. 818-833. Springer.
 
     Args:
         model (chainer.Chain): target model to calculate saliency.
