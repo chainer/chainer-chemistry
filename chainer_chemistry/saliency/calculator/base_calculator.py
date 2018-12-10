@@ -8,6 +8,8 @@ from chainer.dataset.convert import concat_examples, _concat_arrays_with_padding
 from chainer.iterators import SerialIterator
 
 from chainer_chemistry.link_hooks import is_link_hooks_available
+from tqdm import tqdm
+
 if is_link_hooks_available:
     from chainer import LinkHook
     from chainer_chemistry.link_hooks import VariableMonitorLinkHook
@@ -118,7 +120,7 @@ class BaseCalculator(object):
     def compute(self, data, M=1, batchsize=16,
                 converter=concat_examples, retain_inputs=False,
                 preprocess_fn=None, postprocess_fn=None, train=False,
-                noise_sampler=None, ):
+                noise_sampler=None, show_progress=True):
         """computes saliency_samples
 
         Args:
@@ -138,6 +140,7 @@ class BaseCalculator(object):
                 If this is set, noise is added to `target_var`. It can be
                 used to calculate SmoothGrad.
                 If `None`, noise is not sampled.
+            show_progress (bool): Show progress bar or not.
 
         Returns:
             saliency_samples (numpy.ndarray): M samples of saliency array.
@@ -145,7 +148,7 @@ class BaseCalculator(object):
                 added to the first axis.
         """
         saliency_list = []
-        for _ in range(M):
+        for _ in tqdm(range(M), disable=not show_progress):
             with chainer.using_config('train', train):
                 saliency = self._forward(
                     data, batchsize=batchsize,
@@ -195,13 +198,25 @@ class BaseCalculator(object):
         raise NotImplementedError
 
     def get_target_var(self):
-        return self.target_extractor.get_variable()
+        target_var = self.target_extractor.get_variable()
+        if target_var is None:
+            self.logger.warning(
+                'target_var is None. This may be caused because "model" is not'
+                ' forwarded in advance or "model" does not implement "forward"'
+                ' method and LinkHook is not triggered.')
+        return target_var
 
     def get_output_var(self, outputs):
         if isinstance(self.output_extractor, LinkHook):
-            return self.output_extractor.get_variable()
+            output_var = self.output_extractor.get_variable()
         else:
-            return outputs
+            output_var = outputs
+        if output_var is None:
+            self.logger.warning(
+                'output_var is None. This may be caused because "model" is not'
+                ' forwarded in advance or "model" does not implement "forward"'
+                ' method and LinkHook is not triggered.')
+        return output_var
 
     def _forward(self, data, batchsize=16,
                  converter=concat_examples, retain_inputs=False,
