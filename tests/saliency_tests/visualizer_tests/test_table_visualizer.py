@@ -13,7 +13,7 @@ def test_table_visualizer(tmpdir):
     visualizer = TableVisualizer()
 
     # 1. test with setting save_filepath
-    save_filepath = os.path.join(tmpdir, 'tmp.png')
+    save_filepath = os.path.join(str(tmpdir), 'tmp.png')
     visualizer.visualize(saliency, save_filepath=save_filepath)
     assert os.path.exists(save_filepath)
     # 2. test with `save_filepath=None` runs without error

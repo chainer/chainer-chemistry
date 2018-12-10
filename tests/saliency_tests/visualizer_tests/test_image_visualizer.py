@@ -16,7 +16,7 @@ def test_image_visualizer(tmpdir):
     visualizer = ImageVisualizer()
 
     # 1. test with setting save_filepath
-    save_filepath = os.path.join(tmpdir, 'tmp.png')
+    save_filepath = os.path.join(str(tmpdir), 'tmp.png')
     visualizer.visualize(saliency, save_filepath=save_filepath)
     assert os.path.exists(save_filepath)
 

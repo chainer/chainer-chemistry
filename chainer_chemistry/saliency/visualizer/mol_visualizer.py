@@ -111,12 +111,13 @@ class MolVisualier(BaseVisualizer):
                 with open(save_filepath, 'w') as f:
                     f.write(svg)
             elif extention == 'png':
-                # TODO: check it is possible without cairosvg or not
+                # TODO (nakago): check it is possible without cairosvg or not
                 try:
                     import cairosvg
                 except ImportError as e:
-                    print('cairosvg is not installed! '
-                          'Please install cairosvg to save by png format.')
+                    self.logger.error(
+                        'cairosvg is not installed! '
+                        'Please install cairosvg to save by png format.')
                     raise e
                 cairosvg.svg2png(bytestring=svg, write_to=save_filepath)
             else:

@@ -16,7 +16,7 @@ def test_mol_visualizer(tmpdir):
     visualizer = MolVisualier()
 
     # 1. test with setting save_filepath
-    save_filepath = os.path.join(tmpdir, 'tmp.svg')
+    save_filepath = os.path.join(str(tmpdir), 'tmp.svg')
     visualizer.visualize(saliency, mol, save_filepath=save_filepath)
     assert os.path.exists(save_filepath)
 
@@ -32,7 +32,7 @@ def test_smiles_visualizer(tmpdir):
     visualizer = SmilesVisualizer()
 
     # 1. test with setting save_filepath
-    save_filepath = os.path.join(tmpdir, 'tmp.png')
+    save_filepath = os.path.join(str(tmpdir), 'tmp.png')
     visualizer.visualize(saliency, smiles, save_filepath=save_filepath,
                          add_Hs=False)
     assert os.path.exists(save_filepath)
@@ -55,7 +55,7 @@ def test_mol_visualizer_assert_raises(tmpdir):
     with pytest.raises(ValueError):
         # --- Invalid sort key ---
         saliency = numpy.array([0.5, 0.3, 0.2])
-        invalid_ext_filepath = os.path.join(tmpdir, 'tmp.hoge')
+        invalid_ext_filepath = os.path.join(str(tmpdir), 'tmp.hoge')
         visualizer.visualize(saliency, mol, save_filepath=invalid_ext_filepath)
 
 
