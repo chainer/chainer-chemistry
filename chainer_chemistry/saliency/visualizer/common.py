@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import numpy
 from chainer import cuda
 
@@ -57,16 +59,22 @@ def abs_max_scaler(saliency):
         return saliency / maxv
 
 
-def normalize_scaler(saliency, axis=None):
+def normalize_scaler(saliency, axis=None, logger=None):
     """Normalize saliency to be sum=1
 
     Args:
-        saliency (numpy.ndarray or cupy.ndarray): saliency array
+        saliency (numpy.ndarray or cupy.ndarray): saliency array.
+        axis (int): axis to take sum for normalization.
+        logger:
 
     Returns (numpy.ndarray or cupy.ndarray): normalized saliency array
 
     """
     xp = cuda.get_array_module(saliency)
+    if xp.sum(saliency < 0) > 0:
+        logger = logger or getLogger(__name__)
+        logger.warning('saliency array contains negative number, '
+                       'which is unexpected!')
     vsum = xp.sum(xp.abs(saliency), axis=axis, keepdims=True)
     if vsum <= 0:
         return xp.zeros_like(saliency)

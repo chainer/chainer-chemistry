@@ -66,7 +66,7 @@ class MolVisualier(BaseVisualizer):
         num_atoms = mol.GetNumAtoms()
 
         # --- type check ---
-        if not saliency.ndim == 1:
+        if saliency.ndim != 1:
             raise ValueError("Unexpected value saliency.shape={}"
                              .format(saliency.shape))
 

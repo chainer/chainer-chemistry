@@ -1,3 +1,5 @@
+from logging import getLogger
+
 import numpy
 
 import chainer
@@ -42,11 +44,12 @@ def _concat(batch_list):
         return _concat_arrays_with_padding(elem_list, padding=0)
 
 
-def add_linkhook(linkhook, prefix=''):
+def add_linkhook(linkhook, prefix='', logger=None):
     link_hooks = chainer._get_link_hooks()
     name = prefix + linkhook.name
     if name in link_hooks:
-        print('[WARNING] hook {} already exists, overwrite.'.format(name))
+        logger = logger or getLogger(__name__)
+        logger.warning('hook {} already exists, overwrite.'.format(name))
         pass  # skip this case...
         # raise KeyError('hook %s already exists' % name)
     link_hooks[name] = linkhook
@@ -54,11 +57,12 @@ def add_linkhook(linkhook, prefix=''):
     return linkhook
 
 
-def delete_linkhook(linkhook, prefix=''):
+def delete_linkhook(linkhook, prefix='', logger=None):
     name = prefix + linkhook.name
     link_hooks = chainer._get_link_hooks()
     if name not in link_hooks.keys():
-        print('[WARNING] linkhook {} is not registered'.format(name))
+        logger = logger or getLogger(__name__)
+        logger.warning('linkhook {} is not registered'.format(name))
         return
     link_hooks[name].deleted(None)
     del link_hooks[name]
@@ -92,10 +96,11 @@ class BaseCalculator(object):
             If `None`, output of the model is treated as `output_var`.
         device (int or None): device id to calculate saliency.
             If `None`, device id is inferred automatically from `model`.
+        logger:
     """
 
     def __init__(self, model, target_extractor=None, output_extractor=None,
-                 device=None):
+                 device=None, logger=None):
         self.model = model  # type: chainer.Chain
         if device is not None:
             self._device = device
@@ -108,6 +113,7 @@ class BaseCalculator(object):
         else:
             self.target_extractor = target_extractor
         self.output_extractor = output_extractor
+        self.logger = logger or getLogger(__name__)
 
     def compute(self, data, M=1, batchsize=16,
                 converter=concat_examples, retain_inputs=False,
@@ -222,9 +228,11 @@ class BaseCalculator(object):
         it = SerialIterator(data, batch_size=batchsize, repeat=False,
                             shuffle=False)
         if isinstance(self.target_extractor, LinkHook):
-            add_linkhook(self.target_extractor, prefix='/saliency/target/')
+            add_linkhook(self.target_extractor, prefix='/saliency/target/',
+                         logger=self.logger)
         if isinstance(self.output_extractor, LinkHook):
-            add_linkhook(self.output_extractor, prefix='/saliency/output/')
+            add_linkhook(self.output_extractor, prefix='/saliency/output/',
+                         logger=self.logger)
 
         for batch in it:
             inputs = converter(batch, self._device)
@@ -269,9 +277,11 @@ class BaseCalculator(object):
                 output_list[j].append(_extract_numpy(output))
 
         if isinstance(self.target_extractor, LinkHook):
-            delete_linkhook(self.target_extractor, prefix='/saliency/target/')
+            delete_linkhook(self.target_extractor, prefix='/saliency/target/',
+                            logger=self.logger)
         if isinstance(self.output_extractor, LinkHook):
-            delete_linkhook(self.output_extractor, prefix='/saliency/output/')
+            delete_linkhook(self.output_extractor, prefix='/saliency/output/',
+                            logger=self.logger)
 
         if retain_inputs:
             self.inputs = [numpy.concatenate(
