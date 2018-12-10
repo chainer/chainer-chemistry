@@ -24,6 +24,10 @@ class OcclusionCalculator(BaseCalculator):
 
     Use `compute`, `aggregate` method to calculate saliency.
 
+    See: Matthew D Zeiler and Rob Fergus (2014).
+        Visualizing and understanding convolutional networks.
+        In European conference on computer vision, pp. 818–833. Springer.
+
     Args:
         model (chainer.Chain): target model to calculate saliency.
         target_extractor (VariableMonitorLinkHook or None):

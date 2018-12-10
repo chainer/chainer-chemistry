@@ -7,6 +7,14 @@ class GradientCalculator(BaseCalculator):
 
     Use `compute`, `aggregate` method to calculate saliency.
 
+    See: Dumitru Erhan, Yoshua Bengio, Aaron Courville, Pascal Vincent (2009).
+        Visualizing Higher-Layer Features of a Deep Network.
+
+    See: Karen Simonyan, Andrea Vedaldi, and Andrew Zisserman.
+        Deep inside convolutional networks: Visualising image classication
+        models and saliency maps.
+        `arXiv:1312.6034 <https://arxiv.org/abs/1312.6034>`_
+
     Args:
         model (chainer.Chain): target model to calculate saliency.
         target_extractor (VariableMonitorLinkHook or None):

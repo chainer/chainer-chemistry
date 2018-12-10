@@ -9,6 +9,10 @@ class IntegratedGradientsCalculator(GradientCalculator):
 
     Use `compute`, `aggregate` method to calculate saliency.
 
+    See: Mukund Sundararajan, Ankur Taly, and Qiqi Yan (2017).
+        Axiomatic attribution for deep networks. PMLR.
+        URL http://proceedings.mlr.press/v70/sundararajan17a.html.
+
     Args:
         model (chainer.Chain): target model to calculate saliency.
         target_extractor (VariableMonitorLinkHook or None):

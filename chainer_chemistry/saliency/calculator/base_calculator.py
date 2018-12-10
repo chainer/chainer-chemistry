@@ -69,6 +69,17 @@ class BaseCalculator(object):
     """Base class for saliency calculator
 
     Use `compute`, `aggregate` method to calculate saliency.
+    This base class supports to calculate SmoothGrad[1] and BayesGrad[2] of
+    concrete subclass.
+
+    See: Daniel Smilkov, Nikhil Thorat, Been Kim, Fernanda Viegas, and Martin
+        Wattenberg. SmoothGrad: removing noise by adding noise.
+        `arXiv:1706.03825 <https://arxiv.org/abs/1706.03825>`_
+
+    See: Akita, Hirotaka and Nakago, Kosuke and Komatsu, Tomoki and Sugawara,
+        Yohei and Maeda, Shin-ichi and Baba, Yukino and Kashima, Hisashi
+        BayesGrad: Explaining Predictions of Graph Convolutional Networks
+        `arXiv:1807.01985 <https://arxiv.org/abs/1807.01985>`_
 
     Args:
         model (chainer.Chain): target model to calculate saliency.
@@ -140,6 +151,21 @@ class BaseCalculator(object):
         return numpy.stack(saliency_list, axis=_sampling_axis)
 
     def aggregate(self, saliency_arrays, method='raw', ch_axis=None):
+        """Aggregate saliency samples into one saliency score.
+
+        Args:
+            saliency_arrays (numpy.ndarray): M samples of saliency array
+                calculated by `compute` method.
+            method (str): It supports following methods for aggregation.
+                raw: simply take mean of samples.
+                absolute: calc absolute mean of samples.
+                square: calc squared mean of samples.
+            ch_axis (int, tuple or None): channel axis. The ch_axis is
+                considered as reduced axis for saliency calculation.
+
+        Returns:
+            saliency (numpy.ndarray): saliency score
+        """
         if method == 'raw':
             h = saliency_arrays  # do nothing
         elif method == 'abs':
@@ -190,7 +216,6 @@ class BaseCalculator(object):
                 numpy.ndarray.
 
         Returns (tuple or numpy.ndarray): forward result
-
         """
         input_list = None
         output_list = None
