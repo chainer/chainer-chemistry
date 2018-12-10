@@ -32,11 +32,17 @@ def test_smiles_visualizer(tmpdir):
     visualizer = SmilesVisualizer()
 
     # 1. test with setting save_filepath
-    # TODO(nakago): support png save test.
     save_filepath = os.path.join(str(tmpdir), 'tmp.svg')
     visualizer.visualize(saliency, smiles, save_filepath=save_filepath,
                          add_Hs=False)
     assert os.path.exists(save_filepath)
+    save_filepath = os.path.join(str(tmpdir), 'tmp.png')
+    visualizer.visualize(saliency, smiles, save_filepath=save_filepath,
+                         add_Hs=False)
+    # TODO(nakago): support png save test.
+    # Do not test for now (cairosvg is necessary)
+    # assert os.path.exists(save_filepath)
+
     # 2. test with `save_filepath=None` runs without error
     visualizer.visualize(
         saliency, smiles, save_filepath=None, visualize_ratio=0.5,
