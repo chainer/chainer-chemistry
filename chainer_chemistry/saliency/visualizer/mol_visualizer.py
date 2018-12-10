@@ -124,8 +124,14 @@ class MolVisualier(BaseVisualizer):
                     'Unsupported extention {} for save_filepath {}'
                     .format(extention, save_filepath))
         else:
-            from IPython.core.display import SVG
-            return SVG(svg.replace('svg:', ''))
+            try:
+                from IPython.core.display import SVG
+                return SVG(svg.replace('svg:', ''))
+            except ImportError:
+                self.logger.error(
+                    'IPython module failed to import, '
+                    'please install by "pip install ipython"')
+                return None
 
 
 class SmilesVisualizer(MolVisualier):
