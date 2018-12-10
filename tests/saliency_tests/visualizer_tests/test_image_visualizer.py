@@ -1,4 +1,5 @@
 import os
+import sys
 
 import numpy
 import pytest
@@ -7,6 +8,12 @@ import pytest
 from chainer_chemistry.saliency.visualizer.image_visualizer import ImageVisualizer  # NOQA
 
 
+is_python_version2 = sys.version_info[0] < 3
+
+
+@pytest.mark.skipif(is_python_version2,
+                    reason='matplotlib configuration is necessary with'
+                           'python version 2')
 def test_image_visualizer(tmpdir):
     # Only test file is saved without error
     ch = 3
