@@ -1,10 +1,10 @@
 import numpy
 import pytest
 
-from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
-from chainer_chemistry.saliency.visualizer.common import min_max_scaler  # NOQA
-from chainer_chemistry.saliency.visualizer.common import normalize_scaler  # NOQA
-from chainer_chemistry.saliency.visualizer.common import red_blue_cmap  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import abs_max_scaler  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import min_max_scaler  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import normalize_scaler  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import red_blue_cmap  # NOQA
 
 
 def test_abs_max_scaler():

@@ -1,7 +1,7 @@
 import numpy
 import pytest
 
-from chainer_chemistry.saliency.calculator.common import GaussianNoiseSampler  # NOQA
+from chainer_chemistry.saliency.calculator.calculator_utils import GaussianNoiseSampler  # NOQA
 
 
 @pytest.mark.parametrize('mode', ['relative', 'absolute'])

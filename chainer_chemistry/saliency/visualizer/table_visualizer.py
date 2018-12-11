@@ -2,7 +2,7 @@ import numpy
 import matplotlib.pyplot as plt
 
 from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
-from chainer_chemistry.saliency.visualizer.common import abs_max_scaler  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import abs_max_scaler  # NOQA
 
 
 class TableVisualizer(BaseVisualizer):

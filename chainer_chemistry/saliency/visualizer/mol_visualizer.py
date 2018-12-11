@@ -8,7 +8,7 @@ from rdkit.Chem.Draw import rdMolDraw2D
 
 
 from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
-from chainer_chemistry.saliency.visualizer.common import red_blue_cmap, abs_max_scaler  # NOQA
+from chainer_chemistry.saliency.visualizer.visualizer_utils import red_blue_cmap, abs_max_scaler  # NOQA
 
 
 def _convert_to_2d(axes, nrows, ncols):
