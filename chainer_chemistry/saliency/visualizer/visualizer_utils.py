@@ -23,11 +23,12 @@ def red_blue_cmap(x):
         return 1. - x, 1. - x, 1.
 
 
-def min_max_scaler(saliency):
+def min_max_scaler(saliency, logger=None):
     """Normalize saliency to value 0~1
 
     Args:
         saliency (numpy.ndarray or cupy.ndarray): saliency array
+        logger:
 
     Returns (numpy.ndarray or cupy.ndarray): normalized saliency array
 
@@ -36,17 +37,20 @@ def min_max_scaler(saliency):
     maxv = xp.max(saliency)
     minv = xp.min(saliency)
     if maxv == minv:
+        logger = logger or getLogger(__name__)
+        logger.info('All saliency value is 0')
         saliency = xp.zeros_like(saliency)
     else:
         saliency = (saliency - minv) / (maxv - minv)
     return saliency
 
 
-def abs_max_scaler(saliency):
+def abs_max_scaler(saliency, logger=None):
     """Normalize saliency to value -1~1
 
     Args:
         saliency (numpy.ndarray or cupy.ndarray): saliency array
+        logger:
 
     Returns (numpy.ndarray or cupy.ndarray): normalized saliency array
 
@@ -54,7 +58,9 @@ def abs_max_scaler(saliency):
     xp = cuda.get_array_module(saliency)
     maxv = xp.max(xp.abs(saliency))
     if maxv <= 0:
-        return numpy.zeros_like(saliency)
+        logger = logger or getLogger(__name__)
+        logger.info('All saliency value is 0')
+        return xp.zeros_like(saliency)
     else:
         return saliency / maxv
 
@@ -77,6 +83,8 @@ def normalize_scaler(saliency, axis=None, logger=None):
                        'which is unexpected!')
     vsum = xp.sum(xp.abs(saliency), axis=axis, keepdims=True)
     if vsum <= 0:
+        logger = logger or getLogger(__name__)
+        logger.info('All saliency value is 0')
         return xp.zeros_like(saliency)
     else:
         return saliency / vsum
