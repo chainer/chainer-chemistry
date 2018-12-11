@@ -1,5 +1,6 @@
 import os
 import sys
+import matplotlib.pyplot as plt
 
 import numpy
 import pytest
@@ -29,8 +30,10 @@ def test_image_visualizer(tmpdir):
 
     # 2. test with `save_filepath=None` runs without error
     image = numpy.random.uniform(0, 1, (ch, h, w))
+    plt.ion()
     visualizer.visualize(
         saliency, save_filepath=None, image=image, show_colorbar=True)
+    plt.close()
 
 
 def test_table_visualizer_assert_raises():

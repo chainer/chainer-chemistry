@@ -1,5 +1,6 @@
 import os
 import sys
+import matplotlib.pyplot as plt
 
 import numpy
 import pytest
@@ -24,9 +25,11 @@ def test_table_visualizer(tmpdir):
     visualizer.visualize(saliency, save_filepath=save_filepath)
     assert os.path.exists(save_filepath)
     # 2. test with `save_filepath=None` runs without error
+    plt.ion()
     visualizer.visualize(
         saliency, save_filepath=None, feature_names=['hoge', 'huga', 'piyo'],
         num_visualize=2)
+    plt.close()
 
 
 def test_table_visualizer_assert_raises():
