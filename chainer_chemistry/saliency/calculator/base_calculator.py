@@ -314,4 +314,6 @@ class BaseCalculator(object):
         if len(result) == 1:
             return result[0]
         else:
+            self.logger.error('return multiple result handling is not '
+                              'implemented yet and not supported.')
             return result
