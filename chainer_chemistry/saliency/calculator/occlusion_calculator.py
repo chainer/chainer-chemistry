@@ -64,7 +64,7 @@ class OcclusionCalculator(BaseCalculator):
         # Usually, backward() is not necessary for calculating occlusion
         with chainer.using_config('enable_backprop', self.enable_backprop):
             original_result = self.eval_fun(*inputs)
-        target_var = self.get_target_var()
+        target_var = self.get_target_var(inputs)
         original_target_array = target_var.array.copy()
         original_score = self.get_output_var(original_result)
 
@@ -100,18 +100,24 @@ class OcclusionCalculator(BaseCalculator):
                                          for end in end_list]):
             occlude_index = _extract_index(self.slide_axis, self.size, start)
 
-            def mask_target_var(hook, args, _target_var):
-                _target_var.array = original_target_array.copy()
-                _target_var.array[occlude_index] = occlusion_window
+            if self.target_extractor is None:
+                inputs[0].array = original_target_array.copy()
+                inputs[0].array[occlude_index] = occlusion_window
+                with chainer.using_config('enable_backprop',
+                                          self.enable_backprop):
+                    occluded_result = self.eval_fun(*inputs)
+            else:
+                def mask_target_var(hook, args, _target_var):
+                    _target_var.array = original_target_array.copy()
+                    _target_var.array[occlude_index] = occlusion_window
 
-            # self.target_extractor.set_process(mask_target_var)
-            self.target_extractor.add_process(
-                '/saliency/mask_target_var', mask_target_var)
-            with chainer.using_config('enable_backprop', self.enable_backprop):
-                occluded_result = self.eval_fun(*inputs)
-                # occluded_result = self.eval_fun(*copy.deepcopy(inputs))
-            self.target_extractor.delete_process(
-                '/saliency/mask_target_var')
+                self.target_extractor.add_process(
+                    '/saliency/mask_target_var', mask_target_var)
+                with chainer.using_config('enable_backprop',
+                                          self.enable_backprop):
+                    occluded_result = self.eval_fun(*inputs)
+                self.target_extractor.delete_process(
+                    '/saliency/mask_target_var')
 
             occluded_score = self.get_output_var(occluded_result)
             score_diff_var = original_score - occluded_score  # (bs, 1)

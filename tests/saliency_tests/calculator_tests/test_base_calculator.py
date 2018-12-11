@@ -15,7 +15,7 @@ if is_link_hooks_available:
 
         def _compute_core(self, *inputs):
             self.model(*inputs)
-            return self.get_target_var()
+            return self.get_target_var(inputs)
 
 
 class DummyModel(chainer.Chain):

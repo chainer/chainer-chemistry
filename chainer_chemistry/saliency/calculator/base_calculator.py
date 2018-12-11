@@ -108,12 +108,7 @@ class BaseCalculator(object):
             self._device = device
         else:
             self._device = cuda.get_device_from_array(*model.params()).id
-        if target_extractor is None:
-            # First argument of input to the `model` is default target_var
-            self.target_extractor = VariableMonitorLinkHook(
-                self.model, timing='pre')
-        else:
-            self.target_extractor = target_extractor
+        self.target_extractor = target_extractor
         self.output_extractor = output_extractor
         self.logger = logger or getLogger(__name__)
 
@@ -197,8 +192,15 @@ class BaseCalculator(object):
         """
         raise NotImplementedError
 
-    def get_target_var(self):
-        target_var = self.target_extractor.get_variable()
+    def get_target_var(self, inputs):
+        if isinstance(self.target_extractor, VariableMonitorLinkHook):
+            target_var = self.target_extractor.get_variable()
+        else:
+            if isinstance(inputs, tuple):
+                target_var = inputs[0]
+            else:
+                target_var = inputs
+
         if target_var is None:
             self.logger.warning(
                 'target_var is None. This may be caused because "model" is not'
@@ -207,7 +209,7 @@ class BaseCalculator(object):
         return target_var
 
     def get_output_var(self, outputs):
-        if isinstance(self.output_extractor, LinkHook):
+        if isinstance(self.output_extractor, VariableMonitorLinkHook):
             output_var = self.output_extractor.get_variable()
         else:
             output_var = outputs
@@ -265,14 +267,20 @@ class BaseCalculator(object):
                 outputs = self._compute_core(*inputs)
             else:
                 # SmoothGrad computation
-                # Add process to LinkHook
-                def add_noise(hook, args, target_var):
-                    noise = noise_sampler.sample(target_var.array)
-                    target_var.array += noise
-                self.target_extractor.add_process('/saliency/add_noise',
-                                                  add_noise)
-                outputs = self._compute_core(*inputs)
-                self.target_extractor.delete_process('/saliency/add_noise')
+                if self.target_extractor is None:
+                    # inputs[0] is considered as "target_var"
+                    noise = noise_sampler.sample(inputs[0].array)
+                    inputs[0].array += noise
+                    outputs = self._compute_core(*inputs)
+                else:
+                    # Add process to LinkHook
+                    def add_noise(hook, args, target_var):
+                        noise = noise_sampler.sample(target_var.array)
+                        target_var.array += noise
+                    self.target_extractor.add_process('/saliency/add_noise',
+                                                      add_noise)
+                    outputs = self._compute_core(*inputs)
+                    self.target_extractor.delete_process('/saliency/add_noise')
             # --- Main saliency computation end ---
 
             # Init
