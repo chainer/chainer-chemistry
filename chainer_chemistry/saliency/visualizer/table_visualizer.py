@@ -12,7 +12,7 @@ class TableVisualizer(BaseVisualizer):
     def visualize(self, saliency, feature_names=None, save_filepath=None,
                   num_visualize=-1, scaler=abs_max_scaler,
                   sort='descending', title='Feature Importance', color='b',
-                  xlabel='Importance'):
+                  xlabel='Importance', bbox_inches='tight'):
         """Visualize or save `saliency` in bar plot.
 
         Args:
@@ -30,6 +30,7 @@ class TableVisualizer(BaseVisualizer):
             title (str or None): title of plot
             color (str): color of bar in plot
             xlabel (str): x label legend
+            bbox_inches (str or Bbox or None): used for `plt.savefig` option.
 
         """
         # --- type check ---
@@ -78,6 +79,6 @@ class TableVisualizer(BaseVisualizer):
         plt.yticks(range(num_visualize), feature_names)
         plt.xlabel(xlabel)
         if save_filepath:
-            plt.savefig(save_filepath)
+            plt.savefig(save_filepath, bbox_inches=bbox_inches)
         else:
             plt.show()
