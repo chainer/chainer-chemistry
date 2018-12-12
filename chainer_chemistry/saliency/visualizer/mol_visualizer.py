@@ -164,7 +164,7 @@ class SmilesVisualizer(MolVisualier):
             mol = Chem.MolFromSmiles(smiles)
         if add_Hs:
             mol = Chem.AddHs(mol)
-        super(SmilesVisualizer, self).visualize(
+        return super(SmilesVisualizer, self).visualize(
             saliency, mol, save_filepath=save_filepath,
             visualize_ratio=visualize_ratio, color_fn=color_fn, scaler=scaler,
             legend=legend)
