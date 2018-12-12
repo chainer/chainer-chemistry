@@ -23,7 +23,8 @@ class ImageVisualizer(BaseVisualizer):
 
     def visualize(self, saliency, image=None, save_filepath=None,
                   scaler=abs_max_scaler, title='Image saliency map',
-                  cmap=cm.jet, alpha=0.5, show_colorbar=False):
+                  cmap=cm.jet, alpha=0.5, show_colorbar=False,
+                  bbox_inches='tight'):
         """Visualize or save `saliency` of image.
 
         Args:
@@ -41,7 +42,7 @@ class ImageVisualizer(BaseVisualizer):
             alpha (float): alpha value of fore ground saliency. This option is
                 used only when `image` is set.
             show_colorbar (bool): show colorbar in plot or not.
-
+            bbox_inches (str or Bbox or None): used for `plt.savefig` option.
         """
         # --- type check ---
         if saliency.ndim == 3:
@@ -95,6 +96,6 @@ class ImageVisualizer(BaseVisualizer):
         if show_colorbar:
             fig.colorbar(im)
         if save_filepath:
-            plt.savefig(save_filepath)
+            plt.savefig(save_filepath, bbox_inches=bbox_inches)
         else:
             plt.show()
