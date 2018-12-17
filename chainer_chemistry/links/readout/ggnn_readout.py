@@ -16,14 +16,14 @@ class GGNNReadout(chainer.Chain):
             each layer and the result is concatenated
         nobias (bool): If ``True``, then this function does not use
             the bias
-        activate_fn (~chainer.Function or ~chainer.FunctionNode):
+        activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
             It can be replaced with the functions.identity.
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4,
                  concat_hidden=False, nobias=False,
-                 activate_fn=functions.tanh):
+                 activation=functions.tanh):
         super(GGNNReadout, self).__init__()
         n_layer = n_layers if concat_hidden else 1
         with self.init_scope():
@@ -38,7 +38,7 @@ class GGNNReadout(chainer.Chain):
         self.n_layers = n_layers
         self.concat_hidden = concat_hidden
         self.nobias = nobias
-        self.activate_fn = activate_fn
+        self.activation = activation
 
     def __call__(self, h, h0=None, step=0):
         # --- Readout part ---
@@ -47,7 +47,7 @@ class GGNNReadout(chainer.Chain):
         h1 = functions.concat((h, h0), axis=2) if h0 is not None else h
 
         g1 = functions.sigmoid(self.i_layers[index](h1))
-        g2 = self.activate_fn(self.j_layers[index](h1))
+        g2 = self.activation(self.j_layers[index](h1))
         # sum along atom's axis
-        g = self.activate_fn(functions.sum(g1 * g2, axis=1))
+        g = self.activation(functions.sum(g1 * g2, axis=1))
         return g

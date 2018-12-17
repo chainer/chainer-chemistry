@@ -44,7 +44,7 @@ class GGNN(chainer.Chain):
             self.readout_layer = GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 n_layers=n_readout_layer, concat_hidden=concat_hidden,
-                activate_fn=functions.identity)
+                activation=functions.identity)
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
