@@ -28,8 +28,8 @@ class GGNN(chainer.Chain):
     """
     NUM_EDGE_TYPE = 4
 
-    def __init__(self, out_dim, hidden_dim=16,
-                 n_layers=4, n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
+    def __init__(self, out_dim, hidden_dim=16, n_layers=4,
+                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True):
         super(GGNN, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
@@ -37,14 +37,14 @@ class GGNN(chainer.Chain):
         with self.init_scope():
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            self.update_layer = GGNNUpdate(
-                hidden_dim=hidden_dim, n_layers=n_message_layer,
-                n_atom_types=self.NUM_EDGE_TYPE, weight_tying=weight_tying)
+            self.update_layers = chainer.ChainList(*[GGNNUpdate(
+                hidden_dim=hidden_dim, n_atom_types=self.NUM_EDGE_TYPE)
+                for _ in range(n_message_layer)])
             # Readout
-            self.readout_layer = GGNNReadout(
+            self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
-                n_layers=n_readout_layer, concat_hidden=concat_hidden,
-                activation=functions.identity)
+                activation=functions.identity) for _ in range(n_readout_layer)]
+            )
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
@@ -65,8 +65,6 @@ class GGNN(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
-        # reset state
-        self.update_layer.reset_state()
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
@@ -74,13 +72,15 @@ class GGNN(chainer.Chain):
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
         g_list = []
         for step in range(self.n_layers):
-            h = self.update_layer(h, adj, step)
+            message_layer_index = 0 if self.weight_tying else step
+            self.update_layers[message_layer_index].reset_state()
+            h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
-                g = self.readout_layer(h, h0, step)
+                g = self.readout_layers[step](h, h0)
                 g_list.append(g)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout_layer(h, h0, 0)
+            g = self.readout_layers[0](h, h0)
             return g
