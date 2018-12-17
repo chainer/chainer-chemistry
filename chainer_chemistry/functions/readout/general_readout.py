@@ -2,17 +2,17 @@ import chainer
 from chainer import functions
 
 
-class RSGCNReadout(chainer.Chain):
-    """RSGCN submodule for readout part.
+class GeneralReadout(chainer.Chain):
+    """General submodule for readout part.
 
-    This class can be used for rsgcn.
+    This class can be used for rsgcn and weavenet.
 
     Args:
         mode (str):
     """
 
     def __init__(self, mode='sum', activation=None):
-        super(RSGCNReadout, self).__init__()
+        super(GeneralReadout, self).__init__()
         self.mode = mode
         self.activation = activation
 

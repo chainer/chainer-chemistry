@@ -5,7 +5,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import RSGCNReadout
+from chainer_chemistry.functions import GeneralReadout
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
@@ -16,7 +16,7 @@ batch_size = 2
 @pytest.fixture
 def readouts():
     modes = ['sum', 'max', 'summax']
-    return (RSGCNReadout(mode=mode) for mode in modes)
+    return (GeneralReadout(mode=mode) for mode in modes)
 
 
 @pytest.fixture
@@ -53,7 +53,7 @@ def test_forward_gpu(readouts, data):
 
 def test_forward_cpu_assert_raises(data):
     atom_data = data[0]
-    readout = RSGCNReadout(mode='invalid')
+    readout = GeneralReadout(mode='invalid')
     with pytest.raises(ValueError):
         cuda.to_cpu(readout(atom_data).data)
 

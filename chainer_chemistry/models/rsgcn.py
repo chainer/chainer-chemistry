@@ -12,7 +12,7 @@ from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import RSGCNReadout
+from chainer_chemistry.functions import GeneralReadout
 from chainer_chemistry.links import RSGCNUpdate
 
 
@@ -40,7 +40,7 @@ class RSGCN(chainer.Chain):
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
         readout (Callable): readout function. If None,
-            `RSGCNReadout(mode='sum)` is used.
+            `GeneralReadout(mode='sum)` is used.
             To the best of our knowledge, the paper of RSGCN model does
             not give any suggestion on readout.
         dropout_ratio (float): ratio used in dropout function.
@@ -67,7 +67,10 @@ class RSGCN(chainer.Chain):
                         out_dims[i]) for i in range(n_layers)])
             else:
                 self.bnorms = [None for _ in range(n_layers)]
-            self.readout = RSGCNReadout()
+            if isinstance(readout, chainer.Link):
+                self.readout = readout
+        if not isinstance(readout, chainer.Link):
+            self.readout = readout or GeneralReadout()
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers

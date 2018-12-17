@@ -4,8 +4,8 @@ from chainer import links
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
+from chainer_chemistry.functions import GeneralReadout
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import RSGCNReadout
 
 
 WEAVENET_DEFAULT_WEAVE_CHANNELS = [50, ]
@@ -82,7 +82,7 @@ class PairToAtom(chainer.Chain):
             self.linearLayer = chainer.ChainList(
                 *[links.Linear(None, n_channel) for _ in range(n_layer)]
             )
-            self.readout = RSGCNReadout(mode=mode)
+            self.readout = GeneralReadout(mode=mode)
         self.n_atom = n_atom
         self.n_channel = n_channel
         self.mode = mode
@@ -162,7 +162,7 @@ class WeaveNet(chainer.Chain):
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.weave_module = chainer.ChainList(*weave_module)
-            self.readout = RSGCNReadout(mode=readout_mode)
+            self.readout = GeneralReadout(mode=readout_mode)
         self.readout_mode = readout_mode
 
     def __call__(self, atom_x, pair_x, train=True):
