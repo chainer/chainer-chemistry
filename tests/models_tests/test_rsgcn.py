@@ -5,6 +5,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.links import NFPReadout
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.utils.extend import extend_node, extend_adj  # NOQA
 from chainer_chemistry.utils.permutation import permute_adj
@@ -25,6 +26,16 @@ def model_no_dropout():
     # To check backward gradient by `gradient_check`,
     # we need to skip stochastic dropout function.
     return RSGCN(out_dim=out_dim, dropout_ratio=0.)
+
+
+@pytest.fixture
+def model_with_nfp():
+    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_size=out_dim))
+
+
+@pytest.fixture
+def model_with_nfp_no_dropout():
+    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_size=out_dim), dropout_ratio=0.)
 
 
 @pytest.fixture
@@ -60,6 +71,11 @@ def test_forward_gpu(model, data):
     check_forward(model, atom_data, adj_data)
 
 
+def test_forward_cpu_with_nfp(model_with_nfp, data):
+    atom_data, adj_data = data[0], data[1]
+    check_forward(model_with_nfp, atom_data, adj_data)
+
+
 def test_backward_cpu(model_no_dropout, data):
     atom_data, adj_data, y_grad = data
     if int(chainer.__version__[0]) <= 2:
@@ -90,6 +106,18 @@ def test_backward_gpu(model_no_dropout, data):
         model_no_dropout, (atom_data, adj_data), y_grad,
         params=params,
         atol=1e-1, rtol=1e-1, no_grads=[True, True])
+
+
+def test_backward_cpu_with_nfp(model_with_nfp_no_dropout, data):
+    atom_data, adj_data, y_grad = data
+    if int(chainer.__version__[0]) <= 2:
+        params = ()
+    else:
+        params = tuple(model_with_nfp_no_dropout.params())
+    gradient_check.check_backward(
+        model_with_nfp_no_dropout, (atom_data, adj_data), y_grad,
+        params=params,
+        atol=1e-7, rtol=1e-7, no_grads=[True, True])
 
 
 def test_forward_cpu_graph_invariant(model, data):
