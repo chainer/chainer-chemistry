@@ -35,6 +35,19 @@ def test_gradient_calculator():
 
 @pytest.mark.skipif(not is_link_hooks_available,
                     reason='Link Hook is not available')
+def test_gradient_calculator_multiple_output():
+    model = DummyModel()
+    x = numpy.array([[1, 5, 8], [2, 3, 4]], dtype=numpy.float32)
+    calculator = GradientCalculator(model)
+    # even batchsize=2 sum is applied automatically inside `compute`,
+    # so gradient can be calculated.
+    saliency = calculator.compute(x)
+    # Gradient is equal to `initialW` of DummyModel.
+    assert numpy.allclose(saliency, numpy.array([[1, 3, 2]]))
+
+
+@pytest.mark.skipif(not is_link_hooks_available,
+                    reason='Link Hook is not available')
 def test_gradient_calculator_multiply_target():
     model = DummyModel()
     x = numpy.array([[1, 5, 8]], dtype=numpy.float32)
