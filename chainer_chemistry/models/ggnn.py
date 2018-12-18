@@ -29,8 +29,8 @@ class GGNN(chainer.Chain):
     NUM_EDGE_TYPE = 4
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4,
-                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True):
+                 n_atom_types=MAX_ATOMIC_NUM, activation=functions.identity,
+                 concat_hidden=False, weight_tying=True):
         super(GGNN, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = 1 if weight_tying else n_layers
@@ -43,11 +43,12 @@ class GGNN(chainer.Chain):
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
-                activation=functions.identity) for _ in range(n_readout_layer)]
+                activation=activation) for _ in range(n_readout_layer)]
             )
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
+        self.activation = activation
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
