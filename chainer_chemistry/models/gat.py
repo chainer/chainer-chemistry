@@ -34,10 +34,10 @@ class GAT(chainer.Chain):
 
     """
 
-    def __init__(self, out_dim, hidden_dim=16, n_heads=8, negative_slope=0.2,
+    def __init__(self, out_dim, hidden_dim=16, n_heads=3, negative_slope=0.2,
                  n_edge_types=4, n_layers=4, dropout_ratio=-1.,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 concat_heads=False, weight_tying=True):
+                 concat_heads=False, weight_tying=False):
         super(GAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = n_layers
@@ -51,7 +51,7 @@ class GAT(chainer.Chain):
                   GraphLinear(hidden_dim, n_edge_types * hidden_dim * n_heads)
                   for i in range(n_message_layer)]
             )
-            self.attenstion_layers = chainer.ChainList(
+            self.attention_layers = chainer.ChainList(
                 *[GraphLinear(hidden_dim * 2, 1)
                   for _ in range(n_message_layer)]
             )
@@ -110,12 +110,12 @@ class GAT(chainer.Chain):
         e = functions.reshape(e, (mb * self.n_edge_types * self.n_heads,
                                   atom * atom, self.hidden_dim * 2))
         # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
-        e = self.attenstion_layers[step](e)
+        e = self.attention_layers[step](e)
 
         # (minibatch, EDGE_TYPE, heads, atom, atom)
         e = functions.reshape(e, (mb, self.n_edge_types, self.n_heads, atom,
                                   atom))
-        e = functions.leaky_relu(e)
+        e = functions.leaky_relu(e, self.negative_slope)
 
         # (minibatch, EDGE_TYPE, atom, atom)
         cond = adj.array.astype(xp.bool)
@@ -127,7 +127,7 @@ class GAT(chainer.Chain):
         e = functions.where(cond, e,
                             xp.broadcast_to(xp.array(-10000), e.array.shape)
                             .astype(xp.float32))
-        # (minibatch, heads, atom, atom)
+        # (minibatch, EDGE_TYPE, heads, atom, atom)
         alpha = functions.softmax(e, axis=4)
         if self.dropout_ratio >= 0:
             alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
