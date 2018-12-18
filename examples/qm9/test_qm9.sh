@@ -2,18 +2,48 @@
 
 set -e
 
-# gpu id given from first argument, default value is -1
+# List of available graph convolution methods.
+methods=(nfp ggnn schnet weavenet rsgcn relgcn gat)
+
+# GPU identifier; set it to -1 to train on the CPU (default).
 gpu=${1:--1}
+# Number of training epochs (default: 1).
+epoch=${2:-1}
 
-for method in nfp ggnn schnet weavenet rsgcn gat
+for method in ${methods[@]}
 do
-    # QM9
-    if [ ! -f "input" ]; then
-        rm -rf input
-    fi
+    # Remove any previously cached models.
+    [ -d "input" ] && rm -rf input
 
-    python train_qm9.py --method ${method} --label A --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --label A --gpu ${gpu} --batchsize 32 --num-data 100
-    python train_qm9.py --method ${method} --conv-layers 1 --gpu ${gpu} --epoch 1 --unit-num 10 --batchsize 32 --num-data 100
-    python predict_qm9.py --method ${method} --gpu ${gpu} --batchsize 32 --num-data 100
+    # Train with the current method (one label).
+    python train_qm9.py \
+        --method ${method} \
+        --label A \
+        --conv-layers 1 \
+        --gpu ${gpu} \
+        --epoch ${epoch} \
+        --unit-num 10 \
+        --num-data 100
+
+    # Predict with the current method (one label).
+    python predict_qm9.py \
+        --method ${method} \
+        --label A \
+        --gpu ${gpu} \
+        --num-data 100
+
+    # Train with the current method (all labels).
+    python train_qm9.py \
+        --method ${method} \
+        --conv-layers 1 \
+        --gpu ${gpu} \
+        --epoch ${epoch} \
+        --unit-num 10 \
+        --num-data 100
+
+    # Predict with the current method (all labels).
+    python predict_qm9.py \
+        --method ${method} \
+        --gpu ${gpu} \
+        --num-data 100
 done

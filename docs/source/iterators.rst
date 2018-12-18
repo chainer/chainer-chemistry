@@ -1,10 +1,10 @@
-=======
+=========
 Iterators
-=======
+=========
 
 
 Iterator Implementations
-==========
+========================
 
 .. autosummary::
    :toctree: generated/

@@ -4,11 +4,17 @@ from chainer_chemistry.dataset.preprocessors.base_preprocessor import BasePrepro
 
 
 class MolPreprocessor(BasePreprocessor):
-    """preprocessor class specified for rdkit mol instance"""
+    """preprocessor class specified for rdkit mol instance
 
-    def __init__(self, add_Hs=False):
+    Args:
+        add_Hs (bool): If True, implicit Hs are added.
+        kekulize (bool): If True, Kekulizes the molecule.
+    """
+
+    def __init__(self, add_Hs=False, kekulize=False):
         super(MolPreprocessor, self).__init__()
         self.add_Hs = add_Hs
+        self.kekulize = kekulize
 
     def prepare_smiles_and_mol(self, mol):
         """Prepare `smiles` and `mol` used in following preprocessing.
@@ -23,15 +29,16 @@ class MolPreprocessor(BasePreprocessor):
         Returns (tuple): (`smiles`, `mol`)
         """
         # Note that smiles expression is not unique.
-        # we should re-obtain smiles from `mol`, so that the
-        # smiles order does not contradict with input_features'
-        # order.
-        smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
-        mol = Chem.MolFromSmiles(smiles)
+        # we obtain canonical smiles which is unique in `mol`
+        canonical_smiles = Chem.MolToSmiles(mol, isomericSmiles=False,
+                                            canonical=True)
+        mol = Chem.MolFromSmiles(canonical_smiles)
         if self.add_Hs:
             mol = Chem.AddHs(mol)
-            smiles = Chem.MolToSmiles(mol, isomericSmiles=False)
-        return smiles, mol
+        if self.kekulize:
+            Chem.Kekulize(mol)
+        return canonical_smiles, mol
+
 
     def get_label(self, mol, label_names=None):
         """Extracts label information from a molecule.

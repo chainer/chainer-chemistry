@@ -2,10 +2,9 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainer_chemistry.dataset.parsers.sdf_file_parser import SDFFileParser
+from chainer_chemistry.dataset.parsers import SmilesParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
-from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.fixture
@@ -49,11 +48,10 @@ def test_atomic_number_preprocessor(mol):
     numpy.testing.assert_array_equal(ret_atom_array, expect_atom_array)
 
 
-@pytest.mark.slow
-def test_atomic_number_preprocessor_with_tox21():
+def test_atomic_number_preprocessor_default():
     preprocessor = AtomicNumberPreprocessor()
-    dataset = SDFFileParser(preprocessor) \
-        .parse(get_tox21_filepath('train'))['dataset']
+    dataset = SmilesParser(preprocessor).parse(
+        ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1'])['dataset']
     index = numpy.random.choice(len(dataset), None)
     atoms, = dataset[index]
 

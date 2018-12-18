@@ -6,6 +6,8 @@ from setuptools import find_packages
 setup_requires = []
 install_requires = [
     'chainer>=3.0',
+    'joblib',
+    'matplotlib',
     'pandas',
     'scikit-learn',
     'scipy',

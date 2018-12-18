@@ -4,24 +4,11 @@ from chainer import links
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.config import WEAVE_DEFAULT_NUM_MAX_ATOMS
-from chainer_chemistry.links.embed_atom_id import EmbedAtomID
+from chainer_chemistry.functions import GeneralReadout
+from chainer_chemistry.links import EmbedAtomID
 
 
 WEAVENET_DEFAULT_WEAVE_CHANNELS = [50, ]
-
-
-def readout(a, mode='sum', axis=1):
-    if mode == 'sum':
-        a = functions.sum(a, axis=axis)
-    elif mode == 'max':
-        a = functions.max(a, axis=axis)
-    elif mode == 'summax':
-        a_sum = functions.sum(a, axis=axis)
-        a_max = functions.max(a, axis=axis)
-        a = functions.concat((a_sum, a_max), axis=axis)
-    else:
-        raise ValueError('mode {} is not supported'.format(mode))
-    return a
 
 
 class LinearLayer(chainer.Chain):
@@ -95,6 +82,7 @@ class PairToAtom(chainer.Chain):
             self.linearLayer = chainer.ChainList(
                 *[links.Linear(None, n_channel) for _ in range(n_layer)]
             )
+            self.readout = GeneralReadout(mode=mode)
         self.n_atom = n_atom
         self.n_channel = n_channel
         self.mode = mode
@@ -108,7 +96,7 @@ class PairToAtom(chainer.Chain):
             a = functions.relu(a)
         a = functions.reshape(a, (n_batch, self.n_atom, self.n_atom,
                                   self.n_channel))
-        a = readout(a, mode=self.mode, axis=2)
+        a = self.readout(a, axis=2)
         return a
 
 
@@ -174,6 +162,7 @@ class WeaveNet(chainer.Chain):
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.weave_module = chainer.ChainList(*weave_module)
+            self.readout = GeneralReadout(mode=readout_mode)
         self.readout_mode = readout_mode
 
     def __call__(self, atom_x, pair_x, train=True):
@@ -189,5 +178,5 @@ class WeaveNet(chainer.Chain):
             else:
                 # not last layer, both `atom_x` and `pair_x` are needed
                 atom_x, pair_x = self.weave_module[i].forward(atom_x, pair_x)
-        x = readout(atom_x, mode=self.readout_mode, axis=1)
+        x = self.readout(atom_x, axis=1)
         return x

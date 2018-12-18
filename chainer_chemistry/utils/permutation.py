@@ -62,5 +62,5 @@ def permute_adj(adj, permutation_index, axis=None):
             in_indices[axis[1]] = j
             out_indices[axis[0]] = permutation_index[i]
             out_indices[axis[1]] = permutation_index[j]
-            out_adj[in_indices] = adj[out_indices]
+            out_adj[tuple(in_indices)] = adj[tuple(out_indices)]
     return out_adj
