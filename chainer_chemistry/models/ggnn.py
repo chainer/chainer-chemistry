@@ -65,6 +65,8 @@ class GGNN(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
+        # reset state
+        self.reset_state()
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
@@ -73,7 +75,6 @@ class GGNN(chainer.Chain):
         g_list = []
         for step in range(self.n_layers):
             message_layer_index = 0 if self.weight_tying else step
-            self.update_layers[message_layer_index].reset_state()
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
                 g = self.readout_layers[step](h, h0)
@@ -84,3 +85,6 @@ class GGNN(chainer.Chain):
         else:
             g = self.readout_layers[0](h, h0)
             return g
+
+    def reset_state(self):
+        [update_layer.reset_state() for update_layer in self.update_layers]
