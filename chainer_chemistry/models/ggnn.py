@@ -38,7 +38,7 @@ class GGNN(chainer.Chain):
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(*[GGNNUpdate(
-                hidden_dim=hidden_dim, n_atom_types=self.NUM_EDGE_TYPE)
+                hidden_dim=hidden_dim, num_edge_type=self.NUM_EDGE_TYPE)
                 for _ in range(n_message_layer)])
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(

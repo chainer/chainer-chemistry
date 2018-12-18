@@ -3,7 +3,6 @@ from chainer import functions
 from chainer import links
 
 import chainer_chemistry
-from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
@@ -13,12 +12,10 @@ class GGNNUpdate(chainer.Chain):
     Args:
         hidden_dim (int): dimension of feature vector associated to
             each atom
-        n_atom_types (int): number of types of atoms
         num_edge_type (int): number of types of edge
     """
 
-    def __init__(self, hidden_dim=16, n_atom_types=MAX_ATOMIC_NUM,
-                 num_edge_type=4):
+    def __init__(self, hidden_dim=16, num_edge_type=4):
         super(GGNNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear = GraphLinear(
