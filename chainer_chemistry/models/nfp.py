@@ -1,29 +1,35 @@
-"""
-Implementation of Neural Fingerprint
-
-"""
 import chainer
 from chainer import functions
 from chainer import Variable
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import NFPReadout
-from chainer_chemistry.links import NFPUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.readout.nfp_readout import NFPReadout
+from chainer_chemistry.links.update.nfp_update import NFPUpdate
 
 
 class NFP(chainer.Chain):
 
     """Neural Finger Print (NFP)
 
+    See: David K Duvenaud, Dougal Maclaurin, Jorge Iparraguirre, Rafael
+        Bombarell, Timothy Hirzel, Alan Aspuru-Guzik, and Ryan P Adams (2015).
+        Convolutional networks on graphs for learning molecular fingerprints.
+        In C. Cortes, N. D. Lawrence, D. D. Lee, M. Sugiyama, and R. Garnett,
+        editors, *Advances in Neural Information Processing Systems (NIPS) 28*,
+        pages 2224–2232. Curran Asso- ciates, Inc.
+
     Args:
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
+        n_layers (int): number of layers
         max_degree (int): max degree of atoms
             when molecules are regarded as graphs
         n_atom_types (int): number of types of atoms
-        n_layer (int): number of layers
+        concat_hidden (bool): If set to True, readout is executed in each layer
+            and the result is concatenated
+
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4, max_degree=6,
@@ -45,7 +51,7 @@ class NFP(chainer.Chain):
         self.n_layers = n_layers
         self.concat_hidden = concat_hidden
 
-    def __call__(self, atom_array, adj):
+    def __call__(self, atom_array, adj, is_real_node=None):
         """Forward propagation
 
         Args:
@@ -56,6 +62,8 @@ class NFP(chainer.Chain):
             adj (numpy.ndarray): minibatch of adjancency matrix
                 `adj[mol_index]` represents `mol_index`-th molecule's
                 adjacency matrix
+            is_real_node (numpy.ndarray): (minibatch, num_nodes), 1 for real
+               node, 0 for virtual node.
 
         Returns:
             ~chainer.Variable: minibatch of fingerprint
@@ -82,7 +90,7 @@ class NFP(chainer.Chain):
         g_list = []
         for update, readout in zip(self.layers, self.read_out_layers):
             h = update(h, adj, deg_conds)
-            dg = readout(h)
+            dg = readout(h, is_real_node)
             g = g + dg
             if self.concat_hidden:
                 g_list.append(g)

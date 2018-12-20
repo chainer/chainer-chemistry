@@ -5,6 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.nfp import NFP
+from chainer_chemistry.utils.extend import extend_adj, extend_node
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
@@ -77,5 +78,20 @@ def test_forward_cpu_graph_invariant(model, data):
     assert numpy.allclose(y_actual, permute_y_actual, rtol=1e-5, atol=1e-6)
 
 
+def test_forward_cpu_input_size_invariant(model, data):
+    atom_data, adj_data = data[0], data[1]
+    is_real_node = numpy.ones(atom_data.shape, dtype=numpy.float32)
+    y_actual = cuda.to_cpu(model(atom_data, adj_data, is_real_node).data)
+
+    atom_data_ex = extend_node(atom_data, out_size=8)
+    adj_data_ex = extend_adj(adj_data, out_size=8)
+    is_real_node_ex = extend_node(is_real_node, out_size=8)
+    print('size', atom_data.shape, adj_data.shape,
+          atom_data_ex.shape, adj_data_ex.shape, is_real_node_ex.shape)
+    y_actual_ex = cuda.to_cpu(model(
+        atom_data_ex, adj_data_ex, is_real_node_ex).data)
+    assert numpy.allclose(y_actual, y_actual_ex, rtol=1e-5, atol=1e-6)
+
+
 if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+    pytest.main([__file__, '-v', '-s'])
