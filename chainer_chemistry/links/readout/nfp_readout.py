@@ -22,8 +22,8 @@ class NFPReadout(chainer.Chain):
         self.out_size = out_size
 
     def __call__(self, h, is_real_node=None):
-        # h: (minibatch, atom, ch)
-        # input  is_real_node shape (minibatch, num_nodes)
+        # h: (minibatch, node, ch)
+        # is_real_node: (minibatch, node)
 
         # ---Readout part ---
         i = self.output_weight(h)
