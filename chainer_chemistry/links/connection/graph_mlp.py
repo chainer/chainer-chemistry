@@ -1,4 +1,5 @@
 import chainer
+import numpy
 from chainer.functions import relu
 
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
@@ -9,27 +10,29 @@ class GraphMLP(chainer.Chain):
     """Graph MLP layer
 
     Args:
-        out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        channels (list or numpy.ndarray): list of int, representing each
+            layer's hidden dim. e.g., if [32, 16], it will construct 2-layer
+            MLP with hidden dim 32 and output dim 16.
+        in_channels (int or None): input channel size.
         activation (chainer.functions): activation function
     """
 
-    def __init__(self, out_dim, hidden_dim=16, n_layers=2, activation=relu):
+    def __init__(self, channels, in_channels=None, activation=relu):
         super(GraphMLP, self).__init__()
-        if n_layers <= 0:
-            raise ValueError('n_layers must be a positive integer, but it was '
-                             'set to {}'.format(n_layers))
-        layers = [GraphLinear(None, hidden_dim) for i in range(n_layers - 1)]
+        if not isinstance(channels, (list, numpy.ndarray)):
+            raise TypeError('channels {} is expected to be list, actual {}'
+                            .format(channels, type(channels)))
+
+        channels_list = [in_channels] + list(channels)
+        layers = [GraphLinear(channels_list[i], channels_list[i+1])
+                  for i in range(len(channels_list) - 1)]
         with self.init_scope():
             self.layers = chainer.ChainList(*layers)
-            self.l_out = GraphLinear(None, out_dim)
         self.activation = activation
 
     def __call__(self, x):
         h = x
-        for l in self.layers:
+        for l in self.layers[:-1]:
             h = self.activation(l(h))
-        h = self.l_out(h)
+        h = self.layers[-1](h)
         return h
