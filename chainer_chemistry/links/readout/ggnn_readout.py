@@ -14,12 +14,15 @@ class GGNNReadout(chainer.Chain):
         nobias (bool): If ``True``, then this function does not use
             the bias
         activation (~chainer.Function or ~chainer.FunctionNode):
-            activate function
+            activate function for node representation
+            It can be replaced with the functions.identity.
+        activation_agg (~chainer.Function or ~chainer.FunctionNode):
+            activate function for aggregation
             It can be replaced with the functions.identity.
     """
 
     def __init__(self, out_dim, hidden_dim=16, nobias=False,
-                 activation=functions.tanh):
+                 activation=functions.tanh, activation_agg=functions.tanh):
         super(GGNNReadout, self).__init__()
         with self.init_scope():
             self.i_layer = GraphLinear(None, out_dim, nobias=nobias)
@@ -28,6 +31,7 @@ class GGNNReadout(chainer.Chain):
         self.hidden_dim = hidden_dim
         self.nobias = nobias
         self.activation = activation
+        self.activation_agg = activation_agg
 
     def __call__(self, h, h0=None):
         # --- Readout part ---
@@ -37,5 +41,5 @@ class GGNNReadout(chainer.Chain):
         g1 = functions.sigmoid(self.i_layer(h1))
         g2 = self.activation(self.j_layer(h1))
         # sum along atom's axis
-        g = self.activation(functions.sum(g1 * g2, axis=1))
+        g = self.activation_agg(functions.sum(g1 * g2, axis=1))
         return g
