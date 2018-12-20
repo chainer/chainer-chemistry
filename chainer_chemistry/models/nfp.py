@@ -62,8 +62,9 @@ class NFP(chainer.Chain):
             adj (numpy.ndarray): minibatch of adjancency matrix
                 `adj[mol_index]` represents `mol_index`-th molecule's
                 adjacency matrix
-            is_real_node (numpy.ndarray): (minibatch, num_nodes), 1 for real
-               node, 0 for virtual node.
+            is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
+                1 for real node, 0 for virtual node.
+                If `None`, all node is considered as real node.
 
         Returns:
             ~chainer.Variable: minibatch of fingerprint
