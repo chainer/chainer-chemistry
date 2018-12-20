@@ -15,9 +15,7 @@ class NFP(chainer.Chain):
     See: David K Duvenaud, Dougal Maclaurin, Jorge Iparraguirre, Rafael
         Bombarell, Timothy Hirzel, Alan Aspuru-Guzik, and Ryan P Adams (2015).
         Convolutional networks on graphs for learning molecular fingerprints.
-        In C. Cortes, N. D. Lawrence, D. D. Lee, M. Sugiyama, and R. Garnett,
-        editors, *Advances in Neural Information Processing Systems (NIPS) 28*,
-        pages 2224–2232. Curran Asso- ciates, Inc.
+        *Advances in Neural Information Processing Systems (NIPS) 28*,
 
     Args:
         out_dim (int): dimension of output feature vector
