@@ -1,7 +1,7 @@
 import chainer
 from chainer import functions
 
-from chainer_chemistry.links import GraphLinear
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class GGNNReadout(chainer.Chain):
@@ -29,13 +29,20 @@ class GGNNReadout(chainer.Chain):
         self.nobias = nobias
         self.activation = activation
 
-    def __call__(self, h, h0=None):
+    def __call__(self, h, h0=None, is_real_node=None):
         # --- Readout part ---
-        # h, h0: (minibatch, atom, ch)
+        # h, h0: (minibatch, node, ch)
+        # is_real_node: (minibatch, node)
         h1 = functions.concat((h, h0), axis=2) if h0 is not None else h
 
         g1 = functions.sigmoid(self.i_layer(h1))
         g2 = self.activation(self.j_layer(h1))
-        # sum along atom's axis
-        g = self.activation(functions.sum(g1 * g2, axis=1))
+        g = g1 * g2
+        if is_real_node is not None:
+            # mask virtual node feature to be 0
+            mask = self.xp.broadcast_to(
+                is_real_node[:, :, None], g.shape)
+            g = g * mask
+        # sum along node axis
+        g = self.activation(functions.sum(g, axis=1))
         return g

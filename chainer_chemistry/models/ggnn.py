@@ -3,9 +3,9 @@ from chainer import cuda
 from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GGNNReadout
-from chainer_chemistry.links import GGNNUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
+from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 
 
 class GGNN(chainer.Chain):
@@ -52,7 +52,7 @@ class GGNN(chainer.Chain):
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
-    def __call__(self, atom_array, adj):
+    def __call__(self, atom_array, adj, is_real_node=None):
         """Forward propagation
 
         Args:
@@ -62,6 +62,9 @@ class GGNN(chainer.Chain):
                 molecule's `atom_index`-th atomic number
             adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
                 information
+            is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
+                1 for real node, 0 for virtual node.
+                If `None`, all node is considered as real node.
 
         Returns:
             ~chainer.Variable: minibatch of fingerprint
@@ -78,13 +81,13 @@ class GGNN(chainer.Chain):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
-                g = self.readout_layers[step](h, h0)
+                g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout_layers[0](h, h0)
+            g = self.readout_layers[0](h, h0, is_real_node)
             return g
 
     def reset_state(self):
