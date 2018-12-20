@@ -65,6 +65,16 @@ def construct_atomic_number_array(mol, out_size=-1):
                          '.'.format(out_size, n_atom))
 
 
+def construct_is_real_node(mol, out_size=-1):
+    num_atoms = mol.GetNumAtoms()
+    if out_size < 0:
+        is_real_node = numpy.ones(num_atoms, dtype=numpy.float32)
+    else:
+        is_real_node = numpy.zeros(out_size, dtype=numpy.float32)
+        is_real_node[:num_atoms] = 1.
+    return is_real_node
+
+
 # --- Adjacency matrix preprocessing ---
 def construct_adj_matrix(mol, out_size=-1, self_connection=True):
     """Returns the adjacent matrix of the given molecule.
