@@ -15,14 +15,15 @@ class GGNNReadout(chainer.Chain):
             the bias
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function for node representation
-            It can be replaced with the functions.identity.
+            `functions.tanh` was suggested in original paper.
         activation_agg (~chainer.Function or ~chainer.FunctionNode):
             activate function for aggregation
-            It can be replaced with the functions.identity.
+            `functions.tanh` was suggested in original paper.
     """
 
     def __init__(self, out_dim, hidden_dim=16, nobias=False,
-                 activation=functions.tanh, activation_agg=functions.tanh):
+                 activation=functions.identity,
+                 activation_agg=functions.identity):
         super(GGNNReadout, self).__init__()
         with self.init_scope():
             self.i_layer = GraphLinear(None, out_dim, nobias=nobias)
