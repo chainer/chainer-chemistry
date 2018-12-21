@@ -24,7 +24,8 @@ class GGNN(chainer.Chain):
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         weight_tying (bool): enable weight_tying or not
-
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function
     """
     NUM_EDGE_TYPE = 4
 
@@ -43,8 +44,8 @@ class GGNN(chainer.Chain):
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
-                activation=activation) for _ in range(n_readout_layer)]
-            )
+                activation=activation, activation_agg=activation)
+                for _ in range(n_readout_layer)])
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
