@@ -6,7 +6,7 @@ import chainer
 from chainer.dataset.convert import concat_examples
 from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
-from chainer import cuda, Variable  #N OQA
+from chainer import cuda, Variable  # NOQA
 from chainer import reporter
 from chainer_chemistry.models.prediction.base import BaseForwardModel
 
