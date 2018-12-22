@@ -1,9 +1,10 @@
+import numpy
+
 import chainer
 from chainer.dataset.convert import concat_examples
-from chainer import cuda
+from chainer import cuda, Variable  # NOQA
 from chainer import reporter
 from chainer_chemistry.models.prediction.base import BaseForwardModel
-import numpy
 
 
 class Regressor(BaseForwardModel):
@@ -66,9 +67,11 @@ class Regressor(BaseForwardModel):
         self.initialize(device)
 
     def _convert_to_scalar(self, value):
-        """Converts an input value to a scalar if its type is a numpy or cupy
-        array, otherwise it returns the value as it is.
+        """Converts an input value to a scalar if its type is a Variable,
+        numpy or cupy array, otherwise it returns the value as it is.
         """
+        if isinstance(value, Variable):
+            value = value.array
         if numpy.isscalar(value):
             return value
         if type(value) is not numpy.array:
@@ -129,12 +132,12 @@ class Regressor(BaseForwardModel):
         # reporter class, which needs to be addressed and fixed. Until then,
         # the reported values will be converted to numpy arrays.
         reporter.report(
-            {'loss': self._convert_to_scalar(self.loss.data)}, self)
+            {'loss': self._convert_to_scalar(self.loss)}, self)
 
         if self.compute_metrics:
             # Note: self.metrics_fun is `dict`,
             # which is different from original chainer implementation
-            self.metrics = {key: self._convert_to_scalar(value(self.y, t).data)
+            self.metrics = {key: self._convert_to_scalar(value(self.y, t))
                             for key, value in self.metrics_fun.items()}
             reporter.report(self.metrics, self)
         return self.loss

@@ -24,9 +24,10 @@ class GGNN(chainer.Chain):
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         weight_tying (bool): enable weight_tying or not
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function
         num_edge_type (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
-
     """
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4,
@@ -45,8 +46,8 @@ class GGNN(chainer.Chain):
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
-                activation=activation) for _ in range(n_readout_layer)]
-            )
+                activation=activation, activation_agg=activation)
+                for _ in range(n_readout_layer)])
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
