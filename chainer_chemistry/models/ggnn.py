@@ -26,12 +26,14 @@ class GGNN(chainer.Chain):
         weight_tying (bool): enable weight_tying or not
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
+        num_edge_type (int): number of edge type.
+            Defaults to 4 for single, double, triple and aromatic bond.
     """
-    NUM_EDGE_TYPE = 4
 
     def __init__(self, out_dim, hidden_dim=16, n_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True, activation=functions.identity):
+                 weight_tying=True, activation=functions.identity,
+                 num_edge_type=4):
         super(GGNN, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = 1 if weight_tying else n_layers
@@ -39,7 +41,7 @@ class GGNN(chainer.Chain):
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(*[GGNNUpdate(
-                hidden_dim=hidden_dim, num_edge_type=self.NUM_EDGE_TYPE)
+                hidden_dim=hidden_dim, num_edge_type=num_edge_type)
                 for _ in range(n_message_layer)])
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
@@ -49,6 +51,7 @@ class GGNN(chainer.Chain):
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
+        self.num_edge_type = num_edge_type
         self.activation = activation
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
