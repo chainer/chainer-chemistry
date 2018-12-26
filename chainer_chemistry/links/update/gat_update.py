@@ -8,9 +8,15 @@ class GATUpdate(chainer.Chain):
     """GAT submodule for update part.
 
     Args:
-        hidden_dim (int): dimension of feature vector associated to
-            each atom
-        num_edge_type (int): number of types of edge
+        in_channels (int): dimension of input feature vector
+        out_channels (int): dimension of output feature vector
+        n_heads (int): number of multi-head-attentions.
+        n_edge_types (int): number of edge types.
+        dropout_ratio (float): dropout ratio of the normalized attention
+            coefficients
+        negative_slope (float): LeakyRELU angle of the negative slope
+        concat_heads (bool) : Whether to concat or average multi-head
+            attentions
     """
     def __init__(self, in_channels, out_channels, n_heads=3, n_edge_types=4,
                  dropout_ratio=-1., negative_slope=0.2,
@@ -82,10 +88,22 @@ class GATUpdate(chainer.Chain):
         e = functions.where(cond, e,
                             xp.broadcast_to(xp.array(-10000), e.array.shape)
                             .astype(xp.float32))
-        # (minibatch, EDGE_TYPE, heads, atom, atom)
-        alpha = functions.softmax(e, axis=4)
+        # In Relational Graph Attention Networks eq.(7)
+        # ARGAT: take the softmax over the logits across node neighborhoods
+        # irrespective of relation
+        # (minibatch, heads, atom, EDGE_TYPE, atom)
+        e = functions.transpose(e, (0, 2, 3, 1, 4))
+        # (minibatch, heads, atom, EDGE_TYPE * atom)
+        e = functions.reshape(e, (mb, self.n_heads, atom,
+                                  self.n_edge_types * atom))
+        # (minibatch, heads, atom, EDGE_TYPE * atom)
+        alpha = functions.softmax(e, axis=3)
         if self.dropout_ratio >= 0:
             alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
+
+        alpha = functions.reshape(alpha, (mb, self.n_heads, atom,
+                                          self.n_edge_types, atom))
+        alpha = functions.transpose(alpha, (0, 3, 1, 2, 4))
 
         # before: (minibatch, atom, EDGE_TYPE, heads, out_dim)
         # after: (minibatch, EDGE_TYPE, heads, atom, out_dim)

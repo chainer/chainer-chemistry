@@ -14,7 +14,11 @@ class GAT(chainer.Chain):
 
     See: Veličković, Petar, et al. (2017).\
         Graph Attention Networks.\
-        `arXiv:1701.10903 <https://arxiv.org/abs/1710.10903>`_
+        `arXiv:1701.10903 <https://arxiv.org/abs/1710.10903>`\
+        Dan Busbridge, et al. (2018).\
+        Relational Graph Attention Networks
+        `<https://openreview.net/forum?id=Bklzkh0qFm>`\
+
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -24,7 +28,7 @@ class GAT(chainer.Chain):
         n_atom_types (int): number of types of atoms
         n_heads (int): number of multi-head-attentions.
         n_edge_types (int): number of edge types.
-        drop_out_ratio (float): dropout ratio of the normalized attention
+        dropout_ratio (float): dropout ratio of the normalized attention
             coefficients
         negative_slope (float): LeakyRELU angle of the negative slope
         concat_hidden (bool): If set to True, readout is executed in each layer
@@ -35,7 +39,7 @@ class GAT(chainer.Chain):
 
     """
     def __init__(self, out_dim, hidden_dim=16, n_heads=3, negative_slope=0.2,
-                 num_edge_type=4, n_layers=4, dropout_ratio=-1.,
+                 n_edge_types=4, n_layers=4, dropout_ratio=-1.,
                  activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
                  concat_hidden=False, concat_heads=False, weight_tying=False):
         super(GAT, self).__init__()
@@ -51,7 +55,7 @@ class GAT(chainer.Chain):
                     input_dim = hidden_dim
                 update_layers.append(GATUpdate(input_dim, hidden_dim,
                                                n_heads=n_heads,
-                                               n_edge_types=num_edge_type,
+                                               n_edge_types=n_edge_types,
                                                dropout_ratio=dropout_ratio,
                                                negative_slope=negative_slope,
                                                concat_heads=concat_heads
@@ -70,7 +74,7 @@ class GAT(chainer.Chain):
         self.concat_heads = concat_heads
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
-        self.num_edge_type = num_edge_type
+        self.n_edge_types = n_edge_types
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, atom_array, adj):
