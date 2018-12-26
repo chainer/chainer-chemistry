@@ -1,13 +1,12 @@
+# -*- coding: utf-8 -*-
 import chainer
 import chainer.backends.cuda as cuda
 from chainer import functions
-from chainer import Variable
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links import GATUpdate
 from chainer_chemistry.links import GGNNReadout
-from chainer_chemistry.links import GraphLinear
 
 
 class GAT(chainer.Chain):
