@@ -5,6 +5,8 @@ from chainer import Variable
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
+from chainer_chemistry.links import GATUpdate
+from chainer_chemistry.links import GGNNReadout
 from chainer_chemistry.links import GraphLinear
 
 
@@ -33,39 +35,34 @@ class GAT(chainer.Chain):
         weight_tying (bool): enable weight_tying or not
 
     """
-
     def __init__(self, out_dim, hidden_dim=16, n_heads=3, negative_slope=0.2,
-                 n_edge_types=4, n_layers=4, dropout_ratio=-1.,
-                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 concat_heads=False, weight_tying=False):
+                 num_edge_type=4, n_layers=4, dropout_ratio=-1.,
+                 activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
+                 concat_hidden=False, concat_heads=False, weight_tying=False):
         super(GAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = n_layers
         with self.init_scope():
-            # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            self.message_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim * n_heads,
-                              n_edge_types * hidden_dim * n_heads)
-                  if i > 0 and concat_heads else
-                  GraphLinear(hidden_dim, n_edge_types * hidden_dim * n_heads)
-                  for i in range(n_message_layer)]
-            )
-            self.attention_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim * 2, 1)
-                  for _ in range(n_message_layer)]
-            )
-            # Readout
-            self.i_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim + n_heads * hidden_dim, out_dim)
-                  if concat_heads else GraphLinear(2 * hidden_dim, out_dim)
-                  for _ in range(n_readout_layer)]
-            )
-            self.j_layers = chainer.ChainList(
-                *[GraphLinear(n_heads * hidden_dim, out_dim)
-                  if concat_heads else GraphLinear(hidden_dim, out_dim)
-                  for _ in range(n_readout_layer)]
-            )
+            update_layers = []
+            for i in range(n_message_layer):
+                if i > 0 and concat_heads:
+                    input_dim = hidden_dim * n_heads
+                else:
+                    input_dim = hidden_dim
+                update_layers.append(GATUpdate(input_dim, hidden_dim,
+                                               n_heads=n_heads,
+                                               n_edge_types=num_edge_type,
+                                               dropout_ratio=dropout_ratio,
+                                               negative_slope=negative_slope,
+                                               concat_heads=concat_heads
+                                               ))
+            self.update_layers = chainer.ChainList(*update_layers)
+            self.readout_layers = chainer.ChainList(*[GGNNReadout(
+                out_dim=out_dim, hidden_dim=hidden_dim,
+                activation=activation, activation_agg=activation)
+                for _ in range(n_readout_layer)])
+
         self.out_dim = out_dim
         self.n_heads = n_heads
         self.hidden_dim = hidden_dim
@@ -74,95 +71,8 @@ class GAT(chainer.Chain):
         self.concat_heads = concat_heads
         self.weight_tying = weight_tying
         self.negative_slope = negative_slope
-        self.n_edge_types = n_edge_types
+        self.num_edge_type = num_edge_type
         self.dropout_ratio = dropout_ratio
-
-    def update(self, h, adj, step=0):
-        xp = self.xp
-        # (minibatch, atom, channel)
-        mb, atom, ch = h.shape
-        # (minibatch, atom, EDGE_TYPE * heads * out_dim)
-        h = self.message_layers[step](h)
-        # (minibatch, atom, EDGE_TYPE, heads, out_dim)
-        h = functions.reshape(h, (mb, atom, self.n_edge_types, self.n_heads,
-                                  self.hidden_dim))
-        # concat all pairs of atom
-        # (minibatch, 1, atom, heads, out_dim)
-        h_i = functions.reshape(h, (mb, 1, atom, self.n_edge_types,
-                                    self.n_heads, self.hidden_dim))
-        # (minibatch, atom, atom, heads, out_dim)
-        h_i = functions.broadcast_to(h_i, (mb, atom, atom, self.n_edge_types,
-                                           self.n_heads, self.hidden_dim))
-
-        # (minibatch, atom, 1, EDGE_TYPE, heads, out_dim)
-        h_j = functions.reshape(h, (mb, atom, 1, self.n_edge_types,
-                                    self.n_heads, self.hidden_dim))
-        # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim)
-        h_j = functions.broadcast_to(h_j, (mb, atom, atom, self.n_edge_types,
-                                           self.n_heads, self.hidden_dim))
-
-        # (minibatch, atom, atom, EDGE_TYPE, heads, out_dim * 2)
-        e = functions.concat([h_i, h_j], axis=5)
-
-        # (minibatch, EDGE_TYPE, heads, atom, atom, out_dim * 2)
-        e = functions.transpose(e, (0, 3, 4, 1, 2, 5))
-        # (minibatch * EDGE_TYPE * heads, atom * atom, out_dim * 2)
-        e = functions.reshape(e, (mb * self.n_edge_types * self.n_heads,
-                                  atom * atom, self.hidden_dim * 2))
-        # (minibatch * EDGE_TYPE * heads, atom * atom, 1)
-        e = self.attention_layers[step](e)
-
-        # (minibatch, EDGE_TYPE, heads, atom, atom)
-        e = functions.reshape(e, (mb, self.n_edge_types, self.n_heads, atom,
-                                  atom))
-        e = functions.leaky_relu(e, self.negative_slope)
-
-        # (minibatch, EDGE_TYPE, atom, atom)
-        cond = adj.array.astype(xp.bool)
-        # (minibatch, EDGE_TYPE, 1, atom, atom)
-        cond = xp.reshape(cond, (mb, self.n_edge_types, 1, atom, atom))
-        # (minibatch, EDGE_TYPE, heads, atom, atom)
-        cond = xp.broadcast_to(cond, e.array.shape)
-        # TODO(mottodora): find better way to ignore non connected
-        e = functions.where(cond, e,
-                            xp.broadcast_to(xp.array(-10000), e.array.shape)
-                            .astype(xp.float32))
-        # (minibatch, EDGE_TYPE, heads, atom, atom)
-        alpha = functions.softmax(e, axis=4)
-        if self.dropout_ratio >= 0:
-            alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
-
-        # before: (minibatch, atom, EDGE_TYPE, heads, out_dim)
-        # after: (minibatch, EDGE_TYPE, heads, atom, out_dim)
-        h = functions.transpose(h, (0, 2, 3, 1, 4))
-        # (minibatch, EDGE_TYPE, heads, atom, out_dim)
-        h_new = functions.matmul(alpha, h)
-        # (minibatch, heads, atom, out_dim)
-        h_new = functions.sum(h_new, axis=1)
-        if self.concat_heads:
-            # (heads, minibatch, atom, out_dim)
-            h_new = functions.transpose(h_new, (1, 0, 2, 3))
-            # (minibatch, atom, heads * out_dim)
-            h_new = functions.concat(h_new, axis=2)
-        else:
-            # (minibatch, atom, out_dim)
-            h_new = functions.mean(h_new, axis=1)
-        return h_new
-
-    def readout(self, h, h0, step=0, is_real_node=None):
-        # --- Readout part ---
-        index = step if self.concat_hidden else 0
-        # h, h0: (minibatch, atom, ch)
-        g = functions.sigmoid(
-            self.i_layers[index](functions.concat((h, h0), axis=2))) \
-            * self.j_layers[index](h)
-        if is_real_node is not None:
-            mask = self.xp.broadcast_to(
-                is_real_node[:, :, None], g.shape)
-            g = functions.where(mask, g, self.xp.zeros(
-                g.shape, dtype=self.xp.float32))
-        g = functions.sum(g, axis=1)  # sum along atom's axis
-        return g
 
     def __call__(self, atom_array, adj):
         """Forward propagation
@@ -178,31 +88,22 @@ class GAT(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
-        # x: minibatch, atom, channel
+        # reset state
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array
-
-        device_id = cuda.get_device_from_array(h.array).id
-        h0 = functions.copy(h, device_id)
-
-        if isinstance(adj, Variable):
-            w_adj = adj.data
-        else:
-            w_adj = adj
-        is_real_node = self.xp.sum(w_adj, axis=(1, 2)) > 0
-        w_adj = Variable(w_adj, requires_grad=False)
-
+        h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
         g_list = []
         for step in range(self.n_layers):
-            h = self.update(h, w_adj, step)
+            message_layer_index = 0 if self.weight_tying else step
+            h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
-                g = self.readout(h, h0, step, is_real_node)
+                g = self.readout_layers[step](h, h0)
                 g_list.append(g)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout(h, h0, is_real_node)
+            g = self.readout_layers[0](h, h0)
             return g
