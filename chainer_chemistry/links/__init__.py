@@ -7,6 +7,7 @@ from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout  # NOQA
 from chainer_chemistry.links.readout.nfp_readout import NFPReadout  # NOQA
 from chainer_chemistry.links.readout.schnet_readout import SchNetReadout  # NOQA
 
+from chainer_chemistry.links.update.gat_update import GATUpdate  # NOQA
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate  # NOQA
 from chainer_chemistry.links.update.nfp_update import NFPUpdate  # NOQA
 from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate  # NOQA
