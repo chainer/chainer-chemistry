@@ -15,16 +15,19 @@ class RelGATUpdate(chainer.Chain):
         dropout_ratio (float): dropout ratio of the normalized attention
             coefficients
         negative_slope (float): LeakyRELU angle of the negative slope
+        softmax_mode (str): take the softmax over the logits 'across' or
+            'within' relation. If you would like to know the detail discussion,
+            please refer Relational GAT paper.
         concat_heads (bool) : Whether to concat or average multi-head
             attentions
     """
     def __init__(self, in_channels, out_channels, n_heads=3, n_edge_types=4,
-                 dropout_ratio=-1., negative_slope=0.2,
+                 dropout_ratio=-1., negative_slope=0.2, softmax_mode='across',
                  concat_heads=False):
         super(RelGATUpdate, self).__init__()
         with self.init_scope():
-            self.message_layer = GraphLinear(in_channels,
-                                             out_channels * n_edge_types * n_heads)
+            self.message_layer = GraphLinear(
+                in_channels, out_channels * n_edge_types * n_heads)
             self.attention_layer = GraphLinear(out_channels * 2, 1)
 
         self.in_channels = in_channels
@@ -32,6 +35,7 @@ class RelGATUpdate(chainer.Chain):
         self.n_heads = n_heads
         self.n_edge_types = n_edge_types
         self.dropout_ratio = dropout_ratio
+        self.softmax_mode = softmax_mode
         self.concat_heads = concat_heads
         self.negative_slope = negative_slope
 
@@ -91,19 +95,32 @@ class RelGATUpdate(chainer.Chain):
         # In Relational Graph Attention Networks eq.(7)
         # ARGAT: take the softmax over the logits across node neighborhoods
         # irrespective of relation
-        # (minibatch, heads, atom, EDGE_TYPE, atom)
-        e = functions.transpose(e, (0, 2, 3, 1, 4))
-        # (minibatch, heads, atom, EDGE_TYPE * atom)
-        e = functions.reshape(e, (mb, self.n_heads, atom,
-                                  self.n_edge_types * atom))
-        # (minibatch, heads, atom, EDGE_TYPE * atom)
-        alpha = functions.softmax(e, axis=3)
-        if self.dropout_ratio >= 0:
-            alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
+        if self.softmax_mode == 'across':
+            # (minibatch, heads, atom, EDGE_TYPE, atom)
+            e = functions.transpose(e, (0, 2, 3, 1, 4))
+            # (minibatch, heads, atom, EDGE_TYPE * atom)
+            e = functions.reshape(e, (mb, self.n_heads, atom,
+                                      self.n_edge_types * atom))
+            # (minibatch, heads, atom, EDGE_TYPE * atom)
+            alpha = functions.softmax(e, axis=3)
+            if self.dropout_ratio >= 0:
+                alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
+            # (minibatch, heads, atom, EDGE_TYPE, atom)
+            alpha = functions.reshape(alpha, (mb, self.n_heads, atom,
+                                              self.n_edge_types, atom))
+            # (minibatch, EDGE_TYPE, heads, atom, atom)
+            alpha = functions.transpose(alpha, (0, 3, 1, 2, 4))
 
-        alpha = functions.reshape(alpha, (mb, self.n_heads, atom,
-                                          self.n_edge_types, atom))
-        alpha = functions.transpose(alpha, (0, 3, 1, 2, 4))
+        # In Relational Graph Attention Networks eq.(6)
+        # WIRGAT: take the softmax over the logits independently for each
+        # relation
+        elif self.softmax_mode == 'within':
+            alpha = functions.softmax(e, axis=4)
+            if self.dropout_ratio >= 0:
+                alpha = functions.dropout(alpha, ratio=self.dropout_ratio)
+        else:
+            raise ValueError("{} is invalid. Please use 'across' or 'within'"
+                             .format(self.softmax_mode))
 
         # before: (minibatch, atom, EDGE_TYPE, heads, out_dim)
         # after: (minibatch, EDGE_TYPE, heads, atom, out_dim)

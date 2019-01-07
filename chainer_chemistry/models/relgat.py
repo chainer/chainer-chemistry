@@ -31,6 +31,9 @@ class RelGAT(chainer.Chain):
         dropout_ratio (float): dropout ratio of the normalized attention
             coefficients
         negative_slope (float): LeakyRELU angle of the negative slope
+        softmax_mode (str): take the softmax over the logits 'across' or
+            'within' relation. If you would like to know the detail discussion,
+            please refer Relational GAT paper.
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         concat_heads (bool) : Whether to concat or average multi-head
@@ -41,7 +44,8 @@ class RelGAT(chainer.Chain):
     def __init__(self, out_dim, hidden_dim=16, n_heads=3, negative_slope=0.2,
                  n_edge_types=4, n_layers=4, dropout_ratio=-1.,
                  activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
-                 concat_hidden=False, concat_heads=False, weight_tying=False):
+                 softmax_mode='across', concat_hidden=False,
+                 concat_heads=False, weight_tying=False):
         super(RelGAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = n_layers
@@ -58,6 +62,7 @@ class RelGAT(chainer.Chain):
                                  n_edge_types=n_edge_types,
                                  dropout_ratio=dropout_ratio,
                                  negative_slope=negative_slope,
+                                 softmax_mode=softmax_mode,
                                  concat_heads=concat_heads))
             self.update_layers = chainer.ChainList(*update_layers)
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
