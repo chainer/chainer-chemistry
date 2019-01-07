@@ -5,7 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GATUpdate
+from chainer_chemistry.links import RelGATUpdate
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
@@ -19,9 +19,9 @@ num_edge_type = 7
 
 @pytest.fixture
 def update():
-    return GATUpdate(in_channels=in_channels,
-                     out_channels=out_channels,
-                     n_edge_types=num_edge_type)
+    return RelGATUpdate(in_channels=in_channels,
+                        out_channels=out_channels,
+                        n_edge_types=num_edge_type)
 
 
 @pytest.fixture

@@ -4,8 +4,8 @@ from chainer import functions
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
-class GATUpdate(chainer.Chain):
-    """GAT submodule for update part.
+class RelGATUpdate(chainer.Chain):
+    """RelGAT submodule for update part.
 
     Args:
         in_channels (int): dimension of input feature vector
@@ -21,7 +21,7 @@ class GATUpdate(chainer.Chain):
     def __init__(self, in_channels, out_channels, n_heads=3, n_edge_types=4,
                  dropout_ratio=-1., negative_slope=0.2,
                  concat_heads=False):
-        super(GATUpdate, self).__init__()
+        super(RelGATUpdate, self).__init__()
         with self.init_scope():
             self.message_layer = GraphLinear(in_channels,
                                              out_channels * n_edge_types * n_heads)

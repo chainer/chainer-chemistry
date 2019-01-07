@@ -5,12 +5,12 @@ from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GATUpdate
+from chainer_chemistry.links import RelGATUpdate
 from chainer_chemistry.links import GGNNReadout
 
 
-class GAT(chainer.Chain):
-    """Graph Attention Networks (GAT)
+class RelGAT(chainer.Chain):
+    """Relational Graph Attention Networks (GAT)
 
     See: Veličković, Petar, et al. (2017).\
         Graph Attention Networks.\
@@ -42,7 +42,7 @@ class GAT(chainer.Chain):
                  n_edge_types=4, n_layers=4, dropout_ratio=-1.,
                  activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
                  concat_hidden=False, concat_heads=False, weight_tying=False):
-        super(GAT, self).__init__()
+        super(RelGAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
         n_message_layer = n_layers
         with self.init_scope():
@@ -53,13 +53,12 @@ class GAT(chainer.Chain):
                     input_dim = hidden_dim * n_heads
                 else:
                     input_dim = hidden_dim
-                update_layers.append(GATUpdate(input_dim, hidden_dim,
-                                               n_heads=n_heads,
-                                               n_edge_types=n_edge_types,
-                                               dropout_ratio=dropout_ratio,
-                                               negative_slope=negative_slope,
-                                               concat_heads=concat_heads
-                                               ))
+                update_layers.append(
+                    RelGATUpdate(input_dim, hidden_dim, n_heads=n_heads,
+                                 n_edge_types=n_edge_types,
+                                 dropout_ratio=dropout_ratio,
+                                 negative_slope=negative_slope,
+                                 concat_heads=concat_heads))
             self.update_layers = chainer.ChainList(*update_layers)
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,

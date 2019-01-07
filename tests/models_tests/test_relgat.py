@@ -4,7 +4,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.models.gat import GAT
+from chainer_chemistry.models.relgat import RelGAT
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
@@ -16,7 +16,7 @@ num_edge_type = 4
 
 @pytest.fixture(params=[True, False])
 def model(request):
-    return GAT(out_dim=out_dim, concat_heads=request.param)
+    return RelGAT(out_dim=out_dim, concat_heads=request.param)
 
 
 @pytest.fixture
