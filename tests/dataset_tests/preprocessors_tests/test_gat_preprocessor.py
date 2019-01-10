@@ -2,13 +2,13 @@ import numpy
 import pytest
 
 from chainer_chemistry.dataset.parsers import SDFFileParser
-from chainer_chemistry.dataset.preprocessors import GATPreprocessor
+from chainer_chemistry.dataset.preprocessors import RelGATPreprocessor
 from chainer_chemistry.datasets import get_tox21_filepath
 
 
 @pytest.mark.slow
 def test_gat_preprocessor():
-    preprocessor = GATPreprocessor()
+    preprocessor = RelGATPreprocessor()
 
     def postprocess_label(label_list):
         # Set -1 to the place where the label is not found,
@@ -30,7 +30,7 @@ def test_gat_preprocessor():
 
 def test_gat_preprocessor_assert_raises():
     with pytest.raises(ValueError):
-        pp = GATPreprocessor(max_atoms=3, out_size=2)  # NOQA
+        pp = RelGATPreprocessor(max_atoms=3, out_size=2)  # NOQA
 
 
 if __name__ == '__main__':
