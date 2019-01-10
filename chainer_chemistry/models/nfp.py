@@ -7,9 +7,9 @@ from chainer import functions
 from chainer import Variable
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import NFPReadout
-from chainer_chemistry.links import NFPUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.readout.nfp_readout import NFPReadout
+from chainer_chemistry.links.update.nfp_update import NFPUpdate
 
 
 class NFP(chainer.Chain):

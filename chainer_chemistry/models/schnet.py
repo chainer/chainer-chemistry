@@ -10,9 +10,9 @@ import chainer
 from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import SchNetReadout
-from chainer_chemistry.links import SchNetUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
+from chainer_chemistry.links.update.schnet_update import SchNetUpdate
 
 
 class SchNet(chainer.Chain):

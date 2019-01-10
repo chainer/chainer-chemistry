@@ -4,8 +4,8 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import SchNetUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.update.schnet_update import SchNetUpdate
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 

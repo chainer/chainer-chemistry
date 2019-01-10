@@ -12,8 +12,8 @@ from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.functions import GeneralReadout
-from chainer_chemistry.links import RSGCNUpdate
+from chainer_chemistry.functions.readout.general_readout import GeneralReadout
+from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
 
 
 class RSGCN(chainer.Chain):

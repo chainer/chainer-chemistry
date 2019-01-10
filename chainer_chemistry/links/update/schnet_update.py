@@ -11,7 +11,7 @@ import chainer
 from chainer import functions
 from chainer import links
 
-from chainer_chemistry.links import GraphLinear
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class CFConv(chainer.Chain):
