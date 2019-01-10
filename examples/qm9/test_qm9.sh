@@ -3,7 +3,7 @@
 set -e
 
 # List of available graph convolution methods.
-methods=(nfp ggnn schnet weavenet rsgcn relgcn gat)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
 
 # GPU identifier; set it to -1 to train on the CPU (default).
 gpu=${1:--1}
