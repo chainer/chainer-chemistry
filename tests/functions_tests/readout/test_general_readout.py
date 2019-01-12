@@ -5,7 +5,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.functions import GeneralReadout
+from chainer_chemistry.functions.readout.general_readout import GeneralReadout
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5

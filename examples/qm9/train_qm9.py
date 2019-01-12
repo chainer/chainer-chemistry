@@ -23,7 +23,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN)
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT)
 from chainer_chemistry.models.prediction import Regressor
 
 
@@ -101,7 +101,8 @@ class RootMeanSqrError(object):
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
+                   'relgat']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -193,6 +194,11 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
                         scale_adj=True)
         predictor = GraphConvPredictor(relgcn, None)
+    elif method == 'relgat':
+        print('Train Relational GAT predictor...')
+        relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
+                        n_layers=conv_layers)
+        predictor = GraphConvPredictor(relgat, mlp)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
     return predictor

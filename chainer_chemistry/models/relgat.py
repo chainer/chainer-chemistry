@@ -1,19 +1,24 @@
+# -*- coding: utf-8 -*-
 import chainer
-from chainer import cuda
+import chainer.backends.cuda as cuda
 from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
-from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
+from chainer_chemistry.links.update.relgat_update import RelGATUpdate
 
 
-class GGNN(chainer.Chain):
-    """Gated Graph Neural Networks (GGNN)
+class RelGAT(chainer.Chain):
+    """Relational Graph Attention Networks (GAT)
 
-    See: Li, Y., Tarlow, D., Brockschmidt, M., & Zemel, R. (2015).\
-        Gated graph sequence neural networks. \
-        `arXiv:1511.05493 <https://arxiv.org/abs/1511.05493>`_
+    See: Veličković, Petar, et al. (2017).\
+        Graph Attention Networks.\
+        `arXiv:1701.10903 <https://arxiv.org/abs/1710.10903>`\
+        Dan Busbridge, et al. (2018).\
+        Relational Graph Attention Networks
+        `<https://openreview.net/forum?id=Bklzkh0qFm>`\
+
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -21,40 +26,60 @@ class GGNN(chainer.Chain):
             associated to each atom
         n_layers (int): number of layers
         n_atom_types (int): number of types of atoms
+        n_heads (int): number of multi-head-attentions.
+        n_edge_types (int): number of edge types.
+        dropout_ratio (float): dropout ratio of the normalized attention
+            coefficients
+        negative_slope (float): LeakyRELU angle of the negative slope
+        softmax_mode (str): take the softmax over the logits 'across' or
+            'within' relation. If you would like to know the detail discussion,
+            please refer Relational GAT paper.
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
+        concat_heads (bool) : Whether to concat or average multi-head
+            attentions
         weight_tying (bool): enable weight_tying or not
-        activation (~chainer.Function or ~chainer.FunctionNode):
-            activate function
-        num_edge_type (int): number of edge type.
-            Defaults to 4 for single, double, triple and aromatic bond.
-    """
 
-    def __init__(self, out_dim, hidden_dim=16, n_layers=4,
-                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
-                 weight_tying=True, activation=functions.identity,
-                 num_edge_type=4):
-        super(GGNN, self).__init__()
+    """
+    def __init__(self, out_dim, hidden_dim=16, n_heads=3, negative_slope=0.2,
+                 n_edge_types=4, n_layers=4, dropout_ratio=-1.,
+                 activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
+                 softmax_mode='across', concat_hidden=False,
+                 concat_heads=False, weight_tying=False):
+        super(RelGAT, self).__init__()
         n_readout_layer = n_layers if concat_hidden else 1
-        n_message_layer = 1 if weight_tying else n_layers
+        n_message_layer = n_layers
         with self.init_scope():
-            # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            self.update_layers = chainer.ChainList(*[GGNNUpdate(
-                hidden_dim=hidden_dim, num_edge_type=num_edge_type)
-                for _ in range(n_message_layer)])
-            # Readout
+            update_layers = []
+            for i in range(n_message_layer):
+                if i > 0 and concat_heads:
+                    input_dim = hidden_dim * n_heads
+                else:
+                    input_dim = hidden_dim
+                update_layers.append(
+                    RelGATUpdate(input_dim, hidden_dim, n_heads=n_heads,
+                                 n_edge_types=n_edge_types,
+                                 dropout_ratio=dropout_ratio,
+                                 negative_slope=negative_slope,
+                                 softmax_mode=softmax_mode,
+                                 concat_heads=concat_heads))
+            self.update_layers = chainer.ChainList(*update_layers)
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
+
         self.out_dim = out_dim
+        self.n_heads = n_heads
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
-        self.num_edge_type = num_edge_type
-        self.activation = activation
         self.concat_hidden = concat_hidden
+        self.concat_heads = concat_heads
         self.weight_tying = weight_tying
+        self.negative_slope = negative_slope
+        self.n_edge_types = n_edge_types
+        self.dropout_ratio = dropout_ratio
 
     def __call__(self, atom_array, adj):
         """Forward propagation
@@ -71,7 +96,6 @@ class GGNN(chainer.Chain):
             ~chainer.Variable: minibatch of fingerprint
         """
         # reset state
-        self.reset_state()
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
@@ -90,6 +114,3 @@ class GGNN(chainer.Chain):
         else:
             g = self.readout_layers[0](h, h0)
             return g
-
-    def reset_state(self):
-        [update_layer.reset_state() for update_layer in self.update_layers]

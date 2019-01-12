@@ -3,10 +3,10 @@ from chainer import cuda
 from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GGNNReadout
-from chainer_chemistry.links import GraphLinear
-from chainer_chemistry.links import RelGCNUpdate
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
+from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
+from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
 
 
 def rescale_adj(adj):

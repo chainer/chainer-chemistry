@@ -1,3 +1,5 @@
+import chainer
+from chainer import functions
 from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
 
 
@@ -46,6 +48,13 @@ class GradientCalculator(BaseCalculator):
         target_var = self.get_target_var(inputs)
         target_var.grad = None  # Need to reset grad beforehand of backward.
         output_var = self.get_output_var(outputs)
+
+        # --- type check for output_var ---
+        if output_var.size != 1:
+            self.logger.warning(
+                'output_var.size is not 1, calculate scalar value. '
+                'functions.sum is applied.')
+            output_var = functions.sum(output_var)
 
         output_var.backward(retain_grad=True)
         saliency = target_var.grad
