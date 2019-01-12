@@ -4,9 +4,9 @@ import chainer.backends.cuda as cuda
 from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import RelGATUpdate
-from chainer_chemistry.links import GGNNReadout
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
+from chainer_chemistry.links.update.relgat_update import RelGATUpdate
 
 
 class RelGAT(chainer.Chain):

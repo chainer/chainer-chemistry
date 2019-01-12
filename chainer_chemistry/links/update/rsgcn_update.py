@@ -1,8 +1,7 @@
 import chainer
-from chainer import functions
 
 import chainer_chemistry
-from chainer_chemistry.links import GraphLinear
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class RSGCNUpdate(chainer.Chain):
