@@ -32,8 +32,9 @@ class ScaledGraphConvPredictor(GraphConvPredictor):
         """
         super(ScaledGraphConvPredictor, self).__init__(*args, **kwargs)
 
-    def __call__(self, atoms, adjs):
-        h = super(ScaledGraphConvPredictor, self).__call__(atoms, adjs)
+    def __call__(self, atoms, adjs, is_real_node=None):
+        h = super(ScaledGraphConvPredictor, self).__call__(
+            atoms, adjs, is_real_node)
         scaler_available = hasattr(self, 'scaler')
         numpy_data = isinstance(h.data, numpy.ndarray)
 
