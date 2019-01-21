@@ -3,6 +3,7 @@ from chainer_chemistry.links.connection.graph_linear import GraphLinear  # NOQA
 
 from chainer_chemistry.links.normalization.graph_batch_normalization import GraphBatchNormalization  # NOQA
 
+from chainer_chemistry.links.readout.general_readout import GeneralReadout  # NOQA
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout  # NOQA
 from chainer_chemistry.links.readout.nfp_readout import NFPReadout  # NOQA
 from chainer_chemistry.links.readout.schnet_readout import SchNetReadout  # NOQA
