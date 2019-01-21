@@ -23,13 +23,13 @@ params_invalid = {
 
 
 def test_save_json(tmpdir):
-    filepath = os.path.join(tmpdir, 'tmp.json')
+    filepath = os.path.join(str(tmpdir), 'tmp.json')
     save_json(filepath, params)
     assert os.path.exists(filepath)
 
 
 def test_save_json_ignore_error(tmpdir):
-    filepath = os.path.join(tmpdir, 'tmp.json')
+    filepath = os.path.join(str(tmpdir), 'tmp.json')
 
     # 1. should raise error when ignore_error=False
     with pytest.raises(TypeError):
@@ -40,7 +40,7 @@ def test_save_json_ignore_error(tmpdir):
 
 
 def test_load_json(tmpdir):
-    filepath = os.path.join(tmpdir, 'tmp.json')
+    filepath = os.path.join(str(tmpdir), 'tmp.json')
     # TODO(nakago): better to remove `save_json` dependency for unittest.
     save_json(filepath, params)
 
