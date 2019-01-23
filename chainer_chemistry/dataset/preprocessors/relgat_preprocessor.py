@@ -1,4 +1,4 @@
-from chainer_chemistry.dataset.preprocessors import GGNNPreprocessor
+from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor  # NOQA
 
 
 class RelGATPreprocessor(GGNNPreprocessor):
