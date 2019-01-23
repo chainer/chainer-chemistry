@@ -30,4 +30,4 @@ do
         --label ${label}
 done
 
-python plot.py --prefix ${prefix} --methods ${methods[@]} --
+python plot.py --prefix ${prefix} --methods ${methods[@]}

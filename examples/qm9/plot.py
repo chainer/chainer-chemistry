@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--methods', nargs='+', required=True)
     args = parser.parse_args()
 
-    metrics = ['mean_abs_error', 'root_mean_sqr_error']
+    metrics = ['mae', 'rmse']
     x = args.methods
     y = {metric: [] for metric in metrics}
 

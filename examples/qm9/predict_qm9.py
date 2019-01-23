@@ -77,8 +77,9 @@ def main():
     # Set up some useful variables that will be used later on.
     method = args.method
     if args.label:
-        labels = args.label
-        cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
+        label = args.label
+        cache_dir = os.path.join('input', '{}_{}'.format(method, label))
+        labels = [label]
     else:
         labels = D.get_qm9_label_names()
         cache_dir = os.path.join('input', '{}_all'.format(method))
@@ -130,8 +131,9 @@ def main():
 
     # Predict the output labels.
     print('Predicting...')
-    y_pred = regressor.predict(test, converter=extract_inputs,
-                               postprocess_fn=postprocess_fn)
+    y_pred = regressor.predict(
+        test, converter=extract_inputs,
+        postprocess_fn=postprocess_fn)
 
     # Extract the ground-truth labels.
     t = concat_mols(test, device=-1)[-1]
