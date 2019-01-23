@@ -49,5 +49,5 @@ class GGNNReadout(chainer.Chain):
                 is_real_node[:, :, None], g.shape)
             g = g * mask
         # sum along node axis
-        g = self.activation(functions.sum(g, axis=1))
+        g = self.activation_agg(functions.sum(g, axis=1))
         return g
