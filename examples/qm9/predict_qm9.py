@@ -2,17 +2,12 @@
 from __future__ import print_function
 
 import argparse
-import json
-import numpy
 import os
 import pandas
-import pickle
 
-from chainer import Variable, cuda
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer.datasets import split_dataset_random
-from chainer_chemistry.utils import save_json
 
 try:
     import matplotlib
@@ -20,13 +15,12 @@ try:
 except ImportError:
     pass
 
-
-
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models.prediction import Regressor
+from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
