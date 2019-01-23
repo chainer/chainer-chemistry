@@ -248,7 +248,7 @@ def main():
             dataset = D.get_qm9(preprocessor, labels=labels)
 
         # Cache the laded dataset.
-        os.makedirs(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.
