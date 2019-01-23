@@ -1,13 +1,8 @@
-from chainer_chemistry.dataset.preprocessors.common import \
-    construct_atomic_number_array, construct_is_real_node  # NOQA
-from chainer_chemistry.dataset.preprocessors.common import construct_discrete_edge_matrix  # NOQA
-from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
-from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors import GGNNPreprocessor
 
 
-class RelGATPreprocessor(MolPreprocessor):
-    """RelGAT Preprocessor
+class RelGATPreprocessor(GGNNPreprocessor):
+    """RelGCN Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
@@ -19,35 +14,13 @@ class RelGATPreprocessor(MolPreprocessor):
             If the number of atoms in the molecule is less than this value,
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
+        add_Hs (bool): If True, implicit Hs are added.
+        kekulize (bool): If True, Kekulizes the molecule.
         return_is_real_node (bool): If True, also returns `is_real_node`.
 
     """
-
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
-                 return_is_real_node=True):
-        super(RelGATPreprocessor, self).__init__(add_Hs=add_Hs)
-        if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
-            raise ValueError('max_atoms {} must be less or equal to '
-                             'out_size {}'.format(max_atoms, out_size))
-        self.max_atoms = max_atoms
-        self.out_size = out_size
-        self.return_is_real_node = return_is_real_node
-
-    def get_input_features(self, mol):
-        """get input features
-
-        Args:
-            mol (Mol):
-
-        Returns:
-
-        """
-        type_check_num_atoms(mol, self.max_atoms)
-        atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
-        if not self.return_is_real_node:
-            return atom_array, adj_array
-        else:
-            is_real_node = construct_is_real_node(
-                mol, self.out_size)
-            return atom_array, adj_array, is_real_node
+                 kekulize=False, return_is_real_node=True):
+        super(RelGATPreprocessor, self).__init__(
+            max_atoms=max_atoms, out_size=out_size, add_Hs=add_Hs,
+            kekulize=kekulize, return_is_real_node=return_is_real_node)

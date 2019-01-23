@@ -26,14 +26,3 @@ class RelGCNPreprocessor(GGNNPreprocessor):
         super(RelGCNPreprocessor, self).__init__(
             max_atoms=max_atoms, out_size=out_size, add_Hs=add_Hs,
             kekulize=kekulize, return_is_real_node=return_is_real_node)
-
-    def get_input_features(self, mol):
-        """get input features
-
-        Args:
-            mol (Mol):
-
-        Returns:
-
-        """
-        return super(RelGCNPreprocessor, self).get_input_features(mol)
