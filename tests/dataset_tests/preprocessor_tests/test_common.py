@@ -16,7 +16,7 @@ def sample_molecule_2():
     return Chem.MolFromSmiles('Cc1ccccc1')
 
 
-class TestGetAtomicNumbers(object):
+class TestConstructAtomicNumberArray(object):
 
     def test_normal(self, sample_molecule):
         actual = common.construct_atomic_number_array(sample_molecule)
@@ -34,10 +34,28 @@ class TestGetAtomicNumbers(object):
 
     def test_normal_truncated(self, sample_molecule):
         with pytest.raises(ValueError):
-            adj = common.construct_atomic_number_array(sample_molecule, 3)  # NOQA
+            atom = common.construct_atomic_number_array(sample_molecule, 3)  # NOQA
 
 
-class TestGetAdjMatrix(object):
+class TestConstructIsRealNode(object):
+
+    def test_normal(self, sample_molecule):
+        actual = common.construct_is_real_node(sample_molecule)
+
+        assert actual.shape == (4,)
+        expect = numpy.array([1, 1, 1, 1], dtype=numpy.float32)
+        numpy.testing.assert_equal(actual, expect)
+        assert actual.dtype == numpy.float32
+
+    def test_padding(self, sample_molecule):
+        actual = common.construct_is_real_node(sample_molecule, 5)
+
+        assert actual.shape == (5,)
+        expect = numpy.array([1, 1, 1, 1, 0], dtype=numpy.float32)
+        numpy.testing.assert_equal(actual, expect)
+
+
+class TestConstructAdjMatrix(object):
 
     def test_normal(self, sample_molecule_2):
         adj = common.construct_adj_matrix(sample_molecule_2)
