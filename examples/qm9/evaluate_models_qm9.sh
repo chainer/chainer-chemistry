@@ -9,6 +9,9 @@ prefix=eval_
 gpu=${1:--1}
 # Number of training epochs (default: 1).
 epoch=${2:-1}
+label=${3:""}
+
+echo evaluating label ${label}
 
 for method in ${methods[@]}
 do
@@ -18,11 +21,13 @@ do
         --method ${method} \
         --gpu ${gpu} \
         --out ${result_dir} \
-        --epoch ${epoch}
+        --epoch ${epoch} \
+        --label ${label}
 
     python predict_qm9.py \
         --in-dir ${result_dir} \
-        --method ${method}
+        --method ${method} \
+        --label ${label}
 done
 
-python plot.py --prefix ${prefix} --methods ${methods[@]}
+python plot.py --prefix ${prefix} --methods ${methods[@]} --

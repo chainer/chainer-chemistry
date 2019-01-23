@@ -8,8 +8,11 @@ import os
 import pandas
 import pickle
 
+from chainer import Variable, cuda
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
+from chainer.datasets import split_dataset_random
+from chainer_chemistry.utils import save_json
 
 try:
     import matplotlib
@@ -17,9 +20,7 @@ try:
 except ImportError:
     pass
 
-from chainer import cuda
-from chainer.datasets import split_dataset_random
-from chainer import Variable
+
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
@@ -28,28 +29,10 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models.prediction import Regressor
 
 # These import is necessary for pickle to work
-from sklearn.preprocessing import StandardScaler  # NOQA
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
+# from sklearn.preprocessing import StandardScaler  # NOQA
 from train_qm9 import GraphConvPredictor  # NOQA
 from train_qm9 import MeanAbsError, RootMeanSqrError  # NOQA
-
-
-class ScaledGraphConvPredictor(GraphConvPredictor):
-    def __init__(self, *args, **kwargs):
-        """Initializes the (scaled) graph convolution predictor. This uses
-        a standard scaler to rescale the predicted labels.
-        """
-        super(ScaledGraphConvPredictor, self).__init__(*args, **kwargs)
-
-    def __call__(self, atoms, adjs):
-        h = super(ScaledGraphConvPredictor, self).__call__(atoms, adjs)
-        scaler_available = hasattr(self, 'scaler')
-        numpy_data = isinstance(h.data, numpy.ndarray)
-
-        if scaler_available:
-            h = self.scaler.inverse_transform(cuda.to_cpu(h.data))
-            if not numpy_data:
-                h = cuda.to_gpu(h)
-        return Variable(h)
 
 
 def parse_arguments():
@@ -64,7 +47,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Regression on QM9.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
-    parser.add_argument('--label', '-l', type=str, choices=label_names,
+    parser.add_argument('--label', '-l', type=str, choices=label_names + [''],
                         default='',
                         help='target label for regression; empty string means '
                         'predicting all properties at once')
@@ -125,15 +108,15 @@ def main():
             os.mkdir(cache_dir)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
-    # Load the standard scaler parameters, if necessary.
-    if args.scale == 'standardize':
-        scaler_path = os.path.join(args.in_dir, 'scaler.pkl')
-        print('Loading scaler parameters from {}.'.format(scaler_path))
-        with open(scaler_path, mode='rb') as f:
-            scaler = pickle.load(f)
-    else:
-        print('No standard scaling was selected.')
-        scaler = None
+    # # Load the standard scaler parameters, if necessary.
+    # if args.scale == 'standardize':
+    #     scaler_path = os.path.join(args.in_dir, 'scaler.pkl')
+    #     print('Loading scaler parameters from {}.'.format(scaler_path))
+    #     with open(scaler_path, mode='rb') as f:
+    #         scaler = pickle.load(f)
+    # else:
+    #     print('No standard scaling was selected.')
+    #     scaler = None
 
     # Split the dataset into training and testing.
     train_data_size = int(len(dataset) * args.train_data_ratio)
@@ -144,17 +127,26 @@ def main():
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
 
     # Replace the default predictor with one that scales the output labels.
-    scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
-    scaled_predictor.scaler = scaler
-    regressor.predictor = scaled_predictor
+    # scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
+    # scaled_predictor.scaler = scaler
+    # regressor.predictor = scaled_predictor
 
     # This callback function extracts only the inputs and discards the labels.
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 
+    def postprocess_fn(x):
+        scaler = regressor.predictor.scaler
+        if scaler is not None:
+            scaled_x = scaler.inverse_transform(x)
+            return scaled_x
+        else:
+            return x
+
     # Predict the output labels.
     print('Predicting...')
-    y_pred = regressor.predict(test, converter=extract_inputs)
+    y_pred = regressor.predict(test, converter=extract_inputs,
+                               postprocess_fn=postprocess_fn)
 
     # Extract the ground-truth labels.
     t = concat_mols(test, device=-1)[-1]
@@ -170,9 +162,10 @@ def main():
     # Show a prediction/ground truth table with 5 random examples.
     print(df.sample(5))
     for target_label in range(y_pred.shape[1]):
+        label_name = labels[target_label]
         diff = y_pred[:n_eval, target_label] - t[:n_eval, target_label]
-        print('target_label = {}, y_pred = {}, t = {}, diff = {}'
-              .format(target_label, y_pred[:n_eval, target_label],
+        print('label_name = {}, y_pred = {}, t = {}, diff = {}'
+              .format(label_name, y_pred[:n_eval, target_label],
                       t[:n_eval, target_label], diff))
 
     # Run an evaluator on the test dataset.
@@ -183,8 +176,7 @@ def main():
     print('Evaluation result: ', eval_result)
 
     # Save the evaluation results.
-    with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
-        json.dump(eval_result, f)
+    save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
 
 
 if __name__ == '__main__':
