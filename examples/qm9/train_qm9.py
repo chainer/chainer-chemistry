@@ -5,7 +5,6 @@ import argparse
 import chainer
 import numpy
 import os
-import pickle
 
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
@@ -41,7 +40,7 @@ class GraphConvPredictor(chainer.Chain):
             self.graph_conv = graph_conv
             if isinstance(mlp, chainer.Link):
                 self.mlp = mlp
-            if isinstance(mlp, chainer.Link):
+            if isinstance(scaler, chainer.Link):
                 self.scaler = scaler
         if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
@@ -290,13 +289,6 @@ def main():
     model_path = os.path.join(args.out, args.model_filename)
     print('Saving the trained model to {}...'.format(model_path))
     regressor.save_pickle(model_path, protocol=args.protocol)
-
-    # Save the standard scaler's parameters.
-    # if scaler is not None:
-    #     scaler_path = os.path.join(args.out, 'scaler.pkl')
-    #     print('Saving standard scaler parameters to {}.'.format(scaler_path))
-    #     with open(scaler_path, mode='wb') as f:
-    #         pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':

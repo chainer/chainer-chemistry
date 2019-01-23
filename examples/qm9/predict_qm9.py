@@ -108,16 +108,6 @@ def main():
             os.mkdir(cache_dir)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
-    # # Load the standard scaler parameters, if necessary.
-    # if args.scale == 'standardize':
-    #     scaler_path = os.path.join(args.in_dir, 'scaler.pkl')
-    #     print('Loading scaler parameters from {}.'.format(scaler_path))
-    #     with open(scaler_path, mode='rb') as f:
-    #         scaler = pickle.load(f)
-    # else:
-    #     print('No standard scaling was selected.')
-    #     scaler = None
-
     # Split the dataset into training and testing.
     train_data_size = int(len(dataset) * args.train_data_ratio)
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
@@ -125,11 +115,6 @@ def main():
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
-
-    # Replace the default predictor with one that scales the output labels.
-    # scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
-    # scaled_predictor.scaler = scaler
-    # regressor.predictor = scaled_predictor
 
     # This callback function extracts only the inputs and discards the labels.
     def extract_inputs(batch, device=None):
@@ -161,12 +146,12 @@ def main():
 
     # Show a prediction/ground truth table with 5 random examples.
     print(df.sample(5))
-    for target_label in range(y_pred.shape[1]):
-        label_name = labels[target_label]
-        diff = y_pred[:n_eval, target_label] - t[:n_eval, target_label]
-        print('label_name = {}, y_pred = {}, t = {}, diff = {}'
-              .format(label_name, y_pred[:n_eval, target_label],
-                      t[:n_eval, target_label], diff))
+    # for target_label in range(y_pred.shape[1]):
+    #     label_name = labels[target_label]
+    #     diff = y_pred[:n_eval, target_label] - t[:n_eval, target_label]
+    #     print('label_name = {}, y_pred = {}, t = {}, diff = {}'
+    #           .format(label_name, y_pred[:n_eval, target_label],
+    #                   t[:n_eval, target_label], diff))
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
