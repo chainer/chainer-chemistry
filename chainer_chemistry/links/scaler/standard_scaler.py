@@ -28,15 +28,22 @@ class StandardScaler(BaseScaler):
         self.register_persistent('std')
 
     def fit(self, x, indices=None):
+        """Fitting parameter.
+
+        Args:
+            x:
+            indices (list or tuple or None):
+                indices for applying standard scaling.
+
+        Returns:
+            self (StandardScaler): this instance.
+        """
         x = to_array(x)
         x = format_x(x)
 
-        # get indices from meta <- which is better??
-        # if isinstance(meta, dict):
-        #     indices = meta.get('indices', None)
-        # else:
-        #     indices = None
-        if isinstance(indices, (list, tuple)):
+        if indices is None:
+            pass
+        elif isinstance(indices, (list, tuple)):
             indices = numpy.asarray(indices)
         self.indices = indices
         if self.indices is not None:
@@ -58,14 +65,14 @@ class StandardScaler(BaseScaler):
             std_all[non_zero_indices] = self.std[self.std != 0]
             return mean_all, std_all
 
-    def transform(self, x, meta=None):
+    def transform(self, x):
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
         x = format_x(x)
         mean_all, std_all = self._compute_mean_std_all(x.shape[1])
         return (x - mean_all[None, :]) / std_all[None, :]
 
-    def inverse_transform(self, x, meta=None):
+    def inverse_transform(self, x):
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
         x = format_x(x)
