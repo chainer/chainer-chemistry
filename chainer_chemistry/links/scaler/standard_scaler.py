@@ -48,8 +48,18 @@ class StandardScaler(BaseScaler):
         self.indices = indices
         if self.indices is not None:
             x = x[:, self.indices]
-        self.mean = self.xp.nanmean(x, axis=0)
-        self.std = self.xp.nanstd(x, axis=0)
+
+        xp = self.xp
+        if xp is numpy:
+            self.mean = xp.nanmean(x, axis=0)
+            self.std = xp.nanstd(x, axis=0)
+        else:
+            if int(xp.sum(xp.isnan(x))) > 0:
+                raise NotImplementedError(
+                    "StandardScaling with nan value on GPU is not supported.")
+            # cupy.nanmean, cupy.nanstd is not implemented yet.
+            self.mean = self.xp.mean(x, axis=0)
+            self.std = self.xp.std(x, axis=0)
         return self
 
     def _compute_mean_std_all(self, input_dim):

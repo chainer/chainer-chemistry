@@ -2,8 +2,9 @@ import os
 
 import numpy
 import pytest
-from chainer import serializers
-from chainer_chemistry.links import StandardScaler
+from chainer import serializers, Variable, cuda
+
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 
 
 @pytest.fixture
@@ -38,6 +39,30 @@ def test_standard_scaler_transform(data, indices):
                                   expect_x_scaled[:, index])
         else:
             assert numpy.allclose(x_scaled[:, index], x[:, index])
+
+
+def test_standard_scaler_transform_variable(data):
+    x, expect_x_scaled = data
+    xvar = Variable(x)
+    scaler = StandardScaler()
+    scaler.fit(xvar)
+    x_scaled = scaler.transform(xvar)
+
+    assert isinstance(x_scaled, Variable)
+    assert numpy.allclose(x_scaled.array, expect_x_scaled)
+
+
+@pytest.mark.gpu
+def test_standard_scaler_transform_variable_gpu(data):
+    x, expect_x_scaled = data
+    scaler = StandardScaler()
+    scaler.to_gpu()
+    x = cuda.to_gpu(x)
+    scaler.fit(x)
+    x_scaled = scaler.transform(x)
+
+    assert isinstance(x_scaled, cuda.cupy.ndarray)
+    assert numpy.allclose(cuda.to_cpu(x_scaled), expect_x_scaled)
 
 
 @pytest.mark.parametrize('indices', [None, [0], [1, 2]])
