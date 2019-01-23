@@ -12,12 +12,12 @@ from chainer_chemistry.utils.permutation import permute_node
 atom_size = 5
 out_dim = 4
 batch_size = 2
-num_edge_type = GGNN.NUM_EDGE_TYPE
+num_edge_type = 3
 
 
 @pytest.fixture
 def model():
-    return GGNN(out_dim=out_dim)
+    return GGNN(out_dim=out_dim, num_edge_type=num_edge_type)
 
 
 @pytest.fixture

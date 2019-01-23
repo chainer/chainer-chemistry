@@ -2,13 +2,18 @@ import chainer
 from chainer import functions
 
 
-class GeneralReadout(chainer.Chain):
+class GeneralReadout(chainer.Link):
     """General submodule for readout part.
 
-    This class can be used for rsgcn and weavenet.
+    This class can be used for `rsgcn` and `weavenet`.
+    Note that this class has no learnable parameter,
+    even though this is subclass of `chainer.Link`.
+    This class is under `links` module for consistency
+    with other readout module.
 
     Args:
         mode (str):
+        activation (callable): activation function
     """
 
     def __init__(self, mode='sum', activation=None):

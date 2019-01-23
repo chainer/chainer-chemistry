@@ -12,8 +12,8 @@ from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.functions import GeneralReadout
-from chainer_chemistry.links import RSGCNUpdate
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
+from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
 
 
 class RSGCN(chainer.Chain):
@@ -55,6 +55,8 @@ class RSGCN(chainer.Chain):
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
+        if readout is None:
+            readout = GeneralReadout()
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
@@ -70,7 +72,7 @@ class RSGCN(chainer.Chain):
             if isinstance(readout, chainer.Link):
                 self.readout = readout
         if not isinstance(readout, chainer.Link):
-            self.readout = readout or GeneralReadout()
+            self.readout = readout
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers

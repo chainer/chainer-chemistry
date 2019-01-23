@@ -7,5 +7,3 @@ from chainer_chemistry.functions.loss.mean_squared_error import mean_squared_err
 from chainer_chemistry.functions.loss.mean_squared_error import MeanSquaredError  # NOQA
 
 from chainer_chemistry.functions.math.matmul import matmul  # NOQA
-
-from chainer_chemistry.functions.readout.general_readout import GeneralReadout  # NOQA
