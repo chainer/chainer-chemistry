@@ -1,4 +1,7 @@
+from logging import getLogger
+
 import numpy
+from chainer import cuda
 
 from chainer_chemistry.links.scaler.base import BaseScaler, to_array  # NOQA
 
@@ -58,8 +61,14 @@ class StandardScaler(BaseScaler):
                 raise NotImplementedError(
                     "StandardScaling with nan value on GPU is not supported.")
             # cupy.nanmean, cupy.nanstd is not implemented yet.
-            self.mean = self.xp.mean(x, axis=0)
-            self.std = self.xp.std(x, axis=0)
+            self.mean = xp.mean(x, axis=0)
+            self.std = xp.std(x, axis=0)
+
+        # result consistency check
+        if xp.sum(self.std == 0) > 0:
+            logger = getLogger(__name__)
+            ind = numpy.argwhere(cuda.to_cpu(self.std) == 0)[:, 0]
+            logger.warning('fit: std was 0 at indices {}'.format(ind))
         return self
 
     def _compute_mean_std_all(self, input_dim):
