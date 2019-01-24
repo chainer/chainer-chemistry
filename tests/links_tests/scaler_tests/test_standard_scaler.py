@@ -119,19 +119,14 @@ def test_standard_scaler_assert_raises():
         scaler.inverse_transform(x)
 
 
-@pytest.mark.gpu
 def test_standard_scaler_transform_zero_std():
     x = numpy.array([[1, 2], [1, 2], [1, 2]], dtype=numpy.float32)
     expect_x_scaled = numpy.array([[0, 0], [0, 0], [0, 0]],
                                   dtype=numpy.float32)
     scaler = StandardScaler()
-    scaler.to_gpu()
-    x = cuda.to_gpu(x)
     scaler.fit(x)
     x_scaled = scaler.transform(x)
-
-    assert isinstance(x_scaled, cuda.cupy.ndarray)
-    assert numpy.allclose(cuda.to_cpu(x_scaled), expect_x_scaled)
+    assert numpy.allclose(x_scaled, expect_x_scaled)
 
 
 if __name__ == '__main__':
