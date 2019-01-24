@@ -45,8 +45,11 @@ class GraphConvPredictor(chainer.Chain):
         if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
 
-    def __call__(self, atoms, adjs):
-        x = self.graph_conv(atoms, adjs)
+    def __call__(self, atoms, adjs, is_real_node=None):
+        if is_real_node is None:
+            x = self.graph_conv(atoms, adjs)
+        else:
+            x = self.graph_conv(atoms, adjs, is_real_node)
         if self.mlp:
             x = self.mlp(x)
         return x
@@ -245,7 +248,7 @@ def main():
             dataset = D.get_qm9(preprocessor, labels=labels)
 
         # Cache the laded dataset.
-        os.makedirs(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.

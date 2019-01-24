@@ -1,5 +1,4 @@
-from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor \
-    import GGNNPreprocessor
+from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor  # NOQA
 
 
 class RelGCNPreprocessor(GGNNPreprocessor):
@@ -17,22 +16,12 @@ class RelGCNPreprocessor(GGNNPreprocessor):
             Setting negative value indicates do not pad returned array.
         add_Hs (bool): If True, implicit Hs are added.
         kekulize (bool): If True, Kekulizes the molecule.
+        return_is_real_node (bool): If True, also returns `is_real_node`.
 
     """
 
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
-                 kekulize=False):
+                 kekulize=False, return_is_real_node=True):
         super(RelGCNPreprocessor, self).__init__(
             max_atoms=max_atoms, out_size=out_size, add_Hs=add_Hs,
-            kekulize=kekulize)
-
-    def get_input_features(self, mol):
-        """get input features
-
-        Args:
-            mol (Mol):
-
-        Returns:
-
-        """
-        return super(RelGCNPreprocessor, self).get_input_features(mol)
+            kekulize=kekulize, return_is_real_node=return_is_real_node)
