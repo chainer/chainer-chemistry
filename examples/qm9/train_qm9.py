@@ -97,7 +97,7 @@ def parse_arguments():
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='nfp', help='method name')
     parser.add_argument('--label', '-l', type=str,
-                        choices=label_names + ['all'], default='',
+                        choices=label_names + ['all'], default='all',
                         help='target label for regression; all means '
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
