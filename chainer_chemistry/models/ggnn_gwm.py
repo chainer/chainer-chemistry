@@ -1,9 +1,10 @@
 import chainer
 from chainer import cuda
 from chainer import functions
+from chainer import links
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.ggnn_gwm_update import GGNNGWMUpdate
@@ -116,7 +117,9 @@ class GGNN_GWM(chainer.Chain):
         g_list = []
         for step in range(self.n_layers):
             message_layer_index = 0 if self.weight_tying else step
-            h,h_s = self.update_layers[message_layer_index](h, adj, h_s)
+            h2 = self.update_layers[message_layer_index](h, adj)
+
+            h, h_s = self.gwm(h, h2, h_s, message_layer_index)
             if self.concat_hidden:
                 g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
@@ -125,8 +128,8 @@ class GGNN_GWM(chainer.Chain):
             return functions.concat(g_list, axis=1)
         else:
             g = self.readout_layers[0](h, h0, is_real_node)
-            g2 = functions.concat(g, h_s)
-            out_g = function.relu(self.linear_for_concat_super(g2))
+            g2 = functions.concat( (g, h_s), axis=1 )
+            out_g = functions.relu(self.linear_for_concat_super(g2))
             return out_g
 
     def reset_state(self):

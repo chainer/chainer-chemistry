@@ -19,11 +19,55 @@ from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_confi
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT)
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GGNN_GWM)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator
 # from sklearn.preprocessing import StandardScaler
+
+
+class GraphConvPredictorForGWM(chainer.Chain):
+    """Wrapper class that combines a graph convolution + super-node and MLP."""
+
+    def __init__(self, graph_conv, mlp=None):
+        """Constructor
+
+        Args:
+            graph_conv: graph convolution network to obtain molecule feature
+                        representation
+            mlp: multi layer perceptron, used as final connected layer.
+                It can be `None` if no operation is necessary after
+                `graph_conv` calculation.
+        """
+
+        super(GraphConvPredictorForGWM, self).__init__()
+        with self.init_scope():
+            self.graph_conv = graph_conv
+            if isinstance(mlp, chainer.Link):
+                self.mlp = mlp
+        if not isinstance(mlp, chainer.Link):
+            self.mlp = mlp
+
+    def __call__(self, atoms, adjs, super_node_x):
+        """
+        Extended call method to deal with additional super-node input x
+        :param atoms: minibatch by local_node_feature_dim numpy.ndarray
+                       minibatch list of local node feature vectors
+        :param adjs: minibatch by bond_type by num_node by num_node numpy.ndarray
+                      minibatch list of
+        :param super_node_x: minibatch of 1D numpy array
+        :return:
+        """
+
+        x = self.graph_conv(atoms, adjs, super_node_x)
+        if self.mlp:
+            x = self.mlp(x)
+        return x
+
+    def predict(self, atoms, adjs, super_node_x):
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            x = self.__call__(atoms, adjs, super_node_x)
+            return F.sigmoid(x)
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -113,6 +157,12 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         print('Training a GGNN predictor...')
         ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         return GraphConvPredictor(ggnn, mlp)
+    elif method == 'ggnn_gwm':
+        print('Train GGNN+GWM model...')
+        ggnn_gwm = GGNN_GWM(out_dim=n_unit, hidden_dim=n_unit,
+                            hidden_dim_super=n_unit, n_layers=conv_layers,
+                            dropout_ratio=0.5,weight_tying=True)
+        return GraphConvPredictorForGWM(ggnn_gwm, mlp)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,

@@ -1,3 +1,4 @@
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array, construct_discrete_edge_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
@@ -84,7 +85,7 @@ class GGNNGWMPreprocessor(MolPreprocessor):
 
     def __init__(self, max_atoms=-1, out_size=-1, out_size_super=-1, add_Hs=False,
                  kekulize=False):
-        super(GGNNPreprocessor, self).__init__(
+        super(GGNNGWMPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be less or equal to '
