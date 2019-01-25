@@ -240,8 +240,6 @@ def main():
         scaled_t = scaler.fit_transform(dataset.get_datasets()[-1])
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1]
                                       + (scaled_t,)))
-        # labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        print('fit once')
     else:
         print('No standard scaling was selected.')
         scaler = None
