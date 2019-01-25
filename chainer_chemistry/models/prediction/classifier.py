@@ -1,11 +1,13 @@
 import warnings
 
+import numpy
+
 import chainer
 from chainer.dataset.convert import concat_examples
 from chainer.functions.evaluation import accuracy
 from chainer.functions.loss import softmax_cross_entropy
+from chainer import cuda, Variable  # NOQA
 from chainer import reporter
-
 from chainer_chemistry.models.prediction.base import BaseForwardModel
 
 
@@ -110,6 +112,18 @@ class Classifier(BaseForwardModel):
         # `initialize` must be called after `init_scope`.
         self.initialize(device)
 
+    def _convert_to_scalar(self, value):
+        """Converts an input value to a scalar if its type is a Variable,
+        numpy or cupy array, otherwise it returns the value as it is.
+        """
+        if isinstance(value, Variable):
+            value = value.array
+        if numpy.isscalar(value):
+            return value
+        if type(value) is not numpy.array:
+            value = cuda.to_cpu(value)
+        return numpy.asscalar(value)
+
     def __call__(self, *args, **kwargs):
         """Computes the loss value for an input and label pair.
 
@@ -157,12 +171,13 @@ class Classifier(BaseForwardModel):
         self.metrics = None
         self.y = self.predictor(*args, **kwargs)
         self.loss = self.lossfun(self.y, t)
-        reporter.report({'loss': self.loss}, self)
+        reporter.report(
+            {'loss': self._convert_to_scalar(self.loss)}, self)
         if self.compute_metrics:
             # Note: self.accuracy is `dict`, which is different from original
             # chainer implementation
-            self.metrics = {key: value(self.y, t) for key, value in
-                            self.metrics_fun.items()}
+            self.metrics = {key: self._convert_to_scalar(value(self.y, t))
+                            for key, value in self.metrics_fun.items()}
             reporter.report(self.metrics, self)
         return self.loss
 

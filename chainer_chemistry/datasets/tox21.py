@@ -145,6 +145,8 @@ def get_tox21_filepath(dataset_type, download_if_not_exist=True):
     Args:
         dataset_type: Name of the target dataset type.
             Either 'train', 'val', or 'test'
+        download_if_not_exist (bool): If `True` download dataset
+            if it is not downloaded yet.
 
     Returns (str): file path for tox21 dataset
 

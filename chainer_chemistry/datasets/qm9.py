@@ -75,9 +75,10 @@ def get_qm9_filepath(download_if_not_exist=True):
     necessary.
 
     Args:
-        config_name: either 'train', 'val', or 'test'
+        download_if_not_exist (bool): If `True` download dataset
+            if it is not downloaded yet.
 
-    Returns (str): filepath for qm9 dataset
+    Returns (str): file path for qm9 dataset (formatted to csv)
 
     """
     cache_path = _get_qm9_filepath()

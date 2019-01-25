@@ -46,7 +46,7 @@ currently supported:
 | ------------------: | --------------: | -------------: |
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
-| master branch       | v3.0 ~ v4.0     | 2017.09.3.0    |
+| master branch       | v3.0 ~ v5.0     | 2017.09.3.0    |
 
 ## Installation
 
@@ -86,6 +86,8 @@ The following graph convolutional neural networks are currently supported:
 - SchNet [6] 
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
  \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
+- RelGCN: Relational Graph Convolutional Network [14]
+- GAT: Graph Attention Networks [15]
 
 ## Supported Datasets
 
@@ -94,6 +96,7 @@ The following datasets are currently supported:
 - QM9 [7, 8]
 - Tox21 [9]
 - MoleculeNet [11]
+- ZINC (only 250k dataset) [12, 13]
 - User (own) dataset
 
 ## Research Projects
@@ -153,3 +156,12 @@ papers. Use the library at your own risk.
 [10] Kipf, Thomas N. and Welling, Max. Semi-Supervised Classification with Graph Convolutional Networks. *International Conference on Learning Representations (ICLR)*, 2017.
 
 [11] Zhenqin Wu, Bharath Ramsundar, Evan N. Feinberg, Joseph Gomes, Caleb Geniesse, Aneesh S. Pappu, Karl Leswing, Vijay Pande, MoleculeNet: A Benchmark for Molecular Machine Learning, arXiv preprint, arXiv: 1703.00564, 2017.
+
+[12] J. J. Irwin, T. Sterling, M. M. Mysinger, E. S. Bolstad, and R. G. Coleman. Zinc: a free tool to discover chemistry for biology. *Journal of chemical information and modeling*, 52(7):1757–1768, 2012.
+
+[13] Preprocessed csv file downloaded from https://raw.githubusercontent.com/aspuru-guzik-group/chemical_vae/master/models/zinc_properties/250k_rndm_zinc_drugs_clean_3.csv
+
+[14] Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling. Modeling Relational Data with Graph Convolutional Networks. *Extended Semantic Web Conference (ESWC)*, 2018.
+
+[15] Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2017). Graph Attention Networks. arXiv preprint arXiv:1710.10903.
+[16] Dan Busbridge, Dane Sherburn, Pietro Cavallo and Nils Y. Hammerla. (2019). Relational Graph Attention Networks. https://openreview.net/forum?id=Bklzkh0qFm

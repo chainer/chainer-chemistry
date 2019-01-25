@@ -12,49 +12,8 @@ from chainer import Variable
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-
-
-class RSGCNUpdate(chainer.Chain):
-    """RSGCN sub module for message and update part
-
-    Args:
-        in_channels (int): input channel dimension
-        out_channels (int): output channel dimension
-    """
-
-    def __init__(self, in_channels, out_channels):
-        super(RSGCNUpdate, self).__init__()
-        with self.init_scope():
-            self.graph_linear = chainer_chemistry.links.GraphLinear(
-                in_channels, out_channels, nobias=True)
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-
-    def __call__(self, x, w_adj):
-        # --- Message part ---
-        h = chainer_chemistry.functions.matmul(w_adj, x)
-        # --- Update part ---
-        y = self.graph_linear(h)
-        return y
-
-
-def rsgcn_readout_sum(x, activation=None):
-    """Default readout function for `RSGCN`
-
-    Args:
-        x (chainer.Variable): shape consists of (minibatch, atom, ch).
-        activation: activation function, default is `None`.
-            You may consider taking other activations, for example `sigmoid`,
-            `relu` or `softmax` along `axis=2` (ch axis) etc.
-    Returns: result of readout, its shape should be (minibatch, out_ch)
-
-    """
-    if activation is not None:
-        h = activation(x)
-    else:
-        h = x
-    y = functions.sum(h, axis=1)  # sum along node axis
-    return y
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
+from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
 
 
 class RSGCN(chainer.Chain):
@@ -80,8 +39,9 @@ class RSGCN(chainer.Chain):
         n_layers (int): number of layers
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
-        readout (Callable): readout function. If None, `rsgcn_readout_sum` is
-            used. To the best of our knowledge, the paper of RSGCN model does
+        readout (Callable): readout function. If None,
+            `GeneralReadout(mode='sum)` is used.
+            To the best of our knowledge, the paper of RSGCN model does
             not give any suggestion on readout.
         dropout_ratio (float): ratio used in dropout function.
             If 0 or negative value is set, dropout function is skipped.
@@ -95,6 +55,8 @@ class RSGCN(chainer.Chain):
         in_dims = [hidden_dim for _ in range(n_layers)]
         out_dims = [hidden_dim for _ in range(n_layers)]
         out_dims[n_layers - 1] = out_dim
+        if readout is None:
+            readout = GeneralReadout()
         with self.init_scope():
             self.embed = chainer_chemistry.links.EmbedAtomID(
                 in_size=n_atom_types, out_size=hidden_dim)
@@ -110,7 +72,7 @@ class RSGCN(chainer.Chain):
             if isinstance(readout, chainer.Link):
                 self.readout = readout
         if not isinstance(readout, chainer.Link):
-            self.readout = readout or rsgcn_readout_sum
+            self.readout = readout
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
