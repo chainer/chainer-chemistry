@@ -5,45 +5,47 @@ import argparse
 import chainer
 import numpy
 import os
-import pickle
 
-from sklearn.preprocessing import StandardScaler
-
-from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
 from chainer.training import extensions as E
-from chainer import Variable
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 from chainer_chemistry.models import (
     MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT)
 from chainer_chemistry.models.prediction import Regressor
 
 
 class GraphConvPredictor(chainer.Chain):
-    def __init__(self, graph_conv, mlp=None):
+    def __init__(self, graph_conv, mlp=None, scaler=None):
         """Initializes the graph convolution predictor.
         Args:
-            graph_conv: The graph convolution network required to obtain
-                        molecule feature representation.
-            mlp: Multi layer perceptron; used as the final fully connected
-                 layer. Set it to `None` if no operation is necessary
-                 after the `graph_conv` calculation.
+            graph_conv (chainer.Chain): The graph convolution network required
+                to obtain molecule feature representation.
+            mlp (chainer.Chain or None):
+                Multi layer perceptron; used as the final fully connected
+                layer. Set it to `None` if no operation is necessary after
+                the `graph_conv` calculation.
+            scaler (chainer.Link or None): scaler link
         """
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
             self.graph_conv = graph_conv
             if isinstance(mlp, chainer.Link):
                 self.mlp = mlp
+            if isinstance(scaler, chainer.Link):
+                self.scaler = scaler
         if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
+        if not isinstance(scaler, chainer.Link):
+            self.scaler = scaler
 
     def __call__(self, atoms, adjs):
         x = self.graph_conv(atoms, adjs)
@@ -61,17 +63,10 @@ class MeanAbsError(object):
         self.scaler = scaler
 
     def __call__(self, x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
         if self.scaler is not None:
-            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        else:
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+            x0 = self.scaler.inverse_transform(x0)
+            x1 = self.scaler.inverse_transform(x1)
+        return F.mean_absolute_error(x0, x1)
 
 
 class RootMeanSqrError(object):
@@ -83,17 +78,10 @@ class RootMeanSqrError(object):
         self.scaler = scaler
 
     def __call__(self, x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
         if self.scaler is not None:
-            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        else:
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.sqrt(numpy.mean(numpy.power(diff, 2), axis=0)[0])
+            x0 = self.scaler.inverse_transform(x0)
+            x1 = self.scaler.inverse_transform(x1)
+        return F.sqrt(F.mean_squared_error(x0, x1))
 
 
 def parse_arguments():
@@ -107,13 +95,13 @@ def parse_arguments():
     # Set up the argument parser.
     parser = argparse.ArgumentParser(description='Regression on QM9.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
-                        help='method name', default='nfp')
-    parser.add_argument('--label', '-l', type=str, choices=label_names,
-                        default='',
-                        help='target label for regression; empty string means '
+                        default='nfp', help='method name')
+    parser.add_argument('--label', '-l', type=str,
+                        choices=label_names + ['all'], default='all',
+                        help='target label for regression; all means '
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
-                        help='label scaling method', default='standardize')
+                        default='standardize', help='label scaling method')
     parser.add_argument('--conv-layers', '-c', type=int, default=4,
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
@@ -141,37 +129,34 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def set_up_predictor(method, n_unit, conv_layers, class_num):
+def set_up_predictor(method, n_unit, conv_layers, class_num, scaler):
     """Sets up the predictor, consisting of a graph convolution network and
     a multilayer perceptron.
 
     Args:
-        method: Method name. Currently, the supported ones are `nfp`, `ggnn`,
-                `schnet`, `weavenet` and `rsgcn`.
-        n_unit: Number of hidden units.
-        conv_layers: Number of convolutional layers for the graph convolution
-                     network.
-        class_num: Number of output classes.
+        method (str): Method name.
+        n_unit (int): Number of hidden units.
+        conv_layers (int): Number of convolutional layers for the graph
+            convolution network.
+        class_num (int): Number of output classes.
     Returns:
-        An instance of the selected predictor.
+        predictor (chainer.Chain): An instance of the selected predictor.
     """
-
-    predictor = None
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
 
     if method == 'nfp':
         print('Training an NFP predictor...')
         nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(nfp, mlp)
+        predictor = GraphConvPredictor(nfp, mlp, scaler)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
         ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(ggnn, mlp)
+        predictor = GraphConvPredictor(ggnn, mlp, scaler)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
                         n_layers=conv_layers)
-        predictor = GraphConvPredictor(schnet, None)
+        predictor = GraphConvPredictor(schnet, None, scaler)
     elif method == 'weavenet':
         print('Training a WeaveNet predictor...')
         n_atom = 20
@@ -180,22 +165,22 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
 
         weavenet = WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
                             n_sub_layer=n_sub_layer, n_atom=n_atom)
-        predictor = GraphConvPredictor(weavenet, mlp)
+        predictor = GraphConvPredictor(weavenet, mlp, scaler)
     elif method == 'rsgcn':
         print('Training an RSGCN predictor...')
         rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(rsgcn, mlp)
+        predictor = GraphConvPredictor(rsgcn, mlp, scaler)
     elif method == 'relgcn':
         print('Use Relational GCN predictor...')
         num_edge_type = 4
         relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
                         scale_adj=True)
-        predictor = GraphConvPredictor(relgcn, None)
+        predictor = GraphConvPredictor(relgcn, None, scaler)
     elif method == 'relgat':
         print('Train Relational GAT predictor...')
         relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
                         n_layers=conv_layers)
-        predictor = GraphConvPredictor(relgat, mlp)
+        predictor = GraphConvPredictor(relgat, mlp, scaler)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
     return predictor
@@ -207,7 +192,7 @@ def main():
 
     # Set up some useful variables that will be used later on.
     method = args.method
-    if args.label:
+    if args.label != 'all':
         labels = args.label
         cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
         class_num = len(labels) if isinstance(labels, list) else 1
@@ -245,16 +230,16 @@ def main():
             dataset = D.get_qm9(preprocessor, labels=labels)
 
         # Cache the laded dataset.
-        os.makedirs(cache_dir)
+        os.makedirs(cache_dir, exist_ok=True)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
         print('Applying standard scaling to the labels.')
         scaler = StandardScaler()
-        labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
-        labels = scaler.fit_transform(dataset.get_datasets()[-1])
+        scaled_t = scaler.fit_transform(dataset.get_datasets()[-1])
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1]
+                                      + (scaled_t,)))
     else:
         print('No standard scaling was selected.')
         scaler = None
@@ -265,7 +250,7 @@ def main():
 
     # Set up the predictor.
     predictor = set_up_predictor(method, args.unit_num, args.conv_layers,
-                                 class_num)
+                                 class_num, scaler)
 
     # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
@@ -273,29 +258,29 @@ def main():
                                           shuffle=False)
 
     # Set up the regressor.
-    metrics_fun = {'mean_abs_error': MeanAbsError(scaler=scaler),
-                   'root_mean_sqr_error': RootMeanSqrError(scaler=scaler)}
+    device = args.gpu
+    metrics_fun = {'mae': MeanAbsError(scaler=scaler),
+                   'rmse': RootMeanSqrError(scaler=scaler)}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
-                          metrics_fun=metrics_fun, device=args.gpu)
+                          metrics_fun=metrics_fun, device=device)
 
     # Set up the optimizer.
     optimizer = optimizers.Adam()
     optimizer.setup(regressor)
 
     # Set up the updater.
-    updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
+    updater = training.StandardUpdater(train_iter, optimizer, device=device,
                                        converter=concat_mols)
 
     # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(valid_iter, regressor, device=args.gpu,
+    trainer.extend(E.Evaluator(valid_iter, regressor, device=device,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/abs_error',
-                                  'validation/main/loss',
-                                  'validation/main/abs_error',
-                                  'elapsed_time']))
+    trainer.extend(E.PrintReport([
+        'epoch', 'main/loss', 'main/mae', 'main/rmse', 'validation/main/loss',
+        'validation/main/mae', 'validation/main/rmse', 'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
 
@@ -303,13 +288,6 @@ def main():
     model_path = os.path.join(args.out, args.model_filename)
     print('Saving the trained model to {}...'.format(model_path))
     regressor.save_pickle(model_path, protocol=args.protocol)
-
-    # Save the standard scaler's parameters.
-    if scaler is not None:
-        scaler_path = os.path.join(args.out, 'scaler.pkl')
-        print('Saving standard scaler parameters to {}.'.format(scaler_path))
-        with open(scaler_path, mode='wb') as f:
-            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':

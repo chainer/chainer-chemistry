@@ -4,6 +4,7 @@ import json
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
+from chainer_chemistry.utils import load_json
 
 
 def save_evaluation_plot(x, y, metric, filename):
@@ -33,19 +34,19 @@ def main():
     parser.add_argument('--methods', nargs='+', required=True)
     args = parser.parse_args()
 
-    metrics = ['mean_abs_error', 'root_mean_sqr_error']
+    metrics = ['mae', 'rmse']
     x = args.methods
     y = {metric: [] for metric in metrics}
 
     for method in args.methods:
-        with open(os.path.join(args.prefix + method, 'eval_result.json')) as f:
-            result = json.load(f)
-            for metric in metrics:
-                y[metric].append(result['main/' + metric])
+        result = load_json(os.path.join(args.prefix + method,
+                                        'eval_result.json'))
+        for metric in metrics:
+            y[metric].append(result['main/' + metric])
 
     for metric in metrics:
         save_evaluation_plot(
-            x, y[metric], metric, 'eval_' + metric + '_qm9.png')
+            x, y[metric], metric, 'eval_{}_qm9.png'.format(metric))
 
 
 if __name__ == "__main__":
