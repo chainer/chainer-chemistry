@@ -22,7 +22,7 @@ from chainer_chemistry.models import (
     MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GGNN_GWM)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
-from chainer_chemistry.training.extensions import BatchEvaluator
+from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
 # from sklearn.preprocessing import StandardScaler
 
 
@@ -385,6 +385,34 @@ def main():
             raise TypeError('{} is not a supported metrics function.'
                             .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
+
+    # Augmented by Ishiguro
+    # ToDo: consider go/no-go of the following block
+    # (i) more reporting for val/evalutaion
+    # (ii) best validation score snapshot
+    if task_type == 'regression':
+        trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
+    elif task_type == 'classification':
+        train_eval_iter = iterators.SerialIterator(train, args.batchsize,repeat=False, shuffle=False)
+        trainer.extend(ROCAUCEvaluator(
+            train_eval_iter, predictor, eval_func=predictor,
+            device=args.gpu, converter=concat_mols, name='train',
+            pos_labels=1, ignore_labels=-1, raise_value_error=False))
+        # extension name='validation' is already used by `Evaluator`,
+        # instead extension name `val` is used.
+        trainer.extend(ROCAUCEvaluator(
+            valid_iter, predictor, eval_func=predictor,
+            device=args.gpu, converter=concat_mols, name='val',
+            pos_labels=1, ignore_labels=-1))
+        print_report_targets.append('train/main/roc_auc')
+        print_report_targets.append('validation/main/loss')
+        print_report_targets.append('val/main/roc_auc')
+        
+        trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
+    else:
+        raise NotImplementedError(
+            'Not implemented task_type = {}'.format(task_type))
+    
 
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())

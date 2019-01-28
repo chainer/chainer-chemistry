@@ -8,7 +8,12 @@ import os
 
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
+from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 from chainer import cuda
+# Proposed by Ishiguro
+# ToDo: consider go/no-go with following modification
+# Re-load the best-validation score snapshot
+from chainer import serializers
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -96,8 +101,9 @@ def main():
                       'regression': 'regressor.pkl'}
     task_type = molnet_default_config[dataset_name]['task_type']
     model_path = os.path.join(model_dir, model_filename[task_type])
+    print("model_path=" + model_path)
     print('Loading model weights from {}...'.format(model_path))
-
+    
     if task_type == 'classification':
         model = Classifier.load_pickle(model_path, device=args.gpu)
     elif task_type == 'regression':
@@ -106,6 +112,12 @@ def main():
         raise ValueError('Invalid task type ({}) encountered when processing '
                          'dataset ({}).'.format(task_type, dataset_name))
 
+    # Proposed by Ishiguro
+    # ToDo: consider go/no-go with following modification
+    # Re-load the best-validation score snapshot
+    serializers.load_npz(os.path.join(model_dir, "best_val_" + model_filename[task_type]), model)
+
+    
 #    # Replace the default predictor with one that scales the output labels.
 #    scaled_predictor = ScaledGraphConvPredictor(model.predictor)
 #    scaled_predictor.scaler = scaler
@@ -118,6 +130,33 @@ def main():
                             device=args.gpu)()
     print('Evaluation result: ', eval_result)
 
+
+    # Proposed by Ishiguro: add more stats
+    # ToDo: considre go/no-go with the following modification
+
+    if task_type=='regression':
+        loss = numpy.asscalar(cuda.to_cpu(eval_result['main/loss']))
+        eval_result['main/loss'] = loss
+
+        # convert to native values..
+        for k, v in eval_result.items():
+            eval_result[k] = float(v)
+
+        with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
+            json.dump(eval_result, f)
+        # end-with
+
+    elif task_type=="classification":
+        # For Classifier, we do not equip the model with ROC-AUC evalation function
+        # use a seperate ROC-AUC Evaluator here
+        rocauc_result = ROCAUCEvaluator(test_iterator, model, converter=concat_mols, device=args.gpu,eval_func=model.predictor, name='test', ignore_labels=-1)()
+        print('ROCAUC Evaluation result: ', rocauc_result)
+        with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
+            json.dump(rocauc_result, f)
+    else:
+        pass
+
+    
     # Save the evaluation results.
     with open(os.path.join(model_dir, 'eval_result.json'), 'w') as f:
         json.dump(eval_result, f)
