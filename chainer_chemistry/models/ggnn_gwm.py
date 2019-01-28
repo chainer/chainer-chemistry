@@ -7,7 +7,6 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
-from chainer_chemistry.links.update.ggnn_gwm_update import GGNNGWMUpdate
 from chainer_chemistry.models import gwm
 from chainer_chemistry.models.gwm import GWM
 
