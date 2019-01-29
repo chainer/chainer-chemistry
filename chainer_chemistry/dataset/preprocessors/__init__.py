@@ -9,6 +9,7 @@ from chainer_chemistry.dataset.preprocessors.ecfp_preprocessor import ECFPPrepro
 from chainer_chemistry.dataset.preprocessors.relgat_preprocessor import RelGATPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_gwm_preprocessor import GGNNGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gin_preprocessor import GINPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.nfp_preprocessor import NFPPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.relgcn_preprocessor import RelGCNPreprocessor  # NOQA
@@ -21,6 +22,7 @@ preprocess_method_dict = {
     'nfp': NFPPreprocessor,
     'ggnn': GGNNPreprocessor,
     'ggnn_gwm': GGNNGWMPreprocessor,
+    'gin': GINPreprocessor,
     'schnet': SchNetPreprocessor,
     'weavenet': WeaveNetPreprocessor,
     'relgcn': RelGCNPreprocessor,

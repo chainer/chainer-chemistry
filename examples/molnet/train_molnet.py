@@ -19,7 +19,7 @@ from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_confi
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GGNN_GWM)
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, GGNN_GWM)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
@@ -98,7 +98,7 @@ class GraphConvPredictor(chainer.Chain):
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'ggnn_gwm']
+                   'relgat', 'gin', 'ggnn_gwm']
     dataset_names = list(molnet_default_config.keys())
 #    scale_list = ['standardize', 'none']
 
@@ -192,6 +192,10 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
                         n_layers=conv_layers)
         return GraphConvPredictor(relgat, mlp)
+    elif method == 'gin':
+        print('Training a GIN predictor...')
+        gin = GIN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        return GraphConvPredictor(gin, mlp)
     raise ValueError('[ERROR] Invalid method: {}'.format(method))
 
 
