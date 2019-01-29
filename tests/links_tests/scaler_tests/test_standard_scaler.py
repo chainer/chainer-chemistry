@@ -53,7 +53,7 @@ def test_standard_scaler_transform_variable(data):
 
 
 @pytest.mark.gpu
-def test_standard_scaler_transform_variable_gpu(data):
+def test_standard_scaler_transform_gpu(data):
     x, expect_x_scaled = data
     scaler = StandardScaler()
     scaler.to_gpu()
@@ -117,6 +117,16 @@ def test_standard_scaler_assert_raises():
         scaler.transform(x)
     with pytest.raises(AttributeError):
         scaler.inverse_transform(x)
+
+
+def test_standard_scaler_transform_zero_std():
+    x = numpy.array([[1, 2], [1, 2], [1, 2]], dtype=numpy.float32)
+    expect_x_scaled = numpy.array([[0, 0], [0, 0], [0, 0]],
+                                  dtype=numpy.float32)
+    scaler = StandardScaler()
+    scaler.fit(x)
+    x_scaled = scaler.transform(x)
+    assert numpy.allclose(x_scaled, expect_x_scaled)
 
 
 if __name__ == '__main__':

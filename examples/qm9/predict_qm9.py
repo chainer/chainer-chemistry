@@ -3,11 +3,13 @@ from __future__ import print_function
 
 import argparse
 import os
+import numpy
 import pandas
 
+from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-from chainer.datasets import split_dataset_random
+
 
 try:
     import matplotlib
@@ -41,9 +43,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Regression on QM9.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
-    parser.add_argument('--label', '-l', type=str, choices=label_names + [''],
-                        default='',
-                        help='target label for regression; empty string means '
+    parser.add_argument('--label', '-l', type=str,
+                        choices=label_names + ['all'], default='all',
+                        help='target label for regression; all means '
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         help='label scaling method', default='standardize')
@@ -70,9 +72,10 @@ def main():
 
     # Set up some useful variables that will be used later on.
     method = args.method
-    if args.label:
-        labels = args.label
-        cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
+    if args.label != 'all':
+        label = args.label
+        cache_dir = os.path.join('input', '{}_{}'.format(method, label))
+        labels = [label]
     else:
         labels = D.get_qm9_label_names()
         cache_dir = os.path.join('input', '{}_all'.format(method))
@@ -102,20 +105,25 @@ def main():
             os.mkdir(cache_dir)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
-    # Split the dataset into training and testing.
-    train_data_size = int(len(dataset) * args.train_data_ratio)
-    _, test = split_dataset_random(dataset, train_data_size, args.seed)
-
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
+    scaler = regressor.predictor.scaler
+
+    if scaler is not None:
+        scaled_t = scaler.transform(dataset.get_datasets()[-1])
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] +
+                                      (scaled_t,)))
+
+    # Split the dataset into training and testing.
+    train_data_size = int(len(dataset) * args.train_data_ratio)
+    _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
     # This callback function extracts only the inputs and discards the labels.
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 
     def postprocess_fn(x):
-        scaler = regressor.predictor.scaler
         if scaler is not None:
             scaled_x = scaler.inverse_transform(x)
             return scaled_x
@@ -124,28 +132,32 @@ def main():
 
     # Predict the output labels.
     print('Predicting...')
-    y_pred = regressor.predict(test, converter=extract_inputs,
-                               postprocess_fn=postprocess_fn)
+    y_pred = regressor.predict(
+        test, converter=extract_inputs,
+        postprocess_fn=postprocess_fn)
 
     # Extract the ground-truth labels.
     t = concat_mols(test, device=-1)[-1]
-    n_eval = 10
+    original_t = scaler.inverse_transform(t)
 
     # Construct dataframe.
     df_dict = {}
     for i, l in enumerate(labels):
         df_dict.update({'y_pred_{}'.format(l): y_pred[:, i],
-                        't_{}'.format(l): t[:, i], })
+                        't_{}'.format(l): original_t[:, i], })
     df = pandas.DataFrame(df_dict)
 
     # Show a prediction/ground truth table with 5 random examples.
     print(df.sample(5))
-    # for target_label in range(y_pred.shape[1]):
-    #     label_name = labels[target_label]
-    #     diff = y_pred[:n_eval, target_label] - t[:n_eval, target_label]
-    #     print('label_name = {}, y_pred = {}, t = {}, diff = {}'
-    #           .format(label_name, y_pred[:n_eval, target_label],
-    #                   t[:n_eval, target_label], diff))
+
+    n_eval = 10
+    for target_label in range(y_pred.shape[1]):
+        label_name = labels[target_label]
+        diff = y_pred[:n_eval, target_label] - original_t[:n_eval,
+                                                          target_label]
+        print('label_name = {}, y_pred = {}, t = {}, diff = {}'
+              .format(label_name, y_pred[:n_eval, target_label],
+                      original_t[:n_eval, target_label], diff))
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
@@ -153,9 +165,15 @@ def main():
     eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
                             device=args.gpu)()
     print('Evaluation result: ', eval_result)
-
     # Save the evaluation results.
     save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
+
+    # Calculate mean abs error for each label
+    mae = numpy.mean(numpy.abs(y_pred - original_t), axis=0)
+    eval_result = {}
+    for i, l in enumerate(labels):
+        eval_result.update({l: mae[i]})
+    save_json(os.path.join(args.in_dir, 'eval_result_mae.json'), eval_result)
 
 
 if __name__ == '__main__':

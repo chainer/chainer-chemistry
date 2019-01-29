@@ -99,9 +99,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='Regression on QM9.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='nfp', help='method name')
-    parser.add_argument('--label', '-l', type=str, choices=label_names + [''],
-                        default='',
-                        help='target label for regression; empty string means '
+    parser.add_argument('--label', '-l', type=str,
+                        choices=label_names + ['all'], default='all',
+                        help='target label for regression; all means '
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='label scaling method')
@@ -195,7 +195,7 @@ def main():
 
     # Set up some useful variables that will be used later on.
     method = args.method
-    if args.label:
+    if args.label != 'all':
         labels = args.label
         cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
         class_num = len(labels) if isinstance(labels, list) else 1
@@ -240,10 +240,9 @@ def main():
     if args.scale == 'standardize':
         print('Applying standard scaling to the labels.')
         scaler = StandardScaler()
-        labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
-        # labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        print('fit once')
+        scaled_t = scaler.fit_transform(dataset.get_datasets()[-1])
+        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1]
+                                      + (scaled_t,)))
     else:
         print('No standard scaling was selected.')
         scaler = None

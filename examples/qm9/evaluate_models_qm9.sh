@@ -9,7 +9,7 @@ prefix=eval_
 gpu=${1:--1}
 # Number of training epochs (default: 1).
 epoch=${2:-1}
-label=${3:-""}
+label=${3:-all}
 
 echo evaluating label ${label}
 
@@ -30,4 +30,4 @@ do
         --label ${label}
 done
 
-python plot.py --prefix ${prefix} --methods ${methods[@]} --
+python plot.py --prefix ${prefix} --methods ${methods[@]}
