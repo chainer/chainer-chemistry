@@ -34,6 +34,7 @@ class GINUpdate(chainer.Chain):
             self.linear_g2 = GraphLinear(hidden_dim, hidden_dim)
         # end with
         self.dropout_ratio = dropout_ratio
+    # end-def
 
     def __call__(self, h, adj):
         """

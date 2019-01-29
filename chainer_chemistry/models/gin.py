@@ -73,35 +73,17 @@ class GIN(chainer.Chain):
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
+        # end with
 
-        # end init_scope-with
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.n_message_layers = n_message_layer
+        self.n_readout_layer = n_readout_layer
         self.dropout_ratio = dropout_ratio
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
-
-    def readout(self, h, h0, step=0):
-        """
-        Readout (aggregation) throuth tow MLPs.
-
-        :param h:  minibatch by num_nodes by hidden_dim numppy.ndarray, output from the Conv layers
-        :param h0: minibatch by num_nodes by feature_dim (= num_max_atom) numpy.ndarray, input local node features
-        :param step: integer, index for layers.
-        :return:
-        """
-        # --- Readout part ---
-        index = step if self.concat_hidden else 0
-        # h, h0: (minibatch, atom, ch)
-        g = F.sigmoid(
-            self.i_layers[index](F.concat((h, h0), axis=2))) \
-            * self.j_layers[index](h)
-        g = F.sum(g, axis=1)  # sum along atom's axis
-        return g
-
-    def __call__(self, atom_array, adj):
+    def __call__(self, atom_array, adj, is_real_node=None):
         """
         Forward propagation
 
@@ -111,7 +93,7 @@ class GIN(chainer.Chain):
                 m-th molecule's i-th node is value a (atomic number)
         :param adj  - mol-minibatch by relation-types by node by node numpy.ndarray,
                        minibatch of multple relational adjancency matrix with edge-type information
-                       adj[m, i, j] = b represents
+                       adj[i, j] = b represents
                        m-th molecule's  edge from node i to node j has value b
         Returns:
             ~chainer.Variable: minibatch of fingerprint
@@ -135,11 +117,11 @@ class GIN(chainer.Chain):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
-                g = self.readout(h, h0, step)
+                g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
 
         if self.concat_hidden:
             return F.concat(g_list, axis=1)
         else:
-            g = self.readout_layers(h, h0)
+            g = self.readout_layers[0](h, h0, is_real_node)
             return g
