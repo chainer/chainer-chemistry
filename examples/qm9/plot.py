@@ -1,6 +1,8 @@
 #! -*- coding: utf-8 -*-
 import argparse
 import json
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
@@ -15,13 +17,13 @@ def save_evaluation_plot(x, y, metric, filename):
 
     for n, (label, _y) in enumerate(zip(x, y)):
         ax.annotate(
-            s='{:.3f}'.format(abs(_y)),
+            s='{:.4g}'.format(abs(_y)),
             xy=(_y, n),
-            ha='right',
+            ha='left',
             va='center',
-            xytext=(-5, 0),
+            xytext=(5, 0),
             textcoords='offset points',
-            color='white')
+            color='black')
 
     plt.title('Performance on qm9')
     plt.xlabel(metric)
@@ -34,19 +36,18 @@ def main():
     parser.add_argument('--methods', nargs='+', required=True)
     args = parser.parse_args()
 
-    metrics = ['mae', 'rmse']
     x = args.methods
-    y = {metric: [] for metric in metrics}
+    y = defaultdict(list)
 
     for method in args.methods:
-        result = load_json(os.path.join(args.prefix + method,
-                                        'eval_result.json'))
-        for metric in metrics:
-            y[metric].append(result['main/' + metric])
+        result = load_json(os.path.join(
+            args.prefix + method, 'eval_result_mae.json'))
+        for label, value in result.items():
+            y[label].append(value)
 
-    for metric in metrics:
+    for label in y.keys():
         save_evaluation_plot(
-            x, y[metric], metric, 'eval_{}_qm9.png'.format(metric))
+            x, y[label], label, 'eval_qm9_{}_mae.png'.format(label))
 
 
 if __name__ == "__main__":
