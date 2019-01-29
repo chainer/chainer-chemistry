@@ -395,7 +395,14 @@ def main():
     # (i) more reporting for val/evalutaion
     # (ii) best validation score snapshot
     if task_type == 'regression':
-        trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
+        if 'RMSE' in metric_name:
+            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
+        elif 'MAE' in metric_name:
+            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
+        else:
+            print("No validation metric defined?")
+            assert(False)
+
     elif task_type == 'classification':
         train_eval_iter = iterators.SerialIterator(train, args.batchsize,repeat=False, shuffle=False)
         trainer.extend(ROCAUCEvaluator(

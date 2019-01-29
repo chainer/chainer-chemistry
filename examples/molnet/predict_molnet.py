@@ -135,8 +135,8 @@ def main():
     # ToDo: considre go/no-go with the following modification
 
     if task_type=='regression':
-        loss = numpy.asscalar(cuda.to_cpu(eval_result['main/loss']))
-        eval_result['main/loss'] = loss
+        #loss = cuda.to_cpu(numpy.array(eval_result['main/loss']))
+        #eval_result['main/loss'] = loss
 
         # convert to native values..
         for k, v in eval_result.items():
