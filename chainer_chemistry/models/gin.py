@@ -5,9 +5,6 @@
 #              no learnable epsilon
 #              2-layer MLP + ReLU
 #
-#              inputs:
-#
-#              outputs:
 #
 # Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
 # License:     All rights reserved unless specified.
@@ -26,29 +23,28 @@ import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links import GraphLinear
+from chainer_chemistry.links.readout.gin_readout import GINReadout
+from chainer_chemistry.links.update.gin_update import GINUpdate
+
 
 
 class GIN(chainer.Chain):
     """
     Simplest implementation of Graph Isomorphism Network (GIN)
 
-    See: Ishiguro, Maeda, and Koyama To Be Written.
+    See: Xu, Hu, Leskovec, and Jegelka, "How powerful are graph neural networks?", in ICLR 2019.
 
     Args:
         out_dim (int): dimension of output feature vector
         hidden_dim (default=16): dimension of hidden vectors
             associated to each atom
-        hiden_dim_super(default=16); dimension of super-node hidden vector
         n_layers (default=4): number of layers
-        n_heads (default=8): numbef of heads
-        n_atom_types (default=MAX_ATOMIC_NUM): number of types of atoms
-        n_super_feature (default: tuned according to gtn_preprocessor); number of super-node observation attributes
-        n_edge_types (int): number of edge types witin graphs.
+        n_atom_types: number of atoms
         dropout_ratio (default=0.5); if > 0.0, perform dropout
         concat_hidden (default=False): If set to True, readout is executed in each layer
             and the result is concatenated
-        tying_flag (default=True): enable weight_tying for all units
-        scaler_mgr_flag (default=False): reduce the merger gate to be scalar.
+        weight_tying (default=True): enable weight_tying for all units
+
 
     """
     NUM_EDGE_TYPE = 4
@@ -58,83 +54,34 @@ class GIN(chainer.Chain):
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  weight_tying=True,
-                 gpu=-1):
+                 activation=F.identity):
         super(GIN, self).__init__()
 
-        num_layer = 1 if weight_tying else n_layers
+        n_message_layer = 1 if weight_tying else n_layers
         n_readout_layer = n_layers if concat_hidden else 1
         with self.init_scope():
             # embedding
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
 
             # two non-linear MLP part
-            self.linear_g1 = chainer.ChainList(
-                *[GraphLinear(hidden_dim, hidden_dim)
-                for _ in range(num_layer)]
-            )
-
-            self.linear_g2 = chainer.ChainList(
-                *[GraphLinear(hidden_dim, hidden_dim)
-                for _ in range(num_layer)]
-            )
+            self.update_layers = chainer.ChainList(*[GINUpdate(
+                hidden_dim=hidden_dim, dropout_ratio=dropout_ratio)
+                for _ in range(n_message_layer)])
 
             # Readout
-            self.i_layers = chainer.ChainList(
-                *[GraphLinear(2 * hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
-            )
-            self.j_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
-            )
+            self.readout_layers = chainer.ChainList(*[GINReadout(
+                out_dim=out_dim, hidden_dim=hidden_dim,
+                activation=activation, activation_agg=activation)
+                for _ in range(n_readout_layer)])
 
         # end init_scope-with
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
+        self.n_message_layers = n_message_layer
         self.dropout_ratio = dropout_ratio
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
-    def update(self, h, adj, step=0):
-        """
-        Describes the each layer.
-
-        :param h: minibatch by num_nodes by hidden_dim numpy array.
-                local node hidden states
-        :param adj: minibatch by num_nodes by num_nodes 1/0 array.
-                Adjacency matrices over several bond types
-        :param step: integer, the layer index
-        :return: updated h and h_super
-        """
-
-        xp = self.xp
-
-        # (minibatch, atom, ch)
-        mb, atom, ch = h.shape
-        out_ch = ch
-
-        layer_index = 0 if self.weight_tying else step
-
-        # --- Message part ---
-        # Take sum along adjacent atoms
-
-        # adj (mb, atom, atom)
-        # fv   (minibatch, atom, ch)
-        fv = chainer_chemistry.functions.matmul(adj, h)
-        assert(fv.shape == (mb, atom, ch) )
-
-        # sum myself
-        sum_h = fv + h
-        assert(sum_h.shape == (mb, atom, ch))
-
-        # apply MLP
-        new_h = F.relu(self.linear_g1[layer_index](sum_h))
-        new_h = F.relu(F.dropout(self.linear_g2[layer_index](new_h),ratio=self.dropout_ratio))
-
-        # done???
-
-        return new_h
 
     def readout(self, h, h0, step=0):
         """
@@ -184,8 +131,9 @@ class GIN(chainer.Chain):
         h0 = F.copy(h, cuda.get_device_from_array(h.data).id)
 
         g_list = []
-        for step in range(self.n_layers):
-            h = self.update(h, adj, step)
+        for step in range(self.n_message_layers):
+            message_layer_index = 0 if self.weight_tying else step
+            h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
                 g = self.readout(h, h0, step)
                 g_list.append(g)
@@ -193,5 +141,5 @@ class GIN(chainer.Chain):
         if self.concat_hidden:
             return F.concat(g_list, axis=1)
         else:
-            g1 = self.readout(h, h0, 0)
-            return g1
+            g = self.readout_layers(h, h0)
+            return g
