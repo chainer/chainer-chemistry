@@ -10,7 +10,7 @@ class GINPreprocessor(MolPreprocessor):
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1, out_size_super=-1, add_Hs=False):
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
         """
         initialize the GTN Preprocessor.
 
@@ -23,7 +23,6 @@ class GINPreprocessor(MolPreprocessor):
             If the number of atoms in the molecule is less than this value,
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
-        :param out_size_super: integer, indicate the length of the super node feature.
         :param add_Hs: boolean. if true, add Hydrogens explicitly.
         """
         super(GINPreprocessor, self).__init__(add_Hs=add_Hs)
@@ -32,7 +31,6 @@ class GINPreprocessor(MolPreprocessor):
                              'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
         self.out_size = out_size
-        self.out_size_super = out_size_super
 
 
     def get_input_features(self, mol):

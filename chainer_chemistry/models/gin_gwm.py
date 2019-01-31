@@ -1,19 +1,15 @@
 # " -*- coding: utf-8 -*-"
 # ----------------------------------------------------------------------
-# Name:        gin_gwm.py
+# Name:        gin.py
 # Purpose:     Implementation of the simplest case of Graph Isomorphism Network( GIN)
 #              no learnable epsilon
 #              2-layer MLP + ReLU
-#              equipped with Graph Warp Module (GWM)
 #
-#              inputs:
-#
-#              outputs:
 #
 # Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
 # License:     All rights reserved unless specified.
 # Created:     13/12/18 (DD/MM/YY)
-# Last update: 23/01/19 (DD/MM/YY)
+# Last update: 13/12/18 (DD/MM/YY)
 # -----------------------------------------------------------------------
 
 import numpy as np
@@ -27,13 +23,16 @@ import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links import GraphLinear
-from chainer_chemistry.models import gwm
+from chainer_chemistry.links.readout.gin_readout import GINReadout
+from chainer_chemistry.links.update.gin_update import GINUpdate
 from chainer_chemistry.models.gwm import GWM
 
 
 class GIN_GWM(chainer.Chain):
     """
-    Simplest implementation of Graph Isomorphism Network (GIN) with Graph Warp Module (GWM)
+    Simplest implementation of Graph Isomorphism Network (GIN) , attache with the Graph Warp Module (GWM)
+
+    See: Xu, Hu, Leskovec, and Jegelka, "How powerful are graph neural networks?", in ICLR 2019.
 
     See: Ishiguro, Maeda, and Koyama. "Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks", arXiv, 2019.
 
@@ -44,140 +43,63 @@ class GIN_GWM(chainer.Chain):
         hiden_dim_super(default=16); dimension of super-node hidden vector
         n_layers (default=4): number of layers
         n_heads (default=8): numbef of heads
-        n_atom_types (default=MAX_ATOMIC_NUM): number of types of atoms
-        n_super_feature (default: tuned according to gtn_preprocessor); number of super-node observation attributes
-        n_edge_types (int): number of edge types witin graphs.
+        n_atom_types: number of atoms
+        n_super_feature (default: tuned according to ggnn_gwm_preprocessor); number of super-node observation attributes
         dropout_ratio (default=0.5); if > 0.0, perform dropout
         concat_hidden (default=False): If set to True, readout is executed in each layer
             and the result is concatenated
-        tying_flag (default=True): enable weight_tying for all units
-        scaler_mgr_flag (default=False): reduce the merger gate to be scalar.
+        weight_tying (default=True): enable weight_tying for all units
+
 
     """
     NUM_EDGE_TYPE = 4
 
     def __init__(self, out_dim, hidden_dim=16, hidden_dim_super=16,
-                 n_layers=4, n_heads=8, n_atom_types=MAX_ATOMIC_NUM,
+                 n_layers=4, n_heads=8,n_atom_types=MAX_ATOMIC_NUM,
                  n_super_feature=4 + 2 + 4 + MAX_ATOMIC_NUM*2,
-                 n_edge_types=4,
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  weight_tying=True,
-                 scaler_mgr_flag=False,
-                 gpu=-1):
+                 activation=F.identity):
         super(GIN_GWM, self).__init__()
 
-        num_layer = 1 if weight_tying else n_layers
+        n_message_layer = 1 if weight_tying else n_layers
         n_readout_layer = n_layers if concat_hidden else 1
         with self.init_scope():
             # embedding
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
-            self.embed_super = L.Linear(in_size=n_super_feature, out_size=hidden_dim_super)
-
 
             # two non-linear MLP part
-            self.linear_g1 = chainer.ChainList(
-                *[GraphLinear(hidden_dim, hidden_dim)
-                for _ in range(num_layer)]
-            )
-
-            self.linear_g2 = chainer.ChainList(
-                *[GraphLinear(hidden_dim, hidden_dim)
-                for _ in range(num_layer)]
-            )
+            self.update_layers = chainer.ChainList(*[GINUpdate(
+                hidden_dim=hidden_dim, dropout_ratio=dropout_ratio)
+                for _ in range(n_message_layer)])
 
             # GWM
+            self.embed_super = L.Linear(in_size=n_super_feature, out_size=hidden_dim_super)
             self.gwm = GWM(hidden_dim=hidden_dim, hidden_dim_super=hidden_dim_super,
-                           n_layers=n_layers, n_heads=n_heads,
-                           dropout_ratio=dropout_ratio,
-                           tying_flag=weight_tying,
-                           scaler_mgr_flag=scaler_mgr_flag,
-                           gpu=-1)
+                 n_layers=n_message_layer, n_heads=n_heads,
+                 dropout_ratio=dropout_ratio,
+                 tying_flag=weight_tying,
+                 gpu=-1)
 
             # Readout
-            self.i_layers = chainer.ChainList(
-                *[GraphLinear(2 * hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
-            )
-            self.j_layers = chainer.ChainList(
-                *[GraphLinear(hidden_dim, out_dim)
-                    for _ in range(n_readout_layer)]
-            )
+            self.readout_layers = chainer.ChainList(*[GINReadout(
+                out_dim=out_dim, hidden_dim=hidden_dim,
+                activation=activation, activation_agg=activation)
+                for _ in range(n_readout_layer)])
             self.linear_for_concat_super = L.Linear(in_size=None, out_size=out_dim)
-        # end init_scope-with
+        # end with
+
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
         self.hidden_dim_super = hidden_dim_super
-        self.n_layers = n_layers
-        self.n_heads = n_heads
-        self.n_edge_types = n_edge_types
+        self.n_message_layers = n_message_layer
+        self.n_readout_layer = n_readout_layer
         self.dropout_ratio = dropout_ratio
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
-    def update(self, h, adj, g, step=0):
-        """
-        Describes the each layer.
-
-        :param h: minibatch by num_nodes by hidden_dim numpy array.
-                local node hidden states
-        :param adj: minibatch by num_nodes by num_nodes 1/0 array.
-                Adjacency matrices over several bond types
-        :param g: minibatch by hidden_dim_super numpy array.
-                super node hidddne state
-        :param step: integer, the layer index
-        :return: updated h and h_super
-        """
-
-        xp = self.xp
-
-        # (minibatch, atom, ch)
-        mb, atom, ch = h.shape
-        out_ch = ch
-
-        layer_index = 0 if self.weight_tying else step
-
-        # --- Message part ---
-        # Take sum along adjacent atoms
-
-        # adj (mb, atom, atom)
-        # fv   (minibatch, atom, ch)
-        fv = chainer_chemistry.functions.matmul(adj, h)
-        assert(fv.shape == (mb, atom, ch) )
-
-        # sum myself
-        sum_h = fv + h
-        assert(sum_h.shape == (mb, atom, ch))
-
-        # apply MLP
-        out_h = F.relu(self.linear_g1[layer_index](sum_h))
-        out_h = F.relu(F.dropout(self.linear_g2[layer_index](out_h), ratio=self.dropout_ratio))
-
-        #
-        # Graph Warping Module
-        #
-        new_h, new_g = self.gwm(h, out_h, g, layer_index)
-        return new_h, new_g
-
-    def readout(self, h, h0, step=0):
-        """
-        Readout (aggregation) throuth tow MLPs.
-
-        :param h:  minibatch by num_nodes by hidden_dim numppy.ndarray, output from the Conv layers
-        :param h0: minibatch by num_nodes by feature_dim (= num_max_atom) numpy.ndarray, input local node features
-        :param step: integer, index for layers.
-        :return:
-        """
-        # --- Readout part ---
-        index = step if self.concat_hidden else 0
-        # h, h0: (minibatch, atom, ch)
-        g = F.sigmoid(
-            self.i_layers[index](F.concat((h, h0), axis=2))) \
-            * self.j_layers[index](h)
-        g = F.sum(g, axis=1)  # sum along atom's axis
-        return g
-
-    def __call__(self, atom_array, adj, super_node):
+    def __call__(self, atom_array, adj, super_node, is_real_node=None):
         """
         Forward propagation
 
@@ -187,9 +109,9 @@ class GIN_GWM(chainer.Chain):
                 m-th molecule's i-th node is value a (atomic number)
         :param adj  - mol-minibatch by relation-types by node by node numpy.ndarray,
                        minibatch of multple relational adjancency matrix with edge-type information
-                       adj[m, i, j] = b represents
+                       adj[i, j] = b represents
                        m-th molecule's  edge from node i to node j has value b
-        :param super_node  - 1D numpy.ndarray, the super-node observation.
+        super_node (numpy.ndarray): 1D rray, the super-node observation.
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
@@ -202,33 +124,27 @@ class GIN_GWM(chainer.Chain):
         else:
             h = atom_array
         # end if-else
-        # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(h)=" + str(xp.shape(h)))
+        h0 = F.copy(h, cuda.get_device_from_array(h.data).id)
 
-        # call reset for all RNN modules in GWM
         self.gwm.GRU_local.reset_state()
         self.gwm.GRU_super.reset_state()
-        # ebmbed super node
-        g = self.embed_super(super_node)
 
-        h0 = F.copy(h, cuda.get_device_from_array(h.data).id)
-        g0 = F.copy(g, cuda.get_device_from_array(g.data).id)
+        # ebmbed super node
+        h_s = self.embed_super(super_node)
 
         g_list = []
-        for step in range(self.n_layers):
-            h, g = self.update(h, adj, g, step)
+        for step in range(self.n_message_layers):
+            message_layer_index = 0 if self.weight_tying else step
+            h2 = self.update_layers[message_layer_index](h, adj)
+            h, h_s = self.gwm(h, h2, h_s, message_layer_index)
             if self.concat_hidden:
-                g2 = self.readout(h, h0, step)
-                g_list.append(g2)
+                g = self.readout_layers[step](h, h0, is_real_node)
+                g_list.append(g)
 
         if self.concat_hidden:
             return F.concat(g_list, axis=1)
         else:
-            # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(h_super)=" + str(xp.shape(h_super)) + ", type(h_super)=" + str(type(h_super)))
-            # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(h_super0)=" + str(xp.shape(h_super0)) + ", type(h_super0)=" + str(type(h_super0)))
-
-            g1 = self.readout(h, h0, 0)
-            # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(g1)=" + str(xp.shape(g1)) + ", type(g1)=" + str(type(g1)))
-            g2 = F.concat((g1, g))
+            g = self.readout_layers[0](h, h0, is_real_node)
+            g2 = F.concat( (g, h_s), axis=1 )
             out_g = F.relu(self.linear_for_concat_super(g2))
-
             return out_g

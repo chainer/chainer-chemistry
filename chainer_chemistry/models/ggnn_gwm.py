@@ -7,7 +7,6 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
-from chainer_chemistry.models import gwm
 from chainer_chemistry.models.gwm import GWM
 
 
@@ -24,8 +23,8 @@ class GGNN_GWM(chainer.Chain):
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-       hiden_dim_super(default=16); dimension of super-node hidden vector 
-       n_layers (int): number of layers
+        hiden_dim_super(default=16); dimension of super-node hidden vector
+        n_layers (int): number of layers
         n_heads (default=8): numbef of heads
         n_atom_types (int): number of types of atoms
         n_super_feature (default: tuned according to ggnn_gwm_preprocessor); number of super-node observation attributes
@@ -62,8 +61,7 @@ class GGNN_GWM(chainer.Chain):
                  n_layers=n_message_layer, n_heads=n_heads,
                  dropout_ratio=dropout_ratio,
                  tying_flag=weight_tying,
-                 scaler_mgr_flag=False,
-                 gpu=-1)            
+                 gpu=-1)
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,

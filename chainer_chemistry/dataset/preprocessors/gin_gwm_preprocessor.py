@@ -1,77 +1,12 @@
-# " -*- coding: utf-8 -*-"
-#-------------------------------------------------------------------------------
-# Name:        gin_gwm_preprocessor.py
-# Purpose:     Implementation of the data preprocessor for Graph Isomorphism Networks (GTN)
-#              equipeed with GWM
-#
-#              inputs:
-#
-#              outputs:
-#
-# Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
-# License:     All rights reserved unless specified.
-# Created:     13/12/18 (DD/MM/YY)
-# Last update: 13/12/18 (DD/MM/YY)
-#-------------------------------------------------------------------------------
-
-import numpy as np
-
-from collections import Counter
-
-from chainer import functions as F
-
-
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array
-from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
+    import construct_atomic_number_array, construct_adj_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
 
-
-def construct_discrete_edge_matrix(mol, out_size=-1):
-    """construct discrete edge matrix
-
-    :param mol (Chem.Mol):
-    :param out_size (int):
-
-    :return (numpy.ndarray):
-
-    """
-
-    if mol is None:
-        raise MolFeatureExtractionError('mol is None')
-    N = mol.GetNumAtoms()
-
-    if out_size < 0:
-        size = N
-    elif out_size >= N:
-        size = out_size
-    else:
-        raise MolFeatureExtractionError('out_size {} is smaller than number '
-                                        'of atoms in mol {}'
-                                        .format(out_size, N))
-
-    adjs = np.zeros((size, size), dtype=np.float32)
-    for i in range(N):
-
-        for j in range(N):
-            bond = mol.GetBondBetweenAtoms(i, j)  # type: Chem.Bond
-            if bond is not None:
-                bond_type = str(bond.GetBondType())
-                if bond_type == 'SINGLE':
-                    adjs[i, j] = 1.0
-                elif bond_type == 'DOUBLE':
-                    adjs[i, j] = 1.0
-                elif bond_type == 'TRIPLE':
-                    adjs[i, j] = 1.0
-                elif bond_type == 'AROMATIC':
-                    adjs[i, j] = 1.0
-                else:
-                    raise ValueError("[ERROR] Unknown bond type {}"
-                                     .format(bond_type))
-    return adjs
+import numpy as np
+from collections import Counter
 
 def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
     """
@@ -130,8 +65,8 @@ def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
 
     return super_node_x
 
-class GIN_GWMPreprocessor(MolPreprocessor):
-    """GIN + GWM Preprocessor
+class GINGWMPreprocessor(MolPreprocessor):
+    """GIN-GWM Preprocessor
 
     """
 
@@ -151,7 +86,7 @@ class GIN_GWMPreprocessor(MolPreprocessor):
         :param out_size_super: integer, indicate the length of the super node feature.
         :param add_Hs: boolean. if true, add Hydrogens explicitly.
         """
-        super(GIN_GWMPreprocessor, self).__init__(add_Hs=add_Hs)
+        super(GINGWMPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be less or equal to '
                              'out_size {}'.format(max_atoms, out_size))
@@ -159,19 +94,18 @@ class GIN_GWMPreprocessor(MolPreprocessor):
         self.out_size = out_size
         self.out_size_super = out_size_super
 
+
     def get_input_features(self, mol):
         """get input features
 
-        :param mol: Chem.Mol, the molecule representation
+        Args:
+            mol (Mol):
 
-        :return atom_array: num_sample by node_feature_dim numpy.ndarray, array of feature vectors of atom (local) nodes.
-        :return adj_array: num_sample by bond-type by num_node by num_node numpy.ndarray, array of multi-relation (bonds) adjacency matrix of atom (local) nodes.
-        :return super_node_x: num_sample by super-node_feature_dim numpy.ndarray, array of feature vectors of the super node.
+        Returns:
 
         """
-
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
+        adj_array = construct_adj_matrix(mol, out_size=self.out_size)
         super_node_x = construct_supernode_feature(mol, atom_array, adj_array, out_size=self.out_size_super)
         return atom_array, adj_array, super_node_x
