@@ -46,8 +46,9 @@ def build_predictor(method, n_unit, conv_layers, class_num):
         print('Use Relational GCN predictor...')
         num_edge_type = 4
         predictor = GraphConvPredictor(
-            RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
-                   scale_adj=True))
+            RelGCN(out_channels=n_unit, num_edge_type=num_edge_type,
+                   scale_adj=True),
+            MLP(out_dim=class_num, hidden_dim=n_unit))
     elif method == 'relgat':
         print('Use GAT predictor...')
         predictor = GraphConvPredictor(
