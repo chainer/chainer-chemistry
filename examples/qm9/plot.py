@@ -23,11 +23,12 @@ def save_evaluation_plot(x, y, metric, filename):
             va='center',
             xytext=(5, 0),
             textcoords='offset points',
-            color='black')
+            color='gray')
 
-    plt.title('Performance on qm9')
+    plt.title('Performance on qm9: {}'.format(metric))
     plt.xlabel(metric)
     plt.savefig(filename)
+    plt.close()
 
 
 def main():
