@@ -2,16 +2,15 @@
 from __future__ import print_function
 
 import argparse
-import json
-import numpy
 import os
+import numpy
 import pandas
-import pickle
 
-from chainer import Variable, cuda
+import chainer.functions as F
+from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-from chainer.datasets import split_dataset_random
+
 from chainer_chemistry.utils import save_json
 
 try:
@@ -169,9 +168,15 @@ def main():
     eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
                             device=args.gpu)()
     print('Evaluation result: ', eval_result)
-
     # Save the evaluation results.
     save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
+
+    # Calculate mean abs error for each label
+    mae = numpy.mean(numpy.abs(y_pred - original_t), axis=0)
+    eval_result = {}
+    for i, l in enumerate(labels):
+        eval_result.update({l: mae[i]})
+    save_json(os.path.join(args.in_dir, 'eval_result_mae.json'), eval_result)
 
 
 if __name__ == '__main__':
