@@ -9,6 +9,7 @@ from chainer_chemistry.models import SchNet
 from chainer_chemistry.models import WeaveNet
 from chainer_chemistry.models import RelGCN
 from chainer_chemistry.models import RelGAT
+from chainer_chemistry.models.prediction import GraphConvPredictor
 
 
 def build_predictor(method, n_unit, conv_layers, class_num):
@@ -57,37 +58,3 @@ def build_predictor(method, n_unit, conv_layers, class_num):
     else:
         raise ValueError('[ERROR] Invalid predictor: method={}'.format(method))
     return predictor
-
-
-class GraphConvPredictor(chainer.Chain):
-    """Wrapper class that combines a graph convolution and MLP."""
-
-    def __init__(self, graph_conv, mlp=None):
-        """Constructor
-
-        Args:
-            graph_conv: graph convolution network to obtain molecule feature
-                        representation
-            mlp: multi layer perceptron, used as final connected layer.
-                It can be `None` if no operation is necessary after
-                `graph_conv` calculation.
-        """
-
-        super(GraphConvPredictor, self).__init__()
-        with self.init_scope():
-            self.graph_conv = graph_conv
-            if isinstance(mlp, chainer.Link):
-                self.mlp = mlp
-        if not isinstance(mlp, chainer.Link):
-            self.mlp = mlp
-
-    def __call__(self, atoms, adjs):
-        x = self.graph_conv(atoms, adjs)
-        if self.mlp:
-            x = self.mlp(x)
-        return x
-
-    def predict(self, atoms, adjs):
-        with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            x = self.__call__(atoms, adjs)
-            return F.sigmoid(x)

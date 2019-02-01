@@ -21,7 +21,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 
 # These imports are necessary for pickle to work.
 from sklearn.preprocessing import StandardScaler  # NOQA
-from train_own_dataset import GraphConvPredictor  # NOQA
+from chainer_chemistry.models.prediction import GraphConvPredictor  # NOQA
 from train_own_dataset import MeanAbsError, RootMeanSqrError  # NOQA
 
 

@@ -21,6 +21,7 @@ from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
     MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
 from chainer_chemistry.models.prediction import Classifier
+from chainer_chemistry.models.prediction import GraphConvPredictor
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
 # from sklearn.preprocessing import StandardScaler
@@ -430,12 +431,12 @@ def main():
         print_report_targets.append('train/main/roc_auc')
         print_report_targets.append('validation/main/loss')
         print_report_targets.append('val/main/roc_auc')
-        
+
         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
     else:
         raise NotImplementedError(
             'Not implemented task_type = {}'.format(task_type))
-    
+
 
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
