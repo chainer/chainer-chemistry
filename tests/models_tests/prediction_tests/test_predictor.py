@@ -65,7 +65,7 @@ def test_backward_cpu(model, data):
     # type: (GraphConvPredictor, Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray]) -> None  # NOQA
     atom_data, adj_data, y_grad = data
     gradient_check.check_backward(
-        model, (atom_data, adj_data), y_grad, atol=1e-4, rtol=1e-4)
+        model, (atom_data, adj_data), y_grad, atol=1e-3, rtol=1e-3)
 
 
 @pytest.mark.gpu
@@ -74,7 +74,7 @@ def test_backward_gpu(model, data):
     atom_data, adj_data, y_grad = map(cuda.to_gpu, data)
     model.to_gpu()
     gradient_check.check_backward(
-        model, (atom_data, adj_data), y_grad, atol=1e-4, rtol=1e-4)
+        model, (atom_data, adj_data), y_grad, atol=1e-3, rtol=1e-3)
 
 
 def test_forward_cpu_graph_invariant(model, data):
