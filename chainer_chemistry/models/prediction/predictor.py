@@ -32,7 +32,7 @@ class GraphConvPredictor(chainer.Chain):
         if not isinstance(scaler, chainer.Link):
             self.scaler = scaler
 
-    def forward(self, atoms, adjs):
+    def __call__(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
         x = self.graph_conv(atoms, adjs)
         if self.mlp:
