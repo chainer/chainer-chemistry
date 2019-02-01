@@ -53,6 +53,7 @@ class Set2Set(chainer.Chain):
         q_ = functions.transpose(q, axes=(0, 2, 1))  # q_: (mb, ch, 1)
         e = functions.matmul(h, q_)  # e: (mb, node, 1)
         a = functions.softmax(e)  # a: (mb, node, 1)
+        a = functions.broadcast_to(a, h.shape)  # a: (mb, node, ch)
         r = functions.sum((a * h), axis=1, keepdims=True)  # r: (mb, 1, ch)
         q_star_ = functions.concat((q, r), axis=2)  # q_star_: (mb, 1, ch*2)
         self.q_star = [q_star_[i, :] for i in range(mb)]
