@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import chainer
 import numpy
 import os
 import pickle

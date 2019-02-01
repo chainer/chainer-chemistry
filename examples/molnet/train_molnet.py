@@ -2,7 +2,6 @@
 from __future__ import print_function
 
 import argparse
-import chainer
 import numpy
 import os
 import types
@@ -17,7 +16,6 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
     MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
 from chainer_chemistry.models.prediction import Classifier

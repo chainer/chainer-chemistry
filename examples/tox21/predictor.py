@@ -1,6 +1,3 @@
-import chainer
-from chainer import functions as F
-
 from chainer_chemistry.models import GGNN
 from chainer_chemistry.models import MLP
 from chainer_chemistry.models import NFP

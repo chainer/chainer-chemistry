@@ -3,7 +3,6 @@ from __future__ import print_function
 
 import argparse
 import json
-import numpy
 import os
 
 from chainer.iterators import SerialIterator
@@ -103,7 +102,7 @@ def main():
     model_path = os.path.join(model_dir, model_filename[task_type])
     print("model_path=" + model_path)
     print('Loading model weights from {}...'.format(model_path))
-    
+
     if task_type == 'classification':
         model = Classifier.load_pickle(model_path, device=args.gpu)
     elif task_type == 'regression':
@@ -117,7 +116,7 @@ def main():
     # Re-load the best-validation score snapshot
     serializers.load_npz(os.path.join(model_dir, "best_val_" + model_filename[task_type]), model)
 
-    
+
 #    # Replace the default predictor with one that scales the output labels.
 #    scaled_predictor = ScaledGraphConvPredictor(model.predictor)
 #    scaled_predictor.scaler = scaler
@@ -156,7 +155,7 @@ def main():
     else:
         pass
 
-    
+
     # Save the evaluation results.
     with open(os.path.join(model_dir, 'eval_result.json'), 'w') as f:
         json.dump(eval_result, f)
