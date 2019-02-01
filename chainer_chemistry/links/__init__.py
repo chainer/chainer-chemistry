@@ -15,6 +15,8 @@ from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQ
 
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate  # NOQA
 from chainer_chemistry.links.update.gin_update import GINUpdate  # NOQA
+from chainer_chemistry.links.update.mpnn_update import EdgeNet  # NOQA
+from chainer_chemistry.links.update.mpnn_update import MPNNUpdate  # NOQA
 from chainer_chemistry.links.update.nfp_update import NFPUpdate  # NOQA
 from chainer_chemistry.links.update.relgat_update import RelGATUpdate  # NOQA
 from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate  # NOQA
