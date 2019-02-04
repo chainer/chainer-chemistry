@@ -80,17 +80,17 @@ class FlowScaler(BaseScaler):
         """
         -log(p(f(x))) - log|f'(x)|
         """
-        x_nan = numpy.isnan(x)
-        x_not_nan = numpy.logical_not(x_nan)
-        x = numpy.nan_to_num(x)
-        if type(x) == numpy.ndarray:
+        x_nan = self.xp.isnan(x)
+        x_not_nan = self.xp.logical_not(x_nan)
+        x = self.xp.nan_to_num(x)
+        if not isinstance(x, chainer.Variable):
             x = chainer.Variable(x.astype(numpy.float32))
         y = self._forward(x)
         gy = self._derivative(x)
         # gy, = chainer.grad([y], [x], enable_double_backprop=True)
         std_gaussian = chainer.distributions.Normal(
-            numpy.zeros(shape=x.shape, dtype=numpy.float32),
-            numpy.ones(shape=x.shape, dtype=numpy.float32))
+            self.xp.zeros(shape=x.shape, dtype=numpy.float32),
+            self.xp.ones(shape=x.shape, dtype=numpy.float32))
         loss = -std_gaussian.log_prob(y)
         loss -= chainer.functions.log(abs(gy) + self.eps)
         loss = chainer.functions.sum(loss[x_not_nan]) / x_not_nan.sum()
@@ -98,6 +98,9 @@ class FlowScaler(BaseScaler):
         return loss
 
     def fit(self, x):
+        if isinstance(x, chainer.Variable):
+            x = x.array
+
         x = format_x(x)
 
         self._initialize_params(x.shape[1])
@@ -138,17 +141,20 @@ class FlowScaler(BaseScaler):
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
 
-        x = format_x(x)
-        x = (x - self.mean) / (self.std + self.eps)
+        x_ = format_x(x)
+        x_ = (x_ - self.mean) / (self.std + self.eps)
 
         y = []
         for i in range((len(x) - 1) // self.batch_size + 1):
             y.append(self._forward(
-                x[i*self.batch_size: (i+1)*self.batch_size]))
+                x_[i*self.batch_size: (i+1)*self.batch_size]))
 
         y = chainer.functions.concat(y, axis=0)
 
-        if isinstance(x, chainer.Variable):
+        if x.ndim == 1:
+            y = y[:, 0]
+
+        if isinstance(x_, chainer.Variable):
             return y
         else:
             return y.data
