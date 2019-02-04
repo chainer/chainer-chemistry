@@ -23,6 +23,22 @@ def format_x(x):
 
 
 class FlowScaler(BaseScaler):
+    """Flow Scaler.
+
+    Flow Scaler is a Scaler that scale data into the normal distribution.
+    This scaler uses a technique named "flow". By using this technique,
+    parametrized bijective function is learned to scale data that distributes
+    arbitrary continuous distribution into specified continuous distribution.
+    In this scaler, multi-layer perceptron whose weight is restricted into
+    positive range is used as parametrized bijective function.
+
+    Args:
+        hidden_num(int): number of units in hidden layer of multi-layer
+            perceptron.
+        batch_size(int): size of batch used for learning multi-layer
+            perceptron.
+        iteration(int): number of iteration.
+    """
 
     def __init__(self, hidden_num=20, batch_size=100, iteration=3000):
         super(FlowScaler, self).__init__()
@@ -77,9 +93,7 @@ class FlowScaler(BaseScaler):
         return h
 
     def _loss(self, x):
-        """
-        -log(p(f(x))) - log|f'(x)|
-        """
+        # loss = -log(p(f(x))) - log|f'(x)|
         x_nan = self.xp.isnan(x)
         x_not_nan = self.xp.logical_not(x_nan)
         x = self.xp.nan_to_num(x)
@@ -98,6 +112,14 @@ class FlowScaler(BaseScaler):
         return loss
 
     def fit(self, x):
+        """Fitting parameter.
+
+        Args:
+            x(:class:`~chainer.Variable` or :ref:`ndarray`): data for learning.
+
+        Returns:
+            self (FlowScaler): this instance.
+        """
         if isinstance(x, chainer.Variable):
             x = x.array
 
@@ -137,7 +159,18 @@ class FlowScaler(BaseScaler):
 
         trainer.run()
 
+        return self
+
     def transform(self, x):
+        """Transform.
+
+        Args:
+            x(:class:`~chainer.Variable` or :ref:`ndarray`): data.
+
+        Returns:
+            scaled_x(:class:`~chainer.Variable` or :ref:`ndarray`):
+                transformed data.
+        """
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
 
