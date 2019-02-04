@@ -35,17 +35,12 @@ class FlowScaler(BaseScaler):
     Args:
         hidden_num(int): number of units in hidden layer of multi-layer
             perceptron.
-        batch_size(int): size of batch used for learning multi-layer
-            perceptron.
-        iteration(int): number of iteration.
     """
 
-    def __init__(self, hidden_num=20, batch_size=100, iteration=3000):
+    def __init__(self, hidden_num=20):
         super(FlowScaler, self).__init__()
 
         self.hidden_num = hidden_num
-        self.batch_size = batch_size
-        self.iteration = iteration
 
         self.mean = None
         self.register_persistent('mean')
@@ -111,11 +106,14 @@ class FlowScaler(BaseScaler):
         chainer.reporter.report({'loss': loss}, self)
         return loss
 
-    def fit(self, x):
+    def fit(self, x, batch_size=100, iteration=3000):
         """Fitting parameter.
 
         Args:
             x(:class:`~chainer.Variable` or :ref:`ndarray`): data for learning.
+            batch_size(int): size of batch used for learning multi-layer
+                perceptron.
+            iteration(int): number of iteration.
 
         Returns:
             self (FlowScaler): this instance.
@@ -145,13 +143,13 @@ class FlowScaler(BaseScaler):
         optimizer.setup(self)
 
         train = chainer.datasets.TupleDataset(x)
-        train_iter = chainer.iterators.SerialIterator(train, self.batch_size)
+        train_iter = chainer.iterators.SerialIterator(train, batch_size)
 
         updater = chainer.training.updaters.StandardUpdater(
             train_iter, optimizer, loss_func=self._loss)
 
         trainer = chainer.training.Trainer(
-            updater, (self.iteration, 'iteration'))
+            updater, (iteration, 'iteration'))
         trainer.extend(chainer.training.extensions.LogReport(
             trigger=(100, 'iteration')))
         trainer.extend(chainer.training.extensions.PrintReport(
@@ -161,11 +159,13 @@ class FlowScaler(BaseScaler):
 
         return self
 
-    def transform(self, x):
+    def transform(self, x, batch_size=100):
         """Transform.
 
         Args:
             x(:class:`~chainer.Variable` or :ref:`ndarray`): data.
+            batch_size(int): size of batch used for learning multi-layer
+                perceptron.
 
         Returns:
             scaled_x(:class:`~chainer.Variable` or :ref:`ndarray`):
@@ -178,9 +178,9 @@ class FlowScaler(BaseScaler):
         x_ = (x_ - self.mean) / (self.std + self.eps)
 
         y = []
-        for i in range((len(x) - 1) // self.batch_size + 1):
+        for i in range((len(x) - 1) // batch_size + 1):
             y.append(self._forward(
-                x_[i*self.batch_size: (i+1)*self.batch_size]))
+                x_[i*batch_size: (i+1)*batch_size]))
 
         y = chainer.functions.concat(y, axis=0)
 

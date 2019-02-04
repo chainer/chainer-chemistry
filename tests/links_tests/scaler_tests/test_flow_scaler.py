@@ -1,10 +1,9 @@
 import os
-import testing
 
 import numpy
 import pytest
 import scipy.stats
-from chainer import serializers, Variable, cuda
+from chainer import serializers, Variable, cuda, testing
 
 from chainer_chemistry.links.scaler.flow_scaler import FlowScaler
 
