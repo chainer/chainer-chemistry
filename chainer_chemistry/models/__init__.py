@@ -8,6 +8,8 @@ from chainer_chemistry.models import nfp_gwm  # NOQA
 from chainer_chemistry.models import prediction  # NOQA
 from chainer_chemistry.models import relgat  # NOQA
 from chainer_chemistry.models import relgcn  # NOQA
+from chainer_chemistry.models import rsgcn  # NOQA
+from chainer_chemistry.models import rsgcn_gwm  # NOQA
 from chainer_chemistry.models import schnet  # NOQA
 from chainer_chemistry.models import weavenet  # NOQA
 
@@ -21,6 +23,7 @@ from chainer_chemistry.models.nfp_gwm import NFP_GWM  # NOQA
 from chainer_chemistry.models.relgat import RelGAT  # NOQA
 from chainer_chemistry.models.relgcn import RelGCN  # NOQA
 from chainer_chemistry.models.rsgcn import RSGCN  # NOQA
+from chainer_chemistry.models.rsgcn_gwm import RSGCN_GWM  # NOQA
 from chainer_chemistry.models.schnet import SchNet  # NOQA
 from chainer_chemistry.models.weavenet import WeaveNet  # NOQA
 

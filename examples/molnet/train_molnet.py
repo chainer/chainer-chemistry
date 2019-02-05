@@ -19,7 +19,7 @@ from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_confi
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, GIN_GWM)
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
@@ -98,7 +98,7 @@ class GraphConvPredictor(chainer.Chain):
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'nfp_gwm', 'ggnn_gwm', 'gin_gwm']
+                   'relgat', 'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     dataset_names = list(molnet_default_config.keys())
 #    scale_list = ['standardize', 'none']
 
@@ -185,6 +185,10 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         print('Training an RSGCN predictor...')
         rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         return GraphConvPredictor(rsgcn, mlp)
+    elif method == 'rsgcn_gwm':
+        print('Training an RSGCN+GWM predictor...')
+        rsgcn_gwm = RSGCN_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit,  n_layers=conv_layers, dropout_ratio=0.5)
+        return GraphConvPredictorForGWM(rsgcn_gwm, mlp)
     elif method == 'relgcn':
         print('Training an RelGCN predictor...')
         num_edge_type = 4

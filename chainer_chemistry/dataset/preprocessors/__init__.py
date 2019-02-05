@@ -16,6 +16,7 @@ from chainer_chemistry.dataset.preprocessors.nfp_preprocessor import NFPPreproce
 from chainer_chemistry.dataset.preprocessors.nfp_gwm_preprocessor import NFPGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.relgcn_preprocessor import RelGCNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.rsgcn_gwm_preprocessor import RSGCNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.weavenet_preprocessor import WeaveNetPreprocessor  # NOQA
 
@@ -31,5 +32,6 @@ preprocess_method_dict = {
     'weavenet': WeaveNetPreprocessor,
     'relgcn': RelGCNPreprocessor,
     'rsgcn': RSGCNPreprocessor,
+    'rsgcn_gwm': RSGCNGWMPreprocessor,
     'relgat': RelGATPreprocessor,
 }
