@@ -1,28 +1,10 @@
-# " -*- coding: utf-8 -*-"
-# ----------------------------------------------------------------------
-# Name:        gin.py
-# Purpose:     Implementation of the simplest case of Graph Isomorphism Network( GIN)
-#              no learnable epsilon
-#              2-layer MLP + ReLU
-#
-#
-# Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
-# License:     All rights reserved unless specified.
-# Created:     13/12/18 (DD/MM/YY)
-# Last update: 13/12/18 (DD/MM/YY)
-# -----------------------------------------------------------------------
-
-import numpy as np
-
 import chainer
 from chainer import cuda
 from chainer import functions as F
 from chainer import links as L
 
-import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GraphLinear
 from chainer_chemistry.links.readout.gin_readout import GINReadout
 from chainer_chemistry.links.update.gin_update import GINUpdate
 from chainer_chemistry.models.gwm import GWM

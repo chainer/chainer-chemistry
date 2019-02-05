@@ -10,7 +10,7 @@
 # Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
 # License:     All rights reserved unless specified.
 # Created:     29/10/18 (DD/MM/YY)
-# Last update: 23/01/19 (DD/MM/YY)
+# Last update: 05/02/19 (DD/MM/YY)
 # -----------------------------------------------------------------------
 
 import numpy as np
@@ -50,8 +50,6 @@ class GWM(chainer.Chain):
         n_edge_types (int): number of edge types witin graphs.
         dropout_ratio (default=0.5); if > 0.0, perform dropout
         tying_flag (default=false): enable if you want to share params across layers
-        scaler_mgr_flag (default=False): reduce the merger gate to be scalar.
-
     """
     NUM_EDGE_TYPE = 4
 
@@ -60,7 +58,6 @@ class GWM(chainer.Chain):
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  tying_flag=False,
-                 scaler_mgr_flag=False,
                  gpu=-1):
         super(GWM, self).__init__()
         num_layer = n_layers
@@ -98,7 +95,7 @@ class GWM(chainer.Chain):
             #
             # for Merger Gate unit
             #
-            self.gate_dim = 1 if scaler_mgr_flag else hidden_dim
+            self.gate_dim = hidden_dim
             self.H_local = chainer.ChainList(
                 *[GraphLinear(in_size=hidden_dim, out_size=self.gate_dim)
                   for _ in range(num_layer)]
@@ -108,7 +105,7 @@ class GWM(chainer.Chain):
                   for _ in range(num_layer)]
             )
 
-            self.gate_dim_super = 1 if scaler_mgr_flag else hidden_dim_super
+            self.gate_dim_super = hidden_dim_super
             self.H_super = chainer.ChainList(
                 *[L.Linear(in_size=hidden_dim, out_size=self.gate_dim_super)
                   for _ in range(num_layer)]
