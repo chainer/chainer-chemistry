@@ -54,7 +54,6 @@ class RandomSplitter(BaseSplitter):
             >>> c = numpy.random.random((10, 1))
             >>> d = NumpyTupleDataset(a, b, c)
             >>> splitter = RandomSplitter()
-            >>> splitter.train_valid_test_split()
             >>> train, valid, test =
                     splitter.train_valid_test_split(dataset,
                                                     return_index=False)
@@ -102,7 +101,6 @@ class RandomSplitter(BaseSplitter):
             >>> c = numpy.random.random((10, 1))
             >>> d = NumpyTupleDataset(a, b, c)
             >>> splitter = RandomSplitter()
-            >>> splitter.train_valid_split()
             >>> train, valid =
                     splitter.train_valid_split(dataset, return_index=False)
             >>> print(len(train), len(valid))

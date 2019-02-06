@@ -176,7 +176,7 @@ def set_up_predictor(method, n_unit, conv_layers, class_num, scaler):
     elif method == 'relgcn':
         print('Use Relational GCN predictor...')
         num_edge_type = 4
-        relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
+        relgcn = RelGCN(out_channels=n_unit, num_edge_type=num_edge_type,
                         scale_adj=True)
         predictor = GraphConvPredictor(relgcn, mlp, scaler)
     elif method == 'relgat':
@@ -233,7 +233,8 @@ def main():
             dataset = D.get_qm9(preprocessor, labels=labels)
 
         # Cache the laded dataset.
-        os.makedirs(cache_dir, exist_ok=True)
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
         NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.
