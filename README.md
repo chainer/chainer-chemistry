@@ -1,7 +1,3 @@
-This is Ishigiuro's private sandbox to play on Chainer-Chemistry.
-Any materials are take free for PFN people, of course!!
-
-
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
 [![PyPI](https://img.shields.io/pypi/v/chainer-chemistry.svg)](https://pypi.python.org/pypi/chainer-chemistry)

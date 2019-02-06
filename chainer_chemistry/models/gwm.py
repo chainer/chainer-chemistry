@@ -66,19 +66,14 @@ class GWM(chainer.Chain):
 
         with self.init_scope():
 
-            #
-            # for super-node unit
-            #
-
-            self.F_super = chainer.ChainList(
-                *[L.Linear(in_size=hidden_dim_super, out_size=hidden_dim_super)
-                  for _ in range(num_layer)]
-            )
 
             #
             # for Transmitter unit
             #
-
+            self.F_super = chainer.ChainList(
+                *[L.Linear(in_size=hidden_dim_super, out_size=hidden_dim_super)
+                  for _ in range(num_layer)]
+            )
             self.V_super = chainer.ChainList(
                 *[L.Linear(hidden_dim * n_heads, hidden_dim * n_heads)
                   for _ in range(num_layer)]
@@ -93,7 +88,7 @@ class GWM(chainer.Chain):
             )
 
             #
-            # for Merger Gate unit
+            # for Warp Gate unit
             #
             self.gate_dim = hidden_dim
             self.H_local = chainer.ChainList(
@@ -153,19 +148,13 @@ class GWM(chainer.Chain):
         out_ch = ch
 
         #
-        # Super node unit: non linear update of the super node
+        # Transmitter unit: inter-module message passing
         #
-
+        
+        # non linear update of the super node
         g_new = F.relu(self.F_super[step](g))
 
-
-        #
-        # Transmodule unit: inter-module message passing
-        #
-
-        #
-        # h_trans: local --> super transmission
-        #
+        # original --> super transmission
 
         h1 = F.expand_dims(h, 2)
         #assert h1.shape == (mb, atom, 1, ch)
@@ -223,9 +212,7 @@ class GWM(chainer.Chain):
         # assert intermediate_h.shape==(mb, self.hidden_dim_super)
 
 
-        #
-        # g_trans: super --> local transmission
-        #
+        # g_trans: super --> original transmission
 
         # for local updates
         g_trans = self.F_super[step](g)
@@ -238,7 +225,7 @@ class GWM(chainer.Chain):
 
 
         #
-        # Gated Merger unit
+        # Warp Gate unit
         #
         z_local = self.H_local[step](h_new) + self.G_local[step](g_trans)
         z_local = F.broadcast_to(z_local, (mb, atom, self.hidden_dim))
@@ -257,7 +244,7 @@ class GWM(chainer.Chain):
         # assert out_h_super.shape==(mb, self.hidden_dim_super)
 
         #
-        # --- feed to GRU for final self-gating ---
+        # Self recurrent
         #
         out_h = F.reshape(merged_h, (mb * atom, self.hidden_dim))
         out_h = self.GRU_local(out_h)
