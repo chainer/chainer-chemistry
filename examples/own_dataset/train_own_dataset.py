@@ -169,9 +169,9 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
     elif method == 'relgcn':
         print('Training an RelGCN predictor...')
         num_edge_type = 4
-        relgcn = RelGCN(out_channels=class_num, num_edge_type=num_edge_type,
+        relgcn = RelGCN(out_channels=n_unit, num_edge_type=num_edge_type,
                         scale_adj=True)
-        predictor = GraphConvPredictor(relgcn, None)
+        predictor = GraphConvPredictor(relgcn, mlp)
     elif method == 'relgat':
         print('Training an RelGAT predictor...')
         relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
