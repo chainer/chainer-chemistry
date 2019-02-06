@@ -6,7 +6,7 @@ from chainer_chemistry.dataset.preprocessors import RelGCNPreprocessor
 
 
 def test_relgcn_preprocessor():
-    preprocessor = RelGCNPreprocessor()
+    preprocessor = RelGCNPreprocessor(return_is_real_node=False)
     dataset = SmilesParser(preprocessor).parse(
         ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1']
     )["dataset"]
@@ -77,7 +77,7 @@ def test_relgcn_preprocessor():
 
 
 def test_relgcn_preprocessor_kekulize():
-    preprocessor = RelGCNPreprocessor(kekulize=True)
+    preprocessor = RelGCNPreprocessor(return_is_real_node=False, kekulize=True)
     dataset = SmilesParser(preprocessor).parse(
         ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1']
     )["dataset"]

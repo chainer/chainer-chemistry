@@ -46,8 +46,11 @@ class GraphConvPredictor(chainer.Chain):
         if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
 
-    def __call__(self, atoms, adjs):
-        h = self.graph_conv(atoms, adjs)
+    def __call__(self, atoms, adjs, is_real_node=None):
+        if is_real_node is None:
+            h = self.graph_conv(atoms, adjs)
+        else:
+            h = self.graph_conv(atoms, adjs, is_real_node)
         if self.mlp:
             h = self.mlp(h)
         return h

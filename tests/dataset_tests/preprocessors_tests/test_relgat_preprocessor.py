@@ -1,13 +1,14 @@
 import numpy
 import pytest
 
-from chainer_chemistry.dataset.parsers import SmilesParser
-from chainer_chemistry.dataset.preprocessors import GGNNPreprocessor
+from chainer_chemistry.dataset.parsers.smiles_parser import SmilesParser
+from chainer_chemistry.dataset.preprocessors.relgat_preprocessor import RelGATPreprocessor  # NOQA
 
 
+# All tests are copied from GGNNPreprocessor now.
 @pytest.mark.parametrize('return_is_real_node', [True, False])
-def test_ggnn_preprocessor(return_is_real_node):
-    preprocessor = GGNNPreprocessor(return_is_real_node=return_is_real_node)
+def test_relgat_preprocessor(return_is_real_node):
+    preprocessor = RelGATPreprocessor(return_is_real_node=return_is_real_node)
     dataset = SmilesParser(preprocessor).parse(
         ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1']
     )["dataset"]
@@ -95,8 +96,8 @@ def test_ggnn_preprocessor(return_is_real_node):
         assert numpy.allclose(is_real_node1, expect_is_real_node)
 
 
-def test_ggnn_preprocessor_kekulize():
-    preprocessor = GGNNPreprocessor(kekulize=True, return_is_real_node=False)
+def test_relgat_preprocessor_kekulize():
+    preprocessor = RelGATPreprocessor(kekulize=True, return_is_real_node=False)
     dataset = SmilesParser(preprocessor).parse(
         ['C#N', 'Cc1cnc(C=O)n1C', 'c1ccccc1']
     )["dataset"]
@@ -144,9 +145,9 @@ def test_ggnn_preprocessor_kekulize():
     assert numpy.allclose(adjs1, expect_adjs)
 
 
-def test_ggnn_preprocessor_assert_raises():
+def test_relgat_preprocessor_assert_raises():
     with pytest.raises(ValueError):
-        pp = GGNNPreprocessor(max_atoms=3, out_size=2)  # NOQA
+        pp = RelGATPreprocessor(max_atoms=3, out_size=2)  # NOQA
 
 
 if __name__ == '__main__':

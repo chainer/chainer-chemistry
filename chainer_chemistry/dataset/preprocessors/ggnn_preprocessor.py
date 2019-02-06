@@ -1,5 +1,6 @@
-from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array, construct_discrete_edge_matrix
+from chainer_chemistry.dataset.preprocessors.common import \
+    construct_atomic_number_array, construct_discrete_edge_matrix, \
+    construct_is_real_node
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
@@ -20,11 +21,12 @@ class GGNNPreprocessor(MolPreprocessor):
             Setting negative value indicates do not pad returned array.
         add_Hs (bool): If True, implicit Hs are added.
         kekulize (bool): If True, Kekulizes the molecule.
+        return_is_real_node (bool): If True, also returns `is_real_node`.
 
     """
 
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
-                 kekulize=False):
+                 kekulize=False, return_is_real_node=True):
         super(GGNNPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
@@ -32,6 +34,7 @@ class GGNNPreprocessor(MolPreprocessor):
                              'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
         self.out_size = out_size
+        self.return_is_real_node = return_is_real_node
 
     def get_input_features(self, mol):
         """get input features
@@ -45,4 +48,10 @@ class GGNNPreprocessor(MolPreprocessor):
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
-        return atom_array, adj_array
+        if not self.return_is_real_node:
+            return atom_array, adj_array
+        else:
+            is_real_node = construct_is_real_node(
+                mol, self.out_size)
+            return atom_array, adj_array, is_real_node
+

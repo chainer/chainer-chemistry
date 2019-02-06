@@ -72,17 +72,20 @@ class RelGCN(chainer.Chain):
                 for i in range(len(ch_list)-1)])
             self.rgcn_readout = GGNNReadout(
                 out_dim=out_channels, hidden_dim=ch_list[-1],
-                nobias=True, activation=functions.tanh)
+                activation=functions.tanh)
         # self.num_relations = num_edge_type
         self.input_type = input_type
         self.scale_adj = scale_adj
 
-    def __call__(self, x, adj):
+    def __call__(self, x, adj, is_real_node=None):
         """
 
         Args:
             x: (batchsize, num_nodes, in_channels)
             adj: (batchsize, num_edge_type, num_nodes, num_nodes)
+            is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
+                1 for real node, 0 for virtual node.
+                If `None`, all node is considered as real node.
 
         Returns: (batchsize, out_channels)
 
@@ -96,5 +99,5 @@ class RelGCN(chainer.Chain):
             adj = rescale_adj(adj)
         for rgcn_conv in self.rgcn_convs:
             h = functions.tanh(rgcn_conv(h, adj))
-        h = self.rgcn_readout(h)
+        h = self.rgcn_readout(h, is_real_node=is_real_node)
         return h
