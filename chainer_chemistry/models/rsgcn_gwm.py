@@ -39,12 +39,12 @@ class RSGCN_GWM(chainer.Chain):
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        hidden_dim_super(default=16); dimension of super-node hidden vector
+        hidden_dim_super(int); dimension of super-node hidden vector
         n_atom_types (int): number of types of atoms
         n_layers (int): number of layers
-        n_heads (default=8): numbef of heads
+        n_heads (int): numbef of heads
         n_atom_types (int): number of types of atoms
-        n_super_feature (default: tuned according to ggnn_gwm_preprocessor); number of super-node observation attributes
+        n_super_feature (int); number of super-node observation attributes
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
         readout (Callable): readout function. If None,

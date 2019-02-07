@@ -3,6 +3,7 @@ from chainer_chemistry.dataset.preprocessors.base_preprocessor import BasePrepro
 from chainer_chemistry.dataset.preprocessors.common import construct_adj_matrix  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import construct_atomic_number_array  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import construct_discrete_edge_matrix  # NOQA
+from chainer_chemistry.dataset.preprocessors.common import construct_supernode_feature  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
 from chainer_chemistry.dataset.preprocessors.ecfp_preprocessor import ECFPPreprocessor  # NOQA

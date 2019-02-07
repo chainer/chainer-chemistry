@@ -30,8 +30,8 @@ class NFP_GWM(chainer.Chain):
         max_degree (int): max degree of atoms
             when molecules are regarded as graphs
         n_atom_types (int): number of types of atoms
-        n_super_feature (default: tuned according to ggnn_gwm_preprocessor); number of super-node observation attributes
-        dropout_ratio (default=0.5); if > 0.0, perform dropout
+        n_super_feature (int); number of super-node observation attributes
+        dropout_ratio (float); if > 0.0, perform dropout
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
 

@@ -24,7 +24,7 @@ class GINGWMPreprocessor(MolPreprocessor):
             If the number of atoms in the molecule is less than this value,
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
-        :param out_size_super: integer, indicate the length of the super node feature.
+        :param out_size_super (int): indicate the length of the super node feature.
         :param add_Hs: boolean. if true, add Hydrogens explicitly.
         """
         super(GINGWMPreprocessor, self).__init__(add_Hs=add_Hs)

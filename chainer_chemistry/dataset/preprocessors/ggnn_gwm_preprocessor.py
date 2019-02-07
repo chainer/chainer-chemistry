@@ -42,7 +42,7 @@ class GGNNGWMPreprocessor(MolPreprocessor):
         """get input features
 
         Args:
-            mol (Mol):
+            mol (Mol): Molecule input
 
         Returns:
 

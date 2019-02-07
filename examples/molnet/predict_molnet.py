@@ -12,7 +12,7 @@ from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvalua
 from chainer import cuda
 # Proposed by Ishiguro
 # ToDo: consider go/no-go with following modification
-# Re-load the best-validation score snapshot
+# Re-load the best-validation score snapshot using serializers
 from chainer import serializers
 
 from chainer_chemistry.dataset.converters import concat_mols

@@ -21,7 +21,7 @@ class NFPGWMPreprocessor(MolPreprocessor):
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
         add_Hs (bool): If True, implicit Hs are added.
-        out_size_super: integer, indicate the length of the super node feature.
+        out_size_super (int): indicate the length of the super node feature.
         kekulize (bool): If True, Kekulizes the molecule.
 
     """

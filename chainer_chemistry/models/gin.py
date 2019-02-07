@@ -1,14 +1,9 @@
-import numpy as np
-
 import chainer
 from chainer import cuda
-from chainer import functions as F
-from chainer import links as L
+from chainer import functions
 
-import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links import GraphLinear
 from chainer_chemistry.links.readout.gin_readout import GINReadout
 from chainer_chemistry.links.update.gin_update import GINUpdate
 
@@ -40,7 +35,7 @@ class GIN(chainer.Chain):
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  weight_tying=True,
-                 activation=F.identity):
+                 activation=functions.identity):
         super(GIN, self).__init__()
 
         n_message_layer = 1 if weight_tying else n_layers
@@ -73,11 +68,11 @@ class GIN(chainer.Chain):
         """
         Forward propagation
 
-        :param atom_array - mol-minibatch by node numpy.ndarray,
+        :param atom_array (numpy.ndarray): mol-minibatch by node matrix,
                 minibatch of molecular which is represented with atom IDs (representing C, O, S, ...)
                 atom_array[m, i] = a represents
                 m-th molecule's i-th node is value a (atomic number)
-        :param adj  - mol-minibatch by relation-types by node by node numpy.ndarray,
+        :param adj (numpy.ndarray): mol-minibatch by relation-types by node by node array,
                        minibatch of multple relational adjancency matrix with edge-type information
                        adj[i, j] = b represents
                        m-th molecule's  edge from node i to node j has value b
@@ -107,7 +102,7 @@ class GIN(chainer.Chain):
                 g_list.append(g)
 
         if self.concat_hidden:
-            return F.concat(g_list, axis=1)
+            return functions.concat(g_list, axis=1)
         else:
             g = self.readout_layers[0](h, h0, is_real_node)
             return g

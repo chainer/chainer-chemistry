@@ -1,7 +1,7 @@
 import chainer
 from chainer import cuda
-from chainer import functions as F
-from chainer import links as L
+from chainer import functions
+from chainer import links
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
@@ -20,17 +20,17 @@ class GIN_GWM(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (default=16): dimension of hidden vectors
+        hidden_dim (int): dimension of hidden vectors
             associated to each atom
-        hiden_dim_super(default=16); dimension of super-node hidden vector
-        n_layers (default=4): number of layers
-        n_heads (default=8): numbef of heads
-        n_atom_types: number of atoms
-        n_super_feature (default: tuned according to ggnn_gwm_preprocessor); number of super-node observation attributes
-        dropout_ratio (default=0.5); if > 0.0, perform dropout
-        concat_hidden (default=False): If set to True, readout is executed in each layer
+        hiden_dim_super(int); dimension of super-node hidden vector
+        n_layers (int): number of layers
+        n_heads (int): numbef of heads
+        n_atom_types (int): number of atoms
+        n_super_feature (int); number of super-node observation attributes
+        dropout_ratio (float); if > 0.0, perform dropout
+        concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
-        weight_tying (default=True): enable weight_tying for all units
+        weight_tying (bool): enable weight_tying for all units
 
 
     """
@@ -42,7 +42,7 @@ class GIN_GWM(chainer.Chain):
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  weight_tying=True,
-                 activation=F.identity):
+                 activation=functions.identity):
         super(GIN_GWM, self).__init__()
 
         n_message_layer = 1 if weight_tying else n_layers
@@ -57,7 +57,7 @@ class GIN_GWM(chainer.Chain):
                 for _ in range(n_message_layer)])
 
             # GWM
-            self.embed_super = L.Linear(in_size=n_super_feature, out_size=hidden_dim_super)
+            self.embed_super = links.Linear(in_size=n_super_feature, out_size=hidden_dim_super)
             self.gwm = GWM(hidden_dim=hidden_dim, hidden_dim_super=hidden_dim_super,
                  n_layers=n_message_layer, n_heads=n_heads,
                  dropout_ratio=dropout_ratio,
@@ -69,7 +69,7 @@ class GIN_GWM(chainer.Chain):
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
-            self.linear_for_concat_super = L.Linear(in_size=None, out_size=out_dim)
+            self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)
         # end with
 
         self.out_dim = out_dim
@@ -106,7 +106,7 @@ class GIN_GWM(chainer.Chain):
         else:
             h = atom_array
         # end if-else
-        h0 = F.copy(h, cuda.get_device_from_array(h.data).id)
+        h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
 
         self.gwm.GRU_local.reset_state()
         self.gwm.GRU_super.reset_state()
@@ -124,9 +124,9 @@ class GIN_GWM(chainer.Chain):
                 g_list.append(g)
 
         if self.concat_hidden:
-            return F.concat(g_list, axis=1)
+            return functions.concat(g_list, axis=1)
         else:
             g = self.readout_layers[0](h, h0, is_real_node)
-            g2 = F.concat( (g, h_s), axis=1 )
-            out_g = F.relu(self.linear_for_concat_super(g2))
+            g2 = functions.concat( (g, h_s), axis=1 )
+            out_g = functions.relu(self.linear_for_concat_super(g2))
             return out_g
