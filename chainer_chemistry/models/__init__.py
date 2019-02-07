@@ -29,5 +29,5 @@ from chainer_chemistry.models.weavenet import WeaveNet  # NOQA
 
 from chainer_chemistry.models.prediction.base import BaseForwardModel  # NOQA
 from chainer_chemistry.models.prediction.classifier import Classifier  # NOQA
-from chainer_chemistry.models.prediction.predictor import GraphConvPredictor  # NOQA
+from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from chainer_chemistry.models.prediction.regressor import Regressor  # NOQA
