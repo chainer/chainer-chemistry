@@ -38,7 +38,7 @@ class GIN_GWM(chainer.Chain):
 
     def __init__(self, out_dim, hidden_dim=16, hidden_dim_super=16,
                  n_layers=4, n_heads=8,n_atom_types=MAX_ATOMIC_NUM,
-                 n_super_feature=4 + 2 + 4 + MAX_ATOMIC_NUM*2,
+                 n_super_feature=2 + 2 + MAX_ATOMIC_NUM*2,
                  dropout_ratio=0.5,
                  concat_hidden=False,
                  weight_tying=True,

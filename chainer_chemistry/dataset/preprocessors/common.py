@@ -1,8 +1,11 @@
 """Common preprocess method is gethered in this file"""
 
+from collections import Counter
 import numpy
 from rdkit import Chem
 from rdkit.Chem import rdmolops
+
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 
 class MolFeatureExtractionError(Exception):
@@ -165,3 +168,83 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
         adjs[ch, i, j] = 1.0
         adjs[ch, j, i] = 1.0
     return adjs
+
+def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
+    """
+    Construct an input feature x' for a supernode
+
+    Args:
+        mol (rdkit.Chem.Mol): Input molecule
+        atom_array (numpy.ndarray) : array of atoms
+        adjs (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array where |E| is the number of edgetypes.
+        out_size (int): not used...
+
+    Returns:
+        super_node_x (numpy.ndarray); 1-way array, the supernode feature.
+        len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs, 2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
+
+    """
+
+    largest_atomic_number = MAX_ATOMIC_NUM
+
+    if mol is None:
+        raise MolFeatureExtractionError('mol is None')
+    N = mol.GetNumAtoms()
+    E = numpy.sum(adjs.flatten())
+    if E < 1.0:
+        E = 1.0
+
+    if out_size < 0:
+        size = N
+    elif out_size >= N:
+        size = out_size
+    else:
+        raise MolFeatureExtractionError('out_size {} is smaller than number '
+                                        'of atoms in mol {}'
+                                        .format(out_size, N))
+
+    # check the size of adjs
+    if adjs.ndim == 2:
+        super_node_x = numpy.zeros(2 + 2 + largest_atomic_number*2)
+    elif adjs.ndim == 3:
+        super_node_x = numpy.zeros(2 + 4*2 + largest_atomic_number*2)
+    else:
+        raise NotImplementedError('adjs.ndim should be 2 or 3')
+    # end if-else
+
+    # number of nodes and edges
+    super_node_x[0] = float(N)
+    super_node_x[1] = float(E)
+
+    # histogram of types of bins
+    if adjs.ndim == 2:
+        adjs_temp = numpy.reshape(adjs, (1, N*N))
+        edge_type_histo = numpy.sum(adjs_temp, axis=1) / super_node_x[1]
+        super_node_x[2] = numpy.max(adjs_temp, axis=1)
+        super_node_x[3] = edge_type_histo
+
+        idx_bias = 3
+    elif adjs.ndim == 3:
+        adjs_temp = numpy.reshape(adjs, (4, N*N))
+        edge_type_histo = numpy.sum(adjs_temp, axis=1) / super_node_x[1]
+        super_node_x[2:6] = numpy.max(adjs_temp, axis=1)
+        super_node_x[6:10] = edge_type_histo
+
+        idx_bias = 9
+    # end if-else
+
+    # histogram of types of nodes
+    c = Counter(atom_array)
+    keys = c.keys()
+    values = c.values()
+    for k, v in zip(keys, values):
+        if k < largest_atomic_number:
+            super_node_x[idx_bias+k] = 1.0
+            super_node_x[idx_bias+largest_atomic_number+k] = float(v) / float(N)
+        else:
+            super_node_x[idx_bias+k] = 1.0
+            super_node_x[idx_bias+largest_atomic_number+k] = float(v) / float(N)
+
+    super_node_x = super_node_x.astype(numpy.float32)
+
+    return super_node_x

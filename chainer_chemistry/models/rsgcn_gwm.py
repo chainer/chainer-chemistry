@@ -59,7 +59,7 @@ class RSGCN_GWM(chainer.Chain):
     def __init__(self, out_dim, hidden_dim=32, hidden_dim_super=32, n_layers=4,
                  n_heads=8,
                  n_atom_types=MAX_ATOMIC_NUM,
-                 n_super_feature=4 + 2 + 4 + MAX_ATOMIC_NUM*2,
+                 n_super_feature= 2 + 2 + MAX_ATOMIC_NUM*2, #4 + 2 + 4 + MAX_ATOMIC_NUM*2,
                  use_batch_norm=False, readout=None, dropout_ratio=0.5):
         super(RSGCN_GWM, self).__init__()
         in_dims = [hidden_dim for _ in range(n_layers)]
