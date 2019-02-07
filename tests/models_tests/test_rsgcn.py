@@ -118,7 +118,7 @@ def test_backward_cpu_with_nfp(model_with_nfp_no_dropout, data):
     gradient_check.check_backward(
         model_with_nfp_no_dropout, (atom_data, adj_data), y_grad,
         params=params,
-        atol=1e-7, rtol=1e-7, no_grads=[True, True])
+        atol=1e-4, rtol=1e-4, no_grads=[True, True])
 
 
 def test_forward_cpu_graph_invariant(model, data):
