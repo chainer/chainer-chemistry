@@ -31,7 +31,7 @@ These are automatically added to the system when installing the library via the
 installed manually:
 
  - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
- 
+
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
 
@@ -42,7 +42,15 @@ currently supported:
 | ------------------: | --------------: | -------------: |
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
-| master branch       | v3.0 ~ v5.0     | 2017.09.3.0    |
+| v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
+| master branch       | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
+
+[Footnote]
+
+*1: We used `FunctionNode` in [this PR](https://github.com/pfnet-research/chainer-chemistry/pull/190),
+which is introduced after chainer v3. See [this issue](https://github.com/pfnet-research/chainer-chemistry/issues/192) for details.
+
+*2: Saliency modules only work with chainer v5.
 
 ## Installation
 
@@ -79,7 +87,7 @@ The following graph convolutional neural networks are currently supported:
 - NFP: Neural Fingerprint [2, 3]
 - GGNN: Gated Graph Neural Network [4, 3]
 - WeaveNet [5, 3]
-- SchNet [6] 
+- SchNet [6]
 - RSGCN: Renormalized Spectral Graph Convolutional Network [10]<br/>
  \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
 - RelGCN: Relational Graph Convolutional Network [14]
