@@ -26,6 +26,8 @@ def inputs():
 
 def r2_score(pred, true, sample_weight=None, multioutput="uniform_average",
              ignore_nan=False):
+    pred = cuda.to_cpu(pred)
+    true = cuda.to_cpu(true)
     diff = pred - true
     dev = true - numpy.mean(true, axis=0)
     if ignore_nan:
