@@ -7,6 +7,7 @@ import numpy
 import pandas
 
 import chainer.functions as F
+from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
@@ -72,6 +73,7 @@ def parse_arguments():
 def main():
     # Parse the arguments.
     args = parse_arguments()
+    device = args.gpu
 
     # Set up some useful variables that will be used later on.
     method = args.method
@@ -110,11 +112,17 @@ def main():
 
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
-    regressor = Regressor.load_pickle(model_path, device=args.gpu)
+    regressor = Regressor.load_pickle(model_path, device=device)
     scaler = regressor.predictor.scaler
 
     if scaler is not None:
-        scaled_t = scaler.transform(dataset.get_datasets()[-1])
+        original_t = dataset.get_datasets()[-1]
+        if args.gpu >= 0:
+            scaled_t = cuda.to_cpu(scaler.transform(
+                cuda.to_gpu(original_t)))
+        else:
+            scaled_t = scaler.transform(original_t)
+
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] +
                                       (scaled_t,)))
 
@@ -140,8 +148,8 @@ def main():
         postprocess_fn=postprocess_fn)
 
     # Extract the ground-truth labels.
-    t = concat_mols(test, device=-1)[-1]
-    original_t = scaler.inverse_transform(t)
+    t = concat_mols(test, device=device)[-1]
+    original_t = cuda.to_cpu(scaler.inverse_transform(t))
 
     # Construct dataframe.
     df_dict = {}
@@ -166,7 +174,7 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
-                            device=args.gpu)()
+                            device=device)()
     print('Evaluation result: ', eval_result)
     # Save the evaluation results.
     save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
