@@ -8,6 +8,8 @@ import chainer_chemistry
 
 def r2_score(pred, true, sample_weight=None, multioutput="uniform_average",
              ignore_nan=False):
+    pred = cuda.to_cpu(pred)
+    true = cuda.to_cpu(true)
     diff = pred - true
     dev = true - numpy.mean(true, axis=0)
     if ignore_nan:
@@ -56,7 +58,7 @@ def check_forward(inputs):
     assert y.data.shape == ()
 
     expect = r2_score(x0, x1)
-    assert numpy.allclose(y.data, expect)
+    assert numpy.allclose(cuda.to_cpu(y.data), expect)
 
 
 def check_forward_ignore_nan(inputs):
@@ -66,7 +68,7 @@ def check_forward_ignore_nan(inputs):
     assert y.data.shape == ()
 
     expect = r2_score(x0, x2, ignore_nan=True)
-    assert numpy.allclose(y.data, expect)
+    assert numpy.allclose(cuda.to_cpu(y.data), expect)
 
 
 def check_forward_ignore_nan_with_nonnan_value(inputs):
