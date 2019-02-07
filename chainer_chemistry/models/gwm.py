@@ -1,18 +1,3 @@
-# " -*- coding: utf-8 -*-"
-# ----------------------------------------------------------------------
-# Name:        gwm.py
-# Purpose:     Implementation of the Graph Warp Module with a single super node
-#
-#              inputs:
-#
-#              outputs:
-#
-# Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
-# License:     All rights reserved unless specified.
-# Created:     29/10/18 (DD/MM/YY)
-# Last update: 05/02/19 (DD/MM/YY)
-# -----------------------------------------------------------------------
-
 import numpy as np
 
 import chainer

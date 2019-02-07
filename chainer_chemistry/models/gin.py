@@ -1,17 +1,3 @@
-# " -*- coding: utf-8 -*-"
-# ----------------------------------------------------------------------
-# Name:        gin.py
-# Purpose:     Implementation of the simplest case of Graph Isomorphism Network( GIN)
-#              no learnable epsilon
-#              2-layer MLP + ReLU
-#
-#
-# Author:      Katsuhiko Ishiguro <ishiguro@preferred.jp>
-# License:     All rights reserved unless specified.
-# Created:     13/12/18 (DD/MM/YY)
-# Last update: 13/12/18 (DD/MM/YY)
-# -----------------------------------------------------------------------
-
 import numpy as np
 
 import chainer
