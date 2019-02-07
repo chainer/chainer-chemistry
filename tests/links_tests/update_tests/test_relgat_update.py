@@ -64,7 +64,7 @@ def test_backward_cpu(update, data):
     params = tuple(update.params())
     gradient_check.check_backward(update, (atom_data, adj_data), y_grad,
                                   no_grads=[False, True],
-                                  atol=1e3, rtol=1e3)
+                                  atol=1e-1, rtol=1e-1)
 
 
 @pytest.mark.gpu
@@ -72,7 +72,7 @@ def test_backward_gpu(update, data):
     atom_data, adj_data, y_grad = map(cuda.to_gpu, data)
     update.to_gpu()
     gradient_check.check_backward(
-        update, (atom_data, adj_data), y_grad, atol=1e-3, rtol=1e-3)
+        update, (atom_data, adj_data), y_grad, atol=1e-1, rtol=1e-1)
 
 
 def test_forward_cpu_graph_invariant(update, data):
