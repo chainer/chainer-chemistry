@@ -84,6 +84,13 @@ The following graph convolutional neural networks are currently supported:
  \* The name is not from the original paper - see [PR #89](https://github.com/pfnet-research/chainer-chemistry/pull/89) for the naming convention.
 - RelGCN: Relational Graph Convolutional Network [14]
 - GAT: Graph Attention Networks [15]
+- GIN: Graph Isomorphism Networks [17]
+
+We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
+- NFP ('nfp_gwm')
+- GGNN ('ggnn_gwm')
+- RSGCN ('rsgcn_gwm')
+- GIN ('gin_gwm')
 
 ## Supported Datasets
 
@@ -101,6 +108,7 @@ If you use Chainer Chemistry in your research, feel free to submit a
 pull request and add the name of your project to this list:
 
  - BayesGrad: Explaining Predictions of Graph Convolutional Networks ([paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad))
+ - Graph Warp Module: n Auxiliary Module for Boosting the Power of Graph Neural Networks ([paper](https://arxiv.org/abs/1902.01020), [code](https://github.com/k-ishiguro/chainer-chemistry/tree/gwm_for_CC))
 
 ## Useful Links
 
@@ -161,3 +169,7 @@ papers. Use the library at your own risk.
 
 [15] Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2017). Graph Attention Networks. arXiv preprint arXiv:1710.10903.
 [16] Dan Busbridge, Dane Sherburn, Pietro Cavallo and Nils Y. Hammerla. (2019). Relational Graph Attention Networks. https://openreview.net/forum?id=Bklzkh0qFm
+
+[17] Keyulu Xu, Weihua Hu, Jure Leskovec, Stefanie Jegelka, ``How Powerful are Graph Neural Networks?'', 	arXiv:1810.00826 [cs.LG], 2018 (to appear at ICLR19).
+
+[18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019. 
