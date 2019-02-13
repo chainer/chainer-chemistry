@@ -19,11 +19,55 @@ from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_confi
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT)
+    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
-from chainer_chemistry.training.extensions import BatchEvaluator
+from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
 # from sklearn.preprocessing import StandardScaler
+
+
+class GraphConvPredictorForGWM(chainer.Chain):
+    """Wrapper class that combines a graph convolution + super-node and MLP."""
+
+    def __init__(self, graph_conv, mlp=None):
+        """Constructor
+
+        Args:
+            graph_conv: graph convolution network to obtain molecule feature
+                        representation
+            mlp: multi layer perceptron, used as final connected layer.
+                It can be `None` if no operation is necessary after
+                `graph_conv` calculation.
+        """
+
+        super(GraphConvPredictorForGWM, self).__init__()
+        with self.init_scope():
+            self.graph_conv = graph_conv
+            if isinstance(mlp, chainer.Link):
+                self.mlp = mlp
+        if not isinstance(mlp, chainer.Link):
+            self.mlp = mlp
+
+    def __call__(self, atoms, adjs, super_node_x):
+        """
+        Extended call method to deal with additional super-node input x
+        :param atoms: minibatch by local_node_feature_dim numpy.ndarray
+                       minibatch list of local node feature vectors
+        :param adjs: minibatch by bond_type by num_node by num_node numpy.ndarray
+                      minibatch list of
+        :param super_node_x: minibatch of 1D numpy array
+        :return:
+        """
+
+        x = self.graph_conv(atoms, adjs, super_node_x)
+        if self.mlp:
+            x = self.mlp(x)
+        return x
+
+    def predict(self, atoms, adjs, super_node_x):
+        with chainer.no_backprop_mode(), chainer.using_config('train', False):
+            x = self.__call__(atoms, adjs, super_node_x)
+            return F.sigmoid(x)
 
 
 class GraphConvPredictor(chainer.Chain):
@@ -54,7 +98,7 @@ class GraphConvPredictor(chainer.Chain):
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat']
+                   'relgat', 'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     dataset_names = list(molnet_default_config.keys())
 #    scale_list = ['standardize', 'none']
 
@@ -109,10 +153,20 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         print('Training an NFP predictor...')
         nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         return GraphConvPredictor(nfp, mlp)
+    elif method == 'nfp_gwm':
+        print('Training an NFP+GWM predictor...')
+        nfp_gwm = NFP_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit, n_layers=conv_layers, dropout_ratio=0.5)
+        return GraphConvPredictorForGWM(nfp_gwm, mlp)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
         ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         return GraphConvPredictor(ggnn, mlp)
+    elif method == 'ggnn_gwm':
+        print('Train GGNN+GWM model...')
+        ggnn_gwm = GGNN_GWM(out_dim=n_unit, hidden_dim=n_unit,
+                            hidden_dim_super=n_unit, n_layers=conv_layers,
+                            dropout_ratio=0.5,weight_tying=True)
+        return GraphConvPredictorForGWM(ggnn_gwm, mlp)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
@@ -131,6 +185,10 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         print('Training an RSGCN predictor...')
         rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
         return GraphConvPredictor(rsgcn, mlp)
+    elif method == 'rsgcn_gwm':
+        print('Training an RSGCN+GWM predictor...')
+        rsgcn_gwm = RSGCN_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit,  n_layers=conv_layers, dropout_ratio=0.5)
+        return GraphConvPredictorForGWM(rsgcn_gwm, mlp)
     elif method == 'relgcn':
         print('Training an RelGCN predictor...')
         num_edge_type = 4
@@ -142,6 +200,14 @@ def set_up_predictor(method, n_unit, conv_layers, class_num):
         relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
                         n_layers=conv_layers)
         return GraphConvPredictor(relgat, mlp)
+    elif method == 'gin':
+        print('Training a GIN predictor...')
+        gin = GIN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        return GraphConvPredictor(gin, mlp)
+    elif method == 'gin_gwm':
+        print('Training a GIN+GWM predictor...')
+        gin_gwm = GIN_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit, n_layers=conv_layers, dropout_ratio=0.5,weight_tying=True)
+        return GraphConvPredictorForGWM(gin_gwm, mlp)
     raise ValueError('[ERROR] Invalid method: {}'.format(method))
 
 
@@ -335,6 +401,41 @@ def main():
             raise TypeError('{} is not a supported metrics function.'
                             .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
+
+    # Augmented by Ishiguro
+    # ToDo: consider go/no-go of the following block
+    # (i) more reporting for val/evalutaion
+    # (ii) best validation score snapshot
+    if task_type == 'regression':
+        if 'RMSE' in metric_name:
+            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
+        elif 'MAE' in metric_name:
+            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
+        else:
+            print("No validation metric defined?")
+            assert(False)
+
+    elif task_type == 'classification':
+        train_eval_iter = iterators.SerialIterator(train, args.batchsize,repeat=False, shuffle=False)
+        trainer.extend(ROCAUCEvaluator(
+            train_eval_iter, predictor, eval_func=predictor,
+            device=args.gpu, converter=concat_mols, name='train',
+            pos_labels=1, ignore_labels=-1, raise_value_error=False))
+        # extension name='validation' is already used by `Evaluator`,
+        # instead extension name `val` is used.
+        trainer.extend(ROCAUCEvaluator(
+            valid_iter, predictor, eval_func=predictor,
+            device=args.gpu, converter=concat_mols, name='val',
+            pos_labels=1, ignore_labels=-1))
+        print_report_targets.append('train/main/roc_auc')
+        print_report_targets.append('validation/main/loss')
+        print_report_targets.append('val/main/roc_auc')
+        
+        trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
+    else:
+        raise NotImplementedError(
+            'Not implemented task_type = {}'.format(task_type))
+    
 
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())

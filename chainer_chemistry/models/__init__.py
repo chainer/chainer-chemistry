@@ -1,18 +1,29 @@
 from chainer_chemistry.models import ggnn  # NOQA
+from chainer_chemistry.models import ggnn_gwm  # NOQA
+from chainer_chemistry.models import gin  # NOQA
+from chainer_chemistry.models import gin_gwm  # NOQA
 from chainer_chemistry.models import mlp  # NOQA
 from chainer_chemistry.models import nfp  # NOQA
+from chainer_chemistry.models import nfp_gwm  # NOQA
 from chainer_chemistry.models import prediction  # NOQA
 from chainer_chemistry.models import relgat  # NOQA
 from chainer_chemistry.models import relgcn  # NOQA
+from chainer_chemistry.models import rsgcn  # NOQA
+from chainer_chemistry.models import rsgcn_gwm  # NOQA
 from chainer_chemistry.models import schnet  # NOQA
 from chainer_chemistry.models import weavenet  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN  # NOQA
+from chainer_chemistry.models.ggnn_gwm import GGNN_GWM  # NOQA
+from chainer_chemistry.models.gin import GIN  # NOQA
+from chainer_chemistry.models.gin_gwm import GIN_GWM  # NOQA
 from chainer_chemistry.models.mlp import MLP  # NOQA
 from chainer_chemistry.models.nfp import NFP  # NOQA
+from chainer_chemistry.models.nfp_gwm import NFP_GWM  # NOQA
 from chainer_chemistry.models.relgat import RelGAT  # NOQA
 from chainer_chemistry.models.relgcn import RelGCN  # NOQA
 from chainer_chemistry.models.rsgcn import RSGCN  # NOQA
+from chainer_chemistry.models.rsgcn_gwm import RSGCN_GWM  # NOQA
 from chainer_chemistry.models.schnet import SchNet  # NOQA
 from chainer_chemistry.models.weavenet import WeaveNet  # NOQA
 

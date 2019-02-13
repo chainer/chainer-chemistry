@@ -1,12 +1,14 @@
+from chainer_chemistry.dataset.preprocessors.common import construct_adj_matrix
 from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array, construct_discrete_edge_matrix
+    import construct_atomic_number_array
+from chainer_chemistry.dataset.preprocessors.common import construct_supernode_feature
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
 
 
-class GGNNPreprocessor(MolPreprocessor):
-    """GGNN Preprocessor
+class NFPGWMPreprocessor(MolPreprocessor):
+    """NFP-GWM Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
@@ -19,30 +21,33 @@ class GGNNPreprocessor(MolPreprocessor):
             the returned arrays is padded to have fixed size.
             Setting negative value indicates do not pad returned array.
         add_Hs (bool): If True, implicit Hs are added.
+        out_size_super (int): indicate the length of the super node feature.
         kekulize (bool): If True, Kekulizes the molecule.
 
     """
 
-    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
+    def __init__(self, max_atoms=-1, out_size=-1, out_size_super=-1,add_Hs=False,
                  kekulize=False):
-        super(GGNNPreprocessor, self).__init__(
+        super(NFPGWMPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:
             raise ValueError('max_atoms {} must be less or equal to '
                              'out_size {}'.format(max_atoms, out_size))
         self.max_atoms = max_atoms
         self.out_size = out_size
+        self.out_size_super = out_size_super
 
     def get_input_features(self, mol):
         """get input features
 
         Args:
-            mol (Mol): Molecule input
+            mol (Mol):
 
         Returns:
 
         """
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
-        return atom_array, adj_array
+        adj_array = construct_adj_matrix(mol, out_size=self.out_size)
+        super_node_x = construct_supernode_feature(mol, atom_array, adj_array, out_size=self.out_size_super)
+        return atom_array, adj_array, super_node_x
