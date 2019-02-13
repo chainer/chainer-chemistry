@@ -66,22 +66,22 @@ class GIN(chainer.Chain):
 
     def __call__(self, atom_array, adj, is_real_node=None):
         """
-        Forward propagation
+        Describe the whole forwar path
 
-        :param atom_array (numpy.ndarray): mol-minibatch by node matrix,
+        Args:
+            atom_array (numpy.ndarray): mol-minibatch by node numpy.ndarray,
                 minibatch of molecular which is represented with atom IDs (representing C, O, S, ...)
                 atom_array[m, i] = a represents
                 m-th molecule's i-th node is value a (atomic number)
-        :param adj (numpy.ndarray): mol-minibatch by relation-types by node by node array,
+            adj (numpy.ndarray): mol-minibatch by relation-types by node by node numpy.ndarray,
                        minibatch of multple relational adjancency matrix with edge-type information
                        adj[i, j] = b represents
                        m-th molecule's  edge from node i to node j has value b
-        Returns:
-            ~chainer.Variable: minibatch of fingerprint
-        """
+            is_real_node:
 
-        # assert len(super_node) > 0
-        # print("for DEBUG: graphtransformer.py::__call__(): len(super_node)=" + str(len(super_node)))
+        Returns:
+            numpy.ndarray: final molecule representation
+        """
 
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)

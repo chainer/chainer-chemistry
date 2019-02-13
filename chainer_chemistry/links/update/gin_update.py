@@ -38,13 +38,17 @@ class GINUpdate(chainer.Chain):
 
     def __call__(self, h, adj):
         """
-        Describes the each layer.
+        Describing a layer.
 
-        :param h: minibatch by num_nodes by hidden_dim numpy array.
+        Args:
+            h (numpy.ndarray): minibatch by num_nodes by hidden_dim numpy array.
                 local node hidden states
-        :param adj: minibatch by num_nodes by num_nodes 1/0 array.
+            adj (numpy.ndarray): minibatch by num_nodes by num_nodes 1/0 array.
                 Adjacency matrices over several bond types
-        :return: updated h and h_super
+
+        Returns:
+            updated h
+
         """
 
         xp = self.xp

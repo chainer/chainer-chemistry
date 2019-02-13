@@ -169,7 +169,7 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
         adjs[ch, j, i] = 1.0
     return adjs
 
-def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
+def construct_supernode_feature(mol, atom_array, adjs, largest_atomic_number=MAX_ATOMIC_NUM, out_size=-1):
     """
     Construct an input feature x' for a supernode
 
@@ -177,6 +177,7 @@ def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
         mol (rdkit.Chem.Mol): Input molecule
         atom_array (numpy.ndarray) : array of atoms
         adjs (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array where |E| is the number of edgetypes.
+        largest_atomic_number (int) : number of unique atom maximum index
         out_size (int): not used...
 
     Returns:
@@ -184,9 +185,6 @@ def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
         len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs, 2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
 
     """
-
-    largest_atomic_number = MAX_ATOMIC_NUM
-
     if mol is None:
         raise MolFeatureExtractionError('mol is None')
     N = mol.GetNumAtoms()
@@ -209,7 +207,7 @@ def construct_supernode_feature(mol, atom_array, adjs, out_size=-1):
     elif adjs.ndim == 3:
         super_node_x = numpy.zeros(2 + 4*2 + largest_atomic_number*2)
     else:
-        raise NotImplementedError('adjs.ndim should be 2 or 3')
+        raise ValueError('adjs.ndim should be 2 or 3')
     # end if-else
 
     # number of nodes and edges

@@ -37,7 +37,7 @@ class GGNNPreprocessor(MolPreprocessor):
         """get input features
 
         Args:
-            mol (Mol): Molucule input
+            mol (Mol): Molecule input
 
         Returns:
 

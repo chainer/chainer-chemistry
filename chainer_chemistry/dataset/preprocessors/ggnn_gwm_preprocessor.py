@@ -5,9 +5,6 @@ from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
 
-import numpy as np
-from collections import Counter
-
 class GGNNGWMPreprocessor(MolPreprocessor):
     """GGNN-GWM Preprocessor
 

@@ -83,20 +83,24 @@ class GIN_GWM(chainer.Chain):
 
     def __call__(self, atom_array, adj, super_node, is_real_node=None):
         """
-        Forward propagation
+        Describe a layer
 
-        :param atom_array - mol-minibatch by node numpy.ndarray,
+        Args:
+            atom_array (numpy.ndarray): mol-minibatch by node numpy.ndarray,
                 minibatch of molecular which is represented with atom IDs (representing C, O, S, ...)
                 atom_array[m, i] = a represents
                 m-th molecule's i-th node is value a (atomic number)
-        :param adj  - mol-minibatch by relation-types by node by node numpy.ndarray,
-                       minibatch of multple relational adjancency matrix with edge-type information
+            adj (numpy.ndarray): mol-minibatch by relation-types by node by node numpy.ndarray,
+                       minibatch of multiple relational adjancency matrix with edge-type information
                        adj[i, j] = b represents
                        m-th molecule's  edge from node i to node j has value b
-        super_node (numpy.ndarray): 1D rray, the super-node observation.
+            super_node (numpy.ndarray): 1D array, the supernode hidden state
+            is_real_node:
+
         Returns:
-            ~chainer.Variable: minibatch of fingerprint
+            numpy.ndarray: final molecule representation
         """
+
 
         # assert len(super_node) > 0
         # print("for DEBUG: graphtransformer.py::__call__(): len(super_node)=" + str(len(super_node)))

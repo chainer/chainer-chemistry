@@ -87,9 +87,9 @@ class GGNN_GWM(chainer.Chain):
                 represented with atom IDs (representing C, O, S, ...)
                 `atom_array[mol_index, atom_index]` represents `mol_index`-th
                 molecule's `atom_index`-th atomic number
-            adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
+            adj (numpy.ndarray): minibatch of adjacency matrix with edge-type
                 information
-            super_node (numpy.ndarray): 1D rray, the super-node observation.
+            super_node (numpy.ndarray): 1D array, the super-node observation.
             is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
                 1 for real node, 0 for virtual node.
                 If `None`, all node is considered as real node.
@@ -104,9 +104,6 @@ class GGNN_GWM(chainer.Chain):
         else:
             h = atom_array
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
-
-        self.gwm.GRU_local.reset_state()
-        self.gwm.GRU_super.reset_state()
 
         # ebmbed super node
         h_s = self.embed_super(super_node)
@@ -131,3 +128,5 @@ class GGNN_GWM(chainer.Chain):
 
     def reset_state(self):
         [update_layer.reset_state() for update_layer in self.update_layers]
+        self.gwm.GRU_local.reset_state()
+        self.gwm.GRU_super.reset_state()

@@ -108,7 +108,7 @@ class RSGCN_GWM(chainer.Chain):
                 represented with atom IDs (representing C, O, S, ...)
                 `atom_array[mol_index, atom_index]` represents `mol_index`-th
                 molecule's `atom_index`-th atomic number
-            adj (numpy.ndarray): minibatch of adjancency matrix
+            adj (numpy.ndarray): minibatch of adjacency matrix
                 `adj[mol_index]` represents `mol_index`-th molecule's
                 adjacency matrix
             super_node (numpy.ndarray): 1D array, the super-node observation.
