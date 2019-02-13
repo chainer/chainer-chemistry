@@ -67,6 +67,9 @@ Concrete preprocessors
    chainer_chemistry.dataset.preprocessors.NFPPreprocessor
    chainer_chemistry.dataset.preprocessors.SchNetPreprocessor
    chainer_chemistry.dataset.preprocessors.WeaveNetPreprocessor
+   chainer_chemistry.dataset.preprocessors.RelGATPreprocessor
+   chainer_chemistry.dataset.preprocessors.RelGCNPreprocessor
+   chainer_chemistry.dataset.preprocessors.RSGCNPreprocessor
 
 Utilities
 ---------

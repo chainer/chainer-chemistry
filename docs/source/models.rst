@@ -14,6 +14,9 @@ Model implementations
    chainer_chemistry.models.MLP
    chainer_chemistry.models.SchNet
    chainer_chemistry.models.WeaveNet
+   chainer_chemistry.models.RelGAT
+   chainer_chemistry.models.RelGCN
+   chainer_chemistry.models.RSGCN
 
 
 Wrapper models
