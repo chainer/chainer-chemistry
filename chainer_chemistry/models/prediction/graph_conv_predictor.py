@@ -7,7 +7,7 @@ import numpy  # NOQA
 class GraphConvPredictor(chainer.Chain):
     """Wrapper class that combines a graph convolution and MLP."""
 
-    def __init__(self, graph_conv, mlp=None, scaler=None):
+    def __init__(self, graph_conv, mlp=None, label_scaler=None):
         # type: (chainer.Link, Optional[chainer.Link], Optional[chainer.Link]) -> None  # NOQA
         """Initialize the graph convolution predictor.
 
@@ -18,19 +18,19 @@ class GraphConvPredictor(chainer.Chain):
                 used as the final fully connected layer. Set it to
                 `None` if no operation is necessary after the
                 `graph_conv` calculation.
-            scaler (chainer.Link or None): scaler link
+            label_scaler (chainer.Link or None): scaler link
         """
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
             self.graph_conv = graph_conv
             if isinstance(mlp, chainer.Link):
                 self.mlp = mlp
-            if isinstance(scaler, chainer.Link):
-                self.scaler = scaler
+            if isinstance(label_scaler, chainer.Link):
+                self.label_scaler = label_scaler
         if not isinstance(mlp, chainer.Link):
             self.mlp = mlp
-        if not isinstance(scaler, chainer.Link):
-            self.scaler = scaler
+        if not isinstance(label_scaler, chainer.Link):
+            self.label_scaler = label_scaler
 
     def __call__(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
@@ -43,4 +43,6 @@ class GraphConvPredictor(chainer.Chain):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.forward(atoms, adjs)
+            if self.label_scaler is not None:
+                x = self.label_scaler.inverse_transform(x)
             return chainer.functions.sigmoid(x)
