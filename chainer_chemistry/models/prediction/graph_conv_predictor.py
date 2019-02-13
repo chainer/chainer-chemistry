@@ -42,7 +42,7 @@ class GraphConvPredictor(chainer.Chain):
     def predict(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            x = self.forward(atoms, adjs)
+            x = self.__call__(atoms, adjs)
             if self.label_scaler is not None:
                 x = self.label_scaler.inverse_transform(x)
             return chainer.functions.sigmoid(x)
