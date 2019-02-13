@@ -1,8 +1,5 @@
 name: chainer-chemistry
 type: sphinx
 base: docs/source
-requirements_file: docs/source/requirements.txt
-python:
-  pip_install: true
 conda:
   file: docs/source/environment.yml
