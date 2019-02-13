@@ -7,8 +7,14 @@ import numpy  # NOQA
 class GraphConvPredictor(chainer.Chain):
     """Wrapper class that combines a graph convolution and MLP."""
 
-    def __init__(self, graph_conv, mlp=None, label_scaler=None):
-        # type: (chainer.Link, Optional[chainer.Link], Optional[chainer.Link]) -> None  # NOQA
+    def __init__(
+            self,
+            graph_conv,  # type: chainer.Link
+            mlp=None,  # type: Optional[chainer.Link]
+            label_scaler=None,  # type: Optional[chainer.Link]
+            postprocess_fn=None  # type: Optional[chainer.FunctionNode]
+    ):
+        # type: (...) -> None
         """Initialize the graph convolution predictor.
 
         Args:
@@ -19,6 +25,8 @@ class GraphConvPredictor(chainer.Chain):
                 `None` if no operation is necessary after the
                 `graph_conv` calculation.
             label_scaler (chainer.Link or None): scaler link
+            postprocess_fn (chainer.FunctionNode or None):
+                postprocess function for prediction.
         """
         super(GraphConvPredictor, self).__init__()
         with self.init_scope():
@@ -31,6 +39,7 @@ class GraphConvPredictor(chainer.Chain):
             self.mlp = mlp
         if not isinstance(label_scaler, chainer.Link):
             self.label_scaler = label_scaler
+        self.postprocess_fn = postprocess_fn or chainer.functions.identity
 
     def __call__(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
@@ -45,4 +54,4 @@ class GraphConvPredictor(chainer.Chain):
             x = self.__call__(atoms, adjs)
             if self.label_scaler is not None:
                 x = self.label_scaler.inverse_transform(x)
-            return chainer.functions.sigmoid(x)
+            return self.postprocess_fn(x)
