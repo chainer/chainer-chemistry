@@ -18,10 +18,12 @@ import os
 import pkg_resources
 import sys
 
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 import sphinx_rtd_theme
+import _autosummary_check
+
 
 __version__ = pkg_resources.get_distribution('chainer-chemistry').version
-
 
 # -- General configuration ------------------------------------------------
 
@@ -183,3 +185,10 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+def setup(app):
+    app.connect('build-finished', _build_finished)
+
+def _build_finished(app, exception):
+    if exception is None:
+        _autosummary_check.check(app, exception)
