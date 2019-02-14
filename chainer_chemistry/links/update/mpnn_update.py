@@ -5,7 +5,6 @@ from chainer import functions
 from chainer import links
 
 import chainer_chemistry
-from chainer_chemistry.models.mlp import MLP
 
 
 class MPNNUpdate(chainer.Chain):
@@ -61,7 +60,9 @@ class EdgeNet(chainer.Chain):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
-            nn = MLP(out_dim=out_channels**2)
+            nn = chainer.Sequential(
+                links.Linear(None, 16), functions.relu,
+                links.Linear(None, out_channels**2))
         with self.init_scope():
             if isinstance(nn, chainer.Link):
                 self.nn_layer_in = nn
