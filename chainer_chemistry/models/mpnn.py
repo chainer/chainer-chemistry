@@ -17,6 +17,24 @@ from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
 class MPNN(chainer.Chain):
     """Message Passing Neural Networks (MPNN).
 
+    Args:
+        out_dim (int): dimension of output feature vector
+        hidden_dim (int): dimension of feature vector
+            associated to each atom
+        n_layers (int): number of layers
+        n_atom_types (int): number of types of atoms
+        concat_hidden (bool): If set to True, readout is executed in
+            each layer and the result is concatenated
+        weight_tying (bool): enable weight_tying or not
+        num_edge_type (int): number of edge type.
+            Defaults to 4 for single, double, triple and aromatic bond.
+        nn (~chainer.Link): Neural Networks for expanding edge vector
+            dimension
+        message_func (str): message function. 'edgenet' and 'ggnn' are
+            supported.
+        readout_func (str): readout function. 'set2set' and 'ggnn' are
+            supported.
+
     """
 
     def __init__(
