@@ -60,9 +60,7 @@ class EdgeNet(chainer.Chain):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
-            nn = chainer.Sequential(
-                links.Linear(None, 16), functions.relu,
-                links.Linear(None, out_channels**2))
+            nn = MLP(out_channels=out_channels)
         with self.init_scope():
             if isinstance(nn, chainer.Link):
                 self.nn_layer_in = nn
@@ -115,3 +113,18 @@ class EdgeNet(chainer.Chain):
         message_out = functions.reshape(message_out, (mb, node, ch))
         message = functions.concat([message_in, message_out], axis=2)
         return message  # message: (mb, node, out_ch * 2)
+
+
+class MLP(chainer.Chain):
+    def __init__(self, out_channels):
+        # type: (int) -> None
+        super(MLP, self).__init__()
+        with self.init_scope():
+            self.linear1 = links.Linear(None, 16)
+            self.linear2 = links.Linear(None, out_channels**2)
+
+    def __call__(self, x):
+        # type: (chainer.Variable) -> chainer.Variable
+        h = functions.relu(self.linear1(x))
+        h = self.linear2(h)
+        return h
