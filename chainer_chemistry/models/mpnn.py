@@ -1,5 +1,5 @@
 from functools import partial
-# from typing import Optional  # NOQA
+from typing import Optional  # NOQA
 
 import chainer
 from chainer import cuda

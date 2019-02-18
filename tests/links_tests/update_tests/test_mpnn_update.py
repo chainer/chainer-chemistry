@@ -1,4 +1,4 @@
-# from typing import Tuple  # NOQA
+from typing import Tuple  # NOQA
 
 import chainer  # NOQA
 from chainer import cuda

@@ -1,4 +1,4 @@
-# from typing import List, Optional  # NOQA
+from typing import List, Optional  # NOQA
 
 import chainer
 from chainer import cuda
