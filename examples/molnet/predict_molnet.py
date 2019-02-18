@@ -22,7 +22,7 @@ from chainer_chemistry.models.prediction import Regressor
 
 # These import is necessary for pickle to work
 # from sklearn.preprocessing import StandardScaler  # NOQA
-from train_molnet import GraphConvPredictor, GraphConvPredictorForGWM  # NOQA
+from train_molnet import GraphConvPredictorForGWM
 from train_molnet import dataset_part_filename
 from train_molnet import download_entire_dataset
 

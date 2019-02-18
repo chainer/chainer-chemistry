@@ -6,6 +6,7 @@ import numpy
 import os
 import types
 
+import chainer
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
@@ -67,31 +68,6 @@ class GraphConvPredictorForGWM(chainer.Chain):
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.__call__(atoms, adjs, super_node_x)
             return F.sigmoid(x)
-
-
-class GraphConvPredictor(chainer.Chain):
-    def __init__(self, graph_conv, mlp=None):
-        """Initializes the graph convolution predictor.
-        Args:
-            graph_conv: The graph convolution network required to obtain
-                        molecule feature representation.
-            mlp: Multi layer perceptron; used as the final fully connected
-                 layer. Set it to `None` if no operation is necessary
-                 after the `graph_conv` calculation.
-        """
-        super(GraphConvPredictor, self).__init__()
-        with self.init_scope():
-            self.graph_conv = graph_conv
-            if isinstance(mlp, chainer.Link):
-                self.mlp = mlp
-        if not isinstance(mlp, chainer.Link):
-            self.mlp = mlp
-
-    def __call__(self, atoms, adjs):
-        x = self.graph_conv(atoms, adjs)
-        if self.mlp:
-            x = self.mlp(x)
-        return x
 
 
 def parse_arguments():
