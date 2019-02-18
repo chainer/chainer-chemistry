@@ -1,4 +1,4 @@
-# from typing import Optional  # NOQA
+from typing import Optional  # NOQA
 
 import chainer
 import numpy  # NOQA

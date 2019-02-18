@@ -1,4 +1,4 @@
-# from typing import Tuple  # NOQA
+from typing import Tuple  # NOQA
 
 from chainer import cuda
 from chainer import gradient_check
