@@ -2,11 +2,11 @@
 from __future__ import print_function
 
 import argparse
-import chainer
 import numpy
 import os
 import types
 
+import chainer
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
@@ -17,10 +17,10 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.functions import mean_squared_error
 from chainer_chemistry.models import (
     MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
 from chainer_chemistry.models.prediction import Classifier
+from chainer_chemistry.models.prediction import GraphConvPredictor
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
 # from sklearn.preprocessing import StandardScaler
@@ -68,31 +68,6 @@ class GraphConvPredictorForGWM(chainer.Chain):
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.__call__(atoms, adjs, super_node_x)
             return F.sigmoid(x)
-
-
-class GraphConvPredictor(chainer.Chain):
-    def __init__(self, graph_conv, mlp=None):
-        """Initializes the graph convolution predictor.
-        Args:
-            graph_conv: The graph convolution network required to obtain
-                        molecule feature representation.
-            mlp: Multi layer perceptron; used as the final fully connected
-                 layer. Set it to `None` if no operation is necessary
-                 after the `graph_conv` calculation.
-        """
-        super(GraphConvPredictor, self).__init__()
-        with self.init_scope():
-            self.graph_conv = graph_conv
-            if isinstance(mlp, chainer.Link):
-                self.mlp = mlp
-        if not isinstance(mlp, chainer.Link):
-            self.mlp = mlp
-
-    def __call__(self, atoms, adjs):
-        x = self.graph_conv(atoms, adjs)
-        if self.mlp:
-            x = self.mlp(x)
-        return x
 
 
 def parse_arguments():
@@ -430,12 +405,12 @@ def main():
         print_report_targets.append('train/main/roc_auc')
         print_report_targets.append('validation/main/loss')
         print_report_targets.append('val/main/roc_auc')
-        
+
         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
     else:
         raise NotImplementedError(
             'Not implemented task_type = {}'.format(task_type))
-    
+
 
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
