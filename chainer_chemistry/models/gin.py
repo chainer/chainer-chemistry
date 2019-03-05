@@ -91,7 +91,7 @@ class GIN(chainer.Chain):
         # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(h)=" + str(xp.shape(h)))
 
 
-        h0 = F.copy(h, cuda.get_device_from_array(h.data).id)
+        h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
 
         g_list = []
         for step in range(self.n_message_layers):
