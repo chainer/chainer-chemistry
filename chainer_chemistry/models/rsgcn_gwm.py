@@ -1,11 +1,3 @@
-"""
-Implementation of Renormalized Spectral Graph Convolutional Network (RSGCN)
-
-See: Thomas N. Kipf and Max Welling, \
-    Semi-Supervised Classification with Graph Convolutional Networks. \
-    September 2016. \
-    `arXiv:1609.02907 <https://arxiv.org/abs/1609.02907>`_
-"""
 import chainer
 from chainer import functions
 from chainer import links

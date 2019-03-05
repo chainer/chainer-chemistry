@@ -1,11 +1,3 @@
-"""
-Chainer implementation of SchNet
-
-SchNet: A continuous-filter convolutional neural network for modeling quantum
-interactions
-Kristof et al.
-See: https://arxiv.org/abs/1706.08566
-"""
 import chainer
 from chainer import functions
 
@@ -17,6 +9,11 @@ from chainer_chemistry.links.update.schnet_update import SchNetUpdate
 
 class SchNet(chainer.Chain):
     """SchNet
+
+    See Kristof et al, \
+        SchNet: A continuous-filter convolutional neural network for modeling
+        quantum interactions. \
+        `arXiv:1706.08566 <https://arxiv.org/abs/1706.08566>`_
 
     Args:
         out_dim (int): dimension of output feature vector

@@ -9,6 +9,7 @@ from chainer_chemistry.links.readout.nfp_readout import NFPReadout
 from chainer_chemistry.links.update.nfp_update import NFPUpdate
 from chainer_chemistry.models.gwm import GWM
 
+
 class NFP_GWM(chainer.Chain):
 
     """Neural Finger Print (NFP) with Graph Warp Module (GWM)
@@ -24,7 +25,7 @@ class NFP_GWM(chainer.Chain):
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        hiden_dim_super(default=16); dimension of super-node hidden vector
+        hidden_dim_super(default=16); dimension of super-node hidden vector
         n_layers (int): number of layers
         n_heads (default=8): numbef of heads
         max_degree (int): max degree of atoms
