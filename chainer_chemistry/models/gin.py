@@ -8,12 +8,12 @@ from chainer_chemistry.links.readout.gin_readout import GINReadout
 from chainer_chemistry.links.update.gin_update import GINUpdate
 
 
-
 class GIN(chainer.Chain):
     """
     Simplest implementation of Graph Isomorphism Network (GIN)
 
-    See: Xu, Hu, Leskovec, and Jegelka, "How powerful are graph neural networks?", in ICLR 2019.
+    See: Xu, Hu, Leskovec, and Jegelka, \
+    "How powerful are graph neural networks?", in ICLR 2019.
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -22,8 +22,8 @@ class GIN(chainer.Chain):
         n_layers (default=4): number of layers
         n_atom_types: number of atoms
         dropout_ratio (default=0.5); if > 0.0, perform dropout
-        concat_hidden (default=False): If set to True, readout is executed in each layer
-            and the result is concatenated
+        concat_hidden (default=False): If set to True, readout is executed in
+            each layer and the result is concatenated
         weight_tying (default=True): enable weight_tying for all units
 
 
@@ -70,13 +70,14 @@ class GIN(chainer.Chain):
 
         Args:
             atom_array (numpy.ndarray): mol-minibatch by node numpy.ndarray,
-                minibatch of molecular which is represented with atom IDs (representing C, O, S, ...)
-                atom_array[m, i] = a represents
+                minibatch of molecular which is represented with atom IDs
+                (representing C, O, S, ...) atom_array[m, i] = a represents
                 m-th molecule's i-th node is value a (atomic number)
-            adj (numpy.ndarray): mol-minibatch by relation-types by node by node numpy.ndarray,
-                       minibatch of multple relational adjancency matrix with edge-type information
-                       adj[i, j] = b represents
-                       m-th molecule's  edge from node i to node j has value b
+            adj (numpy.ndarray): mol-minibatch by relation-types by node by
+                node numpy.ndarray,
+                minibatch of multple relational adjancency matrix with
+                edge-type information adj[i, j] = b represents
+                m-th molecule's  edge from node i to node j has value b
             is_real_node:
 
         Returns:
@@ -87,9 +88,6 @@ class GIN(chainer.Chain):
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
             h = atom_array
-        # end if-else
-        # print("for DEBUG: graphtransformer.py::__call__(): xp.shape(h)=" + str(xp.shape(h)))
-
 
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
 

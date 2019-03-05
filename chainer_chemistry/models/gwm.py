@@ -1,21 +1,8 @@
-import numpy as np
-
 import chainer
-from chainer import cuda
-from chainer import functions as F
-from chainer import links as L
+from chainer import functions
+from chainer import links
 
-import chainer_chemistry
-from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links import GraphLinear
-
-from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array
-from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
-from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
 
 
 class GWM(chainer.Chain):
@@ -27,11 +14,12 @@ class GWM(chainer.Chain):
     Args:
         hidden_dim (default=16): dimension of hidden vectors
             associated to each atom (local node)
-        hiden_dim_super(default=16); dimension of super-node hidden vector
+        hidden_dim_super(default=16); dimension of super-node hidden vector
         n_layers (default=4): number of layers
         n_heads (default=8): numbef of heads
         n_atom_types (default=MAX_ATOMIC_NUM): number of types of atoms
-        n_super_feature (default: tuned according to gtn_preprocessor); number of super-node observation attributes
+        n_super_feature (default: tuned according to gtn_preprocessor):
+            number of super-node observation attributes
         n_edge_types (int): number of edge types witin graphs.
         dropout_ratio (default=0.5); if > 0.0, perform dropout
         tying_flag (default=false): enable if you want to share params across layers
@@ -56,15 +44,15 @@ class GWM(chainer.Chain):
             # for Transmitter unit
             #
             self.F_super = chainer.ChainList(
-                *[L.Linear(in_size=hidden_dim_super, out_size=hidden_dim_super)
+                *[links.Linear(in_size=hidden_dim_super, out_size=hidden_dim_super)
                   for _ in range(num_layer)]
             )
             self.V_super = chainer.ChainList(
-                *[L.Linear(hidden_dim * n_heads, hidden_dim * n_heads)
+                *[links.Linear(hidden_dim * n_heads, hidden_dim * n_heads)
                   for _ in range(num_layer)]
             )
             self.W_super = chainer.ChainList(
-                *[L.Linear(hidden_dim * n_heads, hidden_dim_super)
+                *[links.Linear(hidden_dim * n_heads, hidden_dim_super)
                   for _ in range(num_layer)]
             )
             self.B = chainer.ChainList(
@@ -87,18 +75,18 @@ class GWM(chainer.Chain):
 
             self.gate_dim_super = hidden_dim_super
             self.H_super = chainer.ChainList(
-                *[L.Linear(in_size=hidden_dim, out_size=self.gate_dim_super)
+                *[links.Linear(in_size=hidden_dim, out_size=self.gate_dim_super)
                   for _ in range(num_layer)]
             )
             self.G_super = chainer.ChainList(
-                *[L.Linear(in_size=hidden_dim_super, out_size=self.gate_dim_super)
+                *[links.Linear(in_size=hidden_dim_super, out_size=self.gate_dim_super)
                   for _ in range(num_layer)]
             )
 
             # GRU's. not layer-wise (recurrent through layers)
 
-            self.GRU_local = L.GRU(in_size=hidden_dim, out_size=hidden_dim)
-            self.GRU_super = L.GRU(in_size=hidden_dim_super, out_size=hidden_dim_super)
+            self.GRU_local = links.GRU(in_size=hidden_dim, out_size=hidden_dim)
+            self.GRU_super = links.GRU(in_size=hidden_dim_super, out_size=hidden_dim_super)
         # end init_scope-with
 
         self.hidden_dim = hidden_dim
@@ -137,25 +125,25 @@ class GWM(chainer.Chain):
         #
         
         # non linear update of the super node
-        g_new = F.relu(self.F_super[step](g))
+        g_new = functions.relu(self.F_super[step](g))
 
         # original --> super transmission
 
-        h1 = F.expand_dims(h, 2)
+        h1 = functions.expand_dims(h, 2)
         #assert h1.shape == (mb, atom, 1, ch)
-        h1 = F.broadcast_to(h1, [mb, atom, self.n_heads, ch])
-        h1 = F.reshape(h1, [mb, atom, self.n_heads* ch])
+        h1 = functions.broadcast_to(h1, [mb, atom, self.n_heads, ch])
+        h1 = functions.reshape(h1, [mb, atom, self.n_heads* ch])
         #assert h1.shape==(mb, atom, self.n_heads * ch)
-        h_j = F.expand_dims(h, 1)
-        h_j = F.broadcast_to(h_j, (mb, self.n_heads, atom, ch))
+        h_j = functions.expand_dims(h, 1)
+        h_j = functions.broadcast_to(h_j, (mb, self.n_heads, atom, ch))
         #assert h_j.shape==(mb, self.n_heads, atom, ch)
 
         # expand h_super
-        g_extend = F.expand_dims(g, 1)
+        g_extend = functions.expand_dims(g, 1)
         # assert g_extend.shape==(mb, 1, self.hidden_dim_super)
-        g_extend = F.broadcast_to(g_extend, (mb, self.n_heads, self.hidden_dim_super))
+        g_extend = functions.broadcast_to(g_extend, (mb, self.n_heads, self.hidden_dim_super))
         # assert g_extend.shape==(mb, self.n_heads, self.hidden_dim_super)
-        g_extend = F.expand_dims(g_extend, 2)
+        g_extend = functions.expand_dims(g_extend, 2)
         # assert g_extend.shape==(mb, self.n_heads, 1, self.hidden_dim_super)
 
         # update for attention-message B h_i
@@ -163,29 +151,30 @@ class GWM(chainer.Chain):
         Bh_i = self.B[step](h1)
         # assert Bh_i.shape==(mb, atom, self.n_heads * self.hidden_dim_super)
         # mb, atom, num_head, ch
-        Bh_i = F.reshape(Bh_i, [mb, atom, self.n_heads, self.hidden_dim_super])
+        Bh_i = functions.reshape(Bh_i, [mb, atom, self.n_heads, self.hidden_dim_super])
         # mb, num_head, atom, ch
-        Bh_i = F.transpose(Bh_i, [0, 2, 1, 3])
+        Bh_i = functions.transpose(Bh_i, [0, 2, 1, 3])
         # assert Bh_i.shape==(mb, self.n_heads, atom, self.hidden_dim_super)
 
         # take g^{T} * B * h_i
         # indexed by i
         # mb, self.n_haeds atom(i)
-        b_hi = F.matmul(g_extend, Bh_i, transb=True)  # This will reduce the last hidden_dim_super axis
+        b_hi = functions.matmul(g_extend, Bh_i, transb=True)  # This will reduce the last hidden_dim_super axis
         # assert b_hi.shape==(mb, self.n_heads, 1, atom)
 
         # softmax. sum/normalize over the last axis.
         # mb, self.n_heda, atom(i-normzlied)
-        attention_i = F.softmax(b_hi, axis=3)
+        attention_i = functions.softmax(b_hi, axis=3)
         if self.dropout_ratio > 0.0:
-            attention_i = F.dropout(attention_i,ratio=self.dropout_ratio)
+            attention_i = functions.dropout(attention_i,
+                                            ratio=self.dropout_ratio)
         # assert attention_i.shape==(mb, self.n_heads, 1, atom)
 
         # element-wise product --> sum over i
         # mb, num_head, hidden_dim_super
-        attention_sum = F.matmul(attention_i, h_j)
+        attention_sum = functions.matmul(attention_i, h_j)
         # assert attention_sum.shape==(mb, self.n_heads, 1, ch)
-        attention_sum = F.reshape(attention_sum, (mb, self.n_heads * ch))
+        attention_sum = functions.reshape(attention_sum, (mb, self.n_heads * ch))
         # assert attention_sum.shape==(mb, self.n_heads * ch)
 
         # weighting h for different heads
@@ -193,7 +182,7 @@ class GWM(chainer.Chain):
         # assert intermediate_h.shape==(mb, self.n_heads * ch)
         # compress heads
         h_trans = self.W_super[step](h_trans)
-        h_trans = F.tanh(h_trans)
+        h_trans = functions.tanh(h_trans)
         # assert intermediate_h.shape==(mb, self.hidden_dim_super)
 
 
@@ -201,11 +190,11 @@ class GWM(chainer.Chain):
 
         # for local updates
         g_trans = self.F_super[step](g)
-        g_trans = F.tanh(g_trans)
+        g_trans = functions.tanh(g_trans)
         # assert intermediate_h_super.shape==(mb, self.hidden_dim)
-        g_trans = F.expand_dims(g_trans, 1)
+        g_trans = functions.expand_dims(g_trans, 1)
         # assert intermediate_h_super.shape==(mb, 1, self.hidden_dim)
-        g_trans = F.broadcast_to(g_trans, (mb, atom, self.hidden_dim))
+        g_trans = functions.broadcast_to(g_trans, (mb, atom, self.hidden_dim))
         # assert intermediate_h_super.shape==(mb, atom, self.hidden_dim)
 
 
@@ -213,27 +202,27 @@ class GWM(chainer.Chain):
         # Warp Gate unit
         #
         z_local = self.H_local[step](h_new) + self.G_local[step](g_trans)
-        z_local = F.broadcast_to(z_local, (mb, atom, self.hidden_dim))
+        z_local = functions.broadcast_to(z_local, (mb, atom, self.hidden_dim))
         if self.dropout_ratio > 0.0:
-            z_local = F.dropout(z_local,ratio=self.dropout_ratio)
-        z_local = F.sigmoid(z_local)
+            z_local = functions.dropout(z_local,ratio=self.dropout_ratio)
+        z_local = functions.sigmoid(z_local)
         merged_h = (1.0-z_local) * h_new + z_local * g_trans
         # assert new_h.shape==(mb, atom, ch)
 
         z_super = self.H_super[step](h_trans) + self.G_super[step](g_new)
-        z_super = F.broadcast_to(z_super, (mb, self.hidden_dim_super))
+        z_super = functions.broadcast_to(z_super, (mb, self.hidden_dim_super))
         if self.dropout_ratio > 0.0:
-            z_super = F.dropout(z_super,ratio=self.dropout_ratio)
-        z_super = F.sigmoid(z_super)
+            z_super = functions.dropout(z_super,ratio=self.dropout_ratio)
+        z_super = functions.sigmoid(z_super)
         merged_g = (1.0-z_super) * h_trans + z_super * g_new
         # assert out_h_super.shape==(mb, self.hidden_dim_super)
 
         #
         # Self recurrent
         #
-        out_h = F.reshape(merged_h, (mb * atom, self.hidden_dim))
+        out_h = functions.reshape(merged_h, (mb * atom, self.hidden_dim))
         out_h = self.GRU_local(out_h)
-        out_h = F.reshape(out_h, (mb, atom, self.hidden_dim))
+        out_h = functions.reshape(out_h, (mb, atom, self.hidden_dim))
 
         out_g = self.GRU_super(merged_g)
 

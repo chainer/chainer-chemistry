@@ -12,7 +12,8 @@ from chainer_chemistry.models.gwm import GWM
 
 class GIN_GWM(chainer.Chain):
     """
-    Simplest implementation of Graph Isomorphism Network (GIN) , attache with the Graph Warp Module (GWM)
+    Simplest implementation of Graph Isomorphism Network (GIN) , attache with
+    the Graph Warp Module (GWM)
 
     See: Xu, Hu, Leskovec, and Jegelka, "How powerful are graph neural networks?", in ICLR 2019.
 
@@ -22,7 +23,7 @@ class GIN_GWM(chainer.Chain):
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of hidden vectors
             associated to each atom
-        hiden_dim_super(int); dimension of super-node hidden vector
+        hidden_dim_super (int): dimension of super-node hidden vector
         n_layers (int): number of layers
         n_heads (int): numbef of heads
         n_atom_types (int): number of atoms
@@ -100,11 +101,6 @@ class GIN_GWM(chainer.Chain):
         Returns:
             numpy.ndarray: final molecule representation
         """
-
-
-        # assert len(super_node) > 0
-        # print("for DEBUG: graphtransformer.py::__call__(): len(super_node)=" + str(len(super_node)))
-
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:
