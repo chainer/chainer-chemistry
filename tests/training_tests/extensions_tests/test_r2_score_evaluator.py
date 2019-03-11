@@ -93,11 +93,11 @@ def _test_r2_score_evaluator(inputs):
         observation = evaluator.evaluate()
 
     expected = r2_score(x0, x1)
-    pytest.approx(observation['target/r2_score'][0], expected)
+    pytest.approx(observation['target/r2_score'], expected)
 
     # --- test __call__ ---
     result = evaluator()
-    pytest.approx(result['train/main/r2_score'][0], expected)
+    pytest.approx(result['train/main/r2_score'], expected)
 
 
 def _test_r2_score_evaluator_ignore_nan(inputs):
@@ -114,11 +114,11 @@ def _test_r2_score_evaluator_ignore_nan(inputs):
         observation = evaluator.evaluate()
 
     expected = r2_score(x0, x2, ignore_nan=True)
-    pytest.approx(observation['target/r2_score'][0], expected)
+    pytest.approx(observation['target/r2_score'], expected)
 
     # --- test __call__ ---
     result = evaluator()
-    pytest.approx(result['train/main/r2_score'][0], expected)
+    pytest.approx(result['train/main/r2_score'], expected)
 
 
 def _test_r2_score_evaluator_ignore_nan_with_nonnan_value(inputs):
@@ -135,11 +135,11 @@ def _test_r2_score_evaluator_ignore_nan_with_nonnan_value(inputs):
         observation = evaluator.evaluate()
 
     expected = r2_score(x0, x1, ignore_nan=True)
-    pytest.approx(observation['target/r2_score'][0], expected)
+    pytest.approx(observation['target/r2_score'], expected)
 
     # --- test __call__ ---
     result = evaluator()
-    pytest.approx(result['train/main/r2_score'][0], expected)
+    pytest.approx(result['train/main/r2_score'], expected)
 
 
 def _test_r2_score_evaluator_raw_values(inputs):
@@ -156,11 +156,11 @@ def _test_r2_score_evaluator_raw_values(inputs):
         observation = evaluator.evaluate()
 
     expected = r2_score(x0, x1, multioutput='raw_values')
-    pytest.approx(observation['target/r2_score'][0], expected)
+    pytest.approx(observation['target/r2_score'], expected)
 
     # --- test __call__ ---
     result = evaluator()
-    pytest.approx(result['train/main/r2_score'][0], expected)
+    pytest.approx(result['train/main/r2_score'], expected)
 
 
 if __name__ == '__main__':
