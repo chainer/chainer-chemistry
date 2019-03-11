@@ -96,6 +96,6 @@ class R2ScoreEvaluator(BatchEvaluator):
         ret = xp.where(
             SS_tot_iszero, 0.0, 1 - SS_res / SS_tot).astype(pred.dtype)
         if self.multioutput == 'uniform_average':
-            return xp.asarray(ret.mean()),
+            return xp.asarray(ret.mean())
         elif self.multioutput == 'raw_values':
-            return ret,
+            return ret
