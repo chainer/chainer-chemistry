@@ -144,6 +144,7 @@ def test_construct_super_node_feature_adj_ndim2(sample_molecule):
     adj = common.construct_adj_matrix(sample_molecule)
     atom_array = common.construct_atomic_number_array(sample_molecule)
     s = common.construct_supernode_feature(sample_molecule, atom_array, adj)
+    print(s)
     assert s.shape == (MAX_ATOMIC_NUM * 2 + 4,)
     assert s[0] == len(atom_array)
     assert s[1] == adj.sum()
@@ -182,7 +183,6 @@ def test_construct_super_node_feature_adj_ndim3(sample_molecule):
     assert s[9 + MAX_ATOMIC_NUM + 7] == 1 / len(atom_array)
     assert s[9 + MAX_ATOMIC_NUM + 8] == 1 / len(atom_array)
     assert s[9 + MAX_ATOMIC_NUM * 2] == 0
-
 
 
 if __name__ == '__main__':
