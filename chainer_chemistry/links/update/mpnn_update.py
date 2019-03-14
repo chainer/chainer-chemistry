@@ -60,14 +60,13 @@ class EdgeNet(chainer.Chain):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
-            nn = MLP(out_channels=out_channels)
+            nn = MLP(out_dim=out_channels, hidden_dim=16)
         with self.init_scope():
             if isinstance(nn, chainer.Link):
                 self.nn_layer_in = nn
                 self.nn_layer_out = nn
         if not isinstance(nn, chainer.Link):
-            self.nn_layer_in = nn
-            self.nn_layer_out = nn
+            raise ValueError('nn {} must be chainer.Link'.format(nn))
         self.out_channels = out_channels
 
     def __call__(self, h, adj):
@@ -116,12 +115,14 @@ class EdgeNet(chainer.Chain):
 
 
 class MLP(chainer.Chain):
-    def __init__(self, out_channels):
-        # type: (int) -> None
+    def __init__(self, out_dim, hidden_dim):
+        # type: (int, int) -> None
         super(MLP, self).__init__()
         with self.init_scope():
-            self.linear1 = links.Linear(None, 16)
-            self.linear2 = links.Linear(None, out_channels**2)
+            self.linear1 = links.Linear(None, hidden_dim)
+            self.linear2 = links.Linear(None, out_dim**2)
+        self.hidden_dim = hidden_dim
+        self.out_dim = out_dim
 
     def __call__(self, x):
         # type: (chainer.Variable) -> chainer.Variable
