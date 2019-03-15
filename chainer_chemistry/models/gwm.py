@@ -37,12 +37,17 @@ class GWM(chainer.Chain):
             num_layer = 1
 
         with self.init_scope():
+            self.update_super = chainer.ChainList(
+                *[links.Linear(in_size=hidden_dim_super,
+                               out_size=hidden_dim_super)
+                  for _ in range(num_layer)]
+            )
             #
             # for Transmitter unit
             #
             self.F_super = chainer.ChainList(
                 *[links.Linear(in_size=hidden_dim_super,
-                               out_size=hidden_dim_super)
+                               out_size=hidden_dim)
                   for _ in range(num_layer)]
             )
             self.V_super = chainer.ChainList(
@@ -67,13 +72,13 @@ class GWM(chainer.Chain):
                   for _ in range(num_layer)]
             )
             self.G_local = chainer.ChainList(
-                *[GraphLinear(in_size=hidden_dim_super, out_size=self.gate_dim)
+                *[GraphLinear(in_size=hidden_dim, out_size=self.gate_dim)
                   for _ in range(num_layer)]
             )
 
             self.gate_dim_super = hidden_dim_super
             self.H_super = chainer.ChainList(
-                *[links.Linear(in_size=hidden_dim,
+                *[links.Linear(in_size=hidden_dim_super,
                                out_size=self.gate_dim_super)
                   for _ in range(num_layer)]
             )
@@ -118,7 +123,7 @@ class GWM(chainer.Chain):
         # Transmitter unit: inter-module message passing
         #
         # non linear update of the super node
-        g_new = functions.relu(self.F_super[step](g))
+        g_new = functions.relu(self.update_super[step](g))
 
         # original --> super transmission
 
