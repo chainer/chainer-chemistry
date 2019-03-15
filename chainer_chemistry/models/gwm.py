@@ -261,3 +261,7 @@ class GWM(chainer.Chain):
         out_g = self.GRU_super(merged_g)
 
         return out_h, out_g
+
+    def reset_state(self):
+        self.GRU_local.reset_state()
+        self.GRU_super.reset_state()

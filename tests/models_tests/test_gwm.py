@@ -168,22 +168,24 @@ def test_backward_cpu(gwm, data):
 # def test_backward_gpu(update, data):
 #     update.to_gpu()
 #     check_backward(update, *map(cuda.to_gpu, data))
-#
-#
-# def test_forward_cpu_graph_invariant(update, data):
-#     permutation_index = numpy.random.permutation(atom_size)
-#     atom_data, adj_data = data[:2]
-#     update.reset_state()
-#     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
-#
-#     permute_atom_data = permute_node(atom_data, permutation_index, axis=1)
-#     permute_adj_data = permute_adj(adj_data, permutation_index)
-#     update.reset_state()
-#     permute_y_actual = cuda.to_cpu(update(
-#         permute_atom_data, permute_adj_data).data)
-#     numpy.testing.assert_allclose(
-#         permute_node(y_actual, permutation_index, axis=1),
-#         permute_y_actual, rtol=1e-5, atol=1e-5)
+
+
+def test_forward_cpu_graph_invariant(gwm, data):
+    permutation_index = numpy.random.permutation(atom_size)
+    gwm.reset_state()
+    embed_atom_data, new_embed_atom_data, supernode = data[:3]
+    h_actual, g_actual = gwm(embed_atom_data, new_embed_atom_data, supernode)
+
+    permute_embed_atom_data = permute_node(embed_atom_data, permutation_index, axis=1)
+    permute_new_embed_atom_data = permute_node(new_embed_atom_data, permutation_index, axis=1)
+    gwm.reset_state()
+    permute_h_actual, permute_g_actual = gwm(permute_embed_atom_data, permute_new_embed_atom_data,
+                                             supernode)
+    numpy.testing.assert_allclose(
+        permute_node(h_actual.data, permutation_index, axis=1),
+        permute_h_actual.data, rtol=1e-5, atol=1e-5)
+
+    numpy.testing.assert_allclose(g_actual.data, permute_g_actual.data, rtol=1e-5, atol=1e-5)
 
 
 if __name__ == '__main__':
