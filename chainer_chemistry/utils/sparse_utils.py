@@ -1,12 +1,25 @@
 import chainer
 import numpy as np
 
+try:
+    from chainer.utils import CooMatrix
+    _coomatrix_imported = True
+except:
+    _coomatrix_imported = False
+
 
 def _flatten(x):
     if isinstance(x, chainer.Variable):
         x = x.data
     x = chainer.backends.cuda.to_cpu(x)
     return x.flatten()
+
+
+def is_sparse(x):
+    if _coomatrix_imported and isinstance(x, CooMatrix):
+        return True
+    else:
+        return False
 
 
 def convert_sparse_with_edge_type(data, row, col, num_nodes,
