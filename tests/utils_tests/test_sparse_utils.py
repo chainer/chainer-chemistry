@@ -4,9 +4,6 @@ import pytest
 from chainer_chemistry.utils.sparse_utils import convert_sparse_with_edge_type
 
 
-num_edge_type = 4
-
-
 def naive_convert(data, row, col, edge_type, num_edge_type):
     mb, length = data.shape
     new_mb = mb * num_edge_type
