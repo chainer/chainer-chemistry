@@ -16,7 +16,6 @@ atom_size = 5
 hidden_dim = 4
 batch_size = 2
 num_edge_type = 2
-sparse_length = 6
 
 
 @pytest.fixture
