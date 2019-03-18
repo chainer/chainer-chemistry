@@ -117,10 +117,9 @@ def _convert_to_sparse(dense_adj):
                     col[-1].append(j)
                     edge_type[-1].append(e)
 
-    data = xp.array(data)
-    row = xp.array(row)
-    col = xp.array(col)
-    edge_type = xp.array(edge_type)
+    data = xp.array(data, dtype=dense_adj.dtype)
+    row = xp.array(row, dtype=xp.int32)
+    col = xp.array(col, dtype=xp.int32)
+    edge_type = xp.array(edge_type, dtype=xp.int32)
 
-    return convert_sparse_with_edge_type(data, row, col, atom_size,
-                                         edge_type, num_edge_type)
+    return data, row, col, edge_type
