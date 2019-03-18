@@ -1,4 +1,5 @@
 import chainer
+from chainer import cuda
 import numpy as np
 
 try:
@@ -43,6 +44,7 @@ def convert_sparse_with_edge_type(data, row, col, num_nodes,
     assert edge_type.shape == data.shape
 
     mb, length = data.shape
+    xp = cuda.get_array_module(data)
 
     data = _flatten(data)
     row = _flatten(row)
@@ -80,13 +82,13 @@ def convert_sparse_with_edge_type(data, row, col, num_nodes,
     new_length = pos_i.max() + 1
     new_mb = mb * num_edge_type
 
-    new_data = np.zeros((new_mb, new_length), dtype=data.dtype)
+    new_data = xp.zeros((new_mb, new_length), dtype=data.dtype)
     new_data[pos_mb, pos_i] = data
 
-    new_row = np.zeros((new_mb, new_length), dtype=np.int32)
+    new_row = xp.zeros((new_mb, new_length), dtype=np.int32)
     new_row[pos_mb, pos_i] = row
 
-    new_col = np.zeros((new_mb, new_length), dtype=np.int32)
+    new_col = xp.zeros((new_mb, new_length), dtype=np.int32)
     new_col[pos_mb, pos_i] = col
 
     new_shape = (num_nodes, num_nodes)
