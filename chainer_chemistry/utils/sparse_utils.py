@@ -93,3 +93,34 @@ def convert_sparse_with_edge_type(data, row, col, num_nodes,
 
     new_shape = (num_nodes, num_nodes)
     return chainer.utils.CooMatrix(new_data, new_row, new_col, new_shape)
+
+
+def _convert_to_sparse(dense_adj):
+    # naive conversion function mainly for testing
+    xp = cuda.get_array_module(dense_adj)
+    dense_adj = cuda.to_cpu(dense_adj)
+    batch_size, num_edge_type, atom_size = dense_adj.shape[:3]
+    data = []
+    row = []
+    col = []
+    edge_type = []
+    for mb in range(batch_size):
+        data.append([])
+        row.append([])
+        col.append([])
+        edge_type.append([])
+        for e in range(num_edge_type):
+            for i in range(atom_size):
+                for j in range(atom_size):
+                    data[-1].append(dense_adj[mb, e, i, j])
+                    row[-1].append(i)
+                    col[-1].append(j)
+                    edge_type[-1].append(e)
+
+    data = xp.array(data)
+    row = xp.array(row)
+    col = xp.array(col)
+    edge_type = xp.array(edge_type)
+
+    return convert_sparse_with_edge_type(data, row, col, atom_size,
+                                         edge_type, num_edge_type)
