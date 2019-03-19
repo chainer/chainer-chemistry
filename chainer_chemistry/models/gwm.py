@@ -7,7 +7,7 @@ from chainer_chemistry.links import GraphLinear
 
 class WarpGateUnit(chainer.Chain):
     def __init__(self, output_type='graph', hidden_dim=16, n_layers=4,
-                 dropout_ratio=-1):
+                 dropout_ratio=-1, activation=functions.sigmoid):
         super(WarpGateUnit, self).__init__()
         if output_type == 'graph':
             LinearFunc = GraphLinear
@@ -30,6 +30,7 @@ class WarpGateUnit(chainer.Chain):
         self.n_layers = n_layers
         self.dropout_ratio = dropout_ratio
         self.output_type = output_type
+        self.activation = activation
 
     def __call__(self, h, g, step=0):
         z = self.H[step](h) + self.G[step](g)
@@ -37,7 +38,7 @@ class WarpGateUnit(chainer.Chain):
         if self.dropout_ratio > 0.0:
             # TODO: fail backward test
             z = functions.dropout(z, ratio=self.dropout_ratio)
-        z = functions.sigmoid(z)
+        z = self.activation(z)
         merged = (1 - z) * h + z * g
         return merged
 
@@ -182,7 +183,8 @@ class GWM(chainer.Chain):
 
     def __init__(self, hidden_dim=16, hidden_dim_super=16, n_layers=4,
                  n_heads=8, dropout_ratio=-1, concat_hidden=False,
-                 tying_flag=False):
+                 tying_flag=False, activation=functions.relu,
+                 wgu_activation=functions.sigmoid):
         super(GWM, self).__init__()
         num_layer = n_layers
         if tying_flag:
@@ -205,9 +207,11 @@ class GWM(chainer.Chain):
 
             # for Warp Gate unit
             self.wgu_local = WarpGateUnit(output_type='graph', hidden_dim=hidden_dim,
-                                          n_layers=n_layers, dropout_ratio=dropout_ratio)
+                                          n_layers=n_layers, dropout_ratio=dropout_ratio,
+                                          activation=wgu_activation)
             self.wgu_super = WarpGateUnit(output_type='super', hidden_dim=hidden_dim_super,
-                                          n_layers=n_layers, dropout_ratio=dropout_ratio)
+                                          n_layers=n_layers, dropout_ratio=dropout_ratio,
+                                          activation=wgu_activation)
 
             # GRU's. not layer-wise (recurrent through layers)
             self.GRU_local = links.GRU(in_size=hidden_dim, out_size=hidden_dim)
@@ -221,6 +225,8 @@ class GWM(chainer.Chain):
         self.dropout_ratio = dropout_ratio
         self.concat_hidden = concat_hidden
         self.tying_flag = tying_flag
+        self.activation = activation
+        self.wgu_activation = wgu_activation
 
     def __call__(self, h, h_new, g, step=0):
         """
@@ -241,7 +247,7 @@ class GWM(chainer.Chain):
         # (minibatch, atom, ch)
         mb, atom, ch = h.shape
         # non linear update of the super node
-        g_new = functions.relu(self.update_super[step](g))
+        g_new = self.activation(self.update_super[step](g))
 
         # Transmitter unit: inter-module message passing
         # original --> super transmission
