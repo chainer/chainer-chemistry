@@ -20,34 +20,32 @@ num_edge_type = 2
 
 @pytest.fixture
 def graph_warp_gate_unit():
-    return WarpGateUnit(output_type='graph', hidden_dim=hidden_dim,
-                        n_layers=1)
+    return WarpGateUnit(output_type='graph', hidden_dim=hidden_dim)
 
 
 @pytest.fixture
 def super_warp_gate_unit():
-    return WarpGateUnit(output_type='super', hidden_dim=supernode_dim,
-                        n_layers=1)
+    return WarpGateUnit(output_type='super', hidden_dim=supernode_dim)
 
 
 @pytest.fixture
 def super_node_transmitter_unit():
     return SuperNodeTransmitterUnit(hidden_dim_super=supernode_dim,
-                                    hidden_dim=hidden_dim, n_layers=1)
+                                    hidden_dim=hidden_dim)
 
 
 @pytest.fixture
 def graph_transmitter_unit():
-    return GraphTransmitterUnit(hidden_dim_super=supernode_dim, hidden_dim=hidden_dim,
-                                n_layers=1)
+    return GraphTransmitterUnit(hidden_dim_super=supernode_dim, hidden_dim=hidden_dim)
 
 
 @pytest.fixture
 def gwm():
     # relu is difficult to test
     return GWM(hidden_dim=hidden_dim, hidden_dim_super=supernode_dim,
-               n_layers=1, activation=functions.identity,
-               wgu_activation=functions.identity)
+               n_layers=2, activation=functions.identity,
+               wgu_activation=functions.identity,
+               gtu_activation=functions.identity)
 
 
 @pytest.fixture
@@ -157,7 +155,7 @@ def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
     gradient_check.check_backward(gwm, (embed_atom_data, new_embed_atom_data,
                                         supernode), (y_grad, supernode_grad),
                                   eps=0.1, detect_nondifferentiable=False,
-                                  rtol=1e-0)
+                                  rtol=1e-1)
 
 
 def test_backward_cpu(gwm, data):
