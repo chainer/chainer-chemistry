@@ -154,7 +154,7 @@ def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
     gradient_check.check_backward(gwm, (embed_atom_data, new_embed_atom_data,
                                         supernode), (y_grad, supernode_grad),
                                   eps=0.1, detect_nondifferentiable=False,
-                                  rtol=1e-1)
+                                  rtol=1e-0)
 
 
 def test_backward_cpu(gwm, data):
