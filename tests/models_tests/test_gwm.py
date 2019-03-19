@@ -1,14 +1,10 @@
-import chainer
 from chainer import cuda
 from chainer import functions
 from chainer import gradient_check
 import numpy
 import pytest
 
-from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
 from chainer_chemistry.models.gwm import GWM, WarpGateUnit, SuperNodeTransmitterUnit, GraphTransmitterUnit
-from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
@@ -138,13 +134,16 @@ def test_forward_cpu(gwm, data):
     check_forward(gwm, embed_atom_data, new_embed_atom_data, supernode)
 
 
-# @pytest.mark.gpu
-# def test_forward_gpu(update, data):
-#     atom_data, adj_data = cuda.to_gpu(data[0]), cuda.to_gpu(data[1])
-#     update.to_gpu()
-#     check_forward(update, atom_data, adj_data)
-#
-#
+@pytest.mark.gpu
+def test_forward_cpu(gwm, data):
+    embed_atom_data, new_embed_atom_data, supernode = data[:3]
+    embed_atom_data = cuda.to_gpu(embed_atom_data)
+    new_embed_atom_data = cuda.to_gpu(new_embed_atom_data)
+    supernode = cuda.to_gpu(supernode)
+    gwm.to_gpu()
+    check_forward(gwm, embed_atom_data, new_embed_atom_data, supernode)
+
+
 def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
                    y_grad, supernode_grad):
     gwm.GRU_local.reset_state()
@@ -160,12 +159,12 @@ def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
 
 def test_backward_cpu(gwm, data):
     check_backward(gwm, *data)
-#
-#
-# @pytest.mark.gpu
-# def test_backward_gpu(update, data):
-#     update.to_gpu()
-#     check_backward(update, *map(cuda.to_gpu, data))
+
+
+@pytest.mark.gpu
+def test_backward_gpu(gwm, data):
+    gwm.to_gpu()
+    check_backward(gwm, *map(cuda.to_gpu, data))
 
 
 def test_forward_cpu_graph_invariant(gwm, data):
