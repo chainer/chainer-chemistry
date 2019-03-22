@@ -1,3 +1,5 @@
+from typing import Any  # NOQA
+from typing import Dict  # NOQA
 from typing import Optional  # NOQA
 
 import chainer  # NOQA
@@ -19,7 +21,8 @@ def set_up_predictor(
         conv_layers,  # type: int
         class_num,  # type: int
         label_scaler=None,  # type: Optional[chainer.Link]
-        postprocess_fn=None  # type: Optional[chainer.FunctionNode]
+        postprocess_fn=None,  # type: Optional[chainer.FunctionNode]
+        conv_kwargs=None  # type: Optional[Dict[str, Any]]
 ):
     # type: (...) -> GraphConvPredictor
     """Set up the predictor, consisting of a GCN and a MLP.
@@ -33,42 +36,59 @@ def set_up_predictor(
         label_scaler (chainer.Link or None): scaler link
         postprocess_fn (chainer.FunctionNode or None):
             postprocess function for prediction.
+        conv_kwargs (dict): keyword args for GraphConvolution model.
     """
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)  # type: Optional[MLP]
+    if conv_kwargs is None:
+        conv_kwargs = {}
 
     if method == 'nfp':
         print('Training an NFP predictor...')
-        conv = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        conv = NFP(
+            out_dim=n_unit,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
-        conv = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        conv = GGNN(
+            out_dim=n_unit,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         conv = SchNet(
-            out_dim=class_num, hidden_dim=n_unit, n_layers=conv_layers)
+            out_dim=class_num,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
         mlp = None
     elif method == 'weavenet':
         print('Training a WeaveNet predictor...')
-        n_atom = 20
-        n_sub_layer = 1
-        weave_channels = [50] * conv_layers
-
-        conv = WeaveNet(
-            weave_channels=weave_channels,
-            hidden_dim=n_unit,
-            n_sub_layer=n_sub_layer,
-            n_atom=n_atom)
+        conv = WeaveNet(hidden_dim=n_unit, **conv_kwargs)
     elif method == 'rsgcn':
         print('Training an RSGCN predictor...')
-        conv = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        conv = RSGCN(
+            out_dim=n_unit,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
     elif method == 'relgcn':
         print('Training a Relational GCN predictor...')
         num_edge_type = 4
         conv = RelGCN(
-            out_channels=n_unit, num_edge_type=num_edge_type, scale_adj=True)
+            out_channels=n_unit,
+            num_edge_type=num_edge_type,
+            scale_adj=True,
+            **conv_kwargs)
     elif method == 'relgat':
         print('Training a Relational GAT predictor...')
-        conv = RelGAT(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
+        conv = RelGAT(
+            out_dim=n_unit,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
 
