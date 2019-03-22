@@ -17,7 +17,7 @@ class GGNNUpdate(chainer.Chain):
     """
 
     def __init__(self, in_channels=16, hidden_channels=None,
-                 out_channels=None, n_edge_type=4):
+                 out_channels=None, n_edge_types=4):
         if hidden_channels is None:
             hidden_channels = in_channels
         if out_channels is None:
@@ -25,9 +25,9 @@ class GGNNUpdate(chainer.Chain):
         super(GGNNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear = GraphLinear(
-                in_channels, n_edge_type * hidden_channels)
+                in_channels, n_edge_types * hidden_channels)
             self.update_layer = links.GRU(2 * hidden_channels, out_channels)
-        self.n_edge_type = n_edge_type
+        self.n_edge_types = n_edge_types
         self.in_channels = in_channels
         self.hidden_channels = hidden_channels
         self.out_channels = out_channels
@@ -36,14 +36,14 @@ class GGNNUpdate(chainer.Chain):
         # --- Message part ---
         mb, atom, _ = h.shape
         m = functions.reshape(self.graph_linear(h),
-                              (mb, atom, self.hidden_channels, self.n_edge_type))
+                              (mb, atom, self.hidden_channels, self.n_edge_types))
         # m: (minibatch, atom, ch, edge_type)
         # Transpose
         m = functions.transpose(m, (0, 3, 1, 2))
         # m: (minibatch, edge_type, atom, ch)
 
         # (minibatch * edge_type, atom, out_ch)
-        m = functions.reshape(m, (mb * self.n_edge_type, atom, self.hidden_channels))
+        m = functions.reshape(m, (mb * self.n_edge_types, atom, self.hidden_channels))
 
         if is_sparse(adj):
             m = functions.sparse_matmul(adj, m)
@@ -52,7 +52,7 @@ class GGNNUpdate(chainer.Chain):
             m = chainer_chemistry.functions.matmul(adj, m)
 
         # (minibatch * edge_type, atom, out_ch)
-        m = functions.reshape(m, (mb, self.n_edge_type, atom, self.hidden_channels))
+        m = functions.reshape(m, (mb, self.n_edge_types, atom, self.hidden_channels))
         m = functions.sum(m, axis=1)
         # (minibatch, atom, out_ch)
 

@@ -58,16 +58,16 @@ class CFConv(chainer.Chain):
 
 
 class SchNetUpdate(chainer.Chain):
-    def __init__(self, hidden_dim=64, num_rbf=300, radius_resolution=0.1,
+    def __init__(self, in_channels=64, num_rbf=300, radius_resolution=0.1,
                  gamma=10.0):
         super(SchNetUpdate, self).__init__()
         with self.init_scope():
             self.linear = chainer.ChainList(
-                *[GraphLinear(hidden_dim) for _ in range(3)])
+                *[GraphLinear(in_channels) for _ in range(3)])
             self.cfconv = CFConv(
                 num_rbf=num_rbf, radius_resolution=radius_resolution,
                 gamma=gamma, hidden_dim=hidden_dim)
-        self.hidden_dim = hidden_dim
+        self.in_channels = in_channels
 
     def __call__(self, x, dist):
         v = self.linear[0](x)

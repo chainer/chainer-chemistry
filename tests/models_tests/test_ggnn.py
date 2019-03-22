@@ -15,19 +15,19 @@ from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 atom_size = 5
 out_dim = 4
 batch_size = 2
-num_edge_type = 3
+n_edge_types = 3
 
 
 @pytest.fixture
 def model():
     numpy.random.seed(0)
-    return GGNN(out_dim=out_dim, n_edge_type=num_edge_type)
+    return GGNN(out_dim=out_dim, n_edge_types=n_edge_types)
 
 
 @pytest.fixture
 def sparse_model():
     numpy.random.seed(0)
-    return SparseGGNN(out_dim=out_dim, num_edge_type=num_edge_type)
+    return SparseGGNN(out_dim=out_dim, num_edge_type=n_edge_types)
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def data():
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)
     adj_data = numpy.random.randint(
-        0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
+        0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
     ).astype(numpy.float32)
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, out_dim)).astype(numpy.float32)

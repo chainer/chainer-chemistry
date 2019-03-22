@@ -13,15 +13,15 @@ class SchNetReadout(chainer.Chain):
             each molecule
     """
 
-    def __init__(self, out_dim=1, hidden_dim=32):
+    def __init__(self, out_dim=1, in_channels=32):
         super(SchNetReadout, self).__init__()
         with self.init_scope():
-            self.linear1 = GraphLinear(hidden_dim)
+            self.linear1 = GraphLinear(in_channels)
             self.linear2 = GraphLinear(out_dim)
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
+        self.hidden_dim = in_channels
 
-    def __call__(self, h):
+    def __call__(self, h, **kwargs):
         h = self.linear1(h)
         h = functions.softplus(h)
         h = self.linear2(h)

@@ -31,12 +31,12 @@ def model_no_dropout():
 
 @pytest.fixture
 def model_with_nfp():
-    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_size=out_dim))
+    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_dim=out_dim))
 
 
 @pytest.fixture
 def model_with_nfp_no_dropout():
-    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_size=out_dim), dropout_ratio=0.)
+    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_dim=out_dim), dropout_ratio=0.)
 
 
 @pytest.fixture

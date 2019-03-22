@@ -12,7 +12,7 @@ class RSGCNUpdate(chainer.Chain):
         out_channels (int): output channel dimension
     """
 
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, **kwargs):
         super(RSGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear = GraphLinear(

@@ -4,8 +4,10 @@ from chainer import functions
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
-class GGNNReadout(chainer.Chain):
-    """GGNN submodule for readout part.
+class GINReadout(chainer.Chain):
+    """GIN submodule for readout part.
+
+    Copied fron GGNN_readout.
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -24,7 +26,7 @@ class GGNNReadout(chainer.Chain):
     def __init__(self, out_dim, in_channels=16, nobias=False,
                  activation=functions.identity,
                  activation_agg=functions.identity):
-        super(GGNNReadout, self).__init__()
+        super(GINReadout, self).__init__()
         with self.init_scope():
             self.i_layer = GraphLinear(None, out_dim, nobias=nobias)
             self.j_layer = GraphLinear(None, out_dim, nobias=nobias)

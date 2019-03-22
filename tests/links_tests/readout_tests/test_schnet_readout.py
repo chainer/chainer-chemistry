@@ -8,21 +8,21 @@ from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
-hidden_dim = 7
+in_channels = 7
 out_dim = 4
 batch_size = 2
 
 
 @pytest.fixture
 def readout():
-    return SchNetReadout(out_dim=out_dim, hidden_dim=hidden_dim)
+    return SchNetReadout(out_dim=out_dim, in_channels=in_channels)
 
 
 @pytest.fixture
 def data():
     numpy.random.seed(0)
     atom_data = numpy.random.uniform(
-        0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size, hidden_dim)
+        0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size, in_channels)
     ).astype('f')
     y_grad = numpy.random.uniform(-1, 1, (batch_size, out_dim)).astype('f')
     return atom_data, y_grad

@@ -71,7 +71,7 @@ class RelGCN(chainer.Chain):
                 RelGCNUpdate(ch_list[i], ch_list[i+1], num_edge_type)
                 for i in range(len(ch_list)-1)])
             self.rgcn_readout = GGNNReadout(
-                out_dim=out_channels, hidden_dim=ch_list[-1],
+                out_dim=out_channels, in_channels=ch_list[-1],
                 nobias=True, activation=functions.tanh)
         # self.num_relations = num_edge_type
         self.input_type = input_type

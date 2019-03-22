@@ -13,13 +13,13 @@ atom_size = 5
 in_channels = 3
 hidden_dim = 4
 batch_size = 2
-num_edge_type = 7
+n_edge_types = 7
 
 
 @pytest.fixture
 def update():
     return RelGCNUpdate(in_channels=in_channels, out_channels=hidden_dim,
-                        num_edge_type=num_edge_type)
+                        n_edge_types=n_edge_types)
 
 
 @pytest.fixture
@@ -28,7 +28,7 @@ def data():
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)).astype('i')
     adj_data = numpy.random.randint(
-        0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
+        0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
     ).astype('f')
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, atom_size, hidden_dim)).astype('f')

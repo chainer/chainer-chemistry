@@ -10,7 +10,7 @@ from chainer_chemistry.models.gwm import GWM
 
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
-                 hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_type=4,
+                 hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4,
                  with_gwm=True, concat_hidden=False, weight_tying=False):
         super(GraphConvModel, self).__init__()
 
@@ -20,10 +20,11 @@ class GraphConvModel(chainer.Chain):
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=in_channels, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
-                *[update_layer(in_channels=in_channels, n_edge_type=n_edge_type)
+                *[update_layer(in_channels=in_channels, out_channels=in_channels,
+                               n_edge_types=n_edge_types)
                   for _ in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
-                *[readout_layer(out_dim=out_dim, hidden_dim=in_channels)
+                *[readout_layer(out_dim=out_dim, in_channels=in_channels)
                   for _ in range(n_readout_layers)])
             if with_gwm:
                 self.gwm = GWM(hidden_dim=in_channels, hidden_dim_super=hidden_dim_super,
@@ -59,13 +60,15 @@ class GraphConvModel(chainer.Chain):
                 h, h_s = self.gwm(h, h2, h_s, update_layer_index)
 
             if self.concat_hidden:
-                g = self.readout_layers[step](h, h0, is_real_node)
+                g = self.readout_layers[step](
+                    h=h, h0=h0, is_real_node=is_real_node)
                 g_list.append(g)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout_layers[0](h, h0, is_real_node)
+            g = self.readout_layers[0](
+                h=h, h0=h0, is_real_node=is_real_node)
             if self.with_gwm:
                 g = functions.concat((g, h_s), axis=1)
                 g = functions.relu(self.linear_for_concat_super(g))

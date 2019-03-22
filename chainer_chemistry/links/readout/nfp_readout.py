@@ -14,14 +14,14 @@ class NFPReadout(chainer.Chain):
             to each molecule (graph)
     """
 
-    def __init__(self, in_channels, out_size):
+    def __init__(self, in_channels, out_dim):
         super(NFPReadout, self).__init__()
         with self.init_scope():
-            self.output_weight = GraphLinear(in_channels, out_size)
+            self.output_weight = GraphLinear(in_channels, out_dim)
         self.in_channels = in_channels
-        self.out_size = out_size
+        self.out_dim = out_dim
 
-    def __call__(self, h, is_real_node=None):
+    def __call__(self, h, is_real_node=None, **kwargs):
         # h: (minibatch, node, ch)
         # is_real_node: (minibatch, node)
 

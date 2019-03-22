@@ -6,8 +6,14 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.graph_conv_model import GraphConvModel
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gin_update import GINUpdate
+from chainer_chemistry.links.update.relgat_update import RelGATUpdate
+from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
+from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
+from chainer_chemistry.links.update.schnet_update import SchNetUpdate
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.readout.gin_readout import GINReadout
+from chainer_chemistry.links.readout.nfp_readout import NFPReadout
+from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
 
 
 atom_size = 5
@@ -15,19 +21,21 @@ super_dim = 7
 in_channels = 6
 out_dim = 4
 batch_size = 2
-num_edge_type = 3
+n_edge_types = 3
 
-updates = [GGNNUpdate, GINUpdate]
-readouts = [GGNNReadout, GINReadout]
+updates_2dim = [GINUpdate, RSGCNUpdate, SchNetUpdate]
+updates_3dim = [GGNNUpdate, RelGATUpdate, RelGCNUpdate]
+updates = updates_2dim + updates_3dim
+readouts = [GGNNReadout, GINReadout, NFPReadout, SchNetReadout]
 params = list(itertools.product(updates, readouts))
 
 
 @pytest.fixture(params=params)
 def plain_context(request):
     update, readout = request.param
-    if update == GGNNUpdate:
+    if update in updates_3dim:
         adj_type = 3
-    elif update == GINUpdate:
+    elif update in updates_2dim:
         adj_type = 2
     else:
         raise ValueError
@@ -39,9 +47,9 @@ def plain_context(request):
 @pytest.fixture(params=params)
 def gwm_context(request):
     update, readout = request.param
-    if update == GGNNUpdate:
+    if update in updates_3dim:
         adj_type = 3
-    elif update == GINUpdate:
+    elif update in updates_2dim:
         adj_type = 2
     else:
         raise ValueError
@@ -53,14 +61,14 @@ def gwm_context(request):
 def make_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        in_channels=in_channels, n_edge_type=num_edge_type,
+        in_channels=in_channels, n_edge_types=n_edge_types,
         out_dim=out_dim, with_gwm=False)
 
 
 def make_gwm_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        in_channels=in_channels, n_edge_type=num_edge_type,
+        in_channels=in_channels, n_edge_types=n_edge_types,
         hidden_dim_super=super_dim, out_dim=out_dim, with_gwm=True)
 
 
@@ -75,7 +83,7 @@ def make_data(adj_type):
         ).astype(numpy.float32)
     elif adj_type == 3:
         adj_data = numpy.random.randint(
-            0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
+            0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
         ).astype(numpy.float32)
     else:
         raise ValueError

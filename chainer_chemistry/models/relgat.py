@@ -66,7 +66,7 @@ class RelGAT(chainer.Chain):
                                  concat_heads=concat_heads))
             self.update_layers = chainer.ChainList(*update_layers)
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
-                out_dim=out_dim, hidden_dim=hidden_dim,
+                out_dim=out_dim, in_channels=hidden_dim,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
 

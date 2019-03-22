@@ -13,13 +13,13 @@ class RelGCNUpdate(chainer.Chain):
         num_edge_type (int): number of types of edge
     """
 
-    def __init__(self, in_channels, out_channels, num_edge_type=4):
+    def __init__(self, in_channels, out_channels, n_edge_types=4):
         super(RelGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear_self = GraphLinear(in_channels, out_channels)
             self.graph_linear_edge = GraphLinear(
-                in_channels, out_channels * num_edge_type)
-        self.num_edge_type = num_edge_type
+                in_channels, out_channels * n_edge_types)
+        self.n_edge_types = n_edge_types
         self.in_channels = in_channels
         self.out_channels = out_channels
 
@@ -44,7 +44,7 @@ class RelGCNUpdate(chainer.Chain):
         # arbitrarily set it to 1
         m = self.graph_linear_edge(h)
         m = functions.reshape(
-            m, (mb, node, self.out_channels, self.num_edge_type))
+            m, (mb, node, self.out_channels, self.n_edge_types))
         m = functions.transpose(m, (0, 3, 1, 2))
         # m: (batchsize, edge_type, node, ch)
         # hrL (batchsize, edge_type, node, ch)
