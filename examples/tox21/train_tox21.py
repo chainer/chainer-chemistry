@@ -20,10 +20,10 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry import datasets as D
 from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
 from chainer_chemistry.models.prediction import Classifier
+from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
 
 import data
-import predictor
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
 lg = RDLogger.logger()
@@ -94,7 +94,7 @@ def main():
     train, val, _ = data.load_dataset(method, labels, num_data=args.num_data)
 
     # Network
-    predictor_ = predictor.build_predictor(
+    predictor_ = set_up_predictor(
         method, args.unit_num, args.conv_layers, class_num)
 
     iterator_type = args.iterator_type
