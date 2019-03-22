@@ -4,7 +4,7 @@ from chainer import functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
-from chainer_chemistry.links.readout.gin_readout import GINReadout
+from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.update.gin_update import GINUpdate
 
 
@@ -50,7 +50,7 @@ class GIN(chainer.Chain):
                 for _ in range(n_message_layer)])
 
             # Readout
-            self.readout_layers = chainer.ChainList(*[GINReadout(
+            self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
