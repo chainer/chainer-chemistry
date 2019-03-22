@@ -55,5 +55,20 @@ def test_call_invalid_model():
             class_num=class_num)
 
 
+def test_set_up_predictor_with_conv_kwargs():
+    # type: () -> None
+    predictor = set_up_predictor(
+        method='nfp',
+        n_unit=n_unit,
+        conv_layers=conv_layers,
+        class_num=class_num,
+        conv_kwargs={
+            'max_degree': 4,
+            'concat_hidden': True
+        })
+    assert predictor.graph_conv.max_degree == 4
+    assert predictor.graph_conv.concat_hidden is True
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
