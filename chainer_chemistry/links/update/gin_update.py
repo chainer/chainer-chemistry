@@ -1,13 +1,12 @@
 import chainer
-from chainer import functions as F
-from chainer import links as L
+from chainer import functions
 
 import chainer_chemistry
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class GINUpdate(chainer.Chain):
-    """GIN submodule for update part.
+    r"""GIN submodule for update part.
 
     Simplest implementation of Graph Isomorphism Network (GIN):
     2-layered MLP + ReLU
@@ -18,7 +17,8 @@ class GINUpdate(chainer.Chain):
     # TODO: implement Batch Normalization
     # TODO: use GraphMLP instead of GraphLinears
 
-    See: Xu, Hu, Leskovec, and Jegelka, "How powerful are graph neural networks?", in ICLR 2019.
+    See: Xu, Hu, Leskovec, and Jegelka, \
+        "How powerful are graph neural networks?", in ICLR 2019.
 
     Args:
         hidden_dim (int): dimension of feature vector associated to
@@ -41,8 +41,8 @@ class GINUpdate(chainer.Chain):
         Describing a layer.
 
         Args:
-            h (numpy.ndarray): minibatch by num_nodes by hidden_dim numpy array.
-                local node hidden states
+            h (numpy.ndarray): minibatch by num_nodes by hidden_dim
+                numpy array. local node hidden states
             adj (numpy.ndarray): minibatch by num_nodes by num_nodes 1/0 array.
                 Adjacency matrices over several bond types
 
@@ -51,32 +51,27 @@ class GINUpdate(chainer.Chain):
 
         """
 
-        xp = self.xp
-
         # (minibatch, atom, ch)
         mb, atom, ch = h.shape
 
         # --- Message part ---
-        # Take sum along adjacent atoms
-
         # adj (mb, atom, atom)
         # fv   (minibatch, atom, ch)
         fv = chainer_chemistry.functions.matmul(adj, h)
-        assert(fv.shape == (mb, atom, ch) )
+        assert (fv.shape == (mb, atom, ch))
 
         # sum myself
         sum_h = fv + h
-        assert(sum_h.shape == (mb, atom, ch))
+        assert (sum_h.shape == (mb, atom, ch))
 
         # apply MLP
-        new_h = F.relu(self.linear_g1(sum_h))
+        new_h = functions.relu(self.linear_g1(sum_h))
         if self.dropout_ratio > 0.0:
-            new_h = F.relu(F.dropout(self.linear_g2(new_h),ratio=self.dropout_ratio))
+            new_h = functions.relu(
+                functions.dropout(
+                    self.linear_g2(new_h), ratio=self.dropout_ratio))
         else:
-            new_h = F.relu(self.linear_g2(new_h))
+            new_h = functions.relu(self.linear_g2(new_h))
 
         # done???
         return new_h
-
-    def reset_state(self):
-        self.update_layer.reset_state()
