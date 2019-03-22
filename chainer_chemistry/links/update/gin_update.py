@@ -26,7 +26,7 @@ class GINUpdate(chainer.Chain):
         dropout_ratio (float): ratio of dropout, insted of bach normlization
     """
 
-    def __init__(self, hidden_dim=16, dropout_ratio=0.5):
+    def __init__(self, hidden_dim=16, num_edge_type=4, dropout_ratio=0.5):
         super(GINUpdate, self).__init__()
         with self.init_scope():
             # two Linear + RELU
