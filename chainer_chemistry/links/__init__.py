@@ -1,5 +1,6 @@
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID  # NOQA
 from chainer_chemistry.links.connection.graph_linear import GraphLinear  # NOQA
+from chainer_chemistry.links.connection.graph_mlp import GraphMLP  # NOQA
 
 from chainer_chemistry.links.normalization.graph_batch_normalization import GraphBatchNormalization  # NOQA
 
@@ -12,6 +13,7 @@ from chainer_chemistry.links.readout.schnet_readout import SchNetReadout  # NOQA
 from chainer_chemistry.links.readout.set2set import Set2Set  # NOQA
 
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
+from chainer_chemistry.links.scaler.flow_scaler import FlowScaler  # NOQA
 
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate  # NOQA
 from chainer_chemistry.links.update.gin_update import GINUpdate  # NOQA
