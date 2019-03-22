@@ -12,7 +12,7 @@ from chainer_chemistry.links.readout.gin_readout import GINReadout
 
 atom_size = 5
 super_dim = 7
-hidden_dim = 6
+in_channels = 6
 out_dim = 4
 batch_size = 2
 num_edge_type = 3
@@ -53,14 +53,14 @@ def gwm_context(request):
 def make_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        hidden_dim=hidden_dim, n_edge_type=num_edge_type,
+        in_channels=in_channels, n_edge_type=num_edge_type,
         out_dim=out_dim, with_gwm=False)
 
 
 def make_gwm_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        hidden_dim=hidden_dim, n_edge_type=num_edge_type,
+        in_channels=in_channels, n_edge_type=num_edge_type,
         hidden_dim_super=super_dim, out_dim=out_dim, with_gwm=True)
 
 

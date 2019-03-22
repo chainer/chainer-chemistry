@@ -17,7 +17,7 @@ class_num = 7
 n_unit = 11
 out_dim = 4
 batch_size = 2
-num_edge_type = 3
+n_edge_type = 3
 
 
 @pytest.fixture
@@ -25,7 +25,7 @@ def model():
     # type: () -> GraphConvPredictor
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
     ggnn = GGNN(
-        out_dim=out_dim, hidden_dim=n_unit, num_edge_type=num_edge_type)
+        out_dim=out_dim, in_channels=n_unit, n_edge_type=n_edge_type)
     return GraphConvPredictor(ggnn, mlp)
 
 
@@ -36,7 +36,7 @@ def data():
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)).astype('i')
     adj_data = numpy.random.randint(
-        0, high=2, size=(batch_size, num_edge_type, atom_size,
+        0, high=2, size=(batch_size, n_edge_type, atom_size,
                          atom_size)).astype('f')
     y_grad = numpy.random.uniform(-1, 1, (batch_size, class_num)).astype('f')
     return atom_data, adj_data, y_grad

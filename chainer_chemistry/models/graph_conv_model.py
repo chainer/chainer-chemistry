@@ -9,7 +9,7 @@ from chainer_chemistry.models.gwm import GWM
 
 
 class GraphConvModel(chainer.Chain):
-    def __init__(self, hidden_dim, out_dim, n_layers, update_layer, readout_layer,
+    def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_type=4,
                  with_gwm=True, concat_hidden=False, weight_tying=False):
         super(GraphConvModel, self).__init__()
@@ -18,15 +18,15 @@ class GraphConvModel(chainer.Chain):
         n_readout_layers = n_layers if concat_hidden else 1
 
         with self.init_scope():
-            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=in_channels, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
-                *[update_layer(hidden_dim=hidden_dim, num_edge_type=n_edge_type)
+                *[update_layer(in_channels=in_channels, n_edge_type=n_edge_type)
                   for _ in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
-                *[readout_layer(out_dim=out_dim, hidden_dim=hidden_dim)
+                *[readout_layer(out_dim=out_dim, hidden_dim=in_channels)
                   for _ in range(n_readout_layers)])
             if with_gwm:
-                self.gwm = GWM(hidden_dim=hidden_dim, hidden_dim_super=hidden_dim_super,
+                self.gwm = GWM(hidden_dim=in_channels, hidden_dim_super=hidden_dim_super,
                                n_layers=n_update_layers)
                 self.embed_super = links.Linear(None, out_size=hidden_dim_super)
                 self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)

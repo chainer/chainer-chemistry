@@ -14,14 +14,14 @@ from chainer_chemistry.utils.sparse_utils import convert_sparse_with_edge_type
 from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 
 atom_size = 5
-hidden_dim = 4
+in_channels = 4
 batch_size = 2
-num_edge_type = 2
+n_edge_type = 2
 
 
 @pytest.fixture
 def update():
-    return GGNNUpdate(hidden_dim=hidden_dim, num_edge_type=num_edge_type)
+    return GGNNUpdate(in_channels=in_channels, n_edge_type=n_edge_type)
 
 
 @pytest.fixture
@@ -31,12 +31,12 @@ def data():
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
         ).astype('i')
     adj_data = numpy.random.uniform(
-        0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
+        0, high=2, size=(batch_size, n_edge_type, atom_size, atom_size)
         ).astype('f')
     y_grad = numpy.random.uniform(
-        -1, 1, (batch_size, atom_size, hidden_dim)).astype('f')
+        -1, 1, (batch_size, atom_size, in_channels)).astype('f')
 
-    embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=hidden_dim)
+    embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=in_channels)
     embed_atom_data = embed(atom_data).data
     return embed_atom_data, adj_data, y_grad
 
@@ -52,7 +52,7 @@ def convert_to_sparse(dense_adj):
 def check_forward(update, atom_data, adj_data):
     update.reset_state()
     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
-    assert y_actual.shape == (batch_size, atom_size, hidden_dim)
+    assert y_actual.shape == (batch_size, atom_size, in_channels)
 
     return y_actual
 

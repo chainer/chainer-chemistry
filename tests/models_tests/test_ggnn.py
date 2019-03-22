@@ -21,7 +21,7 @@ num_edge_type = 3
 @pytest.fixture
 def model():
     numpy.random.seed(0)
-    return GGNN(out_dim=out_dim, num_edge_type=num_edge_type)
+    return GGNN(out_dim=out_dim, n_edge_type=num_edge_type)
 
 
 @pytest.fixture
