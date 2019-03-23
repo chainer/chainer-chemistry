@@ -21,9 +21,8 @@ from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, Regressor)
-from chainer_chemistry.models.prediction import GraphConvPredictor
+from chainer_chemistry.models import Regressor
+from chainer_chemistry.models.prediction import set_up_predictor
 
 
 class MeanAbsError(object):
@@ -93,66 +92,6 @@ class ScaledAbsError(object):
         else:
             diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
         return numpy.mean(numpy.absolute(diff), axis=0)[0]
-
-
-def set_up_predictor(method, n_unit, conv_layers, class_num):
-    """Sets up the graph convolution network  predictor.
-
-    Args:
-        method: Method name. Currently, the supported ones are `nfp`, `ggnn`,
-                `schnet`, `weavenet` and `rsgcn`.
-        n_unit: Number of hidden units.
-        conv_layers: Number of convolutional layers for the graph convolution
-                     network.
-        class_num: Number of output classes.
-
-    Returns:
-        An instance of the selected predictor.
-    """
-
-    predictor = None
-    mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
-
-    if method == 'nfp':
-        print('Training an NFP predictor...')
-        nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(nfp, mlp)
-    elif method == 'ggnn':
-        print('Training a GGNN predictor...')
-        ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(ggnn, mlp)
-    elif method == 'schnet':
-        print('Training an SchNet predictor...')
-        schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
-                        n_layers=conv_layers)
-        predictor = GraphConvPredictor(schnet, None)
-    elif method == 'weavenet':
-        print('Training a WeaveNet predictor...')
-        n_atom = 20
-        n_sub_layer = 1
-        weave_channels = [50] * conv_layers
-
-        weavenet = WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
-                            n_sub_layer=n_sub_layer, n_atom=n_atom)
-        predictor = GraphConvPredictor(weavenet, mlp)
-    elif method == 'rsgcn':
-        print('Training an RSGCN predictor...')
-        rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        predictor = GraphConvPredictor(rsgcn, mlp)
-    elif method == 'relgcn':
-        print('Training an RelGCN predictor...')
-        num_edge_type = 4
-        relgcn = RelGCN(out_channels=n_unit, num_edge_type=num_edge_type,
-                        scale_adj=True)
-        predictor = GraphConvPredictor(relgcn, mlp)
-    elif method == 'relgat':
-        print('Training an RelGAT predictor...')
-        relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
-                        n_layers=conv_layers)
-        predictor = GraphConvPredictor(relgat, mlp)
-    else:
-        raise ValueError('[ERROR] Invalid method: {}'.format(method))
-    return predictor
 
 
 def parse_arguments():
