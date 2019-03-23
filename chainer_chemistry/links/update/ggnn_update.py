@@ -17,7 +17,7 @@ class GGNNUpdate(chainer.Chain):
     """
 
     def __init__(self, in_channels=16, hidden_channels=None,
-                 out_channels=None, n_edge_types=4):
+                 out_channels=None, n_edge_types=4, **kwargs):
         if hidden_channels is None:
             hidden_channels = in_channels
         if out_channels is None:

@@ -15,28 +15,71 @@ def to_array(x):
     return x
 
 
+def rescale_adj(adj):
+    """Normalize adjacency matrix
+    It ensures that activations are on a similar scale irrespective of
+    the number of neighbors
+
+    Args:
+        adj (:class:`chainer.Variable`, or :class:`numpy.ndarray` \
+        or :class:`cupy.ndarray`):
+            adjacency matrix
+
+    Returns:
+        :class:`chainer.Variable`: normalized adjacency matrix
+
+    """
+    xp = cuda.get_array_module(adj)
+    num_neighbors = functions.sum(adj, axis=(1, 2))
+    base = xp.ones(num_neighbors.shape, dtype=xp.float32)
+    cond = num_neighbors.data != 0
+    num_neighbors_inv = 1 / functions.where(cond, num_neighbors, base)
+    return adj * functions.broadcast_to(
+        num_neighbors_inv[:, None, None, :], adj.shape)
+
+
 class GraphConvModel(chainer.Chain):
-    def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
+    def __init__(self, in_channels, out_dim, update_layer, readout_layer, n_layers=None,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
                  dropout_ratio=-1.0, with_gwm=True, concat_hidden=False, sum_hidden=False,
-                 weight_tying=False, activation=None):
+                 weight_tying=False, scale_adj=False, activation=None):
+        # Note: in_channels can be integer or list
+        # Note: Is out_dim necessary?
         super(GraphConvModel, self).__init__()
+
+        if with_gwm:
+            if isinstance(in_channels, list):
+            # TODO: same channel
+                if all([in_dim == in_channels[0] for in_dim in in_channels]):
+                    raise ValueError
+            if hidden_dim_super is None:
+                raise ValueError
+
+        if isinstance(in_channels, int):
+            if n_layers is None:
+                raise ValueError
+            in_channels = [in_channels for _ in range(n_layers + 1)]
+        elif isinstance(in_channels, list):
+            # TODO: check
+            n_layers = len(in_channels) - 1
+        else:
+            raise ValueError
 
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
 
         with self.init_scope():
-            self.embed = EmbedAtomID(out_size=in_channels, in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=in_channels[0], in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
-                *[update_layer(in_channels=in_channels, out_channels=in_channels,
+                *[update_layer(in_channels=in_channels[i], out_channels=in_channels[i+1],
                                n_edge_types=n_edge_types, dropout_ratio=dropout_ratio)
-                  for _ in range(n_update_layers)])
+                  for i in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
-                *[readout_layer(out_dim=out_dim, in_channels=in_channels)
+                *[readout_layer(out_dim=out_dim, in_channels=in_channels[-1])
                   for _ in range(n_readout_layers)])
             if with_gwm:
-                self.gwm = GWM(hidden_dim=in_channels, hidden_dim_super=hidden_dim_super,
+                self.gwm = GWM(hidden_dim=in_channels[0], hidden_dim_super=hidden_dim_super,
                                n_layers=n_update_layers)
                 self.embed_super = links.Linear(None, out_size=hidden_dim_super)
                 self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)
@@ -59,6 +102,8 @@ class GraphConvModel(chainer.Chain):
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)
         else:
+            # TODO: GraphLinear or GraphMLP can be used.
+            # TODO: RelGCN use GraphLinear here.
             h = atom_array
 
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
@@ -77,10 +122,15 @@ class GraphConvModel(chainer.Chain):
             ((degree_mat - degree) == 0)[:, :, None], h.shape)
             for degree in range(1, self.n_degree_type + 1)]
 
+        if self.scale_adj:
+            adj = rescale_adj(adj)
+
         g_list = []
         for step in range(self.n_layers):
             update_layer_index = 0 if self.weight_tying else step
             h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
+            if self.activation is not None:
+                h_new = self.activation(h_new)
 
             if self.with_gwm:
                 h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)

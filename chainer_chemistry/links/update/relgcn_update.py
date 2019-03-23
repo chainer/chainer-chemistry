@@ -13,7 +13,8 @@ class RelGCNUpdate(chainer.Chain):
         num_edge_type (int): number of types of edge
     """
 
-    def __init__(self, in_channels, out_channels, n_edge_types=4):
+    def __init__(self, in_channels, out_channels, n_edge_types=4,
+                 **kwargs):
         super(RelGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear_self = GraphLinear(in_channels, out_channels)
