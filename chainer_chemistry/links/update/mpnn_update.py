@@ -21,13 +21,16 @@ class MPNNUpdate(chainer.Chain):
 
     """
 
-    def __init__(self, hidden_dim=16, nn=None):
+    def __init__(self, in_channels=16, out_channels=None, nn=None, **kwargs):
+        if out_channels is None:
+            out_channels = in_channels
         # type: (int, Optional[chainer.Link]) -> None
         super(MPNNUpdate, self).__init__()
         with self.init_scope():
-            self.message_layer = EdgeNet(out_channels=hidden_dim, nn=nn)
-            self.update_layer = links.GRU(2 * hidden_dim, hidden_dim)
-        self.hidden_dim = hidden_dim
+            self.message_layer = EdgeNet(out_channels=in_channels, nn=nn)
+            self.update_layer = links.GRU(2 * in_channels, out_channels)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
         self.nn = nn
 
     def __call__(self, h, adj):
@@ -35,9 +38,9 @@ class MPNNUpdate(chainer.Chain):
         # adj: (mb, edge_type, node, node)
         mb, node, ch = h.shape
         h = self.message_layer(h, adj)  # h: (mb, node, hidden_dim*2)
-        h = functions.reshape(h, (mb * node, self.hidden_dim * 2))
+        h = functions.reshape(h, (mb * node, self.in_channels * 2))
         h = self.update_layer(h)  # h: (mb*node, hidden_dim)
-        h = functions.reshape(h, (mb, node, self.hidden_dim))
+        h = functions.reshape(h, (mb, node, self.out_channels))
         return h
 
     def reset_state(self):

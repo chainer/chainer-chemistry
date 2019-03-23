@@ -6,6 +6,7 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.graph_conv_model import GraphConvModel
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gin_update import GINUpdate
+from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
 from chainer_chemistry.links.update.relgat_update import RelGATUpdate
 from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
 from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
@@ -24,7 +25,7 @@ batch_size = 2
 n_edge_types = 3
 
 updates_2dim = [GINUpdate, RSGCNUpdate, SchNetUpdate]
-updates_3dim = [GGNNUpdate, RelGATUpdate, RelGCNUpdate]
+updates_3dim = [GGNNUpdate, MPNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
 readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
 params = list(itertools.product(updates, readouts))
