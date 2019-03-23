@@ -18,7 +18,8 @@ def to_array(x):
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
-                 with_gwm=True, concat_hidden=False, sum_hidden=False, weight_tying=False):
+                 dropout_ratio=-1.0, with_gwm=True, concat_hidden=False, sum_hidden=False,
+                 weight_tying=False, activation=None):
         super(GraphConvModel, self).__init__()
 
         n_update_layers = 1 if weight_tying else n_layers
@@ -29,7 +30,7 @@ class GraphConvModel(chainer.Chain):
             self.embed = EmbedAtomID(out_size=in_channels, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
                 *[update_layer(in_channels=in_channels, out_channels=in_channels,
-                               n_edge_types=n_edge_types)
+                               n_edge_types=n_edge_types, dropout_ratio=dropout_ratio)
                   for _ in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim, in_channels=in_channels)
@@ -46,6 +47,11 @@ class GraphConvModel(chainer.Chain):
         self.concat_hidden = concat_hidden
         self.sum_hidden = sum_hidden
         self.n_degree_type = n_degree_type
+        self.scale_adj = scale_adj
+        # TODO: For RelGCN. Support other
+        self.activation = activation
+        # TODO: For GIN. Support other
+        self.dropout_ratio = dropout_ratio
 
     def __call__(self, atom_array, adj, super_node=None, is_real_node=None):
         self.reset_state()
@@ -74,11 +80,11 @@ class GraphConvModel(chainer.Chain):
         g_list = []
         for step in range(self.n_layers):
             update_layer_index = 0 if self.weight_tying else step
-            h2 = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
+            h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
 
             if self.with_gwm:
-                h, h_s = self.gwm(h, h2, h_s, update_layer_index)
-
+                h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)
+            h = h_new
             if self.concat_hidden or self.sum_hidden:
                 g = self.readout_layers[step](
                     h=h, h0=h0, is_real_node=is_real_node)

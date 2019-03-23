@@ -38,6 +38,7 @@ class GIN(GraphConvModel):
             update_layer=GINUpdate, readout_layer=GGNNReadout,
             out_dim=out_dim, in_channels=in_channels,
             n_layers=n_layers, n_atom_types=n_atom_types,
-            concat_hidden=concat_hidden, weight_tying=weight_tying,
-            n_edge_types=n_edge_types, with_gwm=with_gwm
+            dropout_ratio=dropout_ratio, concat_hidden=concat_hidden,
+            weight_tying=weight_tying, n_edge_types=n_edge_types,
+            with_gwm=with_gwm
         )

@@ -13,7 +13,7 @@ from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
-hidden_channels = 4
+in_channels = 4
 batch_size = 3
 num_edge_type = 7
 
@@ -21,7 +21,7 @@ num_edge_type = 7
 @pytest.fixture
 def update():
     # type: () -> GINUpdate
-    return GINUpdate(hidden_dim=hidden_channels, dropout_ratio=0)
+    return GINUpdate(in_channels=in_channels, dropout_ratio=0)
 
 
 @pytest.fixture
@@ -33,8 +33,8 @@ def data():
     adj_data = numpy.random.randint(
         0, high=2, size=(batch_size, atom_size, atom_size)).astype('f')
     y_grad = numpy.random.uniform(
-        -1, 1, (batch_size, atom_size, hidden_channels)).astype('f')
-    embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=hidden_channels)
+        -1, 1, (batch_size, atom_size, in_channels)).astype('f')
+    embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=in_channels)
     embed_atom_data = embed(atom_data).data
     return embed_atom_data, adj_data, y_grad
 
@@ -43,7 +43,7 @@ def data():
 def check_forward(update, atom_data, adj_data):
     # type: (GINUpdate, numpy.ndarray, numpy.ndarray) -> None
     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
-    assert y_actual.shape == (batch_size, atom_size, hidden_channels)
+    assert y_actual.shape == (batch_size, atom_size, in_channels)
 
 
 def test_forward_cpu(update, data):
