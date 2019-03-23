@@ -42,7 +42,7 @@ def rescale_adj(adj):
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, update_layer, readout_layer, n_layers=None,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
-                 n_heads=8, negative_slope=0.2, dropout_ratio=-1.0, with_gwm=True,
+                 n_heads=8, negative_slope=0.2, dropout_ratio=-1.0, with_gwm=True, concat_heads=False,
                  concat_hidden=False, sum_hidden=False, weight_tying=False, scale_adj=False, activation=None,
                  use_batchnorm=False):
         # Note: in_channels can be integer or list
@@ -76,7 +76,8 @@ class GraphConvModel(chainer.Chain):
             self.update_layers = chainer.ChainList(
                 *[update_layer(in_channels=in_channels[i], out_channels=in_channels[i+1],
                                n_edge_types=n_edge_types, dropout_ratio=dropout_ratio,
-                               n_heads=n_heads, negative_slope=negative_slope)
+                               n_heads=n_heads, negative_slope=negative_slope,
+                               concat_heads=concat_heads)
                   for i in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim, in_channels=in_channels[-1])
