@@ -11,6 +11,7 @@ from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
 from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
 from chainer_chemistry.links.update.schnet_update import SchNetUpdate
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
+from chainer_chemistry.links.readout.mpnn_readout import MPNNReadout
 from chainer_chemistry.links.readout.nfp_readout import NFPReadout
 from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
 
@@ -25,7 +26,7 @@ n_edge_types = 3
 updates_2dim = [GINUpdate, RSGCNUpdate, SchNetUpdate]
 updates_3dim = [GGNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
-readouts = [GGNNReadout, NFPReadout, SchNetReadout]
+readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
 params = list(itertools.product(updates, readouts))
 
 

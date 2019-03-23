@@ -16,19 +16,19 @@ class MPNNReadout(chainer.Chain):
         processing_steps (int): number of processing for set2set
     """
 
-    def __init__(self, out_dim, hidden_dim, n_layers, processing_steps=3):
+    def __init__(self, out_dim, in_channels, n_layers=1, processing_steps=3):
         # type: (int, int, int, int) -> None
         super(MPNNReadout, self).__init__()
         with self.init_scope():
-            self.set2set = Set2Set(in_channels=hidden_dim, n_layers=n_layers)
-            self.linear1 = links.Linear(None, hidden_dim)
+            self.set2set = Set2Set(in_channels=in_channels, n_layers=n_layers)
+            self.linear1 = links.Linear(None, in_channels)
             self.linear2 = links.Linear(None, out_dim)
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
+        self.in_channels = in_channels
         self.n_layers = n_layers
         self.processing_steps = processing_steps
 
-    def __call__(self, h):
+    def __call__(self, h, **kwargs):
         # type: (chainer.Variable) -> chainer.Variable
         # h: (mb, node, ch)
         self.set2set.reset_state()
