@@ -24,7 +24,7 @@ def model(request):
     message_func, readout_func = request.param
     return MPNN(
         out_dim=out_dim,
-        num_edge_type=num_edge_type,
+        n_edge_types=num_edge_type,
         message_func=message_func,
         readout_func=readout_func)
 

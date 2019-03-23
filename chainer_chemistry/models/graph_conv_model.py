@@ -8,6 +8,13 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.gwm import GWM
 
 
+def to_array(x):
+    """Convert x into numpy.ndarray or cupy.ndarray"""
+    if isinstance(x, chainer.Variable):
+        x = x.array
+    return x
+
+
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
@@ -54,9 +61,9 @@ class GraphConvModel(chainer.Chain):
 
         # For NFP Update
         if adj.ndim == 4:
-            degree_mat = self.xp.sum(adj, axis=(1, 2))
+            degree_mat = self.xp.sum(to_array(adj), axis=(1, 2))
         elif adj.ndim == 3:
-            degree_mat = self.xp.sum(adj, axis=1)
+            degree_mat = self.xp.sum(to_array(adj), axis=1)
         else:
             raise ValueError
         # deg_conds: (minibatch, atom, ch)
@@ -66,7 +73,6 @@ class GraphConvModel(chainer.Chain):
 
         g_list = []
         for step in range(self.n_layers):
-            print(step)
             update_layer_index = 0 if self.weight_tying else step
             h2 = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
 
@@ -97,5 +103,4 @@ class GraphConvModel(chainer.Chain):
             [update_layer.reset_state() for update_layer in self.update_layers]
 
         if self.with_gwm:
-            self.gwm.GRU_super.reset_state()
-            self.gwm.GRU_local.reset_state()
+            self.gwm.reset_state()
