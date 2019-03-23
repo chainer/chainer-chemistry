@@ -39,7 +39,7 @@ class RelGATUpdate(chainer.Chain):
         self.concat_heads = concat_heads
         self.negative_slope = negative_slope
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         xp = self.xp
         # (minibatch, atom, channel)
         mb, atom, ch = h.shape

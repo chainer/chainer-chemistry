@@ -32,7 +32,7 @@ class GGNNUpdate(chainer.Chain):
         self.hidden_channels = hidden_channels
         self.out_channels = out_channels
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         # --- Message part ---
         mb, atom, _ = h.shape
         m = functions.reshape(self.graph_linear(h),

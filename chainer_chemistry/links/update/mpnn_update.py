@@ -33,7 +33,7 @@ class MPNNUpdate(chainer.Chain):
         self.out_channels = out_channels
         self.nn = nn
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         # type: (chainer.Variable, chainer.Variable) -> chainer.Variable
         # adj: (mb, edge_type, node, node)
         mb, node, ch = h.shape

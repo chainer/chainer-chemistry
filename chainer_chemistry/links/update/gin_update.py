@@ -39,7 +39,7 @@ class GINUpdate(chainer.Chain):
         self.dropout_ratio = dropout_ratio
     # end-def
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         """
         Describing a layer.
 

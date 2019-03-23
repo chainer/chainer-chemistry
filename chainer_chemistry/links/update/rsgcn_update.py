@@ -20,7 +20,7 @@ class RSGCNUpdate(chainer.Chain):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         # --- Message part ---
         h = chainer_chemistry.functions.matmul(adj, h)
         # --- Update part ---

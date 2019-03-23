@@ -23,7 +23,7 @@ class RelGCNUpdate(chainer.Chain):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         """
 
         Args:

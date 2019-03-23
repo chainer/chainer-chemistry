@@ -69,10 +69,10 @@ class SchNetUpdate(chainer.Chain):
                 gamma=gamma, hidden_dim=hidden_dim)
         self.in_channels = in_channels
 
-    def __call__(self, x, dist):
-        v = self.linear[0](x)
-        v = self.cfconv(v, dist)
+    def __call__(self, h, adj, **kwargs):
+        v = self.linear[0](h)
+        v = self.cfconv(v, adj)
         v = self.linear[1](v)
         v = functions.softplus(v)
         v = self.linear[2](v)
-        return x + v
+        return h + v

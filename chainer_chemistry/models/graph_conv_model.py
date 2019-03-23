@@ -10,12 +10,13 @@ from chainer_chemistry.models.gwm import GWM
 
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, n_layers, update_layer, readout_layer,
-                 hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4,
-                 with_gwm=True, concat_hidden=False, weight_tying=False):
+                 hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
+                 with_gwm=True, concat_hidden=False, sum_hidden=False, weight_tying=False):
         super(GraphConvModel, self).__init__()
 
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
+        n_degree_type = max_degree + 1
 
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=in_channels, in_size=n_atom_types)
@@ -36,6 +37,8 @@ class GraphConvModel(chainer.Chain):
         self.weight_tying = weight_tying
         self.with_gwm = with_gwm
         self.concat_hidden = concat_hidden
+        self.sum_hidden = sum_hidden
+        self.n_degree_type = n_degree_type
 
     def __call__(self, atom_array, adj, super_node=None, is_real_node=None):
         self.reset_state()
@@ -49,17 +52,28 @@ class GraphConvModel(chainer.Chain):
         if self.with_gwm:
             h_s = self.embed_super(super_node)
 
+        # For NFP Update
+        if adj.ndim == 4:
+            degree_mat = self.xp.sum(adj, axis=(1, 2))
+        elif adj.ndim == 3:
+            degree_mat = self.xp.sum(adj, axis=1)
+        else:
+            raise ValueError
+        # deg_conds: (minibatch, atom, ch)
+        deg_conds = [self.xp.broadcast_to(
+            ((degree_mat - degree) == 0)[:, :, None], h.shape)
+            for degree in range(1, self.n_degree_type + 1)]
+
         g_list = []
-        print(h.array.shape, adj.shape)
         for step in range(self.n_layers):
             print(step)
             update_layer_index = 0 if self.weight_tying else step
-            h2 = self.update_layers[update_layer_index](h, adj)
+            h2 = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
 
             if self.with_gwm:
                 h, h_s = self.gwm(h, h2, h_s, update_layer_index)
 
-            if self.concat_hidden:
+            if self.concat_hidden or self.sum_hidden:
                 g = self.readout_layers[step](
                     h=h, h0=h0, is_real_node=is_real_node)
                 g_list.append(g)
@@ -67,8 +81,12 @@ class GraphConvModel(chainer.Chain):
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
         else:
-            g = self.readout_layers[0](
-                h=h, h0=h0, is_real_node=is_real_node)
+            if self.sum_hidden:
+                # TODO: check axis
+                g = functions.sum(g_list, axis=1)
+            else:
+                g = self.readout_layers[0](
+                    h=h, h0=h0, is_real_node=is_real_node)
             if self.with_gwm:
                 g = functions.concat((g, h_s), axis=1)
                 g = functions.relu(self.linear_for_concat_super(g))
