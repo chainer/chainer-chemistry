@@ -1,4 +1,5 @@
 import chainer
+import chainer_chemistry
 
 from chainer import cuda
 from chainer import links
@@ -42,7 +43,7 @@ class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, update_layer, readout_layer, n_layers=None,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
                  dropout_ratio=-1.0, with_gwm=True, concat_hidden=False, sum_hidden=False,
-                 weight_tying=False, scale_adj=False, activation=None):
+                 weight_tying=False, scale_adj=False, activation=None, use_batchnorm=False):
         # Note: in_channels can be integer or list
         # Note: Is out_dim necessary?
         super(GraphConvModel, self).__init__()
@@ -83,6 +84,12 @@ class GraphConvModel(chainer.Chain):
                                n_layers=n_update_layers)
                 self.embed_super = links.Linear(None, out_size=hidden_dim_super)
                 self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)
+            if use_batchnorm:
+                # TODO: check
+                self.bnorms = chainer.ChainList(
+                    *[chainer_chemistry.links.GraphBatchNormalization(
+                        in_channels[i]) for i in range(n_update_layers)]
+                )
 
         self.n_layers = n_layers
         self.weight_tying = weight_tying
@@ -94,7 +101,9 @@ class GraphConvModel(chainer.Chain):
         # TODO: For RelGCN. Support other
         self.activation = activation
         # TODO: For GIN. Support other
+        # TODO: mix use
         self.dropout_ratio = dropout_ratio
+        self.use_batchnorm = use_batchnorm
 
     def __call__(self, atom_array, adj, super_node=None, is_real_node=None):
         self.reset_state()
@@ -129,12 +138,21 @@ class GraphConvModel(chainer.Chain):
         for step in range(self.n_layers):
             update_layer_index = 0 if self.weight_tying else step
             h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
+
+            # TODO: the place of activation is various
             if self.activation is not None:
                 h_new = self.activation(h_new)
 
             if self.with_gwm:
                 h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)
             h = h_new
+
+            if self.use_batchnorm:
+                h = self.bnorms[update_layer_index]
+
+            if self.dropout_ratio > 0.:
+                h = functions.dropout(h, ratio=self.dropout_ratio)
+
             if self.concat_hidden or self.sum_hidden:
                 g = self.readout_layers[step](
                     h=h, h0=h0, is_real_node=is_real_node)
