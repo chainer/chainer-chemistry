@@ -33,3 +33,4 @@ class NFP(GraphConvModel):
             max_degree=max_degree, n_atom_types=n_atom_types,
             concat_hidden=concat_hidden, with_gwm=with_gwm
         )
+        self.max_degree = max_degree
