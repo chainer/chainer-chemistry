@@ -1,10 +1,14 @@
 from chainer_chemistry.datasets import molnet  # NOQA
+from chainer_chemistry.datasets import cora  # NOQA
 from chainer_chemistry.datasets import qm9  # NOQA
 from chainer_chemistry.datasets import tox21  # NOQA
 from chainer_chemistry.datasets import zinc  # NOQA
 
 
 # import class and function
+from chainer_chemistry.datasets.cora import get_cora  # NOQA
+from chainer_chemistry.datasets.cora import get_cora_filepath  # NOQA
+from chainer_chemistry.datasets.cora import get_cora_label_names  # NOQA
 from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset  # NOQA
 from chainer_chemistry.datasets.qm9 import get_qm9  # NOQA
 from chainer_chemistry.datasets.qm9 import get_qm9_filepath  # NOQA
