@@ -71,6 +71,8 @@ class GraphConvModel(chainer.Chain):
         if readout_layer == GeneralReadout:
             # TODO: check
             in_channels[-1] = out_dim
+            if with_gwm:
+                n_layers -= 1
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
@@ -98,6 +100,8 @@ class GraphConvModel(chainer.Chain):
                         in_channels[i]) for i in range(n_update_layers)]
                 )
 
+        self.readout_layer = readout_layer
+        self.update_layer = update_layer
         self.n_layers = n_layers
         self.weight_tying = weight_tying
         self.with_gwm = with_gwm
@@ -164,6 +168,10 @@ class GraphConvModel(chainer.Chain):
                 g = self.readout_layers[step](
                     h=h, h0=h0, is_real_node=is_real_node)
                 g_list.append(g)
+
+        # TODO: need cool implementation
+        if self.readout_layer == GeneralReadout and self.with_gwm:
+            h = self.update_layers[-1](h=h, adj=adj, deg_conds=deg_conds)
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)

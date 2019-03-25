@@ -26,15 +26,17 @@ class GINUpdate(chainer.Chain):
         dropout_ratio (float): ratio of dropout, insted of bach normlization
     """
 
-    def __init__(self, in_channels=16, out_channels=None, dropout_ratio=0.5,
-                 **kwargs):
+    def __init__(self, in_channels=16, hidden_channels=None, out_channels=None,
+                 dropout_ratio=0.5, **kwargs):
         if out_channels is None:
             out_channels = in_channels
+        if hidden_channels is None:
+            hidden_channels = in_channels
         super(GINUpdate, self).__init__()
         with self.init_scope():
             # two Linear + RELU
-            self.linear_g1 = GraphLinear(in_channels, out_channels)
-            self.linear_g2 = GraphLinear(in_channels, out_channels)
+            self.linear_g1 = GraphLinear(in_channels, hidden_channels)
+            self.linear_g2 = GraphLinear(hidden_channels, out_channels)
         # end with
         self.dropout_ratio = dropout_ratio
     # end-def

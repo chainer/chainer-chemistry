@@ -11,6 +11,7 @@ from chainer_chemistry.links.update.relgat_update import RelGATUpdate
 from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
 from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
 from chainer_chemistry.links.update.schnet_update import SchNetUpdate
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.readout.mpnn_readout import MPNNReadout
 from chainer_chemistry.links.readout.nfp_readout import NFPReadout
@@ -29,6 +30,9 @@ updates_3dim = [GGNNUpdate, MPNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
 readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
 params = list(itertools.product(updates, readouts))
+# SchNetUpdate + GeneralReadout is impossible
+params.extend(itertools.product(updates_2dim[:-1] + updates_3dim,
+                                [GeneralReadout]))
 
 
 @pytest.fixture(params=params)
