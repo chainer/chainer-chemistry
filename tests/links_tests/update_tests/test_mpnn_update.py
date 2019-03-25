@@ -26,7 +26,7 @@ def message():
 @pytest.fixture
 def update():
     # type: () -> MPNNUpdate
-    return MPNNUpdate(hidden_dim=hidden_channels)
+    return MPNNUpdate(in_channels=hidden_channels)
 
 
 @pytest.fixture
