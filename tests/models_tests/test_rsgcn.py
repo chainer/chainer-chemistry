@@ -31,12 +31,12 @@ def model_no_dropout():
 
 @pytest.fixture
 def model_with_nfp():
-    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_dim=out_dim))
+    return RSGCN(out_dim=out_dim, readout=NFPReadout)
 
 
 @pytest.fixture
 def model_with_nfp_no_dropout():
-    return RSGCN(out_dim=out_dim, readout=NFPReadout(in_channels=out_dim, out_dim=out_dim), dropout_ratio=0.)
+    return RSGCN(out_dim=out_dim, readout=NFPReadout, dropout_ratio=0.)
 
 
 @pytest.fixture
@@ -79,46 +79,28 @@ def test_forward_cpu_with_nfp(model_with_nfp, data):
 
 def test_backward_cpu(model_no_dropout, data):
     atom_data, adj_data, y_grad = data
-    if int(chainer.__version__[0]) <= 2:
-        # somehow the test fails with `params` when using chainer version 2...
-        # TODO(nakago): investigate why the test fails.
-        params = ()
-    else:
-        params = tuple(model_no_dropout.params())
-    # TODO(nakago): check why tolerance is high
     gradient_check.check_backward(
         model_no_dropout, (atom_data, adj_data), y_grad,
-        params=params,
-        atol=1e-1, rtol=1e-1, no_grads=[True, True])
+        atol=1e-1, rtol=1e-1
+    )
 
 
 @pytest.mark.gpu
 def test_backward_gpu(model_no_dropout, data):
     atom_data, adj_data, y_grad = [cuda.to_gpu(d) for d in data]
     model_no_dropout.to_gpu()
-    if int(chainer.__version__[0]) <= 2:
-        # somehow the test fails with `params` when using chainer version 2...
-        # TODO(nakago): investigate why the test fails.
-        params = ()
-    else:
-        params = tuple(model_no_dropout.params())
-    # TODO(nakago): check why tolerance is high
     gradient_check.check_backward(
         model_no_dropout, (atom_data, adj_data), y_grad,
-        params=params,
-        atol=1e-1, rtol=1e-1, no_grads=[True, True])
+        atol=1e-1, rtol=1e-1
+    )
 
 
 def test_backward_cpu_with_nfp(model_with_nfp_no_dropout, data):
     atom_data, adj_data, y_grad = data
-    if int(chainer.__version__[0]) <= 2:
-        params = ()
-    else:
-        params = tuple(model_with_nfp_no_dropout.params())
     gradient_check.check_backward(
         model_with_nfp_no_dropout, (atom_data, adj_data), y_grad,
-        params=params,
-        atol=1e-4, rtol=1e-4, no_grads=[True, True])
+        atol=1e-1, rtol=1e-1
+    )
 
 
 def test_forward_cpu_graph_invariant(model, data):

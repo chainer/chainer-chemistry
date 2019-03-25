@@ -5,6 +5,7 @@ from chainer import cuda
 from chainer import links
 from chainer import functions
 from chainer_chemistry.links import EmbedAtomID
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.gwm import GWM
 
@@ -51,7 +52,7 @@ class GraphConvModel(chainer.Chain):
 
         if with_gwm:
             if isinstance(in_channels, list):
-            # TODO: same channel
+                # TODO: same channel
                 if all([in_dim == in_channels[0] for in_dim in in_channels]):
                     raise ValueError
             if hidden_dim_super is None:
@@ -67,6 +68,9 @@ class GraphConvModel(chainer.Chain):
         else:
             raise ValueError
 
+        if readout_layer == GeneralReadout:
+            # TODO: check
+            in_channels[-1] = out_dim
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
