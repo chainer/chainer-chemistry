@@ -45,7 +45,7 @@ class GraphConvModel(chainer.Chain):
                  out_channels=None, hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM,
                  n_edge_types=4, max_degree=6, dropout_ratio=-1.0, with_gwm=True,
                  concat_hidden=False, sum_hidden=False, weight_tying=False,
-                 scale_adj=False, activation=None, use_batchnorm=False,
+                 scale_adj=False, activation=None, use_batchnorm=False, n_activation=None,
                  update_kwargs=None, readout_kwargs=None, gwm_kwargs=None):
         # Note: in_channels can be integer or list
         # Note: Is out_dim necessary?
@@ -82,6 +82,7 @@ class GraphConvModel(chainer.Chain):
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
+        n_activation = n_layers if n_activation is None else n_activation
 
         if update_kwargs is None:
             update_kwargs = {}
@@ -123,6 +124,7 @@ class GraphConvModel(chainer.Chain):
         self.activation = activation
         self.dropout_ratio = dropout_ratio
         self.use_batchnorm = use_batchnorm
+        self.n_activation = n_activation
 
     def __call__(self, atom_array, adj, super_node=None, is_real_node=None):
         self.reset_state()
@@ -158,13 +160,6 @@ class GraphConvModel(chainer.Chain):
             update_layer_index = 0 if self.weight_tying else step
             h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
 
-            # TODO: This position is right?
-            # TODO: Now this activation is same as relgcn one.
-            # TODO: RSGCN activation is after dropout.
-            # TODO: RSGCN activations are only applied self.n_layers - 1 times.
-            if self.activation is not None:
-                h_new = self.activation(h_new)
-
             if self.with_gwm:
                 h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)
             h = h_new
@@ -174,6 +169,9 @@ class GraphConvModel(chainer.Chain):
 
             if self.dropout_ratio > 0.:
                 h = functions.dropout(h, ratio=self.dropout_ratio)
+
+            if self.activation is not None and step < self.n_activation:
+                h = self.activation(h)
 
             if self.concat_hidden or self.sum_hidden:
                 g = self.readout_layers[step](
