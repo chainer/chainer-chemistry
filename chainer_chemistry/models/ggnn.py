@@ -32,13 +32,14 @@ class GGNN(GraphConvModel):
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True, activation=functions.identity,
                  n_edge_types=4, with_gwm=False):
-        # TODO: activation
+        readout_kwargs = {'activation': activation,
+                          'activation_agg': activation}
         super(GGNN, self).__init__(
             update_layer=GGNNUpdate, readout_layer=GGNNReadout,
             out_dim=out_dim, in_channels=in_channels, n_layers=n_layers,
             n_atom_types=n_atom_types, concat_hidden=concat_hidden,
             weight_tying=weight_tying, n_edge_types=n_edge_types,
-            with_gwm=with_gwm
+            with_gwm=with_gwm, readout_kwargs=readout_kwargs
         )
 
 

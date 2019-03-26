@@ -43,9 +43,9 @@ def rescale_adj(adj):
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, update_layer, readout_layer, n_layers=None,
                  hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
-                 n_heads=8, negative_slope=0.2, dropout_ratio=-1.0, with_gwm=True, concat_heads=False,
-                 concat_hidden=False, sum_hidden=False, weight_tying=False, scale_adj=False, activation=None,
-                 use_batchnorm=False):
+                 dropout_ratio=-1.0, with_gwm=True, concat_hidden=False, sum_hidden=False,
+                 weight_tying=False, scale_adj=False, activation=None, use_batchnorm=False,
+                 update_kwargs=None, readout_kwargs=None, gwm_kwargs=None):
         # Note: in_channels can be integer or list
         # Note: Is out_dim necessary?
         super(GraphConvModel, self).__init__()
@@ -77,20 +77,25 @@ class GraphConvModel(chainer.Chain):
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
 
+        if update_kwargs is None:
+            update_kwargs = {}
+        if readout_kwargs is None:
+            readout_kwargs = {}
+        if gwm_kwargs is None:
+            gwm_kwargs = {}
+
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=in_channels[0], in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
                 *[update_layer(in_channels=in_channels[i], out_channels=in_channels[i+1],
-                               n_edge_types=n_edge_types, dropout_ratio=dropout_ratio,
-                               n_heads=n_heads, negative_slope=negative_slope,
-                               concat_heads=concat_heads)
+                               n_edge_types=n_edge_types, **update_kwargs)
                   for i in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
-                *[readout_layer(out_dim=out_dim, in_channels=in_channels[-1])
+                *[readout_layer(out_dim=out_dim, in_channels=in_channels[-1], **readout_kwargs)
                   for _ in range(n_readout_layers)])
             if with_gwm:
                 self.gwm = GWM(hidden_dim=in_channels[0], hidden_dim_super=hidden_dim_super,
-                               n_layers=n_update_layers)
+                               n_layers=n_update_layers, **gwm_kwargs)
                 self.embed_super = links.Linear(None, out_size=hidden_dim_super)
                 self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)
             if use_batchnorm:
@@ -109,10 +114,7 @@ class GraphConvModel(chainer.Chain):
         self.sum_hidden = sum_hidden
         self.n_degree_type = n_degree_type
         self.scale_adj = scale_adj
-        # TODO: For RelGCN. Support other
         self.activation = activation
-        # TODO: For GIN. Support other
-        # TODO: mix use
         self.dropout_ratio = dropout_ratio
         self.use_batchnorm = use_batchnorm
 
@@ -150,7 +152,10 @@ class GraphConvModel(chainer.Chain):
             update_layer_index = 0 if self.weight_tying else step
             h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
 
-            # TODO: the place of activation is various
+            # TODO: This position is right?
+            # TODO: Now this activation is same as relgcn one.
+            # TODO: RSGCN activation is after dropout.
+            # TODO: RSGCN activations are only applied self.n_layers - 1 times.
             if self.activation is not None:
                 h_new = self.activation(h_new)
 
@@ -174,6 +179,7 @@ class GraphConvModel(chainer.Chain):
             h = self.update_layers[-1](h=h, adj=adj, deg_conds=deg_conds)
 
         if self.concat_hidden:
+            # TODO: SchNet's concat axis is 2.
             return functions.concat(g_list, axis=1)
         else:
             if self.sum_hidden:

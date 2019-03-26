@@ -34,10 +34,11 @@ class SchNet(GraphConvModel):
                  concat_hidden=False, num_rbf=300, radius_resolution=0.1,
                  gamma=10.0, with_gwm=False):
         # TODO: use readout_hidden_dim
-        # TODO: use num_rbf, radius_resolution, gamma
+        # TODO: use num_rbf, radius_resolution, gamma in update
+        readout_kwargs = {'hidden_channels': readout_hidden_dim}
         super(SchNet, self).__init__(
             update_layer=SchNetUpdate, readout_layer=SchNetReadout,
             out_dim=out_dim, in_channels=in_channels, n_layers=n_layers,
             n_atom_types=n_atom_types, concat_hidden=concat_hidden,
-            with_gwm=with_gwm
+            with_gwm=with_gwm, readout_kwargs=readout_kwargs
         )

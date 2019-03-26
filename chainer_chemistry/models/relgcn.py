@@ -28,12 +28,14 @@ class RelGCN(GraphConvModel):
     def __init__(self, out_channels=64, n_edge_types=4, ch_list=None,
                  n_atom_types=MAX_ATOMIC_NUM, input_type='int',
                  scale_adj=False, with_gwm=False):
+        # TODO: input_type is deprecated
         if ch_list is None:
             ch_list = [16, 128, 64]
-        # TODO: use GGNNReadout option
+        readout_kwargs = {'nobias': True,
+                          'activation': functions.tanh}
         super(RelGCN, self).__init__(
             update_layer=RelGCNUpdate, readout_layer=GGNNReadout,
             out_dim=out_channels, n_edge_types=n_edge_types, in_channels=ch_list,
             n_atom_types=n_atom_types, scale_adj=scale_adj, with_gwm=with_gwm,
-            activation=functions.tanh
+            activation=functions.tanh, readout_kwargs=readout_kwargs
         )

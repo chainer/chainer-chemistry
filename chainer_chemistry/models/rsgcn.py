@@ -45,10 +45,6 @@ class RSGCN(GraphConvModel):
                  n_atom_types=MAX_ATOMIC_NUM,
                  use_batch_norm=False, readout=None, dropout_ratio=0.5,
                  with_gwm=False):
-        # TODO: check
-        # in_dims = [hidden_dim for _ in range(n_layers)]
-        # out_dims = [hidden_dim for _ in range(n_layers)]
-        # out_dims[n_layers - 1] = out_dim
         if readout is None:
             readout = GeneralReadout
         super(RSGCN, self).__init__(
