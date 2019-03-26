@@ -46,8 +46,11 @@ class RelGAT(GraphConvModel):
                  concat_heads=False, weight_tying=False, with_gwm=False):
         if concat_heads:
             channels = [in_channels * n_heads for _ in range(n_layers)]
+            out_channels = [in_channels for _ in range(n_layers)]
             channels[0] = in_channels
             in_channels = channels
+        else:
+            out_channels = None
         update_kwargs = {'n_heads': n_heads, 'dropout_ratio': dropout_ratio,
                          'negative_slope': negative_slope, 'softmax_mode': softmax_mode,
                          'concat_heads': concat_heads}
@@ -56,8 +59,8 @@ class RelGAT(GraphConvModel):
 
         super(RelGAT, self).__init__(
             update_layer=RelGATUpdate, readout_layer=GGNNReadout,
-            out_dim=out_dim, n_layers=n_layers,
-            in_channels=in_channels, n_atom_types=n_atom_types,
+            out_dim=out_dim, n_layers=n_layers, in_channels=in_channels,
+            out_channels=out_channels, n_atom_types=n_atom_types,
             concat_hidden=concat_hidden, weight_tying=weight_tying,
             dropout_ratio=dropout_ratio, n_edge_types=n_edge_types,
             with_gwm=with_gwm, update_kwargs=update_kwargs,

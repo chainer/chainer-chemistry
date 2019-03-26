@@ -42,9 +42,10 @@ def rescale_adj(adj):
 
 class GraphConvModel(chainer.Chain):
     def __init__(self, in_channels, out_dim, update_layer, readout_layer, n_layers=None,
-                 hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4, max_degree=6,
-                 dropout_ratio=-1.0, with_gwm=True, concat_hidden=False, sum_hidden=False,
-                 weight_tying=False, scale_adj=False, activation=None, use_batchnorm=False,
+                 out_channels=None, hidden_dim_super=None, n_atom_types=MAX_ATOMIC_NUM,
+                 n_edge_types=4, max_degree=6, dropout_ratio=-1.0, with_gwm=True,
+                 concat_hidden=False, sum_hidden=False, weight_tying=False,
+                 scale_adj=False, activation=None, use_batchnorm=False,
                  update_kwargs=None, readout_kwargs=None, gwm_kwargs=None):
         # Note: in_channels can be integer or list
         # Note: Is out_dim necessary?
@@ -73,6 +74,11 @@ class GraphConvModel(chainer.Chain):
             in_channels[-1] = out_dim
             if with_gwm:
                 n_layers -= 1
+
+        # TODO: cool implementation
+        if out_channels is None:
+            out_channels = in_channels[1:]
+
         n_update_layers = 1 if weight_tying else n_layers
         n_readout_layers = n_layers if concat_hidden else 1
         n_degree_type = max_degree + 1
@@ -87,7 +93,7 @@ class GraphConvModel(chainer.Chain):
         with self.init_scope():
             self.embed = EmbedAtomID(out_size=in_channels[0], in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
-                *[update_layer(in_channels=in_channels[i], out_channels=in_channels[i+1],
+                *[update_layer(in_channels=in_channels[i], out_channels=out_channels[i],
                                n_edge_types=n_edge_types, **update_kwargs)
                   for i in range(n_update_layers)])
             self.readout_layers = chainer.ChainList(
