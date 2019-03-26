@@ -66,14 +66,14 @@ def gwm_context(request):
 def make_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        in_channels=in_channels, n_edge_types=n_edge_types,
+        hidden_channels=in_channels, n_edge_types=n_edge_types,
         out_dim=out_dim, with_gwm=False)
 
 
 def make_gwm_model(update, readout):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_layers=3,
-        in_channels=in_channels, n_edge_types=n_edge_types,
+        hidden_channels=in_channels, n_edge_types=n_edge_types,
         hidden_dim_super=super_dim, out_dim=out_dim, with_gwm=True)
 
 
