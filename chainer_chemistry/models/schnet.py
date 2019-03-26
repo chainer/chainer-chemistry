@@ -29,7 +29,7 @@ class SchNet(GraphConvModel):
         gamma (float): exponential factor of `CFConv`'s radius kernel.
     """
 
-    def __init__(self, out_dim=1, in_channels=64, n_layers=3,
+    def __init__(self, out_dim=1, hidden_channels=64, n_layers=3,
                  readout_hidden_dim=32, n_atom_types=MAX_ATOMIC_NUM,
                  concat_hidden=False, num_rbf=300, radius_resolution=0.1,
                  gamma=10.0, with_gwm=False):
@@ -38,7 +38,8 @@ class SchNet(GraphConvModel):
         readout_kwargs = {'hidden_channels': readout_hidden_dim}
         super(SchNet, self).__init__(
             update_layer=SchNetUpdate, readout_layer=SchNetReadout,
-            out_dim=out_dim, in_channels=in_channels, n_layers=n_layers,
-            n_atom_types=n_atom_types, concat_hidden=concat_hidden,
-            with_gwm=with_gwm, readout_kwargs=readout_kwargs
+            out_dim=out_dim, hidden_channels=hidden_channels,
+            n_layers=n_layers, n_atom_types=n_atom_types,
+            concat_hidden=concat_hidden, with_gwm=with_gwm,
+            readout_kwargs=readout_kwargs
         )

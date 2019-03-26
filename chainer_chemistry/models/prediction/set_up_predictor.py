@@ -46,21 +46,21 @@ def set_up_predictor(
         print('Training an NFP predictor...')
         conv = NFP(
             out_dim=n_unit,
-            in_channels=n_unit,
+            hidden_channels=n_unit,
             n_layers=conv_layers,
             **conv_kwargs)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
         conv = GGNN(
             out_dim=n_unit,
-            in_channels=n_unit,
+            hidden_channels=n_unit,
             n_layers=conv_layers,
             **conv_kwargs)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         conv = SchNet(
             out_dim=class_num,
-            in_channels=n_unit,
+            hidden_channels=n_unit,
             n_layers=conv_layers,
             **conv_kwargs)
         mlp = None
@@ -71,14 +71,14 @@ def set_up_predictor(
         print('Training an RSGCN predictor...')
         conv = RSGCN(
             out_dim=n_unit,
-            in_channels=n_unit,
+            hidden_channels=n_unit,
             n_layers=conv_layers,
             **conv_kwargs)
     elif method == 'relgcn':
         print('Training a Relational GCN predictor...')
         num_edge_type = 4
         conv = RelGCN(
-            out_channels=n_unit,
+            out_dim=n_unit,
             n_edge_types=num_edge_type,
             scale_adj=True,
             **conv_kwargs)
@@ -86,7 +86,7 @@ def set_up_predictor(
         print('Training a Relational GAT predictor...')
         conv = RelGAT(
             out_dim=n_unit,
-            in_channels=n_unit,
+            hidden_channels=n_unit,
             n_layers=conv_layers,
             **conv_kwargs)
     else:

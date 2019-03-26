@@ -17,7 +17,7 @@ num_edge_type = 4
 
 @pytest.fixture
 def model():
-    return RelGCN(out_channels=out_ch)
+    return RelGCN(out_dim=out_ch)
 
 
 @pytest.fixture

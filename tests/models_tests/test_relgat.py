@@ -14,7 +14,6 @@ batch_size = 2
 num_edge_type = 4
 
 
-# TODO(mottodora): test for concat_heads
 @pytest.fixture(params=[True, False])
 def model(request):
     return RelGAT(out_dim=out_dim, concat_heads=request.param)

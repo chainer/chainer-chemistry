@@ -25,17 +25,18 @@ class RelGCN(GraphConvModel):
             adjacency matrix
     """
 
-    def __init__(self, out_channels=64, n_edge_types=4, ch_list=None,
+    def __init__(self, out_dim=64, n_edge_types=4, hidden_channels=None,
                  n_atom_types=MAX_ATOMIC_NUM, input_type='int',
                  scale_adj=False, with_gwm=False):
         # TODO: input_type is deprecated
-        if ch_list is None:
-            ch_list = [16, 128, 64]
+        if hidden_channels is None:
+            hidden_channels = [16, 128, 64]
         readout_kwargs = {'nobias': True,
                           'activation': functions.tanh}
         super(RelGCN, self).__init__(
             update_layer=RelGCNUpdate, readout_layer=GGNNReadout,
-            out_dim=out_channels, n_edge_types=n_edge_types, in_channels=ch_list,
-            n_atom_types=n_atom_types, scale_adj=scale_adj, with_gwm=with_gwm,
+            out_dim=out_dim, n_edge_types=n_edge_types,
+            hidden_channels=hidden_channels, n_atom_types=n_atom_types,
+            scale_adj=scale_adj, with_gwm=with_gwm,
             activation=functions.tanh, readout_kwargs=readout_kwargs
         )

@@ -41,7 +41,7 @@ class RSGCN(GraphConvModel):
 
     """
 
-    def __init__(self, out_dim, in_channels=32, n_layers=4,
+    def __init__(self, out_dim, hidden_channels=32, n_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM,
                  use_batch_norm=False, readout=None, dropout_ratio=0.5,
                  with_gwm=False):
@@ -49,8 +49,9 @@ class RSGCN(GraphConvModel):
             readout = GeneralReadout
         super(RSGCN, self).__init__(
             update_layer=RSGCNUpdate, readout_layer=readout,
-            out_dim=out_dim, in_channels=in_channels, n_layers=n_layers,
-            n_atom_types=n_atom_types, use_batchnorm=use_batch_norm,
-            activation=functions.relu, n_activation=n_layers-1,
-            dropout_ratio=dropout_ratio, with_gwm=with_gwm
+            out_dim=out_dim, hidden_channels=hidden_channels,
+            n_layers=n_layers, n_atom_types=n_atom_types,
+            use_batchnorm=use_batch_norm, activation=functions.relu,
+            n_activation=n_layers-1, dropout_ratio=dropout_ratio,
+            with_gwm=with_gwm
         )

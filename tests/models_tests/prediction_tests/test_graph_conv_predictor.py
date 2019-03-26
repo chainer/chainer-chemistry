@@ -25,7 +25,7 @@ def model():
     # type: () -> GraphConvPredictor
     mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
     ggnn = GGNN(
-        out_dim=out_dim, in_channels=n_unit, n_edge_types=n_edge_types)
+        out_dim=out_dim, hidden_channels=n_unit, n_edge_types=n_edge_types)
     return GraphConvPredictor(ggnn, mlp)
 
 

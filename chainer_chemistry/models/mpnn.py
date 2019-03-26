@@ -41,7 +41,7 @@ class MPNN(GraphConvModel):
     def __init__(
             self,
             out_dim,  # type: int
-            in_channels=16,  # type: int
+            hidden_channels=16,  # type: int
             n_layers=4,  # type: int
             n_atom_types=MAX_ATOMIC_NUM,  # type: int
             concat_hidden=False,  # type: bool
@@ -73,7 +73,7 @@ class MPNN(GraphConvModel):
         update_kwargs = {'nn': nn}
         super(MPNN, self).__init__(
             update_layer=update, readout_layer=readout,
-            out_dim=out_dim, in_channels=in_channels, n_layers=n_layers,
+            out_dim=out_dim, hidden_channels=hidden_channels, n_layers=n_layers,
             n_atom_types=n_atom_types, concat_hidden=concat_hidden,
             weight_tying=weight_tying, n_edge_types=n_edge_types,
             with_gwm=with_gwm, update_kwargs=update_kwargs
