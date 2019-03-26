@@ -80,7 +80,7 @@ class GraphConvModel(chainer.Chain):
             out_channels = in_channels[1:]
 
         n_update_layers = 1 if weight_tying else n_layers
-        n_readout_layers = n_layers if concat_hidden else 1
+        n_readout_layers = n_layers if concat_hidden or sum_hidden else 1
         n_degree_type = max_degree + 1
         n_activation = n_layers if n_activation is None else n_activation
 
@@ -183,12 +183,10 @@ class GraphConvModel(chainer.Chain):
             h = self.update_layers[-1](h=h, adj=adj, deg_conds=deg_conds)
 
         if self.concat_hidden:
-            # TODO: SchNet's concat axis is 2.
             return functions.concat(g_list, axis=1)
         else:
             if self.sum_hidden:
-                # TODO: check axis
-                g = functions.sum(g_list, axis=1)
+                g = functions.sum(functions.stack(g_list), axis=0)
             else:
                 g = self.readout_layers[0](
                     h=h, h0=h0, is_real_node=is_real_node)
