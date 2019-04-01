@@ -29,15 +29,18 @@ updates_2dim = [GINUpdate, RSGCNUpdate, SchNetUpdate]
 updates_3dim = [GGNNUpdate, MPNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
 readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
-params = list(itertools.product(updates, readouts))
+hidden_channels = [[6, 6, 6, 6], 6]
+use_bn = [True, False]
+params = list(itertools.product(
+    updates, readouts, hidden_channels, use_bn))
 # SchNetUpdate + GeneralReadout is impossible
-params.extend(itertools.product(updates_2dim[:-1] + updates_3dim,
-                                [GeneralReadout]))
+# params.extend(itertools.product(updates_2dim[:-1] + updates_3dim,
+#                                 [GeneralReadout]))
 
 
 @pytest.fixture(params=params)
 def plain_context(request):
-    update, readout = request.param
+    update, readout, ch, bn = request.param
     if update in updates_3dim:
         adj_type = 3
     elif update in updates_2dim:
@@ -45,13 +48,13 @@ def plain_context(request):
     else:
         raise ValueError
     data = make_data(adj_type)
-    model = make_model(update, readout)
+    model = make_model(update, readout, ch, bn)
     return model, data
 
 
 @pytest.fixture(params=params)
 def gwm_context(request):
-    update, readout = request.param
+    update, readout, ch, bn = request.param
     if update in updates_3dim:
         adj_type = 3
     elif update in updates_2dim:
@@ -59,22 +62,23 @@ def gwm_context(request):
     else:
         raise ValueError
     data = make_data(adj_type)
-    model = make_gwm_model(update, readout)
+    model = make_gwm_model(update, readout, ch, bn)
     return model, data
 
 
-def make_model(update, readout):
+def make_model(update, readout, ch, bn):
     return GraphConvModel(
-        update_layer=update, readout_layer=readout, n_layers=3,
-        hidden_channels=in_channels, n_edge_types=n_edge_types,
-        out_dim=out_dim, with_gwm=False)
+        update_layer=update, readout_layer=readout, n_update_layers=3,
+        hidden_channels=ch, n_edge_types=n_edge_types,
+        out_dim=out_dim, with_gwm=False, use_batchnorm=bn)
 
 
-def make_gwm_model(update, readout):
+def make_gwm_model(update, readout, ch, bn):
     return GraphConvModel(
-        update_layer=update, readout_layer=readout, n_layers=3,
-        hidden_channels=in_channels, n_edge_types=n_edge_types,
-        hidden_dim_super=super_dim, out_dim=out_dim, with_gwm=True)
+        update_layer=update, readout_layer=readout, n_update_layers=3,
+        hidden_channels=ch, n_edge_types=n_edge_types,
+        super_node_dim=super_dim, out_dim=out_dim, with_gwm=True,
+        use_batchnorm=bn)
 
 
 def make_data(adj_type):
@@ -105,6 +109,8 @@ def test_plain_model_forward(plain_context):
     adj = data[1]
     y_actual = model(atom_array, adj)
     assert y_actual.shape == (batch_size, out_dim)
+    # assert len(model.update_layers) == model.n_update_layers
+    assert len(model.update_layers) == 3
 
 
 def test_gwm_model_forward(gwm_context):
@@ -114,3 +120,4 @@ def test_gwm_model_forward(gwm_context):
     super_node = data[2]
     y_actual = model(atom_array, adj, super_node)
     assert y_actual.shape == (batch_size, out_dim)
+    assert len(model.update_layers) == 3
