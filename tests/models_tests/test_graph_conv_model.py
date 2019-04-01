@@ -31,16 +31,16 @@ updates = updates_2dim + updates_3dim
 readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
 hidden_channels = [[6, 6, 6, 6], 6]
 use_bn = [True, False]
+use_weight_tying = [True, False]
+
 params = list(itertools.product(
-    updates, readouts, hidden_channels, use_bn))
-# SchNetUpdate + GeneralReadout is impossible
-# params.extend(itertools.product(updates_2dim[:-1] + updates_3dim,
-#                                 [GeneralReadout]))
+    updates, readouts, hidden_channels, use_bn, use_weight_tying,
+))
 
 
 @pytest.fixture(params=params)
 def plain_context(request):
-    update, readout, ch, bn = request.param
+    update, readout, ch, bn, wt = request.param
     if update in updates_3dim:
         adj_type = 3
     elif update in updates_2dim:
@@ -48,13 +48,13 @@ def plain_context(request):
     else:
         raise ValueError
     data = make_data(adj_type)
-    model = make_model(update, readout, ch, bn)
+    model = make_model(update, readout, ch, bn, wt)
     return model, data
 
 
 @pytest.fixture(params=params)
 def gwm_context(request):
-    update, readout, ch, bn = request.param
+    update, readout, ch, bn, wt = request.param
     if update in updates_3dim:
         adj_type = 3
     elif update in updates_2dim:
@@ -62,21 +62,21 @@ def gwm_context(request):
     else:
         raise ValueError
     data = make_data(adj_type)
-    model = make_gwm_model(update, readout, ch, bn)
+    model = make_gwm_model(update, readout, ch, bn, wt)
     return model, data
 
 
-def make_model(update, readout, ch, bn):
+def make_model(update, readout, ch, bn, wt):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_update_layers=3,
-        hidden_channels=ch, n_edge_types=n_edge_types,
+        hidden_channels=ch, n_edge_types=n_edge_types, weight_tying=wt,
         out_dim=out_dim, with_gwm=False, use_batchnorm=bn)
 
 
-def make_gwm_model(update, readout, ch, bn):
+def make_gwm_model(update, readout, ch, bn, wt):
     return GraphConvModel(
         update_layer=update, readout_layer=readout, n_update_layers=3,
-        hidden_channels=ch, n_edge_types=n_edge_types,
+        hidden_channels=ch, n_edge_types=n_edge_types, weight_tying=wt,
         super_node_dim=super_dim, out_dim=out_dim, with_gwm=True,
         use_batchnorm=bn)
 
@@ -109,8 +109,10 @@ def test_plain_model_forward(plain_context):
     adj = data[1]
     y_actual = model(atom_array, adj)
     assert y_actual.shape == (batch_size, out_dim)
-    # assert len(model.update_layers) == model.n_update_layers
-    assert len(model.update_layers) == 3
+    if model.weight_tying:
+        assert len(model.update_layers) == 1
+    else:
+        assert len(model.update_layers) == 3
 
 
 def test_gwm_model_forward(gwm_context):
@@ -120,13 +122,17 @@ def test_gwm_model_forward(gwm_context):
     super_node = data[2]
     y_actual = model(atom_array, adj, super_node)
     assert y_actual.shape == (batch_size, out_dim)
-    assert len(model.update_layers) == 3
+    if model.weight_tying:
+        assert len(model.update_layers) == 1
+    else:
+        assert len(model.update_layers) == 3
 
 
 # SchNet is not supported
 sp_params = list(itertools.product(
-    updates_2dim[:-1] + updates_3dim, [[6, 6, 6, 6], [4, 4, 4, 4],
-                                       [6, 5, 3, 4]]))
+    updates_2dim[:-1] + updates_3dim,
+    [[6, 6, 6, 6], [4, 4, 4, 4], [6, 5, 3, 4]],
+))
 
 
 @pytest.mark.parametrize(('update', 'ch'), sp_params)
@@ -151,7 +157,7 @@ def test_plain_model_forward_general_readout(
     assert y_actual.shape == (batch_size, out_dim)
 
 
-@pytest.mark.parametrize(('update'),
+@pytest.mark.parametrize('update',
                          updates_2dim[:-1] + updates_3dim)
 def test_gwm_model_forward_general_readout(update):
     if update in updates_3dim:
@@ -178,6 +184,94 @@ def test_gwm_model_forward_general_readout(update):
                            n_edge_types=n_edge_types,
                            super_node_dim=super_dim,
                            with_gwm=True)
+    atom_array = data[0]
+    adj = data[1]
+    super_node = data[2]
+    y_actual = model(atom_array, adj, super_node)
+    assert y_actual.shape == (batch_size, out_dim)
+
+
+p = list(itertools.product(updates_2dim[:-1] + updates_3dim, readouts,
+                           [True, False]))
+
+
+@pytest.mark.parametrize(('update', 'readout', 'gwm'), p)
+def test_model_forward_general_weight_tying(update, readout, gwm):
+    if update in updates_3dim:
+        adj_type = 3
+    elif update in updates_2dim:
+        adj_type = 2
+    else:
+        raise ValueError
+    data = make_data(adj_type)
+    ch = [6, 7, 8, 6]
+    if gwm:
+        with pytest.raises(ValueError):
+            model = GraphConvModel(update_layer=update,
+                                   readout_layer=GeneralReadout,
+                                   hidden_channels=ch,
+                                   out_dim=out_dim,
+                                   n_edge_types=n_edge_types,
+                                   super_node_dim=super_dim,
+                                   with_gwm=gwm)
+    else:
+        model = GraphConvModel(update_layer=update,
+                               readout_layer=GeneralReadout,
+                               hidden_channels=ch,
+                               out_dim=out_dim,
+                               n_edge_types=n_edge_types,
+                               super_node_dim=super_dim,
+                               with_gwm=gwm)
+        atom_array = data[0]
+        adj = data[1]
+        super_node = data[2]
+        y_actual = model(atom_array, adj)
+        assert y_actual.shape == (batch_size, out_dim)
+
+
+@pytest.mark.parametrize(('update', 'readout', 'gwm'), p)
+def test_model_forward_general_concat_hidden(update, readout, gwm):
+    if update in updates_3dim:
+        adj_type = 3
+    elif update in updates_2dim:
+        adj_type = 2
+    else:
+        raise ValueError
+    data = make_data(adj_type)
+    ch = [6, 6, 6, 6]
+    model = GraphConvModel(update_layer=update,
+                           readout_layer=readout,
+                           hidden_channels=ch,
+                           out_dim=out_dim,
+                           n_edge_types=n_edge_types,
+                           super_node_dim=super_dim,
+                           concat_hidden=True,
+                           with_gwm=gwm)
+    atom_array = data[0]
+    adj = data[1]
+    super_node = data[2]
+    y_actual = model(atom_array, adj, super_node)
+    assert y_actual.shape == (batch_size, out_dim * (len(ch) - 1))
+
+
+@pytest.mark.parametrize(('update', 'readout', 'gwm'), p)
+def test_model_forward_general_sum_hidden(update, readout, gwm):
+    if update in updates_3dim:
+        adj_type = 3
+    elif update in updates_2dim:
+        adj_type = 2
+    else:
+        raise ValueError
+    data = make_data(adj_type)
+    ch = [6, 6, 6, 6]
+    model = GraphConvModel(update_layer=update,
+                           readout_layer=readout,
+                           hidden_channels=ch,
+                           out_dim=out_dim,
+                           n_edge_types=n_edge_types,
+                           super_node_dim=super_dim,
+                           sum_hidden=True,
+                           with_gwm=gwm)
     atom_array = data[0]
     adj = data[1]
     super_node = data[2]

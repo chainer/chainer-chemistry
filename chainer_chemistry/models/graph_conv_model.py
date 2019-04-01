@@ -54,7 +54,8 @@ class GraphConvModel(chainer.Chain):
         if isinstance(hidden_channels, int):
             if n_update_layers is None:
                 raise ValueError
-            hidden_channels = [hidden_channels for _ in range(n_update_layers + 1)]
+            else:
+                hidden_channels = [hidden_channels for _ in range(n_update_layers + 1)]
         elif isinstance(hidden_channels, list):
             n_update_layers = len(hidden_channels) - 1
         else:
@@ -69,9 +70,9 @@ class GraphConvModel(chainer.Chain):
             else:
                 hidden_channels[-1] = out_dim
 
-        # When use with_gwm, concat_hidden, sum_hidden option,
+        # When use with_gwm, concat_hidden, sum_hidden and weight_tying option,
         # hidden_channels must be same
-        if with_gwm or concat_hidden or sum_hidden:
+        if with_gwm or concat_hidden or sum_hidden or weight_tying:
             if not all([in_dim == hidden_channels[0] for in_dim in hidden_channels]):
                 raise ValueError
 
@@ -106,7 +107,7 @@ class GraphConvModel(chainer.Chain):
                 *[update_layer(in_channels=in_channels_list[i], out_channels=out_channels_list[i],
                                n_edge_types=n_edge_types, **update_kwargs)
                   for i in range(n_update_layers)])
-            # TODO: Support weight_tying option
+            # when use weight_tying option, hidden_channels must be same. So we can use -1 index
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim, in_channels=hidden_channels[-1], **readout_kwargs)
                   for _ in range(n_readout_layers)])
