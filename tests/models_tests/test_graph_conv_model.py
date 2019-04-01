@@ -121,3 +121,65 @@ def test_gwm_model_forward(gwm_context):
     y_actual = model(atom_array, adj, super_node)
     assert y_actual.shape == (batch_size, out_dim)
     assert len(model.update_layers) == 3
+
+
+# SchNet is not supported
+sp_params = list(itertools.product(
+    updates_2dim[:-1] + updates_3dim, [[6, 6, 6, 6], [4, 4, 4, 4],
+                                       [6, 5, 3, 4]]))
+
+
+@pytest.mark.parametrize(('update', 'ch'), sp_params)
+def test_plain_model_forward_general_readout(
+        update, ch):
+    if update in updates_3dim:
+        adj_type = 3
+    elif update in updates_2dim:
+        adj_type = 2
+    else:
+        raise ValueError
+    data = make_data(adj_type)
+    model = GraphConvModel(update_layer=update,
+                           readout_layer=GeneralReadout,
+                           hidden_channels=ch,
+                           out_dim=out_dim,
+                           n_edge_types=n_edge_types,
+                           with_gwm=False)
+    atom_array = data[0]
+    adj = data[1]
+    y_actual = model(atom_array, adj)
+    assert y_actual.shape == (batch_size, out_dim)
+
+
+@pytest.mark.parametrize(('update'),
+                         updates_2dim[:-1] + updates_3dim)
+def test_gwm_model_forward_general_readout(update):
+    if update in updates_3dim:
+        adj_type = 3
+    elif update in updates_2dim:
+        adj_type = 2
+    else:
+        raise ValueError
+    data = make_data(adj_type)
+    ch = [6, 6, 6, 6]
+    with pytest.raises(ValueError):
+        model = GraphConvModel(update_layer=update,
+                               readout_layer=GeneralReadout,
+                               hidden_channels=ch,
+                               out_dim=out_dim,
+                               n_edge_types=n_edge_types,
+                               super_node_dim=super_dim,
+                               with_gwm=True)
+    ch = [4, 4, 4, 4]
+    model = GraphConvModel(update_layer=update,
+                           readout_layer=GeneralReadout,
+                           hidden_channels=ch,
+                           out_dim=out_dim,
+                           n_edge_types=n_edge_types,
+                           super_node_dim=super_dim,
+                           with_gwm=True)
+    atom_array = data[0]
+    adj = data[1]
+    super_node = data[2]
+    y_actual = model(atom_array, adj, super_node)
+    assert y_actual.shape == (batch_size, out_dim)
