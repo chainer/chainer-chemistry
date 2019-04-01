@@ -24,13 +24,13 @@ class NFP(GraphConvModel):
             and the result is concatenated
 
     """
-    def __init__(self, out_dim, hidden_channels=16, n_layers=4, max_degree=6,
+    def __init__(self, out_dim, hidden_channels=16, n_update_layers=4, max_degree=6,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False, with_gwm=False):
         update_kwargs = {'max_degree': max_degree}
         super(NFP, self).__init__(
             update_layer=NFPUpdate, readout_layer=NFPReadout,
             out_dim=out_dim, hidden_channels=hidden_channels,
-            n_layers=n_layers, max_degree=max_degree,
+            n_update_layers=n_update_layers, max_degree=max_degree,
             n_atom_types=n_atom_types, concat_hidden=concat_hidden,
             sum_hidden=True, with_gwm=with_gwm, update_kwargs=update_kwargs
         )

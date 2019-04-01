@@ -40,13 +40,13 @@ class RelGAT(GraphConvModel):
 
     """
     def __init__(self, out_dim, hidden_channels=16, n_heads=3, negative_slope=0.2,
-                 n_edge_types=4, n_layers=4, dropout_ratio=-1.,
+                 n_edge_types=4, n_update_layers=4, dropout_ratio=-1.,
                  activation=functions.identity, n_atom_types=MAX_ATOMIC_NUM,
                  softmax_mode='across', concat_hidden=False,
                  concat_heads=False, weight_tying=False, with_gwm=False):
         if concat_heads:
-            channels = [hidden_channels * n_heads for _ in range(n_layers)]
-            out_channels = [hidden_channels for _ in range(n_layers)]
+            channels = [hidden_channels * n_heads for _ in range(n_update_layers)]
+            out_channels = [hidden_channels for _ in range(n_update_layers)]
             channels[0] = hidden_channels
             hidden_channels = channels
         else:
@@ -59,7 +59,7 @@ class RelGAT(GraphConvModel):
 
         super(RelGAT, self).__init__(
             update_layer=RelGATUpdate, readout_layer=GGNNReadout,
-            out_dim=out_dim, n_layers=n_layers, hidden_channels=hidden_channels,
+            out_dim=out_dim, n_update_layers=n_update_layers, hidden_channels=hidden_channels,
             out_channels=out_channels, n_atom_types=n_atom_types,
             concat_hidden=concat_hidden, weight_tying=weight_tying,
             dropout_ratio=dropout_ratio, n_edge_types=n_edge_types,

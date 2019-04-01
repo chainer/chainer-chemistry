@@ -57,7 +57,10 @@ class GraphConvModel(chainer.Chain):
             else:
                 hidden_channels = [hidden_channels for _ in range(n_update_layers + 1)]
         elif isinstance(hidden_channels, list):
-            n_update_layers = len(hidden_channels) - 1
+            if out_channels is None:
+                n_update_layers = len(hidden_channels) - 1
+            else:
+                n_update_layers = len(hidden_channels)
         else:
             raise TypeError
 

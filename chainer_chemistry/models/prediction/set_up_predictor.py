@@ -47,21 +47,21 @@ def set_up_predictor(
         conv = NFP(
             out_dim=n_unit,
             hidden_channels=n_unit,
-            n_layers=conv_layers,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'ggnn':
         print('Training a GGNN predictor...')
         conv = GGNN(
             out_dim=n_unit,
             hidden_channels=n_unit,
-            n_layers=conv_layers,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'schnet':
         print('Training an SchNet predictor...')
         conv = SchNet(
             out_dim=class_num,
             hidden_channels=n_unit,
-            n_layers=conv_layers,
+            n_update_layers=conv_layers,
             **conv_kwargs)
         mlp = None
     elif method == 'weavenet':
@@ -72,7 +72,7 @@ def set_up_predictor(
         conv = RSGCN(
             out_dim=n_unit,
             hidden_channels=n_unit,
-            n_layers=conv_layers,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'relgcn':
         print('Training a Relational GCN predictor...')
@@ -87,7 +87,7 @@ def set_up_predictor(
         conv = RelGAT(
             out_dim=n_unit,
             hidden_channels=n_unit,
-            n_layers=conv_layers,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))

@@ -27,7 +27,7 @@ class GIN(GraphConvModel):
 
     """
     def __init__(self, out_dim, hidden_channels=16,
-                 n_layers=4, n_atom_types=MAX_ATOMIC_NUM,
+                 n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
                  dropout_ratio=0.5, concat_hidden=False,
                  weight_tying=True, activation=functions.identity,
                  n_edge_types=4, with_gwm=False):
@@ -37,7 +37,7 @@ class GIN(GraphConvModel):
         super(GIN, self).__init__(
             update_layer=GINUpdate, readout_layer=GGNNReadout,
             out_dim=out_dim, hidden_channels=hidden_channels,
-            n_layers=n_layers, n_atom_types=n_atom_types,
+            n_update_layers=n_update_layers, n_atom_types=n_atom_types,
             concat_hidden=concat_hidden, weight_tying=weight_tying,
             n_edge_types=n_edge_types, with_gwm=with_gwm,
             update_kwargs=update_kwargs, readout_kwargs=readout_kwargs
