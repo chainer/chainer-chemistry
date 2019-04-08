@@ -36,8 +36,11 @@ def construct_distance_matrix(mol, out_size=-1):
         raise MolFeatureExtractionError('out_size {} is smaller than number '
                                         'of atoms in mol {}'
                                         .format(out_size, N))
-
+    mol = AllChem.AddHs(mol)
     confid = AllChem.EmbedMolecule(mol)
+    if mol.GetNumAtoms() != N:
+        mol = AllChem.RemoveHs(mol)
+    
     try:
         dist_matrix = rdmolops.Get3DDistanceMatrix(mol, confId=confid)
     except ValueError as e:
