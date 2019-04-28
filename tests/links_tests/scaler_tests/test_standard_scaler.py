@@ -1,5 +1,6 @@
 import os
 
+import chainer
 import numpy
 import pytest
 from chainer import serializers, Variable, cuda
@@ -143,10 +144,14 @@ def test_standard_scaler_forward(data):
     scaler.fit(x, indices=indices)
     x_scaled_transform = scaler.transform(x)
     x_scaled_forward = scaler.forward(x)
-    x_scaled_call = scaler(x)
 
     assert numpy.allclose(x_scaled_transform, x_scaled_forward)
-    assert numpy.allclose(x_scaled_transform, x_scaled_call)
+
+    if int(chainer.__version__.split('.')[0]) >= 5:
+        # `__call__` invokes `forward` method from version 5.
+        # Skip test for chainer v4.
+        x_scaled_call = scaler(x)
+        assert numpy.allclose(x_scaled_transform, x_scaled_call)
 
 
 if __name__ == '__main__':
