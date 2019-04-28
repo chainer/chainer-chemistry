@@ -129,5 +129,19 @@ def test_standard_scaler_transform_zero_std():
     assert numpy.allclose(x_scaled, expect_x_scaled)
 
 
+def test_standard_scaler_forward(data):
+    # test `forward` and `__call__` method.
+    indices = [0]
+    x, expect_x_scaled = data
+    scaler = StandardScaler()
+    scaler.fit(x, indices=indices)
+    x_scaled_transform = scaler.transform(x)
+    x_scaled_forward = scaler.forward(x)
+    x_scaled_call = scaler(x)
+
+    assert numpy.allclose(x_scaled_transform, x_scaled_forward)
+    assert numpy.allclose(x_scaled_transform, x_scaled_call)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
