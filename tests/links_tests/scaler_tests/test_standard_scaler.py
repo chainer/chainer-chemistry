@@ -107,6 +107,10 @@ def test_standard_scaler_serialize(tmpdir, data, indices):
     assert scaler.indices == scaler2.indices
 
 
+def test_hoge():
+    assert True
+
+
 def test_standard_scaler_assert_raises():
     x = numpy.array([[0.1, 0.2, 0.3], [0.5, 0.3, 0.1]],
                     dtype=numpy.float32)
