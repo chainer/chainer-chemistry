@@ -2,6 +2,11 @@ import numpy
 import pytest
 
 from chainer_chemistry.utils.sparse_utils import convert_sparse_with_edge_type
+from chainer_chemistry.utils.sparse_utils import sparse_utils_available
+
+if not sparse_utils_available():
+    pytest.skip('sparse_utils is available if chainer>=5 and numpy>=1.16',
+                allow_module_level=True)
 
 
 def naive_convert(data, row, col, edge_type, num_edge_type):

@@ -10,6 +10,7 @@ from chainer_chemistry.utils.extend import extend_node, extend_adj
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 from chainer_chemistry.utils.sparse_utils import _convert_to_sparse
+from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 
 atom_size = 5
 out_dim = 4
@@ -54,10 +55,11 @@ def test_forward_cpu(model, sparse_model, data):
     atom_data, adj_data = data[0], data[1]
     y_dense = check_forward(model, atom_data, adj_data)
     # test for sparse data
-    y_sparse = check_forward(sparse_model, atom_data,
-                             *_convert_to_sparse(adj_data))
-    numpy.testing.assert_allclose(
-        y_dense, y_sparse, atol=1e-4, rtol=1e-4)
+    if sparse_utils_available():
+        y_sparse = check_forward(sparse_model, atom_data,
+                                 *_convert_to_sparse(adj_data))
+        numpy.testing.assert_allclose(
+            y_dense, y_sparse, atol=1e-4, rtol=1e-4)
 
 
 @pytest.mark.gpu
@@ -65,8 +67,9 @@ def test_forward_gpu(model, sparse_model, data):
     atom_data, adj_data = cuda.to_gpu(data[0]), cuda.to_gpu(data[1])
     model.to_gpu()
     check_forward(model, atom_data, adj_data)
-    sparse_model.to_gpu()
-    check_forward(sparse_model, atom_data, *_convert_to_sparse(adj_data))
+    if sparse_utils_available():
+        sparse_model.to_gpu()
+        check_forward(sparse_model, atom_data, *_convert_to_sparse(adj_data))
 
 
 def test_backward_cpu(model, data):

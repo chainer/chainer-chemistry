@@ -11,6 +11,7 @@ from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 from chainer_chemistry.utils.sparse_utils import _convert_to_sparse
 from chainer_chemistry.utils.sparse_utils import convert_sparse_with_edge_type
+from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 
 atom_size = 5
 hidden_dim = 4
@@ -40,6 +41,7 @@ def data():
     return embed_atom_data, adj_data, y_grad
 
 
+@pytest.mark.skipif(not sparse_utils_available())
 def convert_to_sparse(dense_adj):
     # auxiliary function
     data, row, col, edge_type = _convert_to_sparse(dense_adj)
@@ -59,12 +61,13 @@ def test_forward_cpu(update, data):
     atom_data, adj_data = data[:2]
     y_dense = check_forward(update, atom_data, adj_data)
 
-    sparse_adj = convert_to_sparse(adj_data)
-    y_sparse = check_forward(update, atom_data, sparse_adj)
+    if sparse_utils_available():
+        sparse_adj = convert_to_sparse(adj_data)
+        y_sparse = check_forward(update, atom_data, sparse_adj)
 
-    # results for dense matrix and sparse matrix must be same
-    numpy.testing.assert_allclose(
-        y_dense, y_sparse, atol=1e-4, rtol=1e-4)
+        # results for dense matrix and sparse matrix must be same
+        numpy.testing.assert_allclose(
+            y_dense, y_sparse, atol=1e-4, rtol=1e-4)
 
 
 @pytest.mark.gpu
@@ -73,11 +76,12 @@ def test_forward_gpu(update, data):
     update.to_gpu()
     y_dense = check_forward(update, atom_data, adj_data)
 
-    sparse_adj = convert_to_sparse(adj_data)
-    y_sparse = check_forward(update, atom_data, sparse_adj)
+    if sparse_utils_available():
+        sparse_adj = convert_to_sparse(adj_data)
+        y_sparse = check_forward(update, atom_data, sparse_adj)
 
-    numpy.testing.assert_allclose(
-        cuda.to_cpu(y_dense), cuda.to_cpu(y_sparse), atol=1e-4, rtol=1e-4)
+        numpy.testing.assert_allclose(
+            cuda.to_cpu(y_dense), cuda.to_cpu(y_sparse), atol=1e-4, rtol=1e-4)
 
 
 def check_backward(update, atom_data, adj_data, y_grad):
@@ -113,11 +117,12 @@ def test_backward_cpu(update, data):
     atom_data, adj_data, y_grad = data
     gx_dense = check_backward(update, atom_data, adj_data, y_grad)
 
-    sparse_adj = convert_to_sparse(adj_data)
-    gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
+    if sparse_utils_available():
+        sparse_adj = convert_to_sparse(adj_data)
+        gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
 
-    numpy.testing.assert_allclose(
-        gx_dense, gx_sparse, atol=1e-4, rtol=1e-4)
+        numpy.testing.assert_allclose(
+            gx_dense, gx_sparse, atol=1e-4, rtol=1e-4)
 
 
 @pytest.mark.gpu
@@ -126,11 +131,13 @@ def test_backward_gpu(update, data):
     atom_data, adj_data, y_grad = map(cuda.to_gpu, data)
     gx_dense = check_backward(update, atom_data, adj_data, y_grad)
 
-    sparse_adj = convert_to_sparse(adj_data)
-    gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
+    if sparse_utils_available():
+        sparse_adj = convert_to_sparse(adj_data)
+        gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
 
-    numpy.testing.assert_allclose(
-        cuda.to_cpu(gx_dense), cuda.to_cpu(gx_sparse), atol=1e-4, rtol=1e-4)
+        numpy.testing.assert_allclose(
+            cuda.to_cpu(gx_dense), cuda.to_cpu(gx_sparse),
+            atol=1e-4, rtol=1e-4)
 
 
 def test_forward_cpu_graph_invariant(update, data):

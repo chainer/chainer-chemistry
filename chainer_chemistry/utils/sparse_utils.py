@@ -5,7 +5,7 @@ import numpy as np
 try:
     from chainer.utils import CooMatrix
     _coomatrix_imported = True
-except:
+except Exception:
     _coomatrix_imported = False
 
 
@@ -14,6 +14,12 @@ def _flatten(x):
         x = x.data
     x = chainer.backends.cuda.to_cpu(x)
     return x.flatten()
+
+
+def sparse_utils_available():
+    from distutils.version import StrictVersion
+    return _coomatrix_imported and\
+        StrictVersion(np.__version__) >= StrictVersion('1.16')
 
 
 def is_sparse(x):
