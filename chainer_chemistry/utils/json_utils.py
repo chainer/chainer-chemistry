@@ -1,5 +1,6 @@
 import json
 from logging import getLogger
+from pathlib import PurePath
 
 import numpy
 from chainer import cuda
@@ -17,6 +18,10 @@ class JSONEncoderEX(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, cuda.ndarray):
             return cuda.to_cpu(obj).tolist()
+        elif isinstance(obj, PurePath):
+            # save as str representation
+            # convert windows path separator to linux format
+            return str(obj).replace('\\', '/')
         else:
             return super(JSONEncoderEX, self).default(obj)
 

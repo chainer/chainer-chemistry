@@ -2,6 +2,7 @@ import os
 
 import numpy
 import pytest
+from pathlib import Path
 
 from chainer_chemistry.utils.json_utils import load_json
 from chainer_chemistry.utils.json_utils import save_json
@@ -14,6 +15,7 @@ params = {
     'n_int_scalar': numpy.array(1),
     'n_int_array': numpy.array([1]),
     'n_float': numpy.array([[1.0, 2.0], [3.0, 4.0]]),
+    'path': Path('/tmp/hoge')
 }
 
 
@@ -52,7 +54,9 @@ def test_load_json(tmpdir):
         'd_tuple': [1, 2],
         'n_float': [[1.0, 2.0], [3.0, 4.0]],
         'n_int_array': [1],
-        'n_int_scalar': 1}
+        'n_int_scalar': 1,
+        'path': '/tmp/hoge'  # PurePath is converted to str
+    }
     assert params_load == expected_params_load
 
 
