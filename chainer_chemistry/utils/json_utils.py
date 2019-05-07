@@ -1,8 +1,12 @@
 import json
 from logging import getLogger
-from pathlib import PurePath
-
 import numpy
+try:
+    from pathlib import PurePath
+    _is_pathlib_available = True
+except ImportError:
+    _is_pathlib_available = False
+
 from chainer import cuda
 
 
@@ -18,7 +22,7 @@ class JSONEncoderEX(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, cuda.ndarray):
             return cuda.to_cpu(obj).tolist()
-        elif isinstance(obj, PurePath):
+        elif _is_pathlib_available and isinstance(obj, PurePath):
             # save as str representation
             # convert windows path separator to linux format
             return str(obj).replace('\\', '/')
