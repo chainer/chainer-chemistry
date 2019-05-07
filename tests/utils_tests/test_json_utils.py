@@ -2,7 +2,6 @@ import os
 
 import numpy
 import pytest
-from pathlib import Path
 
 from chainer_chemistry.utils.json_utils import load_json
 from chainer_chemistry.utils.json_utils import save_json
@@ -15,8 +14,14 @@ params = {
     'n_int_scalar': numpy.array(1),
     'n_int_array': numpy.array([1]),
     'n_float': numpy.array([[1.0, 2.0], [3.0, 4.0]]),
-    'path': Path('/tmp/hoge')
 }
+try:
+    # pathlib is not available with python 2.7
+    from pathlib import Path
+    params['path'] = Path('/tmp/hoge')
+    _is_pathlib_available = True
+except ImportError:
+    _is_pathlib_available = False
 
 
 params_invalid = {
@@ -55,8 +60,10 @@ def test_load_json(tmpdir):
         'n_float': [[1.0, 2.0], [3.0, 4.0]],
         'n_int_array': [1],
         'n_int_scalar': 1,
-        'path': '/tmp/hoge'  # PurePath is converted to str
     }
+    if _is_pathlib_available:
+        # PurePath is converted to str
+        expected_params_load['path'] = '/tmp/hoge'
     assert params_load == expected_params_load
 
 
