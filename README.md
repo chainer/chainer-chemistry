@@ -44,6 +44,7 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
 | master branch       | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
+| v0.6.0 release plan | v6.0 ~      *3  | TBD            |
 
 [Footnote]
 
@@ -51,6 +52,21 @@ currently supported:
 which is introduced after chainer v3. See [this issue](https://github.com/pfnet-research/chainer-chemistry/issues/192) for details.
 
 *2: Saliency modules only work with chainer v5.
+
+*3: Chainer v6 is under development now, and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
+    In order to support this new feature & API, we are going to break backward compatibility for chainer chemistry v0.6.0 release.
+    See [ChainerX Documentation](https://chainer.org/announcement/2018/12/03/chainerx.html) for details.
+
+## Recent Development Plan
+
+Current master branch is unstable, please consider using [v0.5.0 release](https://github.com/pfnet-research/chainer-chemistry/tree/v0.5.0) if you are new to this library.
+
+We will proceed following implementation & refactoring.
+These design are not finalized yet and we may introduce big change to the library structure/API.
+
+ - Graph Warp Module support for each graph convolution network.
+ - Sparse matrix support for graph convolution network.
+ - [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) support for coming chainer v6.
 
 ## Installation
 
