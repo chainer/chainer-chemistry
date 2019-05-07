@@ -2,7 +2,7 @@ import chainer
 from chainer import functions
 
 
-class ShapeTransformer2D(chainer.Link):
+class ShapeTransformerTo2D(chainer.Link):
     """Transforms input array `x` to 2-dim and reverts.
 
     It converts array to be 2-dim, where 1th axis is `axis` and the rest is
@@ -17,7 +17,7 @@ class ShapeTransformer2D(chainer.Link):
     """
 
     def __init__(self, axis=1):
-        super(ShapeTransformer2D, self).__init__()
+        super(ShapeTransformerTo2D, self).__init__()
         self.original_shape = None
         self.transpose_order = None
         self.axis = axis

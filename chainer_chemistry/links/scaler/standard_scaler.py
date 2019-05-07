@@ -4,7 +4,7 @@ import numpy
 from chainer import cuda, Variable
 
 from chainer_chemistry.links.scaler.base import BaseScaler, to_array  # NOQA
-from chainer_chemistry.links.array.shape_transformer_2d import ShapeTransformer2D  # NOQA
+from chainer_chemistry.links.array.shape_transformer_to_2d import ShapeTransformerTo2D  # NOQA
 
 
 def format_x(x):
@@ -41,7 +41,7 @@ class StandardScaler(BaseScaler):
         """
         x = to_array(x)
         x = format_x(x)
-        x = ShapeTransformer2D(axis=axis).transform(x).array
+        x = ShapeTransformerTo2D(axis=axis).transform(x).array
 
         if indices is None:
             pass
@@ -90,7 +90,7 @@ class StandardScaler(BaseScaler):
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
         mean_all, std_all = self._compute_mean_std_all(x.shape[1])
         x = (x - mean_all[None, :]) / std_all[None, :]
@@ -104,7 +104,7 @@ class StandardScaler(BaseScaler):
         if self.mean is None:
             raise AttributeError('[Error] mean is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
         mean_all, std_all = self._compute_mean_std_all(x.shape[1])
         x = x * std_all[None, :] + mean_all[None, :]

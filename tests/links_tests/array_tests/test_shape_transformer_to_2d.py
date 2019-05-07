@@ -1,12 +1,12 @@
 import numpy
 import pytest
 
-from chainer_chemistry.links.array.shape_transformer_2d import ShapeTransformer2D  # NOQA
+from chainer_chemistry.links.array.shape_transformer_to_2d import ShapeTransformerTo2D  # NOQA
 
 
 @pytest.mark.parametrize('axis', [0, 1, -1])
 def test_shape_transformer_2d_2d_array(axis):
-    st = ShapeTransformer2D(axis=axis)
+    st = ShapeTransformerTo2D(axis=axis)
     x = numpy.arange(6).reshape((2, 3))
     xt = st.transform(x)
     xit = st.inverse_transform(xt)
@@ -20,7 +20,7 @@ def test_shape_transformer_2d_2d_array(axis):
 
 @pytest.mark.parametrize('axis', [0, 1, 2, -1])
 def test_shape_transformer_2d_3d_array(axis):
-    st = ShapeTransformer2D(axis=axis)
+    st = ShapeTransformerTo2D(axis=axis)
     x = numpy.arange(12).reshape((2, 3, 2))
     xt = st.transform(x)
     xit = st.inverse_transform(xt)
@@ -39,7 +39,7 @@ def test_shape_transformer_2d_3d_array(axis):
 
 
 def test_shape_transformer_2d_error():
-    st = ShapeTransformer2D(axis=1)
+    st = ShapeTransformerTo2D(axis=1)
     x = numpy.arange(6).reshape(2, 3)
     with pytest.raises(AttributeError):
         # call `inverse_transform` before `transform`
