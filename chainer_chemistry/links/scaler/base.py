@@ -37,3 +37,7 @@ class BaseScaler(chainer.Link):
 
     def fit_transform(self, x, **kwargs):
         return self.fit(x, **kwargs).transform(x)
+
+    # `__call__` method invokes `forward` method.
+    def forward(self, x, **kwargs):
+        return self.transform(x, **kwargs)
