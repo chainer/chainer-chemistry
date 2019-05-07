@@ -15,6 +15,7 @@ from chainer_chemistry.models import schnet  # NOQA
 from chainer_chemistry.models import weavenet  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN  # NOQA
+from chainer_chemistry.models.ggnn import SparseGGNN  # NOQA
 from chainer_chemistry.models.ggnn_gwm import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gin import GIN  # NOQA
 from chainer_chemistry.models.gin_gwm import GIN_GWM  # NOQA

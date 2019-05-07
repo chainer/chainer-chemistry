@@ -4,6 +4,7 @@ from chainer import links
 
 import chainer_chemistry
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
+from chainer_chemistry.utils import is_sparse
 
 
 class GGNNUpdate(chainer.Chain):
@@ -34,11 +35,14 @@ class GGNNUpdate(chainer.Chain):
         m = functions.transpose(m, (0, 3, 1, 2))
         # m: (minibatch, edge_type, atom, ch)
 
-        adj = functions.reshape(adj, (mb * self.num_edge_type, atom, atom))
         # (minibatch * edge_type, atom, out_ch)
         m = functions.reshape(m, (mb * self.num_edge_type, atom, out_ch))
 
-        m = chainer_chemistry.functions.matmul(adj, m)
+        if is_sparse(adj):
+            m = functions.sparse_matmul(adj, m)
+        else:
+            adj = functions.reshape(adj, (mb * self.num_edge_type, atom, atom))
+            m = chainer_chemistry.functions.matmul(adj, m)
 
         # (minibatch * edge_type, atom, out_ch)
         m = functions.reshape(m, (mb, self.num_edge_type, atom, out_ch))
