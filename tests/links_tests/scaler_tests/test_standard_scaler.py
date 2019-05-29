@@ -83,6 +83,34 @@ def test_standard_scaler_inverse_transform(data, indices):
                                   expect_x_scaled[:, index])
 
 
+@pytest.mark.parametrize('axis', [1, 2])
+def test_standard_scaler_3darray(data, axis):
+    x, expect_x_scaled = data
+    s0, s1 = x.shape
+    if axis == 1:
+        # feature axis is 1, insert other axis to 2nd axis
+        x = numpy.broadcast_to(x[:, :, None], (s0, s1, 2))
+        expect_x_scaled = numpy.broadcast_to(
+            expect_x_scaled[:, :, None], (s0, s1, 2))
+    elif axis == 2:
+        # feature axis is 2, insert other axis to 1st axis
+        x = numpy.broadcast_to(x[:, None, :], (s0, 3, s1))
+        expect_x_scaled = numpy.broadcast_to(
+            expect_x_scaled[:, None, :], (s0, 3, s1))
+    assert x.ndim == 3
+    indices = None
+    scaler = StandardScaler()
+    scaler.fit(x, indices=indices, axis=axis)
+    x_scaled = scaler.transform(x, axis=axis)
+    assert x_scaled.shape == expect_x_scaled.shape
+    assert numpy.allclose(x_scaled, expect_x_scaled, atol=1e-7)
+
+    x_inverse = scaler.inverse_transform(expect_x_scaled, axis=axis)
+
+    for index in numpy.arange(x.shape[1]):
+        assert numpy.allclose(x_inverse[:, index], x[:, index], atol=1e-7)
+
+
 def test_standard_scaler_fit_transform(data):
     x, expect_x_scaled = data
     scaler = StandardScaler()
