@@ -15,6 +15,13 @@ params = {
     'n_int_array': numpy.array([1]),
     'n_float': numpy.array([[1.0, 2.0], [3.0, 4.0]]),
 }
+try:
+    # pathlib is not available with python 2.7
+    from pathlib import Path
+    params['path'] = Path('/tmp/hoge')
+    _is_pathlib_available = True
+except ImportError:
+    _is_pathlib_available = False
 
 
 params_invalid = {
@@ -52,7 +59,11 @@ def test_load_json(tmpdir):
         'd_tuple': [1, 2],
         'n_float': [[1.0, 2.0], [3.0, 4.0]],
         'n_int_array': [1],
-        'n_int_scalar': 1}
+        'n_int_scalar': 1,
+    }
+    if _is_pathlib_available:
+        # PurePath is converted to str
+        expected_params_load['path'] = '/tmp/hoge'
     assert params_load == expected_params_load
 
 
