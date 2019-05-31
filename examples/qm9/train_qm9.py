@@ -2,6 +2,8 @@
 from __future__ import print_function
 
 import argparse
+
+import chainer
 import numpy
 import os
 
@@ -73,9 +75,11 @@ def parse_arguments():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', '-d', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to save the computed model to')
     parser.add_argument('--epoch', '-e', type=int, default=20,
@@ -169,7 +173,7 @@ def main():
                                           shuffle=False)
 
     # Set up the regressor.
-    device = args.gpu
+    device = chainer.get_device(args.device)
     metrics_fun = {'mae': MeanAbsError(scaler=scaler),
                    'rmse': RootMeanSqrError(scaler=scaler)}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,

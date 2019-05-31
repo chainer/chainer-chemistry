@@ -60,9 +60,11 @@ def main():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='GPU ID to use. Negative value indicates '
-                        'not to use GPU and to run the code in CPU.')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to output directory')
     parser.add_argument('--epoch', '-e', type=int, default=10,
@@ -113,20 +115,21 @@ def main():
     val_iter = I.SerialIterator(val, args.batchsize,
                                 repeat=False, shuffle=False)
 
+    device = chainer.get_device(args.device)
     classifier = Classifier(predictor_,
                             lossfun=F.sigmoid_cross_entropy,
                             metrics_fun=F.binary_accuracy,
-                            device=args.gpu)
+                            device=device)
 
     optimizer = O.Adam()
     optimizer.setup(classifier)
 
     updater = training.StandardUpdater(
-        train_iter, optimizer, device=args.gpu, converter=concat_mols)
+        train_iter, optimizer, device=device, converter=concat_mols)
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
 
     trainer.extend(E.Evaluator(val_iter, classifier,
-                               device=args.gpu, converter=concat_mols))
+                               device=device, converter=concat_mols))
     trainer.extend(E.LogReport())
 
     eval_mode = args.eval_mode
@@ -139,13 +142,13 @@ def main():
                                            repeat=False, shuffle=False)
         trainer.extend(ROCAUCEvaluator(
             train_eval_iter, classifier, eval_func=predictor_,
-            device=args.gpu, converter=concat_mols, name='train',
+            device=device, converter=concat_mols, name='train',
             pos_labels=1, ignore_labels=-1, raise_value_error=False))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
         trainer.extend(ROCAUCEvaluator(
             val_iter, classifier, eval_func=predictor_,
-            device=args.gpu, converter=concat_mols, name='val',
+            device=device, converter=concat_mols, name='val',
             pos_labels=1, ignore_labels=-1))
         trainer.extend(E.PrintReport([
             'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',

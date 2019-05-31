@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 
+import chainer
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
@@ -45,9 +46,11 @@ def parse_arguments():
                         'predicting all properties at once')
 #    parser.add_argument('--scale', type=str, choices=scale_list,
 #                        help='label scaling method', default='standardize')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--in-dir', '-i', type=str, default='result',
                         help='directory to load model data from')
     parser.add_argument('--num-data', type=int, default=-1,
@@ -103,10 +106,11 @@ def main():
     print("model_path=" + model_path)
     print('Loading model weights from {}...'.format(model_path))
 
+    device = chainer.get_device(args.device)
     if task_type == 'classification':
-        model = Classifier.load_pickle(model_path, device=args.gpu)
+        model = Classifier.load_pickle(model_path, device=device)
     elif task_type == 'regression':
-        model = Regressor.load_pickle(model_path, device=args.gpu)
+        model = Regressor.load_pickle(model_path, device=device)
     else:
         raise ValueError('Invalid task type ({}) encountered when processing '
                          'dataset ({}).'.format(task_type, dataset_name))
@@ -126,7 +130,7 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(test_iterator, model, converter=concat_mols,
-                            device=args.gpu)()
+                            device=device)()
     print('Evaluation result: ', eval_result)
 
 
@@ -148,7 +152,9 @@ def main():
     elif task_type=="classification":
         # For Classifier, we do not equip the model with ROC-AUC evalation function
         # use a seperate ROC-AUC Evaluator here
-        rocauc_result = ROCAUCEvaluator(test_iterator, model, converter=concat_mols, device=args.gpu,eval_func=model.predictor, name='test', ignore_labels=-1)()
+        rocauc_result = ROCAUCEvaluator(
+            test_iterator, model, converter=concat_mols, device=device,
+            eval_func=model.predictor, name='test', ignore_labels=-1)()
         print('ROCAUC Evaluation result: ', rocauc_result)
         with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
             json.dump(rocauc_result, f)

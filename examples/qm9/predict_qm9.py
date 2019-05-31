@@ -3,35 +3,27 @@ from __future__ import print_function
 
 import argparse
 import os
+
+import chainer
 import numpy
 import pandas
 
-import chainer.functions as F
 from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-
-from chainer_chemistry.utils import save_json
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
-
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models.prediction import Regressor
+from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 # from sklearn.preprocessing import StandardScaler  # NOQA
-from train_qm9 import GraphConvPredictor  # NOQA
+# from train_qm9 import GraphConvPredictor  # NOQA
 from train_qm9 import MeanAbsError, RootMeanSqrError  # NOQA
 
 
@@ -53,9 +45,11 @@ def parse_arguments():
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         help='label scaling method', default='standardize')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', '-d', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--seed', '-s', type=int, default=777,
                         help='random seed value')
     parser.add_argument('--train-data-ratio', '-r', type=float, default=0.7,
@@ -73,7 +67,7 @@ def parse_arguments():
 def main():
     # Parse the arguments.
     args = parse_arguments()
-    device = args.gpu
+    device = chainer.get_device(args.device)
 
     # Set up some useful variables that will be used later on.
     method = args.method
@@ -113,16 +107,12 @@ def main():
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=device)
-    scaler = regressor.predictor.scaler
+    scaler = regressor.predictor.label_scaler
 
     if scaler is not None:
         original_t = dataset.get_datasets()[-1]
-        if args.gpu >= 0:
-            scaled_t = cuda.to_cpu(scaler.transform(
-                cuda.to_gpu(original_t)))
-        else:
-            scaled_t = scaler.transform(original_t)
-
+        scaled_t = cuda.to_cpu(scaler.transform(
+            device.send(original_t)))
         dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] +
                                       (scaled_t,)))
 
@@ -131,6 +121,7 @@ def main():
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
     # This callback function extracts only the inputs and discards the labels.
+    @chainer.dataset.converter()
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 

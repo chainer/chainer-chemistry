@@ -3,6 +3,8 @@
 from __future__ import print_function
 
 import json
+
+import chainer
 import numpy
 import os
 import pickle
@@ -35,12 +37,10 @@ class ScaledGraphConvPredictor(GraphConvPredictor):
     def __call__(self, atoms, adjs):
         h = super(ScaledGraphConvPredictor, self).__call__(atoms, adjs)
         scaler_available = hasattr(self, 'scaler')
-        numpy_data = isinstance(h.data, numpy.ndarray)
 
         if scaler_available:
             h = self.scaler.inverse_transform(cuda.to_cpu(h.data))
-            if not numpy_data:
-                h = cuda.to_gpu(h)
+            self.device.send(h)
         return Variable(h)
 
 
@@ -66,9 +66,11 @@ def parse_arguments():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to save the computed model to')
     parser.add_argument('--epoch', '-e', type=int, default=10,
@@ -113,8 +115,9 @@ def main():
 
     print('Predicting...')
     # Set up the regressor.
+    device = chainer.get_device(args.device)
     model_path = os.path.join(args.in_dir, args.model_filename)
-    regressor = Regressor.load_pickle(model_path, device=args.gpu)
+    regressor = Regressor.load_pickle(model_path, device=device)
     scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
     scaled_predictor.scaler = scaler
     regressor.predictor = scaled_predictor
@@ -123,7 +126,7 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
-                            device=args.gpu)()
+                            device=device)()
     print('Evaluation result: ', eval_result)
 
     with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:

@@ -5,8 +5,8 @@ methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
 
 prefix=eval_
 
-# GPU identifier; set it to -1 to train on the CPU (default).
-gpu=${1:--1}
+# device identifier; set it to -1 to train on the CPU (default).
+device=${1:--1}
 # Number of training epochs (default: 1).
 epoch=${2:-1}
 label=${3:-all}
@@ -19,7 +19,7 @@ do
 
     python train_qm9.py \
         --method ${method} \
-        --gpu ${gpu} \
+        --device ${device} \
         --out ${result_dir} \
         --epoch ${epoch} \
         --label ${label}

@@ -5,8 +5,8 @@ set -e
 # List of available graph convolution methods.
 methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
 
-# GPU identifier; set it to -1 to train on the CPU (default).
-gpu=${1:--1}
+# device identifier; set it to -1 to train on the CPU (default).
+device=${1:--1}
 # Number of training epochs (default: 1).
 epoch=${2:-1}
 
@@ -17,7 +17,7 @@ do
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
-        --gpu ${gpu} \
+        --device ${device} \
         --epoch ${epoch} \
         --unit-num 10 \
         --out eval_${method}
@@ -27,7 +27,7 @@ do
         --method ${method} \
         --label value1 \
         --conv-layers 1 \
-        --gpu ${gpu} \
+        --device ${device} \
         --epoch ${epoch} \
         --unit-num 10 \
         --in-dir eval_${method} \
