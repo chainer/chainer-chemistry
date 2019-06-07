@@ -1,5 +1,4 @@
 from typing import Dict  # NOQA
-from typing import Tuple  # NOQA
 
 import chainer  # NOQA
 import pytest

@@ -20,8 +20,9 @@ class Regressor(BaseForwardModel):
         label_key (int or str): Key to specify label variable from arguments.
             When it is ``int``, a variable in positional arguments is used.
             And when it is ``str``, a variable in keyword arguments is used.
-        device (int): GPU device id of this Regressor to be used.
-            -1 indicates to use in CPU.
+        device (int or chainer._backend.Device):
+             GPU device id of this Regressor to be used.
+             -1 indicates to use in CPU.
 
     Attributes:
         predictor (~chainer.Link): Predictor network.

@@ -5,6 +5,7 @@ from chainer import cuda
 from chainer.dataset.convert import concat_examples
 from chainer.iterators import SerialIterator
 from chainer import link
+import chainerx
 import numpy
 
 
@@ -24,25 +25,13 @@ class BaseForwardModel(link.Chain):
 
     """A base model which supports forward functionality.
 
-    It also supports `device` id management and pickle save/load functionality.
-
-    Args:
-        device (int): GPU device id of this model to be used.
-            -1 indicates to use in CPU.
-
-    Attributes:
-        _dev_id (int): Model's current device id
-
+    It also supports pickle save/load functionality.
     """
 
     def __init__(self):
         super(BaseForwardModel, self).__init__()
 
         self.inputs = None
-        self._dev_id = None
-
-    def get_device(self):
-        return self._dev_id
 
     def initialize(self, device=-1):
         """Initialization of the model.
@@ -51,22 +40,23 @@ class BaseForwardModel(link.Chain):
         (often done by `with self.init_scope()` finished.
 
         Args:
-            device (int): GPU device id of this model to be used.
-            -1 indicates to use in CPU.
+            device (int or chainer._backend.Device):
+                GPU device id of this model to be used.
+                -1 indicates to use in CPU.
 
         """
         self.update_device(device=device)
 
     def update_device(self, device=-1):
-        if self._dev_id is None or self._dev_id != device:
+        if not isinstance(device, chainer._backend.Device):
+            device = chainer.get_device(device)  # type: chainerx.Device
+
+        if self.device != device:
+            device.use()
             # reset current state
             self.to_cpu()
-
-            # update the model to specified device id
-            self._dev_id = device
-            if device >= 0:
-                chainer.cuda.get_device_from_id(device).use()
-                self.to_gpu()  # Copy the model to the GPU
+            # update the model to specified device
+            self.to_device(device)
 
     def _forward(self, data, fn, batchsize=16,
                  converter=concat_examples, retain_inputs=False,
@@ -97,7 +87,7 @@ class BaseForwardModel(link.Chain):
         it = SerialIterator(data, batch_size=batchsize, repeat=False,
                             shuffle=False)
         for batch in it:
-            inputs = converter(batch, self._dev_id)
+            inputs = converter(batch, self.device)
             inputs = _to_tuple(inputs)
 
             if preprocess_fn:
@@ -176,7 +166,7 @@ class BaseForwardModel(link.Chain):
                 [1]: https://docs.python.org/3.6/library/pickle.html#module-interface
 
         """  # NOQA
-        current_device = self.get_device()
+        current_device = self.device
 
         # --- Move the model to CPU for saving ---
         self.update_device(-1)
@@ -204,7 +194,7 @@ class BaseForwardModel(link.Chain):
 
         Args:
             filepath (str): file path of pickle file.
-            device (int): GPU device id of this model to be used.
+            device (int or chainerx.Device): GPU device id of this model to be used.
                 -1 indicates to use in CPU.
 
         """

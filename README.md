@@ -30,7 +30,7 @@ These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -43,8 +43,8 @@ currently supported:
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
-| master branch       | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
-| v0.6.0 release plan | v6.0 ~      *3  | TBD            |
+| master branch       | v6.0 ~      *2,3| 2019.03.2.0    |
+| v0.6.0 release plan | v6.0 ~      *3  | 2019.03.2.0    |
 
 [Footnote]
 
@@ -53,7 +53,7 @@ which is introduced after chainer v3. See [this issue](https://github.com/pfnet-
 
 *2: Saliency modules only work with chainer v5.
 
-*3: Chainer v6 is under development now, and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
+*3: Chainer v6 is released and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
     In order to support this new feature & API, we are going to break backward compatibility for chainer chemistry v0.6.0 release.
     See [ChainerX Documentation](https://chainer.org/announcement/2018/12/03/chainerx.html) for details.
 
@@ -74,6 +74,13 @@ Chainer Chemistry can be installed using the `pip` command, as follows:
 
 ```
 pip install chainer-chemistry
+```
+
+Example to install rdkit with conda:
+```bash
+# newer conda version is necessary to install rdkit 2019.03.2.0
+conda install -n base conda==4.6.14
+conda install -c rdkit rdkit==2019.03.2.0
 ```
 
 If you would like to use the latest sources, please checkout the master branch
@@ -194,6 +201,7 @@ papers. Use the library at your own risk.
 [14] Michael Schlichtkrull, Thomas N. Kipf, Peter Bloem, Rianne van den Berg, Ivan Titov, Max Welling. Modeling Relational Data with Graph Convolutional Networks. *Extended Semantic Web Conference (ESWC)*, 2018.
 
 [15] Veličković, P., Cucurull, G., Casanova, A., Romero, A., Liò, P., & Bengio, Y. (2017). Graph Attention Networks. arXiv preprint arXiv:1710.10903.
+
 [16] Dan Busbridge, Dane Sherburn, Pietro Cavallo and Nils Y. Hammerla. (2019). Relational Graph Attention Networks. https://openreview.net/forum?id=Bklzkh0qFm
 
 [17] Keyulu Xu, Weihua Hu, Jure Leskovec, Stefanie Jegelka, ``How Powerful are Graph Neural Networks?'', 	arXiv:1810.00826 [cs.LG], 2018 (to appear at ICLR19).

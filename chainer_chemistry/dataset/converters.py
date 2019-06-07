@@ -1,6 +1,7 @@
 import chainer
 
 
+@chainer.dataset.converter()
 def concat_mols(batch, device=None, padding=0):
     """Concatenates a list of molecules into array(s).
 
