@@ -33,7 +33,7 @@ def is_visible(begin, end):
         return (begin + end) * 0.5
 
 
-class MolVisualier(BaseVisualizer):
+class MolVisualizer(BaseVisualizer):
 
     """Saliency visualizer for mol data
 
