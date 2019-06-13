@@ -136,7 +136,7 @@ class MolVisualizer(BaseVisualizer):
                 return None
 
 
-class SmilesVisualizer(MolVisualier):
+class SmilesVisualizer(MolVisualizer):
 
     def visualize(self, saliency, smiles, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
