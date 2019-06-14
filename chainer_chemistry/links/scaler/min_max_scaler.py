@@ -4,7 +4,7 @@ import numpy
 from chainer import cuda, Variable
 
 from chainer_chemistry.links.scaler.base import BaseScaler, to_array  # NOQA
-from chainer_chemistry.links.array.shape_transformer_2d import ShapeTransformer2D  # NOQA
+from chainer_chemistry.links.array.shape_transformer_to_2d import ShapeTransformer2D  # NOQA
 
 
 def format_x(x):
