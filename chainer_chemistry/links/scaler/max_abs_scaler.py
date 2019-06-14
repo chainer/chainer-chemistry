@@ -80,7 +80,7 @@ class MaxAbsScaler(BaseScaler):
             raise AttributeError(
                 '[Error] max_abs is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
         max_abs_all = self._compute_max_abs_all(x.shape[1])
         x = x / max_abs_all[None, :]
@@ -95,7 +95,7 @@ class MaxAbsScaler(BaseScaler):
             raise AttributeError(
                 '[Error] max_abs is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
         max_abs_all = self._compute_max_abs_all(x.shape[1])
         x = x * max_abs_all[None, :]
