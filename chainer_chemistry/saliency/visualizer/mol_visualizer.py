@@ -33,7 +33,7 @@ def is_visible(begin, end):
         return (begin + end) * 0.5
 
 
-class MolVisualier(BaseVisualizer):
+class MolVisualizer(BaseVisualizer):
 
     """Saliency visualizer for mol data
 
@@ -136,7 +136,7 @@ class MolVisualier(BaseVisualizer):
                 return None
 
 
-class SmilesVisualizer(MolVisualier):
+class SmilesVisualizer(MolVisualizer):
 
     def visualize(self, saliency, smiles, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
