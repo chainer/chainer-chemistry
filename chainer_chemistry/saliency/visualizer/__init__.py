@@ -6,7 +6,7 @@ from chainer_chemistry.saliency.visualizer import table_visualizer  # NOQA
 
 from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
 from chainer_chemistry.saliency.visualizer.image_visualizer import ImageVisualizer  # NOQA
-from chainer_chemistry.saliency.visualizer.mol_visualizer import MolVisualier  # NOQA
+from chainer_chemistry.saliency.visualizer.mol_visualizer import MolVisualizer  # NOQA
 from chainer_chemistry.saliency.visualizer.mol_visualizer import SmilesVisualizer  # NOQA
 from chainer_chemistry.saliency.visualizer.table_visualizer import TableVisualizer  # NOQA
 
