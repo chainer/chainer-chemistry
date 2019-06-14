@@ -41,7 +41,7 @@ class MinMaxScaler(BaseScaler):
         """
         x = to_array(x)
         x = format_x(x)
-        x = ShapeTransformer2D(axis=axis).transform(x).array
+        x = ShapeTransformerTo2D(axis=axis).transform(x).array
 
         if indices is None:
             pass
@@ -87,7 +87,7 @@ class MinMaxScaler(BaseScaler):
             raise AttributeError(
                 '[Error] min is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
         min_all, diff_all = self._compute_min_diff_all(x.shape[1])
         x = (x - min_all[None, :]) / diff_all[None, :]
@@ -102,7 +102,7 @@ class MinMaxScaler(BaseScaler):
             raise AttributeError(
                 '[Error] min is None, call fit beforehand!')
         x = format_x(x)
-        shape_transformer = ShapeTransformer2D(axis=axis)
+        shape_transformer = ShapeTransformerTo2D(axis=axis)
         x = shape_transformer.transform(x)
 
         min_all, diff_all = self._compute_min_diff_all(x.shape[1])
