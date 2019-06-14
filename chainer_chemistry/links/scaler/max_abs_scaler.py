@@ -39,7 +39,7 @@ class MaxAbsScaler(BaseScaler):
         """
         x = to_array(x)
         x = format_x(x)
-        x = ShapeTransformer2D(axis=axis).transform(x).array
+        x = ShapeTransformerTo2D(axis=axis).transform(x).array
 
         if indices is None:
             pass
