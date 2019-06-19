@@ -171,14 +171,21 @@ def construct_atom_feature(mol, add_Hs,
         mol, num_max_atoms, atom_list=atom_list,
         include_unknown_atom=include_unknown_atom)
     # TODO(nakago): Chilarity
-    formal_charge_vec = construct_formal_charge_vec(mol)
-    partial_charge_vec = construct_partial_charge_vec(mol)
-    atom_ring_vec = construct_atom_ring_vec(mol)
-    hybridization_vec = construct_hybridization_vec(mol)
-    hydrogen_bonding = construct_hydrogen_bonding(mol)
-    aromaticity_vec = construct_aromaticity_vec(mol)
+    formal_charge_vec = construct_formal_charge_vec(
+        mol, num_max_atoms=num_max_atoms)
+    partial_charge_vec = construct_partial_charge_vec(
+        mol, num_max_atoms=num_max_atoms)
+    atom_ring_vec = construct_atom_ring_vec(
+        mol, num_max_atoms=num_max_atoms)
+    hybridization_vec = construct_hybridization_vec(
+        mol, num_max_atoms=num_max_atoms)
+    hydrogen_bonding = construct_hydrogen_bonding(
+        mol, num_max_atoms=num_max_atoms)
+    aromaticity_vec = construct_aromaticity_vec(
+        mol, num_max_atoms=num_max_atoms)
     if add_Hs:
-        num_hydrogens_vec = construct_num_hydrogens_vec(mol)
+        num_hydrogens_vec = construct_num_hydrogens_vec(
+            mol, num_max_atoms=num_max_atoms)
         feature = numpy.hstack((atom_type_vec, formal_charge_vec,
                                 partial_charge_vec, atom_ring_vec,
                                 hybridization_vec, hydrogen_bonding,
