@@ -86,10 +86,10 @@ class NumpyTupleDataset(object):
         numpy.savez(filepath, *numpy_tuple_dataset._datasets)
 
     @classmethod
-    def load(cls, filepath):
+    def load(cls, filepath, allow_pickle=True):
         if not os.path.exists(filepath):
             return None
-        load_data = numpy.load(filepath)
+        load_data = numpy.load(filepath, allow_pickle=allow_pickle)
         result = []
         i = 0
         while True:
