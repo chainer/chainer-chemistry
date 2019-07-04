@@ -2,6 +2,7 @@ FROM chainer/chainer:v6.1.0-python3
 
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
+    curl ca-certificates \
     libboost-dev \
     libboost-python-dev \
     libboost-serialization-dev \
@@ -12,12 +13,12 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-ARG RDKIT_VERSION=Release_2017_09_3
-ADD https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz /
-
 # build & install rdkit
-RUN tar xf ${RDKIT_VERSION}.tar.gz && \
+ARG RDKIT_VERSION=Release_2017_09_3
+RUN curl -sLo ${RDKIT_VERSION}.tar.gz https://github.com/rdkit/rdkit/archive/${RDKIT_VERSION}.tar.gz && \
+    tar xf ${RDKIT_VERSION}.tar.gz && \
     mkdir -p rdkit-${RDKIT_VERSION}/build && \
+    base_dir=$(pwd) && \
     cd rdkit-${RDKIT_VERSION}/build && \
     cmake \
     -D RDK_BUILD_SWIG_SUPPORT=OFF \
@@ -36,10 +37,9 @@ RUN tar xf ${RDKIT_VERSION}.tar.gz && \
     -D CMAKE_INSTALL_PREFIX=/usr/local \
     .. && \
     make -j $(nproc) && \
-    make install
-
-RUN rm ${RDKIT_VERSION}.tar.gz && \
-    rm rdkit-${RDKIT_VERSION} -rf
+    make install && \
+    cd "$base_dir" && \
+    rm -rf rdkit-${RDKIT_VERSION} ${RDKIT_VERSION}.tar.gz
 
 # install chainer-chemistry
 # matplotlib >= 3.1 requires upgrade of pip
