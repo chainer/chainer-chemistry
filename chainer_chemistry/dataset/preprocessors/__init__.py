@@ -35,4 +35,5 @@ preprocess_method_dict = {
     'rsgcn': RSGCNPreprocessor,
     'rsgcn_gwm': RSGCNGWMPreprocessor,
     'relgat': RelGATPreprocessor,
+    'gnnfilm': GGNNPreprocessor,
 }

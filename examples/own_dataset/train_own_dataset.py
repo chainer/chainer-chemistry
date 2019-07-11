@@ -97,7 +97,7 @@ class ScaledAbsError(object):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat']
+                   'relgat', 'mpnn']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.

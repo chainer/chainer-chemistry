@@ -13,6 +13,7 @@ from chainer_chemistry.models.relgcn import RelGCN
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
+from chainer_chemistry.models.gnn_film import GNNFiLM
 
 
 def set_up_predictor(
@@ -85,6 +86,13 @@ def set_up_predictor(
     elif method == 'relgat':
         print('Training a Relational GAT predictor...')
         conv = RelGAT(
+            out_dim=n_unit,
+            hidden_dim=n_unit,
+            n_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'gnnfilm':
+        print('Training a GNN_FiLM predictor...')
+        conv = GNNFiLM(
             out_dim=n_unit,
             hidden_dim=n_unit,
             n_layers=conv_layers,
