@@ -15,9 +15,10 @@ class GNNFiLMUpdate(chainer.Chain):
     """
 
     
-    def __init__(self, hidden_dim=16, num_edge_type=5):
+    def __init__(self, hidden_dim=16, num_edge_type=5, activation=functions.relu):
         super(GNNFiLMUpdate, self).__init__()
         self.num_edge_type = num_edge_type
+        self.activation = activation
         with self.init_scope():
             self.W_linear = GraphLinear(in_size=None, out_size = self.num_edge_type * hidden_dim, nobias=True) # W_l in eq. (6)
             self.W_g = GraphLinear(in_size=None, out_size = self.num_edge_type * hidden_dim * 2, nobias=True) # g in eq. (6)
@@ -41,7 +42,7 @@ class GNNFiLMUpdate(chainer.Chain):
         # --- Update part ---
 
         messages = functions.expand_dims(gamma,axis=3) * functions.expand_dims(messages,axis=2) + functions.expand_dims(beta,axis=3)
-        messages = functions.relu(messages)
+        messages = self.activation(messages)
         messages = functions.transpose(messages, (1, 0, 2, 3, 4)) # (minibatch, num_edge_type, atom, atom, out_ch)
         messages = adj * messages
         messages = functions.sum(messages, axis=3) # sum across atoms

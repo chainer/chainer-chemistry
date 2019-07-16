@@ -6,6 +6,7 @@ from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.readout.nfp_readout import NFPReadout
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gnn_film_update import GNNFiLMUpdate
 from chainer_chemistry.utils import convert_sparse_with_edge_type
@@ -47,6 +48,10 @@ class GNNFiLM(chainer.Chain):
                 hidden_dim=hidden_dim, num_edge_type=num_edge_type)
                 for _ in range(n_message_layer)])
             # Readout
+            # self.readout_layers = chainer.ChainList(*[GeneralReadout(
+            #     out_dim=out_dim, hidden_dim=hidden_dim,
+            #     activation=activation, activation_agg=activation)
+            #     for _ in range(n_readout_layer)])
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
                 out_dim=out_dim, hidden_dim=hidden_dim,
                 activation=activation, activation_agg=activation)
