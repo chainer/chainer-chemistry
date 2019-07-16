@@ -30,7 +30,7 @@ class GNNFiLMUpdate(chainer.Chain):
         
         xp = self.xp
         mb, atom, ch = h.shape
-        adj = xp.broadcast_to(adj[:,:,:,:, xp.newaxis], (*(adj.shape+(ch,)))
+        adj = xp.broadcast_to(adj[:,:,:,:, xp.newaxis], (*adj.shape,ch))
         messages = functions.reshape(self.W_linear(h), (mb, atom, ch, self.num_edge_type))
         messages = functions.transpose(messages, (3, 0, 1, 2))
         film_weights = functions.reshape(self.W_g(h),
