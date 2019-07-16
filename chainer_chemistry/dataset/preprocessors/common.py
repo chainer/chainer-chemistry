@@ -120,7 +120,7 @@ def construct_adj_matrix(mol, out_size=-1, self_connection=True):
     return adj_array
 
 
-def construct_discrete_edge_matrix(mol, out_size=-1):
+def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
     """Returns the edge-type dependent adjacency matrix of the given molecule.
 
     Args:
@@ -152,7 +152,10 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
         raise ValueError(
             'out_size {} is smaller than number of atoms in mol {}'
             .format(out_size, N))
-    adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
+    if self_connection:
+        adjs = numpy.zeros((5, size, size), dtype=numpy.float32)
+    else:
+        adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
 
     bond_type_to_channel = {
         Chem.BondType.SINGLE: 0,
@@ -167,6 +170,8 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
         j = bond.GetEndAtomIdx()
         adjs[ch, i, j] = 1.0
         adjs[ch, j, i] = 1.0
+    if self_connection:
+        adjs[-1] = numpy.eye(N)
     return adjs
 
 def construct_supernode_feature(mol, atom_array, adjs, largest_atomic_number=MAX_ATOMIC_NUM, out_size=-1):

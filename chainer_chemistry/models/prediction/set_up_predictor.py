@@ -96,6 +96,7 @@ def set_up_predictor(
             out_dim=n_unit,
             hidden_dim=n_unit,
             n_layers=conv_layers,
+            num_edge_type = 5,
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))

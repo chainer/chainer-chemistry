@@ -9,6 +9,7 @@ from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms 
 from chainer_chemistry.dataset.preprocessors.ecfp_preprocessor import ECFPPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.relgat_preprocessor import RelGATPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gnnfilm_preprocessor import GNNFiLMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_gwm_preprocessor import GGNNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gin_preprocessor import GINPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gin_gwm_preprocessor import GINGWMPreprocessor  # NOQA
@@ -35,5 +36,5 @@ preprocess_method_dict = {
     'rsgcn': RSGCNPreprocessor,
     'rsgcn_gwm': RSGCNGWMPreprocessor,
     'relgat': RelGATPreprocessor,
-    'gnnfilm': GGNNPreprocessor,
+    'gnnfilm': GNNFiLMPreprocessor,
 }

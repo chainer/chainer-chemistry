@@ -15,7 +15,7 @@ class GNNFiLMUpdate(chainer.Chain):
     """
 
     
-    def __init__(self, hidden_dim=16, num_edge_type=4):
+    def __init__(self, hidden_dim=16, num_edge_type=5):
         super(GNNFiLMUpdate, self).__init__()
         self.num_edge_type = num_edge_type
         with self.init_scope():
@@ -26,7 +26,7 @@ class GNNFiLMUpdate(chainer.Chain):
             
     def forward(self, h, adj):
         # --- Message part ---
-
+        
         xp = self.xp
         mb, atom, ch = h.shape
         adj = xp.broadcast_to(adj[:,:,:,:, xp.newaxis], (*adj.shape, ch))
@@ -44,10 +44,9 @@ class GNNFiLMUpdate(chainer.Chain):
         messages = functions.relu(messages)
         messages = functions.transpose(messages, (1, 0, 2, 3, 4)) # (minibatch, num_edge_type, atom, atom, out_ch)
         messages = adj * messages
-        messages = functions.sum(messages, axis=3) # sum accross atoms
-        messages = functions.sum(messages, axis=1) # sum accross num_edge_type
+        messages = functions.sum(messages, axis=3) # sum across atoms
+        messages = functions.sum(messages, axis=1) # sum across num_edge_type
         messages = functions.reshape(messages, (mb * atom, ch))
         messages = self.norm_layer(messages)
         messages = functions.reshape(messages, (mb, atom, ch))
-        # messages = functions.stack([self.norm_layer(e) for e in messages])
         return messages
