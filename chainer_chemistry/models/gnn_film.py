@@ -15,9 +15,9 @@ from chainer_chemistry.utils import convert_sparse_with_edge_type
 class GNNFiLM(chainer.Chain):
     """Gated Graph Neural Networks (GGNN)
 
-    See: Li, Y., Tarlow, D., Brockschmidt, M., & Zemel, R. (2015).\
-        Gated graph sequence neural networks. \
-        `arXiv:1511.05493 <https://arxiv.org/abs/1511.05493>`_
+    Marc Brockschmidt (2019).\
+        GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation \
+        `arXiv:1906.12192 <https://arxiv.org/abs/1906.12192>`_
 
     Args:
         out_dim (int): dimension of output feature vector
@@ -104,40 +104,3 @@ class GNNFiLM(chainer.Chain):
 
     def reset_state(self):
         [update_layer.reset_state() for update_layer in self.update_layers]
-
-
-class SparseGNNFiLM(GNNFiLM):
-    """GGNN model for sparse matrix inputs.
-
-    The constructor of this model is the same with that of GGNN.
-    See the documentation of GGNN for the detail.
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(SparseGNNFiLM, self).__init__(*args, **kwargs)
-
-    def __call__(self, atom_array, data, row, col, edge_type,
-                 is_real_node=None):
-        """Forward propagation
-
-        Args:
-            atom_array (numpy.ndarray): minibatch of molecular which is
-                represented with atom IDs (representing C, O, S, ...)
-                `atom_array[mol_index, atom_index]` represents `mol_index`-th
-                molecule's `atom_index`-th atomic number
-            data (numpy.ndarray): the entries of the batched sparse matrix.
-            row (numpy.ndarray): the row indices of the matrix entries.
-            col (numpy.ndarray): the column indices of the matrix entries.
-            edge_type (numpy.ndarray): edge type information of edges.
-            is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
-                1 for real node, 0 for virtual node.
-                If `None`, all node is considered as real node.
-
-        Returns:
-            ~chainer.Variable: minibatch of fingerprint
-        """
-        num_nodes = atom_array.shape[1]
-        adj = convert_sparse_with_edge_type(
-            data, row, col, num_nodes, edge_type, self.num_edge_type)
-        return super(SparseGNNFiLM, self).__call__(
-            atom_array, adj, is_real_node=is_real_node)
