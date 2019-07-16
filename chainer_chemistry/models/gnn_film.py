@@ -13,7 +13,7 @@ from chainer_chemistry.utils import convert_sparse_with_edge_type
 
 
 class GNNFiLM(chainer.Chain):
-    """Gated Graph Neural Networks (GGNN)
+    """Graph Neural Networks with Feature-wise Linear Modulation (GGNN_FiLM)
 
     Marc Brockschmidt (2019).\
         GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation \
