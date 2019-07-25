@@ -55,8 +55,8 @@ def data():
         -0.01, 0.01, (batch_size, atom_size, hidden_dim)).astype('f')
     y_grad = numpy.random.uniform(
         -0.01, 0.01, (batch_size, atom_size, hidden_dim)).astype('f')
-    supernode = numpy.random.uniform(-0.01, 0.01, (batch_size, supernode_dim))\
-        .astype('f')
+    supernode = numpy.random.uniform(
+        -0.01, 0.01, (batch_size, supernode_dim)).astype('f')
     supernode_grad = numpy.random.uniform(
         -0.01, 0.01, (batch_size, supernode_dim)).astype('f')
 
@@ -150,8 +150,7 @@ def test_forward_gpu(gwm, data):
 
 def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
                    y_grad, supernode_grad):
-    gwm.GRU_local.reset_state()
-    gwm.GRU_super.reset_state()
+    gwm.reset_state()
 
     # TODO: rtol is too high! GWM is too large to calculate
     # numerical differentiation

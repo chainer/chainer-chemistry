@@ -76,6 +76,6 @@ class SparseGGNN(GGNN):
         """
         num_nodes = atom_array.shape[1]
         adj = convert_sparse_with_edge_type(
-            data, row, col, num_nodes, edge_type, self.num_edge_type)
+            data, row, col, num_nodes, edge_type, self.n_edge_types)
         return super(SparseGGNN, self).__call__(
             atom_array, adj, is_real_node=is_real_node)

@@ -2,6 +2,7 @@ from chainer_chemistry.models import ggnn  # NOQA
 from chainer_chemistry.models import ggnn_gwm  # NOQA
 from chainer_chemistry.models import gin  # NOQA
 from chainer_chemistry.models import gin_gwm  # NOQA
+from chainer_chemistry.models import gwm  # NOQA
 from chainer_chemistry.models import mlp  # NOQA
 from chainer_chemistry.models import mpnn  # NOQA
 from chainer_chemistry.models import nfp  # NOQA
@@ -19,6 +20,10 @@ from chainer_chemistry.models.ggnn import SparseGGNN  # NOQA
 from chainer_chemistry.models.ggnn_gwm import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gin import GIN  # NOQA
 from chainer_chemistry.models.gin_gwm import GIN_GWM  # NOQA
+from chainer_chemistry.models.gwm import GraphTransmitterUnit  # NOQA
+from chainer_chemistry.models.gwm import GWM  # NOQA
+from chainer_chemistry.models.gwm import SuperNodeTransmitterUnit  # NOQA
+from chainer_chemistry.models.gwm import WarpGateUnit  # NOQA
 from chainer_chemistry.models.mlp import MLP  # NOQA
 from chainer_chemistry.models.mpnn import MPNN  # NOQA
 from chainer_chemistry.models.nfp import NFP  # NOQA

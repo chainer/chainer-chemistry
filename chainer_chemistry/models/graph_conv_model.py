@@ -138,6 +138,7 @@ class GraphConvModel(chainer.Chain):
         self.use_batchnorm = use_batchnorm
         self.n_activation = n_activation
         self.n_update_layers = n_update_layers
+        self.n_edge_types = n_edge_types
 
     def __call__(self, atom_array, adj, super_node=None, is_real_node=None):
         self.reset_state()

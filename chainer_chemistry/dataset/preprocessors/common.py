@@ -1,6 +1,4 @@
 """Common preprocess method is gethered in this file"""
-
-from collections import Counter
 import numpy
 from rdkit import Chem
 from rdkit.Chem import rdmolops
@@ -172,7 +170,11 @@ def construct_discrete_edge_matrix(mol, out_size=-1):
 
 def mol_basic_info_feature(mol, atom_array, adj):
     n_atoms = mol.GetNumAtoms()
-    assert n_atoms == len(atom_array)
+    if n_atoms != len(atom_array):
+        raise ValueError("[ERROR] n_atoms {} != len(atom_array) {}"
+                         .format(n_atoms, len(atom_array)))
+
+    # Note: this is actual number of edges * 2.
     n_edges = adj.sum()
     return numpy.asarray([n_atoms, n_edges])
 
@@ -202,24 +204,27 @@ def mol_bond_freq_feature(mol, atom_array, adj):
 
 
 def construct_supernode_feature(mol, atom_array, adj, feature_functions=None):
-                                # largest_atomic_number=MAX_ATOMIC_NUM, out_size=-1):
     """
     Construct an input feature x' for a supernode
 
     Args:
         mol (rdkit.Chem.Mol): Input molecule
         atom_array (numpy.ndarray) : array of atoms
-        adjs (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array where |E| is the number of edgetypes.
-        largest_atomic_number (int) : number of unique atom maximum index
-        out_size (int): not used...
+        adj (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array
+            where |E| is the number of edgetypes.
+        feature_functions (None or list): list of callable
 
     Returns:
         super_node_x (numpy.ndarray); 1-way array, the supernode feature.
-        len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs, 2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
+        len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs,
+            2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
 
     """
 
     if feature_functions is None:
-        feature_functions = [mol_basic_info_feature, mol_bond_type_feature, mol_bond_freq_feature,
-                             mol_atom_type_feature, mol_atom_freq_feature]
-    return numpy.concatenate([func(mol, atom_array, adj) for func in feature_functions])
+        feature_functions = [
+            mol_basic_info_feature, mol_bond_type_feature,
+            mol_bond_freq_feature, mol_atom_type_feature,
+            mol_atom_freq_feature]
+    return numpy.concatenate([func(mol, atom_array, adj)
+                              for func in feature_functions])
