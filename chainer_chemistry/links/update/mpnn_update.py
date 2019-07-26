@@ -1,10 +1,9 @@
-from typing import Optional  # NOQA
-
 import chainer
 from chainer import functions
 from chainer import links
 
 import chainer_chemistry
+from chainer_chemistry.models import MLP
 
 
 class MPNNUpdate(chainer.Chain):
@@ -15,21 +14,24 @@ class MPNNUpdate(chainer.Chain):
         `arXiv:1704.01212 <https://arxiv.org/abs/1704.01212>`
 
     Args:
-        hidden_dim (int): dimension of feature vector associated to
-            each atom
+        in_channels (int or None): input dim of feature vector for each node
+        hidden_channels (int): dimension of feature vector for each node
+        out_channels (int or None): output dime of feature vector for each node
+            When `None`, `hidden_channels` is used.
         nn (~chainer.Link):
 
     """
 
-    def __init__(self, in_channels=16, out_channels=None, nn=None, **kwargs):
+    def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
+                 nn=None, **kwargs):
         if out_channels is None:
-            out_channels = in_channels
-        # type: (int, Optional[chainer.Link]) -> None
+            out_channels = hidden_channels
         super(MPNNUpdate, self).__init__()
         with self.init_scope():
-            self.message_layer = EdgeNet(out_channels=in_channels, nn=nn)
-            self.update_layer = links.GRU(2 * in_channels, out_channels)
-        self.in_channels = in_channels
+            self.message_layer = EdgeNet(out_channels=hidden_channels, nn=nn)
+            self.update_layer = links.GRU(2 * hidden_channels, out_channels)
+        self.in_channels = in_channels  # currently it is not used...
+        self.hidden_channels = hidden_channels
         self.out_channels = out_channels
         self.nn = nn
 
@@ -63,13 +65,12 @@ class EdgeNet(chainer.Chain):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
-            nn = MLP(out_dim=out_channels, hidden_dim=16)
-        with self.init_scope():
-            if isinstance(nn, chainer.Link):
-                self.nn_layer_in = nn
-                self.nn_layer_out = nn
+            nn = MLP(out_dim=out_channels**2, hidden_dim=16)
         if not isinstance(nn, chainer.Link):
             raise ValueError('nn {} must be chainer.Link'.format(nn))
+        with self.init_scope():
+            self.nn_layer_in = nn
+            self.nn_layer_out = nn
         self.out_channels = out_channels
 
     def __call__(self, h, adj):
@@ -115,20 +116,3 @@ class EdgeNet(chainer.Chain):
         message_out = functions.reshape(message_out, (mb, node, ch))
         message = functions.concat([message_in, message_out], axis=2)
         return message  # message: (mb, node, out_ch * 2)
-
-
-class MLP(chainer.Chain):
-    def __init__(self, out_dim, hidden_dim):
-        # type: (int, int) -> None
-        super(MLP, self).__init__()
-        with self.init_scope():
-            self.linear1 = links.Linear(None, hidden_dim)
-            self.linear2 = links.Linear(None, out_dim**2)
-        self.hidden_dim = hidden_dim
-        self.out_dim = out_dim
-
-    def __call__(self, x):
-        # type: (chainer.Variable) -> chainer.Variable
-        h = functions.relu(self.linear1(x))
-        h = self.linear2(h)
-        return h

@@ -14,18 +14,18 @@ class NFP(GraphConvModel):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
         max_degree (int): max degree of atoms
             when molecules are regarded as graphs
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
-
+        with_gwm (bool): Use GWM module or not.
     """
-    def __init__(self, out_dim, hidden_channels=16, n_update_layers=4, max_degree=6,
-                 n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False, with_gwm=False):
+    def __init__(self, out_dim, hidden_channels=16, n_update_layers=4,
+                 max_degree=6, n_atom_types=MAX_ATOMIC_NUM,
+                 concat_hidden=False, with_gwm=False):
         update_kwargs = {'max_degree': max_degree}
         super(NFP, self).__init__(
             update_layer=NFPUpdate, readout_layer=NFPReadout,

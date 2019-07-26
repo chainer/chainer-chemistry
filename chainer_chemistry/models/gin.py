@@ -15,16 +15,19 @@ class GIN(GraphConvModel):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (default=16): dimension of hidden vectors
-            associated to each atom
-        n_layers (default=4): number of layers
-        n_atom_types: number of atoms
-        dropout_ratio (default=0.5); if > 0.0, perform dropout
-        concat_hidden (default=False): If set to True, readout is executed in
-            each layer and the result is concatenated
-        weight_tying (default=True): enable weight_tying for all units
-
-
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
+        n_atom_types (int): number of types of atoms
+        concat_hidden (bool): If set to True, readout is executed in each layer
+            and the result is concatenated
+        dropout_ratio (float): dropout ratio. Negative value indicates not
+            apply dropout
+        weight_tying (bool): enable weight_tying or not
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function
+        n_edge_types (int): number of edge type.
+            Defaults to 4 for single, double, triple and aromatic bond.
+        with_gwm (bool): Use GWM module or not.
     """
     def __init__(self, out_dim, hidden_channels=16,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,

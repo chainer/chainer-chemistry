@@ -16,17 +16,17 @@ class GGNN(GraphConvModel):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         weight_tying (bool): enable weight_tying or not
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
-        num_edge_type (int): number of edge type.
+        n_edge_types (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
+        with_gwm (bool): Use GWM module or not.
     """
     def __init__(self, out_dim, hidden_channels=16, n_update_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,

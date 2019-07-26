@@ -9,21 +9,16 @@ class SchNetReadout(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector associated to
-            each molecule
+        in_channels (int or None): dimension of feature vector for each node
+        hidden_channels (int): dimension of feature vector for each node
     """
 
-    def __init__(self, out_dim=1, in_channels=32,
-                 hidden_channels=None):
+    def __init__(self, out_dim=1, in_channels=None,
+                 hidden_channels=32):
         super(SchNetReadout, self).__init__()
-        if hidden_channels is None:
-            hidden_channels = in_channels
-
         with self.init_scope():
-            self.linear1 = GraphLinear(in_channels,
-                                       hidden_channels)
-            self.linear2 = GraphLinear(hidden_channels,
-                                       out_dim)
+            self.linear1 = GraphLinear(in_channels, hidden_channels)
+            self.linear2 = GraphLinear(hidden_channels, out_dim)
         self.out_dim = out_dim
         self.hidden_dim = in_channels
 

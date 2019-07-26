@@ -26,10 +26,9 @@ class RSGCN(GraphConvModel):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
         n_atom_types (int): number of types of atoms
-        n_layers (int): number of layers
         use_batch_norm (bool): If True, batch normalization is applied after
             graph convolution.
         readout (Callable): readout function. If None,
@@ -38,7 +37,7 @@ class RSGCN(GraphConvModel):
             not give any suggestion on readout.
         dropout_ratio (float): ratio used in dropout function.
             If 0 or negative value is set, dropout function is skipped.
-
+        with_gwm (bool): Use GWM module or not.
     """
 
     def __init__(self, out_dim, hidden_channels=32, n_update_layers=4,

@@ -14,9 +14,8 @@ class SchNet(GraphConvModel):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
         readout_hidden_dim (int): dimension of feature vector
             associated to each molecule
         n_atom_types (int): number of types of atoms
@@ -33,13 +32,14 @@ class SchNet(GraphConvModel):
                  readout_hidden_dim=32, n_atom_types=MAX_ATOMIC_NUM,
                  concat_hidden=False, num_rbf=300, radius_resolution=0.1,
                  gamma=10.0, with_gwm=False):
-        # TODO: use readout_hidden_dim
-        # TODO: use num_rbf, radius_resolution, gamma in update
         readout_kwargs = {'hidden_channels': readout_hidden_dim}
+        update_kwargs = {'num_rbf': num_rbf,
+                         'radius_resolution': radius_resolution,
+                         'gamma': gamma}
         super(SchNet, self).__init__(
             update_layer=SchNetUpdate, readout_layer=SchNetReadout,
             out_dim=out_dim, hidden_channels=hidden_channels,
             n_update_layers=n_update_layers, n_atom_types=n_atom_types,
             concat_hidden=concat_hidden, with_gwm=with_gwm,
-            readout_kwargs=readout_kwargs
+            update_kwargs=update_kwargs, readout_kwargs=readout_kwargs
         )

@@ -41,46 +41,78 @@ def rescale_adj(adj):
 
 
 class GraphConvModel(chainer.Chain):
+    """Unified module of Graph Convolution Model
+
+    Args:
+        hidden_channels (list): hidden channels for update
+        out_dim (int): output dim
+        update_layer (chainer.links.Link):
+        readout_layer (chainer.links.Link):
+        n_update_layers (int or None):
+        out_channels (None or lsit):
+        super_node_dim (int):
+        n_atom_types (int):
+        n_edge_types (int):
+        max_degree (int):
+        dropout_ratio (float):
+        with_gwm (bool):
+        concat_hidden (bool):
+        sum_hidden (bool):
+        weight_tying (bool):
+        scale_adj (bool):
+        activation (callable):
+        use_batchnorm (bool):
+        n_activation (int or None):
+        update_kwargs (dict or None):
+        readout_kwargs (dict or None):
+        gwm_kwargs (dict or None):
+    """
     def __init__(self, hidden_channels, out_dim, update_layer, readout_layer,
                  n_update_layers=None, out_channels=None, super_node_dim=None,
                  n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4,
                  max_degree=6, dropout_ratio=-1.0, with_gwm=True,
                  concat_hidden=False, sum_hidden=False, weight_tying=False,
-                 scale_adj=False, activation=None, use_batchnorm=False, n_activation=None,
-                 update_kwargs=None, readout_kwargs=None, gwm_kwargs=None):
+                 scale_adj=False, activation=None, use_batchnorm=False,
+                 n_activation=None, update_kwargs=None, readout_kwargs=None,
+                 gwm_kwargs=None):
         super(GraphConvModel, self).__init__()
 
         # General: length of hidden_channels must be n_layers + 1
         if isinstance(hidden_channels, int):
             if n_update_layers is None:
-                raise ValueError
+                raise ValueError('n_update_layers is None')
             else:
-                hidden_channels = [hidden_channels for _ in range(n_update_layers + 1)]
+                hidden_channels = [hidden_channels
+                                   for _ in range(n_update_layers + 1)]
         elif isinstance(hidden_channels, list):
             if out_channels is None:
                 n_update_layers = len(hidden_channels) - 1
             else:
                 n_update_layers = len(hidden_channels)
         else:
-            raise TypeError
+            raise TypeError('Unexpected value for hidden_channels {}'
+                            .format(hidden_channels))
 
         if readout_layer == GeneralReadout and hidden_channels[-1] != out_dim:
             # When use GWM, hidden channels must be same. But GeneralReadout
             # cannot change the dimension. So when use General Readout and GWM,
             # hidden channel and out_dim should be same.
             if with_gwm:
-                raise ValueError
+                raise ValueError('Unsupported combination.')
             else:
                 hidden_channels[-1] = out_dim
 
         # When use with_gwm, concat_hidden, sum_hidden and weight_tying option,
         # hidden_channels must be same
         if with_gwm or concat_hidden or sum_hidden or weight_tying:
-            if not all([in_dim == hidden_channels[0] for in_dim in hidden_channels]):
-                raise ValueError
+            if not all([in_dim == hidden_channels[0]
+                        for in_dim in hidden_channels]):
+                raise ValueError(
+                    'hidden_channels must be same but different {}'
+                    .format(hidden_channels))
 
         if with_gwm and super_node_dim is None:
-            raise ValueError
+            raise ValueError('super_node_dim must be set to use gwm')
 
         if out_channels is None:
             in_channels_list = hidden_channels[:-1]
@@ -105,20 +137,26 @@ class GraphConvModel(chainer.Chain):
             gwm_kwargs = {}
 
         with self.init_scope():
-            self.embed = EmbedAtomID(out_size=hidden_channels[0], in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=hidden_channels[0],
+                                     in_size=n_atom_types)
             self.update_layers = chainer.ChainList(
-                *[update_layer(in_channels=in_channels_list[i], out_channels=out_channels_list[i],
+                *[update_layer(in_channels=in_channels_list[i],
+                               out_channels=out_channels_list[i],
                                n_edge_types=n_edge_types, **update_kwargs)
                   for i in range(n_update_layers)])
             # when use weight_tying option, hidden_channels must be same. So we can use -1 index
             self.readout_layers = chainer.ChainList(
-                *[readout_layer(out_dim=out_dim, in_channels=hidden_channels[-1], **readout_kwargs)
+                *[readout_layer(out_dim=out_dim,
+                                in_channels=hidden_channels[-1],
+                                **readout_kwargs)
                   for _ in range(n_readout_layers)])
             if with_gwm:
-                self.gwm = GWM(hidden_dim=hidden_channels[0], hidden_dim_super=super_node_dim,
+                self.gwm = GWM(hidden_dim=hidden_channels[0],
+                               hidden_dim_super=super_node_dim,
                                n_layers=n_update_layers, **gwm_kwargs)
                 self.embed_super = links.Linear(None, out_size=super_node_dim)
-                self.linear_for_concat_super = links.Linear(in_size=None, out_size=out_dim)
+                self.linear_for_concat_super = links.Linear(in_size=None,
+                                                            out_size=out_dim)
             if use_batchnorm:
                 self.bnorms = chainer.ChainList(
                     *[chainer_chemistry.links.GraphBatchNormalization(
@@ -147,7 +185,6 @@ class GraphConvModel(chainer.Chain):
             h = self.embed(atom_array)
         else:
             # TODO: GraphLinear or GraphMLP can be used.
-            # TODO: RelGCN use GraphLinear here.
             h = atom_array
 
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
@@ -172,7 +209,8 @@ class GraphConvModel(chainer.Chain):
         g_list = []
         for step in range(self.n_update_layers):
             update_layer_index = 0 if self.weight_tying else step
-            h_new = self.update_layers[update_layer_index](h=h, adj=adj, deg_conds=deg_conds)
+            h_new = self.update_layers[update_layer_index](
+                h=h, adj=adj, deg_conds=deg_conds)
 
             if self.with_gwm:
                 h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)

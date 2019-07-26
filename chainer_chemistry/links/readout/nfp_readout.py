@@ -8,13 +8,13 @@ class NFPReadout(chainer.Chain):
     """NFP submodule for readout part.
 
     Args:
-        in_channels (int): dimension of feature vector associated to
-            each atom (node)
-        out_size (int): output dimension of feature vector associated
-            to each molecule (graph)
+        out_dim (int): output dimension of feature vector associated
+            to each graph
+        in_channels (int or None): dimension of feature vector associated to
+            each node
     """
 
-    def __init__(self, in_channels, out_dim):
+    def __init__(self, out_dim, in_channels):
         super(NFPReadout, self).__init__()
         with self.init_scope():
             self.output_weight = GraphLinear(in_channels, out_dim)

@@ -8,7 +8,7 @@ class RSGCNUpdate(chainer.Chain):
     """RSGCN submodule for message and update part.
 
     Args:
-        in_channels (int): input channel dimension
+        in_channels (int or None): input channel dimension
         out_channels (int): output channel dimension
     """
 
