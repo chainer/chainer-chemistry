@@ -126,8 +126,7 @@ def test_super_warp_gate_unit_backward(super_warp_gate_unit, data):
 
 
 def check_forward(gwm, embed_atom_data, new_embed_atom_data, supernode):
-    gwm.GRU_local.reset_state()
-    gwm.GRU_super.reset_state()
+    gwm.reset_state()
     h_actual, g_actual = gwm(embed_atom_data, new_embed_atom_data, supernode)
     assert h_actual.array.shape == (batch_size, atom_size, hidden_dim)
     assert g_actual.array.shape == (batch_size, supernode_dim)
