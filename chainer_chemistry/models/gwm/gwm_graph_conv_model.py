@@ -1,13 +1,13 @@
 import chainer
-import chainer_chemistry
-
 from chainer import cuda
 from chainer import links
 from chainer import functions
-from chainer_chemistry.links import EmbedAtomID
+
+from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links.normalization.graph_batch_normalization import GraphBatchNormalization  # NOQA
 from chainer_chemistry.links.readout.general_readout import GeneralReadout
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.models.gwm import GWM
+from chainer_chemistry.models.gwm.gwm import GWM
 
 
 def to_array(x):
@@ -40,8 +40,11 @@ def rescale_adj(adj):
         num_neighbors_inv[:, None, None, :], adj.shape)
 
 
-class GraphConvModel(chainer.Chain):
-    """Unified module of Graph Convolution Model
+class GWMGraphConvModel(chainer.Chain):
+    """Unified module of Graph Convolution Model with GWM
+
+    Note that this module is experimental, and it might not
+    be maintained in the future.
 
     Args:
         hidden_channels (list): hidden channels for update
@@ -53,7 +56,6 @@ class GraphConvModel(chainer.Chain):
         super_node_dim (int):
         n_atom_types (int):
         n_edge_types (int):
-        max_degree (int):
         dropout_ratio (float):
         with_gwm (bool):
         concat_hidden (bool):
@@ -70,12 +72,12 @@ class GraphConvModel(chainer.Chain):
     def __init__(self, hidden_channels, out_dim, update_layer, readout_layer,
                  n_update_layers=None, out_channels=None, super_node_dim=None,
                  n_atom_types=MAX_ATOMIC_NUM, n_edge_types=4,
-                 max_degree=6, dropout_ratio=-1.0, with_gwm=True,
+                 dropout_ratio=-1.0, with_gwm=True,
                  concat_hidden=False, sum_hidden=False, weight_tying=False,
                  scale_adj=False, activation=None, use_batchnorm=False,
                  n_activation=None, update_kwargs=None, readout_kwargs=None,
                  gwm_kwargs=None):
-        super(GraphConvModel, self).__init__()
+        super(GWMGraphConvModel, self).__init__()
 
         # General: length of hidden_channels must be n_layers + 1
         if isinstance(hidden_channels, int):
@@ -126,7 +128,6 @@ class GraphConvModel(chainer.Chain):
 
         n_update_layers = 1 if weight_tying else n_update_layers
         n_readout_layers = n_update_layers if concat_hidden or sum_hidden else 1
-        n_degree_type = max_degree + 1
         n_activation = n_update_layers if n_activation is None else n_activation
 
         if update_kwargs is None:
@@ -159,9 +160,8 @@ class GraphConvModel(chainer.Chain):
                                                             out_size=out_dim)
             if use_batchnorm:
                 self.bnorms = chainer.ChainList(
-                    *[chainer_chemistry.links.GraphBatchNormalization(
-                        out_channels_list[i]) for i in range(n_update_layers)]
-                )
+                    *[GraphBatchNormalization(
+                        out_channels_list[i]) for i in range(n_update_layers)])
 
         self.readout_layer = readout_layer
         self.update_layer = update_layer
@@ -169,7 +169,6 @@ class GraphConvModel(chainer.Chain):
         self.with_gwm = with_gwm
         self.concat_hidden = concat_hidden
         self.sum_hidden = sum_hidden
-        self.n_degree_type = n_degree_type
         self.scale_adj = scale_adj
         self.activation = activation
         self.dropout_ratio = dropout_ratio
@@ -191,17 +190,8 @@ class GraphConvModel(chainer.Chain):
         if self.with_gwm:
             h_s = self.embed_super(super_node)
 
-        # For NFP Update
-        if adj.ndim == 4:
-            degree_mat = self.xp.sum(to_array(adj), axis=(1, 2))
-        elif adj.ndim == 3:
-            degree_mat = self.xp.sum(to_array(adj), axis=1)
-        else:
-            raise ValueError
-        # deg_conds: (minibatch, atom, ch)
-        deg_conds = [self.xp.broadcast_to(
-            ((degree_mat - degree) == 0)[:, :, None], h.shape)
-            for degree in range(1, self.n_degree_type + 1)]
+        additional_kwargs = self.preprocess_addtional_kwargs(
+            atom_array, adj, super_node=super_node, is_real_node=is_real_node)
 
         if self.scale_adj:
             adj = rescale_adj(adj)
@@ -210,7 +200,7 @@ class GraphConvModel(chainer.Chain):
         for step in range(self.n_update_layers):
             update_layer_index = 0 if self.weight_tying else step
             h_new = self.update_layers[update_layer_index](
-                h=h, adj=adj, deg_conds=deg_conds)
+                h=h, adj=adj, **additional_kwargs)
 
             if self.with_gwm:
                 h_new, h_s = self.gwm(h, h_new, h_s, update_layer_index)
@@ -227,7 +217,7 @@ class GraphConvModel(chainer.Chain):
 
             if self.concat_hidden or self.sum_hidden:
                 g = self.readout_layers[step](
-                    h=h, h0=h0, is_real_node=is_real_node)
+                    h=h, h0=h0, is_real_node=is_real_node, **additional_kwargs)
                 g_list.append(g)
 
         if self.concat_hidden:
@@ -249,3 +239,6 @@ class GraphConvModel(chainer.Chain):
 
         if self.with_gwm:
             self.gwm.reset_state()
+
+    def preprocess_addtional_kwargs(self, *args, **kwargs):
+        return {}

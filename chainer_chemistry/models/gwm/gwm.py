@@ -201,14 +201,13 @@ class GWM(chainer.Chain):
         n_heads (int): number of heads
         dropout_ratio (float): dropout ratio.
             Negative value indicates to not apply dropout.
-        concat_hidden (bool):
         tying_flag (bool): enable if you want to share params across layers.
         activation (callable):
         wgu_activation (callable):
         gtu_activation (callable):
     """
     def __init__(self, hidden_dim=16, hidden_dim_super=16, n_layers=4,
-                 n_heads=8, dropout_ratio=-1, concat_hidden=False,
+                 n_heads=8, dropout_ratio=-1,
                  tying_flag=False, activation=functions.relu,
                  wgu_activation=functions.sigmoid,
                  gtu_activation=functions.tanh):
@@ -256,7 +255,6 @@ class GWM(chainer.Chain):
         self.n_layers = n_layers
         self.n_heads = n_heads
         self.dropout_ratio = dropout_ratio
-        self.concat_hidden = concat_hidden
         self.tying_flag = tying_flag
         self.activation = activation
         self.wgu_activation = wgu_activation
