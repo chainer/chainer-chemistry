@@ -3,7 +3,6 @@ from chainer import functions
 from chainer import links
 
 import chainer_chemistry
-from chainer_chemistry.models import MLP
 
 
 class MPNNUpdate(chainer.Chain):
@@ -40,7 +39,7 @@ class MPNNUpdate(chainer.Chain):
         # adj: (mb, edge_type, node, node)
         mb, node, ch = h.shape
         h = self.message_layer(h, adj)  # h: (mb, node, hidden_dim*2)
-        h = functions.reshape(h, (mb * node, self.in_channels * 2))
+        h = functions.reshape(h, (mb * node, self.hidden_channels * 2))
         h = self.update_layer(h)  # h: (mb*node, hidden_dim)
         h = functions.reshape(h, (mb, node, self.out_channels))
         return h
@@ -65,6 +64,7 @@ class EdgeNet(chainer.Chain):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
+            from chainer_chemistry.models.mlp import MLP
             nn = MLP(out_dim=out_channels**2, hidden_dim=16)
         if not isinstance(nn, chainer.Link):
             raise ValueError('nn {} must be chainer.Link'.format(nn))

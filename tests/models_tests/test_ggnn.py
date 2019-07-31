@@ -27,7 +27,7 @@ def model():
 @pytest.fixture
 def sparse_model():
     numpy.random.seed(0)
-    return SparseGGNN(out_dim=out_dim, num_edge_type=n_edge_types)
+    return SparseGGNN(out_dim=out_dim, n_edge_types=n_edge_types)
 
 
 @pytest.fixture
@@ -54,7 +54,7 @@ def check_forward(model, *args):
 def test_forward_cpu(model, sparse_model, data):
     atom_data, adj_data = data[0], data[1]
     y_dense = check_forward(model, atom_data, adj_data)
-    # test for sparse data
+    # test for sparse forward result is same with dense
     if sparse_utils_available():
         y_sparse = check_forward(sparse_model, atom_data,
                                  *_convert_to_sparse(adj_data))

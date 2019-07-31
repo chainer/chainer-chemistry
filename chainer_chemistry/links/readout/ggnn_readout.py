@@ -10,7 +10,7 @@ class GGNNReadout(chainer.Chain):
     Args:
         out_dim (int): dimension of output feature vector
         in_channels (int or None): dimension of feature vector associated to
-            each node
+            each node. `in_channels` is the total dimension of `h` and `h0`.
         nobias (bool): If ``True``, then this function does not use
             the bias
         activation (~chainer.Function or ~chainer.FunctionNode):

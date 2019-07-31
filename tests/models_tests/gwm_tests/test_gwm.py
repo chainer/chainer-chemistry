@@ -4,7 +4,7 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainer_chemistry.models.gwm import GWM, WarpGateUnit, SuperNodeTransmitterUnit, GraphTransmitterUnit  # NOQA
+from chainer_chemistry.models.gwm.gwm import GWM, WarpGateUnit, SuperNodeTransmitterUnit, GraphTransmitterUnit  # NOQA
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5

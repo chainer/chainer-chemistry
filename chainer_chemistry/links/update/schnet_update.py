@@ -77,7 +77,7 @@ class SchNetUpdate(chainer.Chain):
         hidden_channels (int):
         num_rbf (int):
         radius_resolution (float):
-        gamma (int):
+        gamma (float):
     """
 
     def __init__(self, hidden_channels=64, num_rbf=300,

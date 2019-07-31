@@ -5,7 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.relgcn import RelGCN
-from chainer_chemistry.models.graph_conv_model import rescale_adj
+from chainer_chemistry.models.gwm.gwm_graph_conv_model import rescale_adj
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 
@@ -83,4 +83,4 @@ def test_rescale_adj(data):
 
 
 if __name__ == '__main__':
-    pytest.main((__file__, '-v'))
+    pytest.main([__file__, '-v', '-s'])

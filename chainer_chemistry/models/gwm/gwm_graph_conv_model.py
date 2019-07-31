@@ -8,6 +8,7 @@ from chainer_chemistry.links.normalization.graph_batch_normalization import Grap
 from chainer_chemistry.links.readout.general_readout import GeneralReadout
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.gwm.gwm import GWM
+from chainer_chemistry.models.relgcn import rescale_adj
 
 
 def to_array(x):
@@ -15,29 +16,6 @@ def to_array(x):
     if isinstance(x, chainer.Variable):
         x = x.array
     return x
-
-
-def rescale_adj(adj):
-    """Normalize adjacency matrix
-    It ensures that activations are on a similar scale irrespective of
-    the number of neighbors
-
-    Args:
-        adj (:class:`chainer.Variable`, or :class:`numpy.ndarray` \
-        or :class:`cupy.ndarray`):
-            adjacency matrix
-
-    Returns:
-        :class:`chainer.Variable`: normalized adjacency matrix
-
-    """
-    xp = cuda.get_array_module(adj)
-    num_neighbors = functions.sum(adj, axis=(1, 2))
-    base = xp.ones(num_neighbors.shape, dtype=xp.float32)
-    cond = num_neighbors.data != 0
-    num_neighbors_inv = 1 / functions.where(cond, num_neighbors, base)
-    return adj * functions.broadcast_to(
-        num_neighbors_inv[:, None, None, :], adj.shape)
 
 
 class GWMGraphConvModel(chainer.Chain):

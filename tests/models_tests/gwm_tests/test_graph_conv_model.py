@@ -3,7 +3,7 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.models.graph_conv_model import GraphConvModel
+from chainer_chemistry.models.gwm.gwm_graph_conv_model import GWMGraphConvModel
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gin_update import GINUpdate
 from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
@@ -67,14 +67,14 @@ def gwm_context(request):
 
 
 def make_model(update, readout, ch, bn, wt):
-    return GraphConvModel(
+    return GWMGraphConvModel(
         update_layer=update, readout_layer=readout, n_update_layers=3,
         hidden_channels=ch, n_edge_types=n_edge_types, weight_tying=wt,
         out_dim=out_dim, with_gwm=False, use_batchnorm=bn)
 
 
 def make_gwm_model(update, readout, ch, bn, wt):
-    return GraphConvModel(
+    return GWMGraphConvModel(
         update_layer=update, readout_layer=readout, n_update_layers=3,
         hidden_channels=ch, n_edge_types=n_edge_types, weight_tying=wt,
         super_node_dim=super_dim, out_dim=out_dim, with_gwm=True,
@@ -145,12 +145,12 @@ def test_plain_model_forward_general_readout(
     else:
         raise ValueError
     data = make_data(adj_type)
-    model = GraphConvModel(update_layer=update,
-                           readout_layer=GeneralReadout,
-                           hidden_channels=ch,
-                           out_dim=out_dim,
-                           n_edge_types=n_edge_types,
-                           with_gwm=False)
+    model = GWMGraphConvModel(update_layer=update,
+                              readout_layer=GeneralReadout,
+                              hidden_channels=ch,
+                              out_dim=out_dim,
+                              n_edge_types=n_edge_types,
+                              with_gwm=False)
     atom_array = data[0]
     adj = data[1]
     y_actual = model(atom_array, adj)
@@ -169,21 +169,21 @@ def test_gwm_model_forward_general_readout(update):
     data = make_data(adj_type)
     ch = [6, 6, 6, 6]
     with pytest.raises(ValueError):
-        model = GraphConvModel(update_layer=update,
-                               readout_layer=GeneralReadout,
-                               hidden_channels=ch,
-                               out_dim=out_dim,
-                               n_edge_types=n_edge_types,
-                               super_node_dim=super_dim,
-                               with_gwm=True)
+        model = GWMGraphConvModel(update_layer=update,
+                                  readout_layer=GeneralReadout,
+                                  hidden_channels=ch,
+                                  out_dim=out_dim,
+                                  n_edge_types=n_edge_types,
+                                  super_node_dim=super_dim,
+                                  with_gwm=True)
     ch = [4, 4, 4, 4]
-    model = GraphConvModel(update_layer=update,
-                           readout_layer=GeneralReadout,
-                           hidden_channels=ch,
-                           out_dim=out_dim,
-                           n_edge_types=n_edge_types,
-                           super_node_dim=super_dim,
-                           with_gwm=True)
+    model = GWMGraphConvModel(update_layer=update,
+                              readout_layer=GeneralReadout,
+                              hidden_channels=ch,
+                              out_dim=out_dim,
+                              n_edge_types=n_edge_types,
+                              super_node_dim=super_dim,
+                              with_gwm=True)
     atom_array = data[0]
     adj = data[1]
     super_node = data[2]
@@ -207,21 +207,21 @@ def test_model_forward_general_weight_tying(update, readout, gwm):
     ch = [6, 7, 8, 6]
     if gwm:
         with pytest.raises(ValueError):
-            model = GraphConvModel(update_layer=update,
-                                   readout_layer=GeneralReadout,
-                                   hidden_channels=ch,
-                                   out_dim=out_dim,
-                                   n_edge_types=n_edge_types,
-                                   super_node_dim=super_dim,
-                                   with_gwm=gwm)
+            model = GWMGraphConvModel(update_layer=update,
+                                      readout_layer=GeneralReadout,
+                                      hidden_channels=ch,
+                                      out_dim=out_dim,
+                                      n_edge_types=n_edge_types,
+                                      super_node_dim=super_dim,
+                                      with_gwm=gwm)
     else:
-        model = GraphConvModel(update_layer=update,
-                               readout_layer=GeneralReadout,
-                               hidden_channels=ch,
-                               out_dim=out_dim,
-                               n_edge_types=n_edge_types,
-                               super_node_dim=super_dim,
-                               with_gwm=gwm)
+        model = GWMGraphConvModel(update_layer=update,
+                                  readout_layer=GeneralReadout,
+                                  hidden_channels=ch,
+                                  out_dim=out_dim,
+                                  n_edge_types=n_edge_types,
+                                  super_node_dim=super_dim,
+                                  with_gwm=gwm)
         atom_array = data[0]
         adj = data[1]
         super_node = data[2]
@@ -239,14 +239,14 @@ def test_model_forward_general_concat_hidden(update, readout, gwm):
         raise ValueError
     data = make_data(adj_type)
     ch = [6, 6, 6, 6]
-    model = GraphConvModel(update_layer=update,
-                           readout_layer=readout,
-                           hidden_channels=ch,
-                           out_dim=out_dim,
-                           n_edge_types=n_edge_types,
-                           super_node_dim=super_dim,
-                           concat_hidden=True,
-                           with_gwm=gwm)
+    model = GWMGraphConvModel(update_layer=update,
+                              readout_layer=readout,
+                              hidden_channels=ch,
+                              out_dim=out_dim,
+                              n_edge_types=n_edge_types,
+                              super_node_dim=super_dim,
+                              concat_hidden=True,
+                              with_gwm=gwm)
     atom_array = data[0]
     adj = data[1]
     super_node = data[2]
@@ -264,14 +264,14 @@ def test_model_forward_general_sum_hidden(update, readout, gwm):
         raise ValueError
     data = make_data(adj_type)
     ch = [6, 6, 6, 6]
-    model = GraphConvModel(update_layer=update,
-                           readout_layer=readout,
-                           hidden_channels=ch,
-                           out_dim=out_dim,
-                           n_edge_types=n_edge_types,
-                           super_node_dim=super_dim,
-                           sum_hidden=True,
-                           with_gwm=gwm)
+    model = GWMGraphConvModel(update_layer=update,
+                              readout_layer=readout,
+                              hidden_channels=ch,
+                              out_dim=out_dim,
+                              n_edge_types=n_edge_types,
+                              super_node_dim=super_dim,
+                              sum_hidden=True,
+                              with_gwm=gwm)
     atom_array = data[0]
     adj = data[1]
     super_node = data[2]
