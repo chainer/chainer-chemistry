@@ -11,12 +11,13 @@ from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
 in_channels = 4
+hidden_channels = in_channels  # must be same for now
 batch_size = 2
 
 
 @pytest.fixture
 def update():
-    return SchNetUpdate(in_channels=in_channels)
+    return SchNetUpdate(hidden_channels=hidden_channels)
 
 
 @pytest.fixture
@@ -31,7 +32,7 @@ def data():
     dist_data = (dist_data + dist_data.swapaxes(-1, -2)) / 2.
 
     y_grad = numpy.random.uniform(
-        -1, 1, (batch_size, atom_size, in_channels)).astype('f')
+        -1, 1, (batch_size, atom_size, hidden_channels)).astype('f')
     embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=in_channels)
     embed_atom_data = embed(atom_data).data
     return embed_atom_data, dist_data, y_grad
@@ -39,7 +40,7 @@ def data():
 
 def check_forward(update, atom_data, dist_data):
     y_actual = cuda.to_cpu(update(atom_data, dist_data).data)
-    assert y_actual.shape == (batch_size, atom_size, in_channels)
+    assert y_actual.shape == (batch_size, atom_size, hidden_channels)
 
 
 def test_forward_cpu(update, data):

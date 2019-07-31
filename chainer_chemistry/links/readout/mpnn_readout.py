@@ -10,8 +10,8 @@ class MPNNReadout(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        in_channels (int or None): dimension of feature vector associated to
-            each node
+        in_channels (int): dimension of feature vector associated to
+            each node. Must not be `None`.
         n_layers (int): number of LSTM layers for set2set
         processing_steps (int): number of processing for set2set
     """

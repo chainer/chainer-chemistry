@@ -25,6 +25,9 @@ class MPNNUpdate(chainer.Chain):
                  nn=None, **kwargs):
         if out_channels is None:
             out_channels = hidden_channels
+        if in_channels is None:
+            # Current `EdgeNet` hidden_channels must be same with input `h` dim.
+            in_channels = out_channels
         super(MPNNUpdate, self).__init__()
         with self.init_scope():
             self.message_layer = EdgeNet(out_channels=hidden_channels, nn=nn)
@@ -56,8 +59,8 @@ class EdgeNet(chainer.Chain):
 
     Args:
         out_channels (int): dimension of output feature vector
+            Currently, it must be same with input dimension.
         nn (~chainer.Link):
-
     """
 
     def __init__(self, out_channels, nn=None):
@@ -77,7 +80,7 @@ class EdgeNet(chainer.Chain):
         # type: (chainer.Variable, chainer.Variable) -> chainer.Variable
         mb, node, ch = h.shape
         if ch != self.out_channels:
-            raise ValueError('out_channels must be equal to dimension '
+            raise ValueError('hidden_channels must be equal to dimension '
                              'of feature vector associated to each atom, '
                              '{}, but it was set to {}'.format(
                                  ch, self.out_channels))

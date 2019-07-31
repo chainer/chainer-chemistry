@@ -15,13 +15,15 @@ from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 
 atom_size = 5
 in_channels = 4
+hidden_channels = 7
 batch_size = 2
 n_edge_types = 2
 
 
 @pytest.fixture
 def update():
-    return GGNNUpdate(in_channels=in_channels, n_edge_types=n_edge_types)
+    return GGNNUpdate(in_channels=in_channels, hidden_channels=hidden_channels,
+                      n_edge_types=n_edge_types)
 
 
 @pytest.fixture
@@ -34,7 +36,7 @@ def data():
         0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
         ).astype('f')
     y_grad = numpy.random.uniform(
-        -1, 1, (batch_size, atom_size, in_channels)).astype('f')
+        -1, 1, (batch_size, atom_size, hidden_channels)).astype('f')
 
     embed = EmbedAtomID(in_size=MAX_ATOMIC_NUM, out_size=in_channels)
     embed_atom_data = embed(atom_data).data
@@ -46,14 +48,13 @@ def convert_to_sparse(dense_adj):
     # auxiliary function
     data, row, col, edge_type = _convert_to_sparse(dense_adj)
     return convert_sparse_with_edge_type(data, row, col, atom_size,
-                                         edge_type, num_edge_type)
+                                         edge_type, n_edge_types)
 
 
 def check_forward(update, atom_data, adj_data):
     update.reset_state()
     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
-    assert y_actual.shape == (batch_size, atom_size, in_channels)
-
+    assert y_actual.shape == (batch_size, atom_size, hidden_channels)
     return y_actual
 
 
@@ -122,7 +123,7 @@ def test_backward_cpu(update, data):
         gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
 
         numpy.testing.assert_allclose(
-            gx_dense, gx_sparse, atol=1e-4, rtol=1e-4)
+            gx_dense, gx_sparse, atol=1e-2, rtol=1e-2)
 
 
 @pytest.mark.gpu
@@ -137,7 +138,7 @@ def test_backward_gpu(update, data):
 
         numpy.testing.assert_allclose(
             cuda.to_cpu(gx_dense), cuda.to_cpu(gx_sparse),
-            atol=1e-4, rtol=1e-4)
+            atol=1e-2, rtol=1e-2)
 
 
 def test_forward_cpu_graph_invariant(update, data):

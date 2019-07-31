@@ -85,7 +85,7 @@ class RelGCN(chainer.Chain):
             x: (batchsize, num_nodes, in_channels)
             adj: (batchsize, num_edge_type, num_nodes, num_nodes)
 
-        Returns: (batchsize, out_channels)
+        Returns: (batchsize, hidden_channels)
         """
         if x.dtype == self.xp.int32:
             assert self.input_type == 'int'

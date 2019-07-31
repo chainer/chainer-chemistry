@@ -70,7 +70,7 @@ class CFConv(chainer.Chain):
 class SchNetUpdate(chainer.Chain):
     """Update submodule for SchNet
 
-    `in_channels` and `out_channels` must be same with `hidden_channels` in
+    `in_channels` and `hidden_channels` must be same with `hidden_channels` in
      this module.
 
     Args:

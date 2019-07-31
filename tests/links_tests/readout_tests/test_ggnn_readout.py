@@ -16,7 +16,7 @@ batch_size = 2
 
 @pytest.fixture
 def readout():
-    return GGNNReadout(out_dim=out_dim, in_channels=in_channels)
+    return GGNNReadout(out_dim=out_dim, in_channels=None)
 
 
 @pytest.fixture

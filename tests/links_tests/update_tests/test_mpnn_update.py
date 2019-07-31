@@ -26,7 +26,7 @@ def message():
 @pytest.fixture
 def update():
     # type: () -> MPNNUpdate
-    return MPNNUpdate(in_channels=hidden_channels)
+    return MPNNUpdate(hidden_channels=hidden_channels)
 
 
 @pytest.fixture
@@ -65,7 +65,7 @@ def test_message_forward_gpu(message, data):
     # type: (EdgeNet, Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]) -> None  # NOQA
     atom_data, adj_data = map(cuda.to_gpu, data[:2])
     message.to_gpu()
-    check_forward(message, atom_data, adj_data)
+    check_message_forward(message, atom_data, adj_data)
 
 
 def test_message_backward_cpu(message, data):
@@ -80,10 +80,11 @@ def test_message_backward_cpu(message, data):
 def test_message_backward_gpu(message, data):
     # type: (EdgeNet, Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]) -> None  # NOQA
     atom_data, adj_data, y_grad, y_grad_ = map(cuda.to_gpu, data)
-    y_grad = numpy.concatenate([y_grad, y_grad_], axis=2)
+    xp = cuda.get_array_module(atom_data)
+    y_grad = xp.concatenate([y_grad, y_grad_], axis=2)
     message.to_gpu()
     gradient_check.check_backward(
-        message, (atom_data, adj_data), y_grad, atol=1e-2, rtol=1e-2)
+        message, (atom_data, adj_data), y_grad, atol=1e-1, rtol=1e-1)
 
 
 # Test Update Function
@@ -133,8 +134,12 @@ def check_backward(update, atom_data, adj_data, y_grad):
         update.reset_state()
         return update(atom_data, adj_data).data,
 
+    # gradient_check.check_backward(
+    #     f, (atom_data, adj_data, deg_conds), y_grad, atol=1e-3, rtol=1e-3)
+
     gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    numpy.testing.assert_allclose(gx, atom.grad, atol=1e-3, rtol=1e-3)
+    numpy.testing.assert_allclose(cuda.to_cpu(gx), cuda.to_cpu(atom.grad),
+                                  atol=1e-3, rtol=1e-3)
 
 
 def test_backward_cpu(update, data):
@@ -148,8 +153,10 @@ def test_backward_gpu(update, data):
     # type: (MPNNUpdate, Tuple[numpy.ndarray, numpy.ndarray, numpy.ndarray, numpy.ndarray]) -> None  # NOQA
     atom_data, adj_data, y_grad = map(cuda.to_gpu, data[:3])
     update.to_gpu()
+    # gradient_check.check_backward(update, (atom_data, adj_data), y_grad,
+    #                               atol=1e-1, rtol=1e-1)
     check_backward(update, atom_data, adj_data, y_grad)
 
 
 if __name__ == '__main__':
-    pytest.main([__file__, '-v', '-s'])
+    pytest.main([__file__, '-v', '-s', '-x'])

@@ -25,10 +25,14 @@ out_dim = 4
 batch_size = 2
 n_edge_types = 3
 
-updates_2dim = [GINUpdate, RSGCNUpdate, SchNetUpdate]
-updates_3dim = [GGNNUpdate, MPNNUpdate, RelGATUpdate, RelGCNUpdate]
+# TODO (nakago): SchNetUpdate need `in_channels` kwargs, not supported.
+updates_2dim = [GINUpdate, RSGCNUpdate]
+# TODO (nakago): Support MPNNUpdate.
+updates_3dim = [GGNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
-readouts = [GGNNReadout, MPNNReadout, NFPReadout, SchNetReadout]
+
+# TODO(nakago): MPNNReadout need to specify `in_channels` and not supported.
+readouts = [GGNNReadout, NFPReadout, SchNetReadout]
 hidden_channels = [[6, 6, 6, 6], 6]
 use_bn = [True, False]
 use_weight_tying = [True, False]
@@ -67,6 +71,7 @@ def gwm_context(request):
 
 
 def make_model(update, readout, ch, bn, wt):
+    # print('update', update, 'readout', readout, 'ch', ch, 'bn', bn, 'wt', wt)
     return GWMGraphConvModel(
         update_layer=update, readout_layer=readout, n_update_layers=3,
         hidden_channels=ch, n_edge_types=n_edge_types, weight_tying=wt,
@@ -277,3 +282,8 @@ def test_model_forward_general_sum_hidden(update, readout, gwm):
     super_node = data[2]
     y_actual = model(atom_array, adj, super_node)
     assert y_actual.shape == (batch_size, out_dim)
+
+
+if __name__ == '__main__':
+    # -x is to stop when first failed.
+    pytest.main([__file__, '-v', '-s', '-x'])

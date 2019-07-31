@@ -21,8 +21,10 @@ def to_array(x):
 class GWMGraphConvModel(chainer.Chain):
     """Unified module of Graph Convolution Model with GWM
 
-    Note that this module is experimental, and it might not
-    be maintained in the future.
+    Note that this module is experimental, all update_layer and
+    readout_layer combination is not supported.
+    Please refer `test_gwm_graph_conv_model.py` for tested combinations.
+    This module might not be maintained in the future.
 
     Args:
         hidden_channels (list): hidden channels for update
@@ -126,7 +128,8 @@ class GWMGraphConvModel(chainer.Chain):
             # when use weight_tying option, hidden_channels must be same. So we can use -1 index
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim,
-                                in_channels=hidden_channels[-1],
+                                # in_channels=hidden_channels[-1],
+                                in_channels=None,
                                 **readout_kwargs)
                   for _ in range(n_readout_layers)])
             if with_gwm:
