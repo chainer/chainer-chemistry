@@ -91,6 +91,7 @@ def set_up_predictor(
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
+    # TODO (nakago): Add nfp_gwm, ggnn_gwm, rsgcn_gwm, gin_gwm
 
     predictor = GraphConvPredictor(conv, mlp, label_scaler, postprocess_fn)
     return predictor
