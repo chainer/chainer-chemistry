@@ -50,6 +50,7 @@ class GraphConvPredictor(chainer.Chain):
 
     def predict(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
+        # TODO (nakago): support super_node & is_real_node args.
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.__call__(atoms, adjs)
             if self.label_scaler is not None:

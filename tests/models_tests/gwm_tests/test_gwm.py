@@ -4,7 +4,7 @@ from chainer import gradient_check
 import numpy
 import pytest
 
-from chainer_chemistry.models.gwm import GWM, WarpGateUnit, SuperNodeTransmitterUnit, GraphTransmitterUnit  # NOQA
+from chainer_chemistry.models.gwm.gwm import GWM, WarpGateUnit, SuperNodeTransmitterUnit, GraphTransmitterUnit  # NOQA
 from chainer_chemistry.utils.permutation import permute_node
 
 atom_size = 5
@@ -55,8 +55,8 @@ def data():
         -0.01, 0.01, (batch_size, atom_size, hidden_dim)).astype('f')
     y_grad = numpy.random.uniform(
         -0.01, 0.01, (batch_size, atom_size, hidden_dim)).astype('f')
-    supernode = numpy.random.uniform(-0.01, 0.01, (batch_size, supernode_dim))\
-        .astype('f')
+    supernode = numpy.random.uniform(
+        -0.01, 0.01, (batch_size, supernode_dim)).astype('f')
     supernode_grad = numpy.random.uniform(
         -0.01, 0.01, (batch_size, supernode_dim)).astype('f')
 
@@ -126,8 +126,7 @@ def test_super_warp_gate_unit_backward(super_warp_gate_unit, data):
 
 
 def check_forward(gwm, embed_atom_data, new_embed_atom_data, supernode):
-    gwm.GRU_local.reset_state()
-    gwm.GRU_super.reset_state()
+    gwm.reset_state()
     h_actual, g_actual = gwm(embed_atom_data, new_embed_atom_data, supernode)
     assert h_actual.array.shape == (batch_size, atom_size, hidden_dim)
     assert g_actual.array.shape == (batch_size, supernode_dim)
@@ -150,8 +149,7 @@ def test_forward_gpu(gwm, data):
 
 def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
                    y_grad, supernode_grad):
-    gwm.GRU_local.reset_state()
-    gwm.GRU_super.reset_state()
+    gwm.reset_state()
 
     # TODO: rtol is too high! GWM is too large to calculate
     # numerical differentiation

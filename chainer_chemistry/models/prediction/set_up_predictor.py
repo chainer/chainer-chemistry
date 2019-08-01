@@ -43,54 +43,55 @@ def set_up_predictor(
         conv_kwargs = {}
 
     if method == 'nfp':
-        print('Training an NFP predictor...')
+        print('Set up NFP predictor...')
         conv = NFP(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'ggnn':
-        print('Training a GGNN predictor...')
+        print('Set up GGNN predictor...')
         conv = GGNN(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'schnet':
-        print('Training an SchNet predictor...')
+        print('Set up SchNet predictor...')
         conv = SchNet(
             out_dim=class_num,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
         mlp = None
     elif method == 'weavenet':
-        print('Training a WeaveNet predictor...')
+        print('Set up WeaveNet predictor...')
         conv = WeaveNet(hidden_dim=n_unit, **conv_kwargs)
     elif method == 'rsgcn':
-        print('Training an RSGCN predictor...')
+        print('Set up RSGCN predictor...')
         conv = RSGCN(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'relgcn':
-        print('Training a Relational GCN predictor...')
+        print('Set up Relational GCN predictor...')
         num_edge_type = 4
         conv = RelGCN(
-            out_channels=n_unit,
-            num_edge_type=num_edge_type,
+            out_dim=n_unit,
+            n_edge_types=num_edge_type,
             scale_adj=True,
             **conv_kwargs)
     elif method == 'relgat':
-        print('Training a Relational GAT predictor...')
+        print('Set up Relational GAT predictor...')
         conv = RelGAT(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
+    # TODO (nakago): Add nfp_gwm, ggnn_gwm, rsgcn_gwm, gin_gwm
 
     predictor = GraphConvPredictor(conv, mlp, label_scaler, postprocess_fn)
     return predictor

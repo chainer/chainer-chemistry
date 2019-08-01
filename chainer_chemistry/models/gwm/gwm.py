@@ -6,19 +6,36 @@ from chainer_chemistry.links import GraphLinear
 
 
 class WarpGateUnit(chainer.Chain):
+    """WarpGateUnit
+
+    It computes gated-sum mixing `merged` feature from normal node feature `h`
+    and super node feature `g`,
+
+    See Section "3.4 Warp Gate" of the paper.
+
+    Args:
+        output_type (str): supported type as below.
+            graph:
+            super:
+        hidden_dim (int): hidden dim
+        dropout_ratio (float): negative value indicates to not apply dropout.
+        activation (callable):
+    """
     def __init__(self, output_type='graph', hidden_dim=16,
                  dropout_ratio=-1, activation=functions.sigmoid):
         super(WarpGateUnit, self).__init__()
         if output_type == 'graph':
-            LinearFunc = GraphLinear
+            LinearLink = GraphLinear
         elif output_type == 'super':
-            LinearFunc = links.Linear
+            LinearLink = links.Linear
         else:
-            raise ValueError
+            raise ValueError(
+                'output_type = {} is unexpected. graph or super is supported.'
+                .format(output_type))
 
         with self.init_scope():
-            self.H = LinearFunc(in_size=hidden_dim, out_size=hidden_dim)
-            self.G = LinearFunc(in_size=hidden_dim, out_size=hidden_dim)
+            self.H = LinearLink(in_size=hidden_dim, out_size=hidden_dim)
+            self.G = LinearLink(in_size=hidden_dim, out_size=hidden_dim)
 
         self.hidden_dim = hidden_dim
         self.dropout_ratio = dropout_ratio
@@ -26,6 +43,8 @@ class WarpGateUnit(chainer.Chain):
         self.activation = activation
 
     def __call__(self, h, g):
+        # TODO: more efficient computation. Maybe we can calculate self.G(g)
+        # as Linear layer followed by broadcast to each atom.
         z = self.H(h) + self.G(g)
 
         if self.dropout_ratio > 0.0:
@@ -37,6 +56,16 @@ class WarpGateUnit(chainer.Chain):
 
 
 class SuperNodeTransmitterUnit(chainer.Chain):
+    """SuperNodeTransmitterUnit
+
+    It calculates message from super node to normal node.
+
+    Args:
+        hidden_dim_super (int):
+        hidden_dim (int): hiddem dim for
+        dropout_ratio (float): negative value indicates to not apply dropout.
+    """
+
     def __init__(self, hidden_dim_super=16, hidden_dim=16, dropout_ratio=-1):
         super(SuperNodeTransmitterUnit, self).__init__()
         with self.init_scope():
@@ -47,6 +76,15 @@ class SuperNodeTransmitterUnit(chainer.Chain):
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, g, n_atoms):
+        """
+
+        Args:
+            g: super node feature. shape (bs, hidden_dim_super)
+            n_atoms:
+
+        Returns:
+            g_trans: super --> original transmission
+        """
         mb = len(g)
         # for local updates
         g_trans = self.F_super(g)
@@ -55,18 +93,31 @@ class SuperNodeTransmitterUnit(chainer.Chain):
         # intermediate_h_super.shape == (mb, 1, self.hidden_dim)
         g_trans = functions.expand_dims(g_trans, 1)
         # intermediate_h_super.shape == (mb, atom, self.hidden_dim)
-        g_trans = functions.broadcast_to(g_trans, (mb, n_atoms, self.hidden_dim))
+        g_trans = functions.broadcast_to(g_trans,
+                                         (mb, n_atoms, self.hidden_dim))
         return g_trans
 
 
 class GraphTransmitterUnit(chainer.Chain):
+    """GraphTransmitterUnit
+
+    It calculates message from normal node to super node.
+
+    Args:
+        hidden_dim_super (int):
+        hidden_dim (int):
+        n_heads (int):
+        dropout_ratio (float):
+        activation (callable):
+    """
     def __init__(self, hidden_dim_super=16, hidden_dim=16, n_heads=8,
                  dropout_ratio=-1, activation=functions.tanh):
         super(GraphTransmitterUnit, self).__init__()
+        hdim_n = hidden_dim * n_heads
         with self.init_scope():
-            self.V_super = links.Linear(hidden_dim * n_heads, hidden_dim * n_heads)
-            self.W_super = links.Linear(hidden_dim * n_heads, hidden_dim_super)
-            self.B = GraphLinear(n_heads * hidden_dim, n_heads * hidden_dim_super)
+            self.V_super = links.Linear(hdim_n, hdim_n)
+            self.W_super = links.Linear(hdim_n, hidden_dim_super)
+            self.B = GraphLinear(hidden_dim, n_heads * hidden_dim_super)
         self.hidden_dim = hidden_dim
         self.hidden_dim_super = hidden_dim_super
         self.dropout_ratio = dropout_ratio
@@ -75,12 +126,6 @@ class GraphTransmitterUnit(chainer.Chain):
 
     def __call__(self, h, g, step=0):
         mb, atom, ch = h.shape
-        # h1.shape == (mb, atom, 1, ch)
-        h1 = functions.expand_dims(h, 2)
-        # h1.shape == (mb, atom, n_heads, ch)
-        h1 = functions.broadcast_to(h1, [mb, atom, self.n_heads, ch])
-        # h1.shape == (mb, atom, n_heads * ch)
-        h1 = functions.reshape(h1, [mb, atom, self.n_heads * ch])
 
         h_j = functions.expand_dims(h, 1)
         # h_j.shape == (mb, self.n_heads, atom, ch)
@@ -96,9 +141,9 @@ class GraphTransmitterUnit(chainer.Chain):
         g_extend = functions.expand_dims(g_extend, 2)
 
         # update for attention-message B h_i
-        # h1.shape == (mb, atom, n_heads * ch)
+        # h (mb, atom, ch)
         # Bh_i.shape == (mb, atom, self.n_heads * self.hidden_dim_super)
-        Bh_i = self.B(h1)
+        Bh_i = self.B(h)
         # Bh_i.shpae == (mb, atom, num_head, ch)
         Bh_i = functions.reshape(Bh_i, (mb, atom, self.n_heads,
                                         self.hidden_dim_super))
@@ -130,6 +175,8 @@ class GraphTransmitterUnit(chainer.Chain):
 
         # weighting h for different heads
         # intermediate_h.shape == (mb, self.n_heads * ch)
+        # TODO (nakago): Consider to delete `V_super` maybe not necessary.
+        # TODO (nakago): Consider to move `V_super` to calculate `h_j`??
         h_trans = self.V_super(attention_sum)
         # compress heads
         h_trans = self.W_super(h_trans)
@@ -139,30 +186,28 @@ class GraphTransmitterUnit(chainer.Chain):
 
 
 class GWM(chainer.Chain):
-    """
-    Graph Warping Module (GWM)
+    """Graph Warping Module (GWM)
+
+    Module for a single layer update.
 
     See: Ishiguro, Maeda, and Koyama. "Graph Warp Module: an Auxiliary Module
         for Boosting the Power of Graph NeuralNetworks", arXiv, 2019.
 
     Args:
-        hidden_dim (default=16): dimension of hidden vectors
+        hidden_dim (int): dimension of hidden vectors
             associated to each atom (local node)
-        hidden_dim_super(default=16); dimension of super-node hidden vector
-        n_layers (default=4): number of layers
-        n_heads (default=8): numbef of heads
-        n_atom_types (default=MAX_ATOMIC_NUM): number of types of atoms
-        n_super_feature (default: tuned according to gtn_preprocessor):
-            number of super-node observation attributes
-        n_edge_types (int): number of edge types witin graphs.
-        dropout_ratio (default=0.5); if > 0.0, perform dropout
-        tying_flag (default=false): enable if you want to share params across
-            layers
+        hidden_dim_super (int); dimension of super-node hidden vector
+        n_layers (int): number of layers
+        n_heads (int): number of heads
+        dropout_ratio (float): dropout ratio.
+            Negative value indicates to not apply dropout.
+        tying_flag (bool): enable if you want to share params across layers.
+        activation (callable):
+        wgu_activation (callable):
+        gtu_activation (callable):
     """
-    NUM_EDGE_TYPE = 4
-
     def __init__(self, hidden_dim=16, hidden_dim_super=16, n_layers=4,
-                 n_heads=8, dropout_ratio=-1, concat_hidden=False,
+                 n_heads=8, dropout_ratio=-1,
                  tying_flag=False, activation=functions.relu,
                  wgu_activation=functions.sigmoid,
                  gtu_activation=functions.tanh):
@@ -200,8 +245,7 @@ class GWM(chainer.Chain):
                     dropout_ratio=dropout_ratio, activation=wgu_activation)
                     for _ in range(n_layers)])
 
-
-            # GRU's. not layer-wise (recurrent through layers)
+            # Weight tying: not layer-wise but recurrent through layers
             self.GRU_local = links.GRU(in_size=hidden_dim, out_size=hidden_dim)
             self.GRU_super = links.GRU(in_size=hidden_dim_super,
                                        out_size=hidden_dim_super)
@@ -211,26 +255,25 @@ class GWM(chainer.Chain):
         self.n_layers = n_layers
         self.n_heads = n_heads
         self.dropout_ratio = dropout_ratio
-        self.concat_hidden = concat_hidden
         self.tying_flag = tying_flag
         self.activation = activation
         self.wgu_activation = wgu_activation
 
     def __call__(self, h, h_new, g, step=0):
         """
-        Describes the module for a single layer update.
-        Do not forget to rest GRU for each batch...
+        Note: Do not forget to reset GRU for each batch.
 
-        :param h: minibatch by num_nodes by hidden_dim numpy array.
+        Args:
+            h: Minibatch by num_nodes by hidden_dim numpy array.
                 current local node hidden states as input of the vanilla GNN
-        :param h_new: minibatch by num_nodes by hidden_dim numpy array.
+            h_new: Minibatch by num_nodes by hidden_dim numpy array.
                 updated local node hidden states as output from the vanilla GNN
-        :param adj: minibatch by bond_types by num_nodes by num_nodes 1/0
+            g: Minibatch by bond_types by num_nodes by num_nodes 1/0
                 array. Adjacency matrices over several bond types
-        :param g: minibatch by hidden_dim_super numpy array.
+            step: Minibatch by hidden_dim_super numpy array.
                 current super node hiddden state
-        :param step: integer, the layer index
-        :return: updated h and g
+
+        Returns: Updated h and g
         """
         # (minibatch, atom, ch)
         mb, atom, ch = h.shape

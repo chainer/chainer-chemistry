@@ -8,11 +8,11 @@ class RSGCNUpdate(chainer.Chain):
     """RSGCN submodule for message and update part.
 
     Args:
-        in_channels (int): input channel dimension
+        in_channels (int or None): input channel dimension
         out_channels (int): output channel dimension
     """
 
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, in_channels, out_channels, **kwargs):
         super(RSGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear = GraphLinear(
@@ -20,7 +20,7 @@ class RSGCNUpdate(chainer.Chain):
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         # --- Message part ---
         h = chainer_chemistry.functions.matmul(adj, h)
         # --- Update part ---

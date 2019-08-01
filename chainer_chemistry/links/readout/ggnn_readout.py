@@ -9,8 +9,8 @@ class GGNNReadout(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector associated to
-            each atom
+        in_channels (int or None): dimension of feature vector associated to
+            each node. `in_channels` is the total dimension of `h` and `h0`.
         nobias (bool): If ``True``, then this function does not use
             the bias
         activation (~chainer.Function or ~chainer.FunctionNode):
@@ -21,15 +21,15 @@ class GGNNReadout(chainer.Chain):
             `functions.tanh` was suggested in original paper.
     """
 
-    def __init__(self, out_dim, hidden_dim=16, nobias=False,
+    def __init__(self, out_dim, in_channels=None, nobias=False,
                  activation=functions.identity,
                  activation_agg=functions.identity):
         super(GGNNReadout, self).__init__()
         with self.init_scope():
-            self.i_layer = GraphLinear(None, out_dim, nobias=nobias)
-            self.j_layer = GraphLinear(None, out_dim, nobias=nobias)
+            self.i_layer = GraphLinear(in_channels, out_dim, nobias=nobias)
+            self.j_layer = GraphLinear(in_channels, out_dim, nobias=nobias)
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
+        self.in_channels = in_channels
         self.nobias = nobias
         self.activation = activation
         self.activation_agg = activation_agg
