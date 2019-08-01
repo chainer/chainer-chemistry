@@ -2,17 +2,12 @@
 
 from __future__ import print_function
 
-import json
 import numpy
 import os
-import pickle
 
 from argparse import ArgumentParser
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-
-from chainer import cuda
-from chainer import Variable
 
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.dataset.converters import concat_mols
@@ -20,28 +15,10 @@ from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 
 # These imports are necessary for pickle to work.
-from sklearn.preprocessing import StandardScaler  # NOQA
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction import GraphConvPredictor  # NOQA
-from train_own_dataset import MeanAbsError, RootMeanSqrError  # NOQA
-
-
-class ScaledGraphConvPredictor(GraphConvPredictor):
-    def __init__(self, *args, **kwargs):
-        """Initializes the (scaled) graph convolution predictor. This uses
-        a standard scaler to rescale the predicted labels.
-        """
-        super(ScaledGraphConvPredictor, self).__init__(*args, **kwargs)
-
-    def __call__(self, atoms, adjs):
-        h = super(ScaledGraphConvPredictor, self).__call__(atoms, adjs)
-        scaler_available = hasattr(self, 'scaler')
-        numpy_data = isinstance(h.data, numpy.ndarray)
-
-        if scaler_available:
-            h = self.scaler.inverse_transform(cuda.to_cpu(h.data))
-            if not numpy_data:
-                h = cuda.to_gpu(h)
-        return Variable(h)
+from chainer_chemistry.utils import save_json
+from train_own_dataset import rmse
 
 
 def parse_arguments():
@@ -103,21 +80,12 @@ def main():
                            labels=labels, smiles_col='SMILES')
     dataset = parser.parse(args.datafile)['dataset']
 
-    # Load the standard scaler parameters, if necessary.
-    if args.scale == 'standardize':
-        with open(os.path.join(args.in_dir, 'scaler.pkl'), mode='rb') as f:
-            scaler = pickle.load(f)
-    else:
-        scaler = None
     test = dataset
 
     print('Predicting...')
     # Set up the regressor.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=args.gpu)
-    scaled_predictor = ScaledGraphConvPredictor(regressor.predictor)
-    scaled_predictor.scaler = scaler
-    regressor.predictor = scaled_predictor
 
     # Perform the prediction.
     print('Evaluating...')
@@ -126,8 +94,7 @@ def main():
                             device=args.gpu)()
     print('Evaluation result: ', eval_result)
 
-    with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:
-        json.dump(eval_result, f)
+    save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
 
 
 if __name__ == '__main__':

@@ -16,6 +16,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
@@ -28,7 +29,7 @@ def parse_arguments():
                    'relgat', 'gin']
     # TODO (nakago): support 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm'
     dataset_names = list(molnet_default_config.keys())
-    # scale_list = ['standardize', 'none']
+    scale_list = ['standardize', 'none']
 
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
@@ -57,8 +58,8 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
-#    parser.add_argument('--scale', type=str, choices=scale_list,
-#                        help='label scaling method', default='standardize')
+    parser.add_argument('--scale', type=str, choices=scale_list,
+                        help='label scaling method', default='standardize')
     return parser.parse_args()
 
 
@@ -107,34 +108,28 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
     return dataset_parts
 
 
-# def standardize_dataset_labels(datasets):
-#     """Standardizes (scales) the dataset labels.
-#     Args:
-#         datasets: Tuple containing the datasets.
-#     Returns:
-#         Datasets with standardized labels and the scaler object.
-#     """
-#     scaler = StandardScaler()
-#
-#     # Collect all labels in order to apply scaling over the entire dataset.
-#     labels = None
-#     offsets = []
-#     for dataset in datasets:
-#         if labels is None:
-#             labels = dataset.get_datasets()[-1]
-#         else:
-#             labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
-#         offsets.append(len(labels))
-#
-#     labels = scaler.fit_transform(labels)
-#
-#     # Replace the old labels with the new ones.
-#     for i, dataset in enumerate(datasets):
-#         start = 0 if i == 0 else offsets[i - 1]
-#         end = offsets[i]
-#         dataset = NumpyTupleDataset(
-#                 *(dataset.get_datasets()[:-1] + (labels[start:end, :],)))
-#     return datasets, scaler
+def fit_scaler(datasets):
+    """Standardizes (scales) the dataset labels.
+    Args:
+        datasets: Tuple containing the datasets.
+    Returns:
+        Datasets with standardized labels and the scaler object.
+    """
+    scaler = StandardScaler()
+
+    # Collect all labels in order to apply scaling over the entire dataset.
+    labels = None
+    offsets = []
+    for dataset in datasets:
+        if labels is None:
+            labels = dataset.get_datasets()[-1]
+        else:
+            labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
+        offsets.append(len(labels))
+
+    scaler.fit(labels)
+
+    return scaler
 
 
 def main():
@@ -180,19 +175,20 @@ def main():
                                                 method, cache_dir)
     train, valid = dataset_parts[0], dataset_parts[1]
 
-#    # Scale the label values, if necessary.
-#    if args.scale == 'standardize':
-#        if task_type == 'regression':
-#            print('Applying standard scaling to the labels.')
-#            datasets, scaler = standardize_dataset_labels(datasets)
-#        else:
-#            print('Label scaling is not available for classification tasks.')
-#    else:
-#        print('No label scaling was selected.')
-#        scaler = None
+    # Scale the label values, if necessary.
+    scaler = None
+    if args.scale == 'standardize':
+        if task_type == 'regression':
+            print('Applying standard scaling to the labels.')
+            scaler = fit_scaler(dataset_parts)
+        else:
+            print('Label scaling is not available for classification tasks.')
+    else:
+        print('No label scaling was selected.')
 
     # Set up the predictor.
-    predictor = set_up_predictor(method, n_unit, conv_layers, class_num)
+    predictor = set_up_predictor(method, n_unit, conv_layers, class_num,
+                                 label_scaler=scaler)
 
     # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
@@ -208,7 +204,6 @@ def main():
     if task_type == 'regression':
         model = Regressor(predictor, lossfun=loss_fun,
                           metrics_fun=metrics_fun, device=args.gpu)
-        # TODO: Use standard scaler for regression task
     elif task_type == 'classification':
         model = Classifier(predictor, lossfun=loss_fun,
                            metrics_fun=metrics_fun, device=args.gpu)
@@ -299,13 +294,6 @@ def main():
     model_path = os.path.join(model_dir,  model_filename[task_type])
     print('Saving the trained model to {}...'.format(model_path))
     model.save_pickle(model_path, protocol=args.protocol)
-
-#    # Save the standard scaler's parameters.
-#    if scaler is not None:
-#        scaler_path = os.path.join(model_dir, 'scaler.pkl')
-#        print('Saving standard scaler parameters to {}.'.format(scaler_path))
-#        with open(scaler_path, mode='wb') as f:
-#            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':
