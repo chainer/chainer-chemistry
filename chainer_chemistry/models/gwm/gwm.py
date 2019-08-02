@@ -48,7 +48,6 @@ class WarpGateUnit(chainer.Chain):
         z = self.H(h) + self.G(g)
 
         if self.dropout_ratio > 0.0:
-            # TODO: fail backward test
             z = functions.dropout(z, ratio=self.dropout_ratio)
         z = self.activation(z)
         merged = (1 - z) * h + z * g
@@ -75,12 +74,12 @@ class SuperNodeTransmitterUnit(chainer.Chain):
         self.hidden_dim_super = hidden_dim_super
         self.dropout_ratio = dropout_ratio
 
-    def __call__(self, g, n_atoms):
+    def __call__(self, g, n_nodes):
         """
 
         Args:
             g: super node feature. shape (bs, hidden_dim_super)
-            n_atoms:
+            n_nodes (int): number of nodes
 
         Returns:
             g_trans: super --> original transmission
@@ -94,7 +93,7 @@ class SuperNodeTransmitterUnit(chainer.Chain):
         g_trans = functions.expand_dims(g_trans, 1)
         # intermediate_h_super.shape == (mb, atom, self.hidden_dim)
         g_trans = functions.broadcast_to(g_trans,
-                                         (mb, n_atoms, self.hidden_dim))
+                                         (mb, n_nodes, self.hidden_dim))
         return g_trans
 
 
@@ -115,7 +114,7 @@ class GraphTransmitterUnit(chainer.Chain):
         super(GraphTransmitterUnit, self).__init__()
         hdim_n = hidden_dim * n_heads
         with self.init_scope():
-            self.V_super = links.Linear(hdim_n, hdim_n)
+            self.V_super = GraphLinear(hidden_dim, hdim_n)
             self.W_super = links.Linear(hdim_n, hidden_dim_super)
             self.B = GraphLinear(hidden_dim, n_heads * hidden_dim_super)
         self.hidden_dim = hidden_dim
@@ -127,9 +126,10 @@ class GraphTransmitterUnit(chainer.Chain):
     def __call__(self, h, g, step=0):
         mb, atom, ch = h.shape
 
-        h_j = functions.expand_dims(h, 1)
-        # h_j.shape == (mb, self.n_heads, atom, ch)
-        h_j = functions.broadcast_to(h_j, (mb, self.n_heads, atom, ch))
+        h_j = self.V_super(h)
+        h_j = functions.reshape(h_j, (mb, atom, self.n_heads, ch))
+        # h_j (mb, atom, self.n_heads, ch)
+        h_j = functions.transpose(h_j, (0, 2, 1, 3))
 
         # expand h_super
         # g_extend.shape (mb, 1, self.hidden_dim_super)
@@ -175,11 +175,8 @@ class GraphTransmitterUnit(chainer.Chain):
 
         # weighting h for different heads
         # intermediate_h.shape == (mb, self.n_heads * ch)
-        # TODO (nakago): Consider to delete `V_super` maybe not necessary.
-        # TODO (nakago): Consider to move `V_super` to calculate `h_j`??
-        h_trans = self.V_super(attention_sum)
         # compress heads
-        h_trans = self.W_super(h_trans)
+        h_trans = self.W_super(attention_sum)
         # intermediate_h.shape == (mb, self.hidden_dim_super)
         h_trans = self.activation(h_trans)
         return h_trans
@@ -212,38 +209,38 @@ class GWM(chainer.Chain):
                  wgu_activation=functions.sigmoid,
                  gtu_activation=functions.tanh):
         super(GWM, self).__init__()
-        if tying_flag:
-            n_layers = 1
+
+        n_use_layers = 1 if tying_flag else n_layers
 
         with self.init_scope():
             self.update_super = chainer.ChainList(
                 *[links.Linear(in_size=hidden_dim_super,
                                out_size=hidden_dim_super)
-                  for _ in range(n_layers)]
+                  for _ in range(n_use_layers)]
             )
 
             # for Transmitter unit
             self.super_transmitter = chainer.ChainList(
                 *[SuperNodeTransmitterUnit(
                     hidden_dim=hidden_dim, hidden_dim_super=hidden_dim_super,
-                    dropout_ratio=dropout_ratio) for _ in range(n_layers)])
+                    dropout_ratio=dropout_ratio) for _ in range(n_use_layers)])
             self.graph_transmitter = chainer.ChainList(
                 *[GraphTransmitterUnit(
                     hidden_dim=hidden_dim, hidden_dim_super=hidden_dim_super,
                     n_heads=n_heads, dropout_ratio=dropout_ratio,
-                    activation=gtu_activation) for _ in range(n_layers)])
+                    activation=gtu_activation) for _ in range(n_use_layers)])
 
             # for Warp Gate unit
             self.wgu_local = chainer.ChainList(
                 *[WarpGateUnit(
                     output_type='graph', hidden_dim=hidden_dim,
                     dropout_ratio=dropout_ratio, activation=wgu_activation)
-                    for _ in range(n_layers)])
+                    for _ in range(n_use_layers)])
             self.wgu_super = chainer.ChainList(
                 *[WarpGateUnit(
                     output_type='super', hidden_dim=hidden_dim_super,
                     dropout_ratio=dropout_ratio, activation=wgu_activation)
-                    for _ in range(n_layers)])
+                    for _ in range(n_use_layers)])
 
             # Weight tying: not layer-wise but recurrent through layers
             self.GRU_local = links.GRU(in_size=hidden_dim, out_size=hidden_dim)
@@ -276,7 +273,7 @@ class GWM(chainer.Chain):
         Returns: Updated h and g
         """
         # (minibatch, atom, ch)
-        mb, atom, ch = h.shape
+        mb, n_nodes, ch = h.shape
         # non linear update of the super node
         g_new = self.activation(self.update_super[step](g))
 
@@ -284,16 +281,16 @@ class GWM(chainer.Chain):
         # original --> super transmission
         h_trans = self.graph_transmitter[step](h, g)
         # g_trans: super --> original transmission
-        g_trans = self.super_transmitter[step](g, atom)
+        g_trans = self.super_transmitter[step](g, n_nodes)
 
         # Warp Gate unit
         merged_h = self.wgu_local[step](h_new, g_trans)
         merged_g = self.wgu_super[step](h_trans, g_new)
 
         # Self recurrent
-        out_h = functions.reshape(merged_h, (mb * atom, self.hidden_dim))
+        out_h = functions.reshape(merged_h, (mb * n_nodes, self.hidden_dim))
         out_h = self.GRU_local(out_h)
-        out_h = functions.reshape(out_h, (mb, atom, self.hidden_dim))
+        out_h = functions.reshape(out_h, (mb, n_nodes, self.hidden_dim))
 
         out_g = self.GRU_super(merged_g)
 
