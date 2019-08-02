@@ -10,8 +10,8 @@ class GINUpdate(chainer.Chain):
     r"""GIN submodule for update part.
 
     Simplest implementation of Graph Isomorphism Network (GIN):
-    2-layered MLP + ReLU
-    no learnable epsilon
+    N-layered MLP + ReLU
+    No learnable epsilon
 
     Batch Normalization is not implemented. instead we use dropout
 
@@ -27,6 +27,7 @@ class GINUpdate(chainer.Chain):
         out_channels (int or None): output dime of feature vector for each node
             When `None`, `hidden_channels` is used.
         dropout_ratio (float): ratio of dropout, instead of batch normalization
+        n_layers (int): layers used in `GraphMLP`
     """
 
     def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
