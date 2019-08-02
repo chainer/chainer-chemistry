@@ -23,6 +23,8 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
+from chainer_chemistry.training.extensions.auto_print_report import \
+    AutoPrintReport
 
 
 class MeanAbsError(object):
@@ -195,8 +197,7 @@ def main():
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/mean_abs_error',
-                                  'main/root_mean_sqr_error', 'elapsed_time']))
+    trainer.extend(AutoPrintReport())
     trainer.extend(E.ProgressBar())
     trainer.run()
 
