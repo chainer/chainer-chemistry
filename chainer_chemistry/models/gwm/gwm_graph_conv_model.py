@@ -27,7 +27,7 @@ class GWMGraphConvModel(chainer.Chain):
     This module might not be maintained in the future.
 
     Args:
-        hidden_channels (list): hidden channels for update
+        hidden_channels (int or list): hidden channels for update
         out_dim (int): output dim
         update_layer (chainer.links.Link):
         readout_layer (chainer.links.Link):
@@ -94,7 +94,9 @@ class GWMGraphConvModel(chainer.Chain):
                     .format(hidden_channels))
 
         if with_gwm and super_node_dim is None:
-            raise ValueError('super_node_dim must be set to use gwm')
+            print('[WARNING] super_node_dim is None, set to {}'
+                  .format(hidden_channels[0]))
+            super_node_dim = hidden_channels[0]
 
         if out_channels is None:
             in_channels_list = hidden_channels[:-1]
@@ -106,9 +108,9 @@ class GWMGraphConvModel(chainer.Chain):
         assert len(in_channels_list) == n_update_layers
         assert len(out_channels_list) == n_update_layers
 
-        n_update_layers = 1 if weight_tying else n_update_layers
-        n_readout_layers = n_update_layers if concat_hidden or sum_hidden else 1
-        n_activation = n_update_layers if n_activation is None else n_activation
+        n_use_update_layers = 1 if weight_tying else n_update_layers
+        n_readout_layers = n_use_update_layers if concat_hidden or sum_hidden else 1
+        n_activation = n_use_update_layers if n_activation is None else n_activation
 
         if update_kwargs is None:
             update_kwargs = {}
@@ -124,7 +126,7 @@ class GWMGraphConvModel(chainer.Chain):
                 *[update_layer(in_channels=in_channels_list[i],
                                out_channels=out_channels_list[i],
                                n_edge_types=n_edge_types, **update_kwargs)
-                  for i in range(n_update_layers)])
+                  for i in range(n_use_update_layers)])
             # when use weight_tying option, hidden_channels must be same. So we can use -1 index
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim,
@@ -135,14 +137,14 @@ class GWMGraphConvModel(chainer.Chain):
             if with_gwm:
                 self.gwm = GWM(hidden_dim=hidden_channels[0],
                                hidden_dim_super=super_node_dim,
-                               n_layers=n_update_layers, **gwm_kwargs)
+                               n_layers=n_use_update_layers, **gwm_kwargs)
                 self.embed_super = links.Linear(None, out_size=super_node_dim)
                 self.linear_for_concat_super = links.Linear(in_size=None,
                                                             out_size=out_dim)
             if use_batchnorm:
                 self.bnorms = chainer.ChainList(
                     *[GraphBatchNormalization(
-                        out_channels_list[i]) for i in range(n_update_layers)])
+                        out_channels_list[i]) for i in range(n_use_update_layers)])
 
         self.readout_layer = readout_layer
         self.update_layer = update_layer
