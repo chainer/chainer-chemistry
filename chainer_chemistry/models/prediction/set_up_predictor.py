@@ -5,6 +5,7 @@ from typing import Optional  # NOQA
 import chainer  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN
+from chainer_chemistry.models.gin import GIN
 from chainer_chemistry.models.mlp import MLP
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
