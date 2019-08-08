@@ -4,94 +4,25 @@ from __future__ import print_function
 
 import numpy
 import os
-import pickle
 
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
-from chainer import cuda
 from chainer import functions as F
 from chainer import optimizers
 from chainer import training
-from chainer import Variable
 from chainer.iterators import SerialIterator
 from chainer.training import extensions as E
-from sklearn.preprocessing import StandardScaler
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.parsers import CSVFileParser
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 from chainer_chemistry.models import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 
 
-class MeanAbsError(object):
-    def __init__(self, scaler=None):
-        """Initializes the (scaled) mean absolute error metric object.
-
-        Args:
-            scaler: Standard label scaler.
-        """
-        self.scaler = scaler
-
-    def __call__(self, x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if self.scaler is not None:
-            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        else:
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
-
-
-class RootMeanSqrError(object):
-    def __init__(self, scaler=None):
-        """Initializes the (scaled) root mean square error metric object.
-
-        Args:
-            scaler: Standard label scaler.
-        """
-        self.scaler = scaler
-
-    def __call__(self, x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if self.scaler is not None:
-            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        else:
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.sqrt(numpy.mean(numpy.power(diff, 2), axis=0)[0])
-
-
-class ScaledAbsError(object):
-    def __init__(self, scaler=None):
-        """Initializes the (scaled) absolute error object.
-
-        Args:
-            scaler: Standard label scaler.
-        """
-        self.scaler = scaler
-
-    def __call__(self, x0, x1):
-        if isinstance(x0, Variable):
-            x0 = cuda.to_cpu(x0.data)
-        if isinstance(x1, Variable):
-            x1 = cuda.to_cpu(x1.data)
-        if self.scaler is not None:
-            scaled_x0 = self.scaler.inverse_transform(cuda.to_cpu(x0))
-            scaled_x1 = self.scaler.inverse_transform(cuda.to_cpu(x1))
-            diff = scaled_x0 - scaled_x1
-        else:
-            diff = cuda.to_cpu(x0) - cuda.to_cpu(x1)
-        return numpy.mean(numpy.absolute(diff), axis=0)[0]
+def rmse(x0, x1):
+    return F.sqrt(F.mean_squared_error(x0, x1))
 
 
 def parse_arguments():
@@ -160,8 +91,7 @@ def main():
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
         scaler = StandardScaler()
-        labels = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] + (labels,)))
+        scaler.fit(dataset.get_datasets()[-1])
     else:
         scaler = None
 
@@ -170,24 +100,25 @@ def main():
     train, _ = split_dataset_random(dataset, train_data_size, args.seed)
 
     # Set up the predictor.
-    predictor = set_up_predictor(args.method, args.unit_num,
-                                 args.conv_layers, class_num)
+    predictor = set_up_predictor(
+        args.method, args.unit_num,
+        args.conv_layers, class_num, label_scaler=scaler)
 
     # Set up the iterator.
     train_iter = SerialIterator(train, args.batchsize)
 
     # Set up the regressor.
-    metrics_fun = {'mean_abs_error': MeanAbsError(scaler=scaler),
-                   'root_mean_sqr_error': RootMeanSqrError(scaler=scaler)}
+    device = args.gpu
+    metrics_fun = {'mae': F.mean_absolute_error, 'rmse': rmse}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
-                          metrics_fun=metrics_fun, device=args.gpu)
+                          metrics_fun=metrics_fun, device=device)
 
     # Set up the optimizer.
     optimizer = optimizers.Adam()
     optimizer.setup(regressor)
 
     # Set up the updater.
-    updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
+    updater = training.StandardUpdater(train_iter, optimizer, device=device,
                                        converter=concat_mols)
 
     # Set up the trainer.
@@ -195,8 +126,8 @@ def main():
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/mean_abs_error',
-                                  'main/root_mean_sqr_error', 'elapsed_time']))
+    trainer.extend(E.PrintReport(['epoch', 'main/loss', 'main/mae',
+                                  'main/rmse', 'elapsed_time']))
     trainer.extend(E.ProgressBar())
     trainer.run()
 
@@ -204,11 +135,6 @@ def main():
     model_path = os.path.join(args.out, args.model_filename)
     print('Saving the trained model to {}...'.format(model_path))
     regressor.save_pickle(model_path, protocol=args.protocol)
-
-    # Save the standard scaler's parameters.
-    if scaler is not None:
-        with open(os.path.join(args.out, 'scaler.pkl'), mode='wb') as f:
-            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':

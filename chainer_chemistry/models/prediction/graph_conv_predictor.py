@@ -46,6 +46,8 @@ class GraphConvPredictor(chainer.Chain):
         x = self.graph_conv(atoms, adjs)
         if self.mlp:
             x = self.mlp(x)
+        if self.label_scaler is not None:
+            x = self.label_scaler.inverse_transform(x)
         return x
 
     def predict(self, atoms, adjs):
@@ -53,6 +55,4 @@ class GraphConvPredictor(chainer.Chain):
         # TODO (nakago): support super_node & is_real_node args.
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.__call__(atoms, adjs)
-            if self.label_scaler is not None:
-                x = self.label_scaler.inverse_transform(x)
             return self.postprocess_fn(x)

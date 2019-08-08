@@ -22,8 +22,9 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
-# from sklearn.preprocessing import StandardScaler  # NOQA
-from train_molnet import GraphConvPredictorForGWM
+from chainer import functions as F
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
+from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from train_molnet import dataset_part_filename
 from train_molnet import download_entire_dataset
 
@@ -31,7 +32,8 @@ from train_molnet import download_entire_dataset
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn', 'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
+    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
+                   'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
 #    scale_list = ['standardize', 'none']
     dataset_names = list(molnet_default_config.keys())
 
@@ -85,16 +87,6 @@ def main():
         _, _, test = download_entire_dataset(dataset_name, num_data, labels,
                                              method, cache_dir)
 
-#    # Load the standard scaler parameters, if necessary.
-#    if args.scale == 'standardize':
-#        scaler_path = os.path.join(args.in_dir, 'scaler.pkl')
-#        print('Loading scaler parameters from {}.'.format(scaler_path))
-#        with open(scaler_path, mode='rb') as f:
-#            scaler = pickle.load(f)
-#    else:
-#        print('No standard scaling was selected.')
-#        scaler = None
-
     # Model-related data is stored this directory.
     model_dir = os.path.join(args.in_dir, os.path.basename(cache_dir))
 
@@ -113,15 +105,9 @@ def main():
         raise ValueError('Invalid task type ({}) encountered when processing '
                          'dataset ({}).'.format(task_type, dataset_name))
 
-    # Proposed by Ishiguro
-    # ToDo: consider go/no-go with following modification
     # Re-load the best-validation score snapshot
-    serializers.load_npz(os.path.join(model_dir, "best_val_" + model_filename[task_type]), model)
-
-#    # Replace the default predictor with one that scales the output labels.
-#    scaled_predictor = ScaledGraphConvPredictor(model.predictor)
-#    scaled_predictor.scaler = scaler
-#    model.predictor = scaled_predictor
+    # serializers.load_npz(os.path.join(
+    #     model_dir, "best_val_" + model_filename[task_type]), model)
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
@@ -130,9 +116,7 @@ def main():
                             device=args.gpu)()
     print('Evaluation result: ', eval_result)
 
-    # Proposed by Ishiguro: add more stats
-    # ToDo: considre go/no-go with the following modification
-
+    # Add more stats
     if task_type == 'regression':
         # loss = cuda.to_cpu(numpy.array(eval_result['main/loss']))
         # eval_result['main/loss'] = loss
@@ -141,7 +125,6 @@ def main():
         for k, v in eval_result.items():
             eval_result[k] = float(v)
 
-        save_json(os.path.join(args.in_dir, 'eval_result.json'), eval_result)
     elif task_type == "classification":
         # For Classifier, we do not equip the model with ROC-AUC evalation function
         # use a seperate ROC-AUC Evaluator here
@@ -150,9 +133,9 @@ def main():
             device=args.gpu, eval_func=model.predictor, name='test',
             ignore_labels=-1)()
         print('ROCAUC Evaluation result: ', rocauc_result)
-        save_json(os.path.join(args.in_dir, 'eval_result.json'), rocauc_result)
+        save_json(os.path.join(model_dir, 'rocauc_result.json'), rocauc_result)
     else:
-        pass
+        print('[WARNING] unknown task_type {}.'.format(task_type))
 
     # Save the evaluation results.
     save_json(os.path.join(model_dir, 'eval_result.json'), eval_result)
