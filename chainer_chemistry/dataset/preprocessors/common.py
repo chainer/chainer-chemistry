@@ -200,12 +200,17 @@ def mol_bond_freq_feature(mol, atom_array, adj):
     if adj.ndim == 2:
         adj = numpy.expand_dims(adj, axis=0)
     adj = adj.reshape((adj.shape[0], -1))
-    return adj.sum(axis=1) / adj.sum()
+    adj_sum = adj.sum()
+    if adj_sum == 0:
+        return adj.sum(axis=1)
+    else:
+        return adj.sum(axis=1) / adj_sum
 
 
 def construct_supernode_feature(mol, atom_array, adj, feature_functions=None):
-    """
-    Construct an input feature x' for a supernode
+    """Construct an input feature x' for a supernode
+
+    `out_size` is automatically inferred by `atom_array` and `adj`
 
     Args:
         mol (rdkit.Chem.Mol): Input molecule
@@ -226,5 +231,7 @@ def construct_supernode_feature(mol, atom_array, adj, feature_functions=None):
             mol_basic_info_feature, mol_bond_type_feature,
             mol_bond_freq_feature, mol_atom_type_feature,
             mol_atom_freq_feature]
-    return numpy.concatenate([func(mol, atom_array, adj)
-                              for func in feature_functions])
+    super_node_x = numpy.concatenate(
+        [func(mol, atom_array, adj) for func in feature_functions])
+    super_node_x = super_node_x.astype(numpy.float32)
+    return super_node_x

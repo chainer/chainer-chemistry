@@ -5,6 +5,7 @@ from typing import Optional  # NOQA
 import chainer  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN
+from chainer_chemistry.models.gin import GIN
 from chainer_chemistry.models.mlp import MLP
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
@@ -13,6 +14,11 @@ from chainer_chemistry.models.relgcn import RelGCN
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
+
+from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import NFP_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import RSGCN_GWM  # NOQA
 
 
 def set_up_predictor(
@@ -89,9 +95,43 @@ def set_up_predictor(
             hidden_channels=n_unit,
             n_update_layers=conv_layers,
             **conv_kwargs)
+    elif method == 'gin':
+        print('Set up GIN predictor...')
+        conv = GIN(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'nfp_gwm':
+        print('Set up NFP_GWM predictor...')
+        conv = NFP_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'ggnn_gwm':
+        print('Set up GGNN_GWM predictor...')
+        conv = GGNN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'rsgcn_gwm':
+        print('Set up RSGCN_GWM predictor...')
+        conv = RSGCN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'gin_gwm':
+        print('Set up GIN_GWM predictor...')
+        conv = GIN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
-    # TODO (nakago): Add nfp_gwm, ggnn_gwm, rsgcn_gwm, gin_gwm
 
     predictor = GraphConvPredictor(conv, mlp, label_scaler, postprocess_fn)
     return predictor
