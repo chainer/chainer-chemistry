@@ -2,6 +2,7 @@ import chainer
 from chainer import functions
 
 import chainer_chemistry
+from chainer_chemistry.links import GraphMLP
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
@@ -9,13 +10,13 @@ class GINUpdate(chainer.Chain):
     r"""GIN submodule for update part.
 
     Simplest implementation of Graph Isomorphism Network (GIN):
-    2-layered MLP + ReLU
-    no learnable epsilon
+    N-layered MLP + ReLU
+    No learnable epsilon
 
     Batch Normalization is not implemented. instead we use dropout
 
-    # TODO: implement Batch Normalization
-    # TODO: use GraphMLP instead of GraphLinears
+    # TODO: implement Batch Normalization inside GraphMLP
+    # Linear -> BN -> relu is used.
 
     See: Xu, Hu, Leskovec, and Jegelka, \
         "How powerful are graph neural networks?", in ICLR 2019.
@@ -26,17 +27,20 @@ class GINUpdate(chainer.Chain):
         out_channels (int or None): output dime of feature vector for each node
             When `None`, `hidden_channels` is used.
         dropout_ratio (float): ratio of dropout, instead of batch normalization
+        n_layers (int): layers used in `GraphMLP`
     """
 
     def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
-                 dropout_ratio=0.5, **kwargs):
+                 dropout_ratio=0.5, n_layers=2, **kwargs):
         if out_channels is None:
             out_channels = hidden_channels
         super(GINUpdate, self).__init__()
+        channels = [hidden_channels] * (n_layers - 1) + [out_channels]
         with self.init_scope():
             # two Linear + RELU
-            self.linear_g1 = GraphLinear(in_channels, hidden_channels)
-            self.linear_g2 = GraphLinear(hidden_channels, out_channels)
+            self.graph_mlp = GraphMLP(
+                channels=channels, in_channels=in_channels,
+                activation=functions.relu)
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, h, adj, **kwargs):
@@ -65,12 +69,8 @@ class GINUpdate(chainer.Chain):
         assert (sum_h.shape == (mb, atom, ch))
 
         # apply MLP
-        new_h = functions.relu(self.linear_g1(sum_h))
+        new_h = self.graph_mlp(sum_h)
+        new_h = functions.relu(new_h)
         if self.dropout_ratio > 0.0:
-            new_h = functions.relu(
-                functions.dropout(
-                    self.linear_g2(new_h), ratio=self.dropout_ratio))
-        else:
-            new_h = functions.relu(self.linear_g2(new_h))
-
+            new_h = functions.dropout(new_h, ratio=self.dropout_ratio)
         return new_h

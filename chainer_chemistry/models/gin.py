@@ -38,7 +38,8 @@ class GIN(chainer.Chain):
         n_readout_layer = n_update_layers if concat_hidden else 1
         with self.init_scope():
             # embedding
-            self.embed = EmbedAtomID(out_size=hidden_channels, in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=hidden_channels,
+                                     in_size=n_atom_types)
 
             # two non-linear MLP part
             self.update_layers = chainer.ChainList(*[GINUpdate(
