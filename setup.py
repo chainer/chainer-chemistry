@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup_requires = []
 install_requires = [
-    'chainer >=3.0, <6.0',
+    'chainer >=6.0.0',
     'joblib',
     'matplotlib',
     'pandas',
