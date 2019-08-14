@@ -145,14 +145,8 @@ def main():
                                           shuffle=False)
 
     # Set up the regressor.
-<<<<<<< HEAD
     device = chainer.get_device(args.device)
-    metrics_fun = {'mae': MeanAbsError(scaler=scaler),
-                   'rmse': RootMeanSqrError(scaler=scaler)}
-=======
-    device = args.gpu
     metrics_fun = {'mae': F.mean_absolute_error, 'rmse': rmse}
->>>>>>> master
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
                           metrics_fun=metrics_fun, device=device)
 
