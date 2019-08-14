@@ -4,7 +4,7 @@ from rdkit import Chem
 
 from chainer_chemistry.dataset.preprocessors import common
 from chainer_chemistry.utils.extend import extend_adj
-
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 
 @pytest.fixture
 def sample_molecule():
@@ -138,6 +138,51 @@ class TestConstructDiscreteEdgeMatrix(object):
     def test_truncated(self, sample_molecule_2):
         with pytest.raises(ValueError):
             adj = common.construct_discrete_edge_matrix(sample_molecule_2, 6)  # NOQA
+
+
+def test_construct_super_node_feature_adj_ndim2(sample_molecule):
+    adj = common.construct_adj_matrix(sample_molecule)
+    atom_array = common.construct_atomic_number_array(sample_molecule)
+    s = common.construct_supernode_feature(sample_molecule, atom_array, adj)
+    print(s)
+    assert s.shape == (MAX_ATOMIC_NUM * 2 + 4,)
+    assert s[0] == len(atom_array)
+    assert s[1] == adj.sum()
+    assert s[2] == 1
+    assert s[3] == 1
+    assert s[3 + 6] == 1  # C
+    assert s[3 + 7] == 1  # N
+    assert s[3 + 8] == 1  # O
+    assert s[3 + MAX_ATOMIC_NUM] == 0  # other
+    assert s[3 + MAX_ATOMIC_NUM + 6] == 2 / len(atom_array)
+    assert s[3 + MAX_ATOMIC_NUM + 7] == 1 / len(atom_array)
+    assert s[3 + MAX_ATOMIC_NUM + 8] == 1 / len(atom_array)
+    assert s[3 + MAX_ATOMIC_NUM * 2] == 0
+
+
+def test_construct_super_node_feature_adj_ndim3(sample_molecule):
+    adj = common.construct_discrete_edge_matrix(sample_molecule)
+    atom_array = common.construct_atomic_number_array(sample_molecule)
+    s = common.construct_supernode_feature(sample_molecule, atom_array, adj)
+    assert s.shape == (MAX_ATOMIC_NUM * 2 + 10,)
+    assert s[0] == len(atom_array)
+    assert s[1] == adj.sum()
+    assert s[2] == 1
+    assert s[3] == 1
+    assert s[4] == 0
+    assert s[5] == 0
+    assert pytest.approx(s[6], 1 * 2 / adj.sum()) # symmetric
+    assert pytest.approx(s[7], 2 * 2 / adj.sum()) # symmetric
+    assert s[8] == 0
+    assert s[9] == 0
+    assert s[9 + 6] == 1  # C
+    assert s[9 + 6] == 1  # N
+    assert s[9 + 7] == 1  # O
+    assert s[9 + MAX_ATOMIC_NUM] == 0  # other
+    assert s[9 + MAX_ATOMIC_NUM + 6] == 2 / len(atom_array)
+    assert s[9 + MAX_ATOMIC_NUM + 7] == 1 / len(atom_array)
+    assert s[9 + MAX_ATOMIC_NUM + 8] == 1 / len(atom_array)
+    assert s[9 + MAX_ATOMIC_NUM * 2] == 0
 
 
 if __name__ == '__main__':

@@ -17,65 +17,20 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.models import (
-    MLP, NFP, GGNN, SchNet, WeaveNet, RSGCN, RelGCN, RelGAT, GIN, NFP_GWM, GGNN_GWM, RSGCN_GWM, GIN_GWM)
+from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Classifier
-from chainer_chemistry.models.prediction import GraphConvPredictor
 from chainer_chemistry.models.prediction import Regressor
-from chainer_chemistry.training.extensions import BatchEvaluator,ROCAUCEvaluator
-# from sklearn.preprocessing import StandardScaler
-
-
-class GraphConvPredictorForGWM(chainer.Chain):
-    """Wrapper class that combines a graph convolution + super-node and MLP."""
-
-    def __init__(self, graph_conv, mlp=None):
-        """Constructor
-
-        Args:
-            graph_conv: graph convolution network to obtain molecule feature
-                        representation
-            mlp: multi layer perceptron, used as final connected layer.
-                It can be `None` if no operation is necessary after
-                `graph_conv` calculation.
-        """
-
-        super(GraphConvPredictorForGWM, self).__init__()
-        with self.init_scope():
-            self.graph_conv = graph_conv
-            if isinstance(mlp, chainer.Link):
-                self.mlp = mlp
-        if not isinstance(mlp, chainer.Link):
-            self.mlp = mlp
-
-    def __call__(self, atoms, adjs, super_node_x):
-        """
-        Extended call method to deal with additional super-node input x
-        :param atoms: minibatch by local_node_feature_dim numpy.ndarray
-                       minibatch list of local node feature vectors
-        :param adjs: minibatch by bond_type by num_node by num_node numpy.ndarray
-                      minibatch list of
-        :param super_node_x: minibatch of 1D numpy array
-        :return:
-        """
-
-        x = self.graph_conv(atoms, adjs, super_node_x)
-        if self.mlp:
-            x = self.mlp(x)
-        return x
-
-    def predict(self, atoms, adjs, super_node_x):
-        with chainer.no_backprop_mode(), chainer.using_config('train', False):
-            x = self.__call__(atoms, adjs, super_node_x)
-            return F.sigmoid(x)
+from chainer_chemistry.models.prediction import set_up_predictor
+from chainer_chemistry.training.extensions import BatchEvaluator, ROCAUCEvaluator  # NOQA
 
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
+                   'relgat', 'gin',
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     dataset_names = list(molnet_default_config.keys())
-#    scale_list = ['standardize', 'none']
+    scale_list = ['standardize', 'none']
 
     parser = argparse.ArgumentParser(description='molnet example')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
@@ -106,86 +61,9 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
-#    parser.add_argument('--scale', type=str, choices=scale_list,
-#                        help='label scaling method', default='standardize')
+    parser.add_argument('--scale', type=str, choices=scale_list,
+                        help='label scaling method', default='standardize')
     return parser.parse_args()
-
-
-def set_up_predictor(method, n_unit, conv_layers, class_num):
-    """Sets up the predictor, consisting of a graph convolution network and
-    a multilayer perceptron.
-    Args:
-        method: Method name. See `parse_arguments`.
-        n_unit: Number of hidden units.
-        conv_layers: Number of convolutional layers for the graph convolution
-                     network.
-        class_num: Number of output classes.
-    Returns:
-        An instance of the selected predictor.
-    """
-
-    mlp = MLP(out_dim=class_num, hidden_dim=n_unit)
-
-    if method == 'nfp':
-        print('Training an NFP predictor...')
-        nfp = NFP(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        return GraphConvPredictor(nfp, mlp)
-    elif method == 'nfp_gwm':
-        print('Training an NFP+GWM predictor...')
-        nfp_gwm = NFP_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit, n_layers=conv_layers, dropout_ratio=0.5)
-        return GraphConvPredictorForGWM(nfp_gwm, mlp)
-    elif method == 'ggnn':
-        print('Training a GGNN predictor...')
-        ggnn = GGNN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        return GraphConvPredictor(ggnn, mlp)
-    elif method == 'ggnn_gwm':
-        print('Train GGNN+GWM model...')
-        ggnn_gwm = GGNN_GWM(out_dim=n_unit, hidden_dim=n_unit,
-                            hidden_dim_super=n_unit, n_layers=conv_layers,
-                            dropout_ratio=0.5,weight_tying=True)
-        return GraphConvPredictorForGWM(ggnn_gwm, mlp)
-    elif method == 'schnet':
-        print('Training an SchNet predictor...')
-        schnet = SchNet(out_dim=class_num, hidden_dim=n_unit,
-                        n_layers=conv_layers)
-        return GraphConvPredictor(schnet, None)
-    elif method == 'weavenet':
-        print('Training a WeaveNet predictor...')
-        n_atom = 20
-        n_sub_layer = 1
-        weave_channels = [50] * conv_layers
-
-        weavenet = WeaveNet(weave_channels=weave_channels, hidden_dim=n_unit,
-                            n_sub_layer=n_sub_layer, n_atom=n_atom)
-        return GraphConvPredictor(weavenet, mlp)
-    elif method == 'rsgcn':
-        print('Training an RSGCN predictor...')
-        rsgcn = RSGCN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        return GraphConvPredictor(rsgcn, mlp)
-    elif method == 'rsgcn_gwm':
-        print('Training an RSGCN+GWM predictor...')
-        rsgcn_gwm = RSGCN_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit,  n_layers=conv_layers, dropout_ratio=0.5)
-        return GraphConvPredictorForGWM(rsgcn_gwm, mlp)
-    elif method == 'relgcn':
-        print('Training an RelGCN predictor...')
-        num_edge_type = 4
-        relgcn = RelGCN(out_channels=n_unit, num_edge_type=num_edge_type,
-                        scale_adj=True)
-        return GraphConvPredictor(relgcn, mlp)
-    elif method == 'relgat':
-        print('Train Relational GAT model...')
-        relgat = RelGAT(out_dim=n_unit, hidden_dim=n_unit,
-                        n_layers=conv_layers)
-        return GraphConvPredictor(relgat, mlp)
-    elif method == 'gin':
-        print('Training a GIN predictor...')
-        gin = GIN(out_dim=n_unit, hidden_dim=n_unit, n_layers=conv_layers)
-        return GraphConvPredictor(gin, mlp)
-    elif method == 'gin_gwm':
-        print('Training a GIN+GWM predictor...')
-        gin_gwm = GIN_GWM(out_dim=n_unit, hidden_dim=n_unit, hidden_dim_super=n_unit, n_layers=conv_layers, dropout_ratio=0.5,weight_tying=True)
-        return GraphConvPredictorForGWM(gin_gwm, mlp)
-    raise ValueError('[ERROR] Invalid method: {}'.format(method))
 
 
 def dataset_part_filename(dataset_part, num_data):
@@ -233,34 +111,28 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
     return dataset_parts
 
 
-# def standardize_dataset_labels(datasets):
-#     """Standardizes (scales) the dataset labels.
-#     Args:
-#         datasets: Tuple containing the datasets.
-#     Returns:
-#         Datasets with standardized labels and the scaler object.
-#     """
-#     scaler = StandardScaler()
-#
-#     # Collect all labels in order to apply scaling over the entire dataset.
-#     labels = None
-#     offsets = []
-#     for dataset in datasets:
-#         if labels is None:
-#             labels = dataset.get_datasets()[-1]
-#         else:
-#             labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
-#         offsets.append(len(labels))
-#
-#     labels = scaler.fit_transform(labels)
-#
-#     # Replace the old labels with the new ones.
-#     for i, dataset in enumerate(datasets):
-#         start = 0 if i == 0 else offsets[i - 1]
-#         end = offsets[i]
-#         dataset = NumpyTupleDataset(
-#                 *(dataset.get_datasets()[:-1] + (labels[start:end, :],)))
-#     return datasets, scaler
+def fit_scaler(datasets):
+    """Standardizes (scales) the dataset labels.
+    Args:
+        datasets: Tuple containing the datasets.
+    Returns:
+        Datasets with standardized labels and the scaler object.
+    """
+    scaler = StandardScaler()
+
+    # Collect all labels in order to apply scaling over the entire dataset.
+    labels = None
+    offsets = []
+    for dataset in datasets:
+        if labels is None:
+            labels = dataset.get_datasets()[-1]
+        else:
+            labels = numpy.vstack([labels, dataset.get_datasets()[-1]])
+        offsets.append(len(labels))
+
+    scaler.fit(labels)
+
+    return scaler
 
 
 def main():
@@ -306,19 +178,20 @@ def main():
                                                 method, cache_dir)
     train, valid = dataset_parts[0], dataset_parts[1]
 
-#    # Scale the label values, if necessary.
-#    if args.scale == 'standardize':
-#        if task_type == 'regression':
-#            print('Applying standard scaling to the labels.')
-#            datasets, scaler = standardize_dataset_labels(datasets)
-#        else:
-#            print('Label scaling is not available for classification tasks.')
-#    else:
-#        print('No label scaling was selected.')
-#        scaler = None
+    # Scale the label values, if necessary.
+    scaler = None
+    if args.scale == 'standardize':
+        if task_type == 'regression':
+            print('Applying standard scaling to the labels.')
+            scaler = fit_scaler(dataset_parts)
+        else:
+            print('Label scaling is not available for classification tasks.')
+    else:
+        print('No label scaling was selected.')
 
     # Set up the predictor.
-    predictor = set_up_predictor(method, n_unit, conv_layers, class_num)
+    predictor = set_up_predictor(method, n_unit, conv_layers, class_num,
+                                 label_scaler=scaler)
 
     # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
@@ -335,7 +208,6 @@ def main():
     if task_type == 'regression':
         model = Regressor(predictor, lossfun=loss_fun,
                           metrics_fun=metrics_fun, device=device)
-        # TODO: Use standard scaler for regression task
     elif task_type == 'classification':
         model = Classifier(predictor, lossfun=loss_fun,
                            metrics_fun=metrics_fun, device=device)
@@ -380,39 +252,43 @@ def main():
                             .format(type(metrics_fun)))
     print_report_targets.append('elapsed_time')
 
-    # Augmented by Ishiguro
-    # ToDo: consider go/no-go of the following block
-    # (i) more reporting for val/evalutaion
-    # (ii) best validation score snapshot
-    if task_type == 'regression':
-        if 'RMSE' in metric_name:
-            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
-        elif 'MAE' in metric_name:
-            trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
-        else:
-            print("No validation metric defined?")
-            assert(False)
-
-    elif task_type == 'classification':
-        train_eval_iter = iterators.SerialIterator(train, args.batchsize,repeat=False, shuffle=False)
-        trainer.extend(ROCAUCEvaluator(
-            train_eval_iter, predictor, eval_func=predictor,
-            device=device, converter=concat_mols, name='train',
-            pos_labels=1, ignore_labels=-1, raise_value_error=False))
-        # extension name='validation' is already used by `Evaluator`,
-        # instead extension name `val` is used.
-        trainer.extend(ROCAUCEvaluator(
-            valid_iter, predictor, eval_func=predictor,
-            device=device, converter=concat_mols, name='val',
-            pos_labels=1, ignore_labels=-1))
-        print_report_targets.append('train/main/roc_auc')
-        print_report_targets.append('validation/main/loss')
-        print_report_targets.append('val/main/roc_auc')
-
-        trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]), trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
-    else:
-        raise NotImplementedError(
-            'Not implemented task_type = {}'.format(task_type))
+    # TODO: consider go/no-go of the following block
+    # # (i) more reporting for val/evalutaion
+    # # (ii) best validation score snapshot
+    # if task_type == 'regression':
+    #     metric_name_list = list(metrics.keys())
+    #     if 'RMSE' in metric_name_list:
+    #         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]),
+    #                        trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
+    #     elif 'MAE' in metric_name_list:
+    #         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]),
+    #                        trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
+    #     else:
+    #         print("[WARNING] No validation metric defined?")
+    #
+    # elif task_type == 'classification':
+    #     train_eval_iter = iterators.SerialIterator(
+    #         train, args.batchsize, repeat=False, shuffle=False)
+    #     trainer.extend(ROCAUCEvaluator(
+    #         train_eval_iter, predictor, eval_func=predictor,
+    #         device=args.gpu, converter=concat_mols, name='train',
+    #         pos_labels=1, ignore_labels=-1, raise_value_error=False))
+    #     # extension name='validation' is already used by `Evaluator`,
+    #     # instead extension name `val` is used.
+    #     trainer.extend(ROCAUCEvaluator(
+    #         valid_iter, predictor, eval_func=predictor,
+    #         device=args.gpu, converter=concat_mols, name='val',
+    #         pos_labels=1, ignore_labels=-1, raise_value_error=False))
+    #     print_report_targets.append('train/main/roc_auc')
+    #     print_report_targets.append('validation/main/loss')
+    #     print_report_targets.append('val/main/roc_auc')
+    #
+    #     trainer.extend(E.snapshot_object(
+    #         model, "best_val_" + model_filename[task_type]),
+    #         trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
+    # else:
+    #     raise NotImplementedError(
+    #         'Not implemented task_type = {}'.format(task_type))
 
     trainer.extend(E.PrintReport(print_report_targets))
     trainer.extend(E.ProgressBar())
@@ -422,13 +298,6 @@ def main():
     model_path = os.path.join(model_dir,  model_filename[task_type])
     print('Saving the trained model to {}...'.format(model_path))
     model.save_pickle(model_path, protocol=args.protocol)
-
-#    # Save the standard scaler's parameters.
-#    if scaler is not None:
-#        scaler_path = os.path.join(model_dir, 'scaler.pkl')
-#        print('Saving standard scaler parameters to {}.'.format(scaler_path))
-#        with open(scaler_path, mode='wb') as f:
-#            pickle.dump(scaler, f, protocol=args.protocol)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ class RelGATUpdate(chainer.Chain):
     """RelGAT submodule for update part.
 
     Args:
-        in_channels (int): dimension of input feature vector
+        in_channels (int or None): dimension of input feature vector
         out_channels (int): dimension of output feature vector
         n_heads (int): number of multi-head-attentions.
         n_edge_types (int): number of edge types.
@@ -39,7 +39,7 @@ class RelGATUpdate(chainer.Chain):
         self.concat_heads = concat_heads
         self.negative_slope = negative_slope
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         xp = self.xp
         # (minibatch, atom, channel)
         mb, atom, ch = h.shape

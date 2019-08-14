@@ -10,12 +10,13 @@ class NFPUpdate(chainer.Chain):
     """NFP submodule for update part.
 
     Args:
-        in_channels (int): input channel dimension
+        in_channels (int or None): input channel dimension
         out_channels (int): output channel dimension
         max_degree (int): max degree of edge
     """
 
-    def __init__(self, in_channels, out_channels, max_degree=6):
+    def __init__(self, in_channels, out_channels, max_degree=6,
+                 **kwargs):
         super(NFPUpdate, self).__init__()
         num_degree_type = max_degree + 1
         with self.init_scope():

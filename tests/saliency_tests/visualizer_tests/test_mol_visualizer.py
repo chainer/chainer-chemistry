@@ -4,7 +4,7 @@ import numpy
 import pytest
 from rdkit import Chem
 
-from chainer_chemistry.saliency.visualizer.mol_visualizer import MolVisualier  # NOQA
+from chainer_chemistry.saliency.visualizer.mol_visualizer import MolVisualizer  # NOQA
 from chainer_chemistry.saliency.visualizer.mol_visualizer import SmilesVisualizer  # NOQA
 
 
@@ -13,7 +13,7 @@ def test_mol_visualizer(tmpdir):
     smiles = 'OCO'
     mol = Chem.MolFromSmiles(smiles)
     saliency = numpy.array([0.5, 0.3, 0.2])
-    visualizer = MolVisualier()
+    visualizer = MolVisualizer()
 
     # 1. test with setting save_filepath
     save_filepath = os.path.join(str(tmpdir), 'tmp.svg')
@@ -50,7 +50,7 @@ def test_smiles_visualizer(tmpdir):
 
 
 def test_mol_visualizer_assert_raises(tmpdir):
-    visualizer = MolVisualier()
+    visualizer = MolVisualizer()
     smiles = 'OCO'
     mol = Chem.MolFromSmiles(smiles)
 

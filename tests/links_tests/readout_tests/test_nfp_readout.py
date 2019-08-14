@@ -15,7 +15,7 @@ batch_size = 2
 
 @pytest.fixture
 def readout():
-    return NFPReadout(in_channels=hidden_dim, out_size=out_dim)
+    return NFPReadout(in_channels=hidden_dim, out_dim=out_dim)
 
 
 @pytest.fixture

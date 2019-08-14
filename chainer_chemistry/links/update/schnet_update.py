@@ -15,6 +15,16 @@ from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class CFConv(chainer.Chain):
+    """CFConv
+
+    Args:
+        num_rbf (int): Number of RBF kernel
+        radius_resolution (float): resolution of radius.
+            Roughly `num_rbf * radius_resolution` ball is convolved in 1 step.
+        gamma (float): coefficient to apply kernel.
+        hidden_dim (int): hidden dim
+    """
+
     def __init__(self, num_rbf=300, radius_resolution=0.1, gamma=10.0,
                  hidden_dim=64):
         super(CFConv, self).__init__()
@@ -58,18 +68,33 @@ class CFConv(chainer.Chain):
 
 
 class SchNetUpdate(chainer.Chain):
-    def __init__(self, hidden_dim=64):
+    """Update submodule for SchNet
+
+    `in_channels` and `hidden_channels` must be same with `hidden_channels` in
+     this module.
+
+    Args:
+        hidden_channels (int):
+        num_rbf (int):
+        radius_resolution (float):
+        gamma (float):
+    """
+
+    def __init__(self, hidden_channels=64, num_rbf=300,
+                 radius_resolution=0.1, gamma=10.0):
         super(SchNetUpdate, self).__init__()
         with self.init_scope():
             self.linear = chainer.ChainList(
-                *[GraphLinear(hidden_dim) for _ in range(3)])
-            self.cfconv = CFConv(hidden_dim=hidden_dim)
-        self.hidden_dim = hidden_dim
+                *[GraphLinear(None, hidden_channels) for _ in range(3)])
+            self.cfconv = CFConv(
+                num_rbf=num_rbf, radius_resolution=radius_resolution,
+                gamma=gamma, hidden_dim=hidden_channels)
+        self.hidden_channels = hidden_channels
 
-    def __call__(self, x, dist):
-        v = self.linear[0](x)
-        v = self.cfconv(v, dist)
+    def __call__(self, h, adj, **kwargs):
+        v = self.linear[0](h)
+        v = self.cfconv(v, adj)
         v = self.linear[1](v)
         v = functions.softplus(v)
         v = self.linear[2](v)
-        return x + v
+        return h + v

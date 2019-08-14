@@ -15,19 +15,19 @@ from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 atom_size = 5
 out_dim = 4
 batch_size = 2
-num_edge_type = 3
+n_edge_types = 3
 
 
 @pytest.fixture
 def model():
     numpy.random.seed(0)
-    return GGNN(out_dim=out_dim, num_edge_type=num_edge_type)
+    return GGNN(out_dim=out_dim, n_edge_types=n_edge_types)
 
 
 @pytest.fixture
 def sparse_model():
     numpy.random.seed(0)
-    return SparseGGNN(out_dim=out_dim, num_edge_type=num_edge_type)
+    return SparseGGNN(out_dim=out_dim, n_edge_types=n_edge_types)
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def data():
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
     ).astype(numpy.int32)
     adj_data = numpy.random.randint(
-        0, high=2, size=(batch_size, num_edge_type, atom_size, atom_size)
+        0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
     ).astype(numpy.float32)
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, out_dim)).astype(numpy.float32)
@@ -54,7 +54,7 @@ def check_forward(model, *args):
 def test_forward_cpu(model, sparse_model, data):
     atom_data, adj_data = data[0], data[1]
     y_dense = check_forward(model, atom_data, adj_data)
-    # test for sparse data
+    # test for sparse forward result is same with dense
     if sparse_utils_available():
         y_sparse = check_forward(sparse_model, atom_data,
                                  *_convert_to_sparse(adj_data))
@@ -103,13 +103,15 @@ def test_forward_cpu_graph_invariant(model, data):
 def test_forward_cpu_input_size_invariant(model, data):
     atom_data, adj_data = data[0], data[1]
     is_real_node = numpy.ones(atom_data.shape, dtype=numpy.float32)
-    y_actual = cuda.to_cpu(model(atom_data, adj_data, is_real_node).data)
+    y_actual = cuda.to_cpu(model(atom_array=atom_data, adj=adj_data,
+                                 is_real_node=is_real_node).data)
 
     atom_data_ex = extend_node(atom_data, out_size=8)
     adj_data_ex = extend_adj(adj_data, out_size=8)
     is_real_node_ex = extend_node(is_real_node, out_size=8)
     y_actual_ex = cuda.to_cpu(model(
-        atom_data_ex, adj_data_ex, is_real_node_ex).data)
+        atom_array=atom_data_ex, adj=adj_data_ex,
+        is_real_node=is_real_node_ex).data)
     assert numpy.allclose(y_actual, y_actual_ex, rtol=1e-5, atol=1e-6)
 
 

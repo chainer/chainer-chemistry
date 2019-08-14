@@ -2,16 +2,15 @@ from functools import partial
 from typing import Optional  # NOQA
 
 import chainer
-from chainer import cuda
-from chainer import functions
-import numpy  # NOQA
+from chainer import cuda, functions
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.readout.mpnn_readout import MPNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
+from chainer_chemistry.models.gwm.gwm_graph_conv_model import GWMGraphConvModel
 
 
 class MPNN(chainer.Chain):
@@ -19,14 +18,13 @@ class MPNN(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of update layers
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in
             each layer and the result is concatenated
         weight_tying (bool): enable weight_tying or not
-        num_edge_type (int): number of edge type.
+        n_edge_types (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
         nn (~chainer.Link): Neural Networks for expanding edge vector
             dimension
@@ -34,21 +32,20 @@ class MPNN(chainer.Chain):
             supported.
         readout_func (str): readout function. 'set2set' and 'ggnn' are
             supported.
-
     """
 
     def __init__(
             self,
             out_dim,  # type: int
-            hidden_dim=16,  # type: int
-            n_layers=4,  # type: int
+            hidden_channels=16,  # type: int
+            n_update_layers=4,  # type: int
             n_atom_types=MAX_ATOMIC_NUM,  # type: int
             concat_hidden=False,  # type: bool
             weight_tying=True,  # type: bool
-            num_edge_type=4,  # type: int
+            n_edge_types=4,  # type: int
             nn=None,  # type: Optional[chainer.Link]
             message_func='edgenet',  # type: str
-            readout_func='set2set'  # type: str
+            readout_func='set2set',  # type: str
     ):
         # type: (...) -> None
         super(MPNN, self).__init__()
@@ -58,39 +55,43 @@ class MPNN(chainer.Chain):
         if readout_func not in ('set2set', 'ggnn'):
             raise ValueError(
                 'Invalid readout function: {}'.format(readout_func))
-        n_readout_layer = n_layers if concat_hidden else 1
-        n_message_layer = 1 if weight_tying else n_layers
+        n_readout_layer = n_update_layers if concat_hidden else 1
+        n_message_layer = 1 if weight_tying else n_update_layers
         with self.init_scope():
             # Update
-            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=hidden_channels,
+                                     in_size=n_atom_types)
             if message_func == 'ggnn':
                 self.update_layers = chainer.ChainList(*[
                     GGNNUpdate(
-                        hidden_dim=hidden_dim, num_edge_type=num_edge_type)
+                        hidden_channels=hidden_channels,
+                        n_edge_types=n_edge_types)
                     for _ in range(n_message_layer)
                 ])
             else:
                 self.update_layers = chainer.ChainList(*[
-                    MPNNUpdate(hidden_dim=hidden_dim, nn=nn)
+                    MPNNUpdate(hidden_channels=hidden_channels, nn=nn)
                     for _ in range(n_message_layer)
                 ])
 
             # Readout
             if readout_func == 'ggnn':
                 self.readout_layers = chainer.ChainList(*[
-                    GGNNReadout(out_dim=out_dim, hidden_dim=hidden_dim)
+                    GGNNReadout(out_dim=out_dim,
+                                in_channels=hidden_channels * 2)
                     for _ in range(n_readout_layer)
                 ])
             else:
                 self.readout_layers = chainer.ChainList(*[
                     MPNNReadout(
-                        out_dim=out_dim, hidden_dim=hidden_dim, n_layers=1)
+                        out_dim=out_dim, in_channels=hidden_channels,
+                        n_layers=1)
                     for _ in range(n_readout_layer)
                 ])
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-        self.num_edge_type = num_edge_type
+        self.hidden_channels = hidden_channels
+        self.n_update_layers = n_update_layers
+        self.n_edge_types = n_edge_types
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
         self.message_func = message_func
@@ -99,7 +100,6 @@ class MPNN(chainer.Chain):
     def __call__(self, atom_array, adj):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
         """Forward propagation.
-
         Args:
             atom_array (numpy.ndarray): minibatch of molecular which is
                 represented with atom IDs (representing C, O, S, ...)
@@ -107,10 +107,8 @@ class MPNN(chainer.Chain):
                 molecule's `atom_index`-th atomic number
             adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
                 information
-
         Returns:
             ~chainer.Variable: minibatch of fingerprint
-
         """
         # reset state
         self.reset_state()
@@ -127,7 +125,7 @@ class MPNN(chainer.Chain):
         else:
             readout_layers = self.readout_layers
         g_list = []
-        for step in range(self.n_layers):
+        for step in range(self.n_update_layers):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:

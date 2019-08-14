@@ -8,22 +8,23 @@ class RelGCNUpdate(chainer.Chain):
     """RelGUN submodule for update part.
 
     Args:
-        in_channels (int): input channel dimension
+        in_channels (int or None): input channel dimension
         out_channels (int): output channel dimension
         num_edge_type (int): number of types of edge
     """
 
-    def __init__(self, in_channels, out_channels, num_edge_type=4):
+    def __init__(self, in_channels, out_channels, n_edge_types=4,
+                 **kwargs):
         super(RelGCNUpdate, self).__init__()
         with self.init_scope():
             self.graph_linear_self = GraphLinear(in_channels, out_channels)
             self.graph_linear_edge = GraphLinear(
-                in_channels, out_channels * num_edge_type)
-        self.num_edge_type = num_edge_type
+                in_channels, out_channels * n_edge_types)
+        self.n_edge_types = n_edge_types
         self.in_channels = in_channels
         self.out_channels = out_channels
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         """
 
         Args:
@@ -44,7 +45,7 @@ class RelGCNUpdate(chainer.Chain):
         # arbitrarily set it to 1
         m = self.graph_linear_edge(h)
         m = functions.reshape(
-            m, (mb, node, self.out_channels, self.num_edge_type))
+            m, (mb, node, self.out_channels, self.n_edge_types))
         m = functions.transpose(m, (0, 3, 1, 2))
         # m: (batchsize, edge_type, node, ch)
         # hrL (batchsize, edge_type, node, ch)
