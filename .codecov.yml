@@ -1,3 +1,11 @@
+coverage:
+  status:
+    # pull-requests only
+    patch:
+      default:
+        # https://github.com/apache/dubbo/pull/1678
+        # Allow to drop coverage
+        threshold: 5.0%
 comment:
   layout: "header, diff"
   require_changes: false
