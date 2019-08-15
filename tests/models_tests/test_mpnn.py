@@ -109,6 +109,5 @@ def test_invalid_readout_funcion():
         MPNN(out_dim=out_dim, readout_func='invalid')
 
 
-
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])
