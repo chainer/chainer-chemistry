@@ -67,19 +67,16 @@ def check_backward(readout, atom_data, y_grad):
         atom_data:
         y_grad:
     """
-    atom = chainer.Variable(atom_data)
-    readout.reset_state()
-    y = readout(atom)
-    y.grad = y_grad
-    y.backward()
-
-    def f():
+    def f(atom_data):
         readout.reset_state()
-        return readout(atom_data).data,
+        return readout(atom_data),
 
-    gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    numpy.testing.assert_allclose(cuda.to_cpu(gx), cuda.to_cpu(atom.grad),
-                                  atol=1e-2, rtol=1e-2)
+    gradient_check.check_backward(
+        f, (atom_data), y_grad, atol=1e-1, rtol=1e-1)
+
+    # gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
+    # numpy.testing.assert_allclose(cuda.to_cpu(gx), cuda.to_cpu(atom.grad),
+    #                               atol=1e-2, rtol=1e-2)
 
 
 def test_backward_cpu(readout, data):

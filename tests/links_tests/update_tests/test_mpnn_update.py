@@ -122,24 +122,11 @@ def check_backward(update, atom_data, adj_data, y_grad):
         adj_data (numpy.ndarray):
         y_grad (numpy.ndarray):
     """
-    atom = chainer.Variable(atom_data)
-    adj = chainer.Variable(adj_data)
-    update.reset_state()
-    y = update(atom, adj)
-    y.grad = y_grad
-    y.backward()
-
-    def f():
-        # type: () -> numpy.ndarray
+    def f(*args, **kwargs):
         update.reset_state()
-        return update(atom_data, adj_data).data,
-
-    # gradient_check.check_backward(
-    #     f, (atom_data, adj_data, deg_conds), y_grad, atol=1e-3, rtol=1e-3)
-
-    gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    numpy.testing.assert_allclose(cuda.to_cpu(gx), cuda.to_cpu(atom.grad),
-                                  atol=1e-3, rtol=1e-3)
+        return update(*args, **kwargs)
+    gradient_check.check_backward(
+        f, (atom_data, adj_data), y_grad, atol=1e-1, rtol=1e-1)
 
 
 def test_backward_cpu(update, data):
