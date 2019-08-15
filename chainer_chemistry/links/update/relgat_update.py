@@ -130,10 +130,11 @@ class RelGATUpdate(chainer.Chain):
         # (minibatch, heads, atom, out_dim)
         h_new = functions.sum(h_new, axis=1)
         if self.concat_heads:
-            # (heads, minibatch, atom, out_dim)
-            h_new = functions.transpose(h_new, (1, 0, 2, 3))
+            # -> (minibatch, atom, heads, out_dim)
+            h_new = functions.transpose(h_new, (0, 2, 1, 3))
+            bs, n_nodes, n_heads, outdim = h_new.shape
             # (minibatch, atom, heads * out_dim)
-            h_new = functions.concat(h_new, axis=2)
+            h_new = functions.reshape(h_new, (bs, n_nodes, n_heads * outdim))
         else:
             # (minibatch, atom, out_dim)
             h_new = functions.mean(h_new, axis=1)
