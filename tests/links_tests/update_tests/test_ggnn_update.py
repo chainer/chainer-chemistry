@@ -98,47 +98,33 @@ def check_backward(update, atom_data, adj_data, y_grad):
         adj_data (numpy.ndarray):
         y_grad (numpy.ndarray):
     """
-    atom = chainer.Variable(atom_data)
-    update.reset_state()
-    y = update(atom, adj_data)
-    y.grad = y_grad
-    y.backward()
-
-    def f():
+    def f(atom_data):
+        # skip adj_data check.
         update.reset_state()
-        return update(atom_data, adj_data).data,
+        return update(atom_data, adj_data)
 
-    gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    numpy.testing.assert_allclose(
-        cuda.to_cpu(gx), cuda.to_cpu(atom.grad), atol=1e-3, rtol=1e-3)
-    return gx
+    gradient_check.check_backward(
+        f, (atom_data), y_grad, atol=1e-1, rtol=1e-1)
 
 
 def test_backward_cpu(update, data):
     atom_data, adj_data, y_grad = data
-    gx_dense = check_backward(update, atom_data, adj_data, y_grad)
+    check_backward(update, atom_data, adj_data, y_grad)
 
     if sparse_utils_available():
         sparse_adj = convert_to_sparse(adj_data)
-        gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
-
-        numpy.testing.assert_allclose(
-            gx_dense, gx_sparse, atol=1e-2, rtol=1e-2)
+        check_backward(update, atom_data, sparse_adj, y_grad)
 
 
 @pytest.mark.gpu
 def test_backward_gpu(update, data):
     update.to_gpu()
     atom_data, adj_data, y_grad = map(cuda.to_gpu, data)
-    gx_dense = check_backward(update, atom_data, adj_data, y_grad)
+    check_backward(update, atom_data, adj_data, y_grad)
 
     if sparse_utils_available():
         sparse_adj = convert_to_sparse(adj_data)
-        gx_sparse = check_backward(update, atom_data, sparse_adj, y_grad)
-
-        numpy.testing.assert_allclose(
-            cuda.to_cpu(gx_dense), cuda.to_cpu(gx_sparse),
-            atol=1e-2, rtol=1e-2)
+        check_backward(update, atom_data, sparse_adj, y_grad)
 
 
 def test_forward_cpu_graph_invariant(update, data):
