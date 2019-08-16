@@ -74,10 +74,6 @@ def check_backward(readout, atom_data, y_grad):
     gradient_check.check_backward(
         f, (atom_data), y_grad, atol=1e-1, rtol=1e-1)
 
-    # gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    # numpy.testing.assert_allclose(cuda.to_cpu(gx), cuda.to_cpu(atom.grad),
-    #                               atol=1e-2, rtol=1e-2)
-
 
 def test_backward_cpu(readout, data):
     # type: (Set2Set, Tuple[numpy.ndarray, numpy.ndarray]) -> None
