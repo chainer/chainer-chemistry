@@ -7,7 +7,7 @@ coverage:
         threshold: 5.0%
     patch:
       default:
-        threshold: 5.0%
+        threshold: 20.0%
 comment:
   layout: "header, diff"
   require_changes: false
