@@ -32,7 +32,6 @@ class GINPreprocessor(MolPreprocessor):
         self.max_atoms = max_atoms
         self.out_size = out_size
 
-
     def get_input_features(self, mol):
         """get input features
 
