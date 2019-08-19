@@ -10,8 +10,8 @@ from chainer_chemistry.dataset.preprocessors.ecfp_preprocessor import ECFPPrepro
 from chainer_chemistry.dataset.preprocessors.relgat_preprocessor import RelGATPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gnnfilm_preprocessor import GNNFiLMPreprocessor  # NOQA
-from chainer_chemistry.dataset.preprocessors.gin_preprocessor import GINPreprocessor  # NOQA
-from chainer_chemistry.dataset.preprocessors.gwm_prprocessor import GGNNGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gin_preeprocessor import GINPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import GGNNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import GINGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import NFPGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import RSGCNGWMPreprocessor  # NOQA
