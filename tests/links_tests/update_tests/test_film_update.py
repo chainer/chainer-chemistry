@@ -1,4 +1,3 @@
-import chainer
 from chainer import cuda
 from chainer import gradient_check
 import numpy
@@ -6,7 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
-from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
+from chainer_chemistry.links.update.gnn_film_update import GNNFiLMUpdate
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 from chainer_chemistry.utils.sparse_utils import _convert_to_sparse
@@ -14,16 +13,16 @@ from chainer_chemistry.utils.sparse_utils import convert_sparse_with_edge_type
 from chainer_chemistry.utils.sparse_utils import sparse_utils_available
 
 atom_size = 5
-in_channels = 4
+in_channels = 7
 hidden_channels = 7
 batch_size = 2
-n_edge_types = 2
+n_edge_types = 5
 
 
 @pytest.fixture
 def update():
-    return GGNNUpdate(in_channels=in_channels, hidden_channels=hidden_channels,
-                      n_edge_types=n_edge_types)
+    return GNNFiLMUpdate(hidden_channels=hidden_channels,
+                         num_edge_types=n_edge_types)
 
 
 @pytest.fixture
@@ -52,7 +51,6 @@ def convert_to_sparse(dense_adj):
 
 
 def check_forward(update, atom_data, adj_data):
-    update.reset_state()
     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
     assert y_actual.shape == (batch_size, atom_size, hidden_channels)
     return y_actual
@@ -100,7 +98,7 @@ def check_backward(update, atom_data, adj_data, y_grad):
     """
     def f(atom_data):
         # skip adj_data check.
-        update.reset_state()
+
         return update(atom_data, adj_data)
 
     gradient_check.check_backward(
@@ -130,12 +128,10 @@ def test_backward_gpu(update, data):
 def test_forward_cpu_graph_invariant(update, data):
     permutation_index = numpy.random.permutation(atom_size)
     atom_data, adj_data = data[:2]
-    update.reset_state()
     y_actual = cuda.to_cpu(update(atom_data, adj_data).data)
 
     permute_atom_data = permute_node(atom_data, permutation_index, axis=1)
     permute_adj_data = permute_adj(adj_data, permutation_index)
-    update.reset_state()
     permute_y_actual = cuda.to_cpu(update(
         permute_atom_data, permute_adj_data).data)
     numpy.testing.assert_allclose(
