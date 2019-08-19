@@ -1,9 +1,8 @@
 import chainer
-from chainer import cuda
-from chainer import functions
+from chainer import functions, cuda
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
+from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.utils import convert_sparse_with_edge_type
@@ -18,41 +17,40 @@ class GGNN(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
-            associated to each atom
-        n_layers (int): number of layers
+        hidden_channels (int): dimension of feature vector for each node
+        n_update_layers (int): number of layers
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
         weight_tying (bool): enable weight_tying or not
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
-        num_edge_type (int): number of edge type.
+        n_edge_types (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
     """
-
-    def __init__(self, out_dim, hidden_dim=16, n_layers=4,
+    def __init__(self, out_dim, hidden_channels=16, n_update_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True, activation=functions.identity,
-                 num_edge_type=4):
+                 n_edge_types=4):
         super(GGNN, self).__init__()
-        n_readout_layer = n_layers if concat_hidden else 1
-        n_message_layer = 1 if weight_tying else n_layers
+        n_readout_layer = n_update_layers if concat_hidden else 1
+        n_message_layer = 1 if weight_tying else n_update_layers
         with self.init_scope():
             # Update
-            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
+            self.embed = EmbedAtomID(
+                out_size=hidden_channels, in_size=n_atom_types)
             self.update_layers = chainer.ChainList(*[GGNNUpdate(
-                hidden_dim=hidden_dim, num_edge_type=num_edge_type)
+                hidden_channels=hidden_channels, n_edge_types=n_edge_types)
                 for _ in range(n_message_layer)])
             # Readout
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
-                out_dim=out_dim, hidden_dim=hidden_dim,
+                out_dim=out_dim, in_channels=hidden_channels * 2,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-        self.num_edge_type = num_edge_type
+        self.hidden_channels = hidden_channels
+        self.n_update_layers = n_update_layers
+        self.n_edge_types = n_edge_types
         self.activation = activation
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
@@ -70,7 +68,6 @@ class GGNN(chainer.Chain):
             is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
                 1 for real node, 0 for virtual node.
                 If `None`, all node is considered as real node.
-
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
@@ -82,7 +79,7 @@ class GGNN(chainer.Chain):
             h = atom_array
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
         g_list = []
-        for step in range(self.n_layers):
+        for step in range(self.n_update_layers):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
@@ -131,6 +128,6 @@ class SparseGGNN(GGNN):
         """
         num_nodes = atom_array.shape[1]
         adj = convert_sparse_with_edge_type(
-            data, row, col, num_nodes, edge_type, self.num_edge_type)
+            data, row, col, num_nodes, edge_type, self.n_edge_types)
         return super(SparseGGNN, self).__call__(
             atom_array, adj, is_real_node=is_real_node)

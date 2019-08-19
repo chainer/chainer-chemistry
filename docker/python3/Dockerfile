@@ -39,9 +39,11 @@ RUN curl -sLo ${RDKIT_VERSION}.tar.gz https://github.com/rdkit/rdkit/archive/${R
     make -j $(nproc) && \
     make install && \
     cd "$base_dir" && \
-    rm -rf rdkit-${RDKIT_VERSION} ${RDKIT_VERSION}.tar.gz
+    rm -rf rdkit-${RDKIT_VERSION} ${RDKIT_VERSION}.tar.gz && \
+    ldconfig
 
 # install chainer-chemistry
 # matplotlib >= 3.1 requires upgrade of pip
-RUN pip3 install --no-cache-dir matplotlib==3.0 chainer-chemistry
+# pandas >= 0.25 doesn't support python3.5.2 which is installed for ubuntu16.04
+RUN pip3 install --no-cache-dir matplotlib==3.0 pandas==0.24 chainer-chemistry
 

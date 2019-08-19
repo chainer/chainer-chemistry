@@ -1,5 +1,3 @@
-from typing import Optional  # NOQA
-
 import chainer
 from chainer import functions
 from chainer import links
@@ -15,29 +13,38 @@ class MPNNUpdate(chainer.Chain):
         `arXiv:1704.01212 <https://arxiv.org/abs/1704.01212>`
 
     Args:
-        hidden_dim (int): dimension of feature vector associated to
-            each atom
+        in_channels (int or None): input dim of feature vector for each node
+        hidden_channels (int): dimension of feature vector for each node
+        out_channels (int or None): output dime of feature vector for each node
+            When `None`, `hidden_channels` is used.
         nn (~chainer.Link):
 
     """
 
-    def __init__(self, hidden_dim=16, nn=None):
-        # type: (int, Optional[chainer.Link]) -> None
+    def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
+                 nn=None, **kwargs):
+        if out_channels is None:
+            out_channels = hidden_channels
+        if in_channels is None:
+            # Current `EdgeNet` hidden_channels must be same with input `h` dim.
+            in_channels = out_channels
         super(MPNNUpdate, self).__init__()
         with self.init_scope():
-            self.message_layer = EdgeNet(out_channels=hidden_dim, nn=nn)
-            self.update_layer = links.GRU(2 * hidden_dim, hidden_dim)
-        self.hidden_dim = hidden_dim
+            self.message_layer = EdgeNet(out_channels=hidden_channels, nn=nn)
+            self.update_layer = links.GRU(2 * hidden_channels, out_channels)
+        self.in_channels = in_channels  # currently it is not used...
+        self.hidden_channels = hidden_channels
+        self.out_channels = out_channels
         self.nn = nn
 
-    def __call__(self, h, adj):
+    def __call__(self, h, adj, **kwargs):
         # type: (chainer.Variable, chainer.Variable) -> chainer.Variable
         # adj: (mb, edge_type, node, node)
         mb, node, ch = h.shape
         h = self.message_layer(h, adj)  # h: (mb, node, hidden_dim*2)
-        h = functions.reshape(h, (mb * node, self.hidden_dim * 2))
+        h = functions.reshape(h, (mb * node, self.hidden_channels * 2))
         h = self.update_layer(h)  # h: (mb*node, hidden_dim)
-        h = functions.reshape(h, (mb, node, self.hidden_dim))
+        h = functions.reshape(h, (mb, node, self.out_channels))
         return h
 
     def reset_state(self):
@@ -52,28 +59,28 @@ class EdgeNet(chainer.Chain):
 
     Args:
         out_channels (int): dimension of output feature vector
+            Currently, it must be same with input dimension.
         nn (~chainer.Link):
-
     """
 
     def __init__(self, out_channels, nn=None):
         # type: (int, chainer.Link) -> None
         super(EdgeNet, self).__init__()
         if nn is None:
-            nn = MLP(out_dim=out_channels, hidden_dim=16)
-        with self.init_scope():
-            if isinstance(nn, chainer.Link):
-                self.nn_layer_in = nn
-                self.nn_layer_out = nn
+            from chainer_chemistry.models.mlp import MLP
+            nn = MLP(out_dim=out_channels**2, hidden_dim=16)
         if not isinstance(nn, chainer.Link):
             raise ValueError('nn {} must be chainer.Link'.format(nn))
+        with self.init_scope():
+            self.nn_layer_in = nn
+            self.nn_layer_out = nn
         self.out_channels = out_channels
 
     def __call__(self, h, adj):
         # type: (chainer.Variable, chainer.Variable) -> chainer.Variable
         mb, node, ch = h.shape
         if ch != self.out_channels:
-            raise ValueError('out_channels must be equal to dimension '
+            raise ValueError('hidden_channels must be equal to dimension '
                              'of feature vector associated to each atom, '
                              '{}, but it was set to {}'.format(
                                  ch, self.out_channels))
@@ -112,20 +119,3 @@ class EdgeNet(chainer.Chain):
         message_out = functions.reshape(message_out, (mb, node, ch))
         message = functions.concat([message_in, message_out], axis=2)
         return message  # message: (mb, node, out_ch * 2)
-
-
-class MLP(chainer.Chain):
-    def __init__(self, out_dim, hidden_dim):
-        # type: (int, int) -> None
-        super(MLP, self).__init__()
-        with self.init_scope():
-            self.linear1 = links.Linear(None, hidden_dim)
-            self.linear2 = links.Linear(None, out_dim**2)
-        self.hidden_dim = hidden_dim
-        self.out_dim = out_dim
-
-    def __call__(self, x):
-        # type: (chainer.Variable) -> chainer.Variable
-        h = functions.relu(self.linear1(x))
-        h = self.linear2(h)
-        return h

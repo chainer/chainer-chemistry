@@ -21,34 +21,8 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 
 
-class MeanAbsError(object):
-    def __init__(self, scaler=None):
-        """Initializes the (scaled) mean absolute error metric object.
-        Args:
-            scaler: Standard label scaler.
-        """
-        self.scaler = scaler
-
-    def __call__(self, x0, x1):
-        if self.scaler is not None:
-            x0 = self.scaler.inverse_transform(x0)
-            x1 = self.scaler.inverse_transform(x1)
-        return F.mean_absolute_error(x0, x1)
-
-
-class RootMeanSqrError(object):
-    def __init__(self, scaler=None):
-        """Initializes the (scaled) root mean square error metric object.
-        Args:
-            scaler: Standard label scaler.
-        """
-        self.scaler = scaler
-
-    def __call__(self, x0, x1):
-        if self.scaler is not None:
-            x0 = self.scaler.inverse_transform(x0)
-            x1 = self.scaler.inverse_transform(x1)
-        return F.sqrt(F.mean_squared_error(x0, x1))
+def rmse(x0, x1):
+    return F.sqrt(F.mean_squared_error(x0, x1))
 
 
 def parse_arguments():
@@ -146,11 +120,9 @@ def main():
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
-        print('Applying standard scaling to the labels.')
+        print('Fit StandardScaler to the labels.')
         scaler = StandardScaler()
-        scaled_t = scaler.fit_transform(dataset.get_datasets()[-1])
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1]
-                                      + (scaled_t,)))
+        scaler.fit(dataset.get_datasets()[-1])
     else:
         print('No standard scaling was selected.')
         scaler = None
@@ -170,8 +142,7 @@ def main():
 
     # Set up the regressor.
     device = args.gpu
-    metrics_fun = {'mae': MeanAbsError(scaler=scaler),
-                   'rmse': RootMeanSqrError(scaler=scaler)}
+    metrics_fun = {'mae': F.mean_absolute_error, 'rmse': rmse}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
                           metrics_fun=metrics_fun, device=device)
 

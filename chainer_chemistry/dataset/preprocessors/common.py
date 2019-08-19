@@ -1,6 +1,4 @@
 """Common preprocess method is gethered in this file"""
-
-from collections import Counter
 import numpy
 from rdkit import Chem
 from rdkit.Chem import rdmolops
@@ -174,80 +172,71 @@ def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
         adjs[-1] = numpy.eye(N)
     return adjs
 
-def construct_supernode_feature(mol, atom_array, adjs, largest_atomic_number=MAX_ATOMIC_NUM, out_size=-1):
-    """
-    Construct an input feature x' for a supernode
+
+def mol_basic_info_feature(mol, atom_array, adj):
+    n_atoms = mol.GetNumAtoms()
+    if n_atoms != len(atom_array):
+        raise ValueError("[ERROR] n_atoms {} != len(atom_array) {}"
+                         .format(n_atoms, len(atom_array)))
+
+    # Note: this is actual number of edges * 2.
+    n_edges = adj.sum()
+    return numpy.asarray([n_atoms, n_edges])
+
+
+def mol_atom_type_feature(mol, atom_array, adj):
+    atom_count = numpy.bincount(atom_array, minlength=MAX_ATOMIC_NUM + 1)
+    return (atom_count > 0).astype(numpy.float)[1:]
+
+
+def mol_atom_freq_feature(mol, atom_array, adj):
+    atom_count = numpy.bincount(atom_array, minlength=MAX_ATOMIC_NUM + 1)
+    return (atom_count / len(atom_array))[1:]
+
+
+def mol_bond_type_feature(mol, atom_array, adj):
+    if adj.ndim == 2:
+        adj = numpy.expand_dims(adj, axis=0)
+    adj = adj.reshape((adj.shape[0], -1))
+    return adj.max(axis=1)
+
+
+def mol_bond_freq_feature(mol, atom_array, adj):
+    if adj.ndim == 2:
+        adj = numpy.expand_dims(adj, axis=0)
+    adj = adj.reshape((adj.shape[0], -1))
+    adj_sum = adj.sum()
+    if adj_sum == 0:
+        return adj.sum(axis=1)
+    else:
+        return adj.sum(axis=1) / adj_sum
+
+
+def construct_supernode_feature(mol, atom_array, adj, feature_functions=None):
+    """Construct an input feature x' for a supernode
+
+    `out_size` is automatically inferred by `atom_array` and `adj`
 
     Args:
         mol (rdkit.Chem.Mol): Input molecule
         atom_array (numpy.ndarray) : array of atoms
-        adjs (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array where |E| is the number of edgetypes.
-        largest_atomic_number (int) : number of unique atom maximum index
-        out_size (int): not used...
+        adj (numpy.ndarray): N by N 2-way array, or |E| by N by N 3-way array
+            where |E| is the number of edgetypes.
+        feature_functions (None or list): list of callable
 
     Returns:
         super_node_x (numpy.ndarray); 1-way array, the supernode feature.
-        len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs, 2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
+        len(super_node_x) will be 2 + 2 + MAX_ATOMIC_NUM*2 for 2-way adjs,
+            2 + 4*2 + MAX_ATOMIC_NUM*2 for 3-way adjs
 
     """
-    if mol is None:
-        raise MolFeatureExtractionError('mol is None')
-    N = mol.GetNumAtoms()
-    E = numpy.sum(adjs.flatten())
-    if E < 1.0:
-        E = 1.0
 
-    if out_size < 0:
-        size = N
-    elif out_size >= N:
-        size = out_size
-    else:
-        raise MolFeatureExtractionError('out_size {} is smaller than number '
-                                        'of atoms in mol {}'
-                                        .format(out_size, N))
-
-    # check the size of adjs
-    if adjs.ndim == 2:
-        super_node_x = numpy.zeros(2 + 2 + largest_atomic_number*2)
-    elif adjs.ndim == 3:
-        super_node_x = numpy.zeros(2 + 4*2 + largest_atomic_number*2)
-    else:
-        raise ValueError('adjs.ndim should be 2 or 3')
-    # end if-else
-
-    # number of nodes and edges
-    super_node_x[0] = float(N)
-    super_node_x[1] = float(E)
-
-    # histogram of types of bins
-    if adjs.ndim == 2:
-        adjs_temp = numpy.reshape(adjs, (1, N*N))
-        edge_type_histo = numpy.sum(adjs_temp, axis=1) / super_node_x[1]
-        super_node_x[2] = numpy.max(adjs_temp, axis=1)
-        super_node_x[3] = edge_type_histo
-
-        idx_bias = 3
-    elif adjs.ndim == 3:
-        adjs_temp = numpy.reshape(adjs, (4, N*N))
-        edge_type_histo = numpy.sum(adjs_temp, axis=1) / super_node_x[1]
-        super_node_x[2:6] = numpy.max(adjs_temp, axis=1)
-        super_node_x[6:10] = edge_type_histo
-
-        idx_bias = 9
-    # end if-else
-
-    # histogram of types of nodes
-    c = Counter(atom_array)
-    keys = c.keys()
-    values = c.values()
-    for k, v in zip(keys, values):
-        if k < largest_atomic_number:
-            super_node_x[idx_bias+k] = 1.0
-            super_node_x[idx_bias+largest_atomic_number+k] = float(v) / float(N)
-        else:
-            super_node_x[idx_bias+k] = 1.0
-            super_node_x[idx_bias+largest_atomic_number+k] = float(v) / float(N)
-
+    if feature_functions is None:
+        feature_functions = [
+            mol_basic_info_feature, mol_bond_type_feature,
+            mol_bond_freq_feature, mol_atom_type_feature,
+            mol_atom_freq_feature]
+    super_node_x = numpy.concatenate(
+        [func(mol, atom_array, adj) for func in feature_functions])
     super_node_x = super_node_x.astype(numpy.float32)
-
     return super_node_x

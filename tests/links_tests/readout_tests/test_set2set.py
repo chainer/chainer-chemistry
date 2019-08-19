@@ -67,18 +67,12 @@ def check_backward(readout, atom_data, y_grad):
         atom_data:
         y_grad:
     """
-    atom = chainer.Variable(atom_data)
-    readout.reset_state()
-    y = readout(atom)
-    y.grad = y_grad
-    y.backward()
-
-    def f():
+    def f(atom_data):
         readout.reset_state()
-        return readout(atom_data).data,
+        return readout(atom_data),
 
-    gx, = gradient_check.numerical_grad(f, (atom.data, ), (y.grad, ))
-    numpy.testing.assert_allclose(gx, atom.grad, atol=1e-2, rtol=1e-2)
+    gradient_check.check_backward(
+        f, (atom_data), y_grad, atol=1e-1, rtol=1e-1)
 
 
 def test_backward_cpu(readout, data):
@@ -89,8 +83,9 @@ def test_backward_cpu(readout, data):
 @pytest.mark.gpu
 def test_backward_gpu(readout, data):
     # type: (Set2Set, Tuple[numpy.ndarray, numpy.ndarray]) -> None
+    atom_data, y_grad = [cuda.to_gpu(d) for d in data]
     readout.to_gpu()
-    check_backward(readout, *map(cuda.to_gpu, data))
+    check_backward(readout, atom_data, y_grad)
 
 
 def test_forward_cpu_graph_invariant(readout, data):

@@ -5,6 +5,7 @@ from typing import Optional  # NOQA
 import chainer  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN
+from chainer_chemistry.models.gin import GIN
 from chainer_chemistry.models.mlp import MLP
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
@@ -14,6 +15,11 @@ from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
 from chainer_chemistry.models.gnn_film import GNNFiLM
+
+from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import NFP_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import RSGCN_GWM  # NOQA
 
 
 def set_up_predictor(
@@ -44,51 +50,86 @@ def set_up_predictor(
         conv_kwargs = {}
 
     if method == 'nfp':
-        print('Training an NFP predictor...')
+        print('Set up NFP predictor...')
         conv = NFP(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'ggnn':
-        print('Training a GGNN predictor...')
+        print('Set up GGNN predictor...')
         conv = GGNN(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'schnet':
-        print('Training an SchNet predictor...')
+        print('Set up SchNet predictor...')
         conv = SchNet(
             out_dim=class_num,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
         mlp = None
     elif method == 'weavenet':
-        print('Training a WeaveNet predictor...')
+        print('Set up WeaveNet predictor...')
         conv = WeaveNet(hidden_dim=n_unit, **conv_kwargs)
     elif method == 'rsgcn':
-        print('Training an RSGCN predictor...')
+        print('Set up RSGCN predictor...')
         conv = RSGCN(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'relgcn':
-        print('Training a Relational GCN predictor...')
+        print('Set up Relational GCN predictor...')
         num_edge_type = 4
         conv = RelGCN(
-            out_channels=n_unit,
-            num_edge_type=num_edge_type,
+            out_dim=n_unit,
+            n_edge_types=num_edge_type,
             scale_adj=True,
             **conv_kwargs)
     elif method == 'relgat':
-        print('Training a Relational GAT predictor...')
+        print('Set up Relational GAT predictor...')
         conv = RelGAT(
             out_dim=n_unit,
-            hidden_dim=n_unit,
-            n_layers=conv_layers,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'gin':
+        print('Set up GIN predictor...')
+        conv = GIN(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'nfp_gwm':
+        print('Set up NFP_GWM predictor...')
+        conv = NFP_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'ggnn_gwm':
+        print('Set up GGNN_GWM predictor...')
+        conv = GGNN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'rsgcn_gwm':
+        print('Set up RSGCN_GWM predictor...')
+        conv = RSGCN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'gin_gwm':
+        print('Set up GIN_GWM predictor...')
+        conv = GIN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'gnnfilm':
         print('Training a GNN_FiLM predictor...')

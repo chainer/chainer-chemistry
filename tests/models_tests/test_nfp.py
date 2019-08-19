@@ -81,14 +81,17 @@ def test_forward_cpu_graph_invariant(model, data):
 def test_forward_cpu_input_size_invariant(model, data):
     atom_data, adj_data = data[0], data[1]
     is_real_node = numpy.ones(atom_data.shape, dtype=numpy.float32)
-    y_actual = cuda.to_cpu(model(atom_data, adj_data, is_real_node).data)
+    y_actual = cuda.to_cpu(model(
+        atom_array=atom_data, adj=adj_data,
+        is_real_node=is_real_node).data)
 
     atom_data_ex = extend_node(atom_data, out_size=8)
     adj_data_ex = extend_adj(adj_data, out_size=8)
     is_real_node_ex = extend_node(is_real_node, out_size=8)
 
     y_actual_ex = cuda.to_cpu(model(
-        atom_data_ex, adj_data_ex, is_real_node_ex).data)
+        atom_array=atom_data_ex, adj=adj_data_ex,
+        is_real_node=is_real_node_ex).data)
     assert numpy.allclose(y_actual, y_actual_ex, rtol=1e-5, atol=1e-6)
 
 

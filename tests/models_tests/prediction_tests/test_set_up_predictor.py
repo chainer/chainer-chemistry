@@ -1,10 +1,10 @@
 from typing import Dict  # NOQA
-from typing import Tuple  # NOQA
 
 import chainer  # NOQA
 import pytest
 
 from chainer_chemistry.models.ggnn import GGNN
+from chainer_chemistry.models.gin import GIN
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from chainer_chemistry.models.prediction.set_up_predictor import set_up_predictor  # NOQA
@@ -13,6 +13,11 @@ from chainer_chemistry.models.relgcn import RelGCN
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
+
+from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import NFP_GWM  # NOQA
+from chainer_chemistry.models.gwm.gwm_net import RSGCN_GWM  # NOQA
 
 class_num = 7
 n_unit = 11
@@ -30,6 +35,11 @@ def models_dict():
         'rsgcn': RSGCN,
         'relgcn': RelGCN,
         'relgat': RelGAT,
+        'gin': GIN,
+        'nfp_gwm': NFP_GWM,
+        'ggnn_gwm': GGNN_GWM,
+        'rsgcn_gwm': RSGCN_GWM,
+        'gin_gwm': GIN_GWM
     }
 
 

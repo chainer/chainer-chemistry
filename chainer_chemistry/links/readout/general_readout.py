@@ -16,16 +16,16 @@ class GeneralReadout(chainer.Link):
         activation (callable): activation function
     """
 
-    def __init__(self, mode='sum', activation=None):
+    def __init__(self, mode='sum', activation=None, **kwargs):
         super(GeneralReadout, self).__init__()
         self.mode = mode
         self.activation = activation
 
-    def __call__(self, x, axis=1):
+    def __call__(self, h, axis=1, **kwargs):
         if self.activation is not None:
-            h = self.activation(x)
+            h = self.activation(h)
         else:
-            h = x
+            h = h
 
         if self.mode == 'sum':
             y = functions.sum(h, axis=axis)

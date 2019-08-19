@@ -41,17 +41,21 @@ class GraphConvPredictor(chainer.Chain):
             self.label_scaler = label_scaler
         self.postprocess_fn = postprocess_fn or chainer.functions.identity
 
-    def __call__(self, atoms, adjs):
+    def __call__(self, atoms, adjs, super_node=None):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
-        x = self.graph_conv(atoms, adjs)
+        if super_node is None:
+            x = self.graph_conv(atoms, adjs)
+        else:
+            x = self.graph_conv(atoms, adjs, super_node=super_node)
         if self.mlp:
             x = self.mlp(x)
+        if self.label_scaler is not None:
+            x = self.label_scaler.inverse_transform(x)
         return x
 
     def predict(self, atoms, adjs):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
+        # TODO (nakago): support super_node & is_real_node args.
         with chainer.no_backprop_mode(), chainer.using_config('train', False):
             x = self.__call__(atoms, adjs)
-            if self.label_scaler is not None:
-                x = self.label_scaler.inverse_transform(x)
             return self.postprocess_fn(x)

@@ -6,13 +6,10 @@ import os
 import numpy
 import pandas
 
-import chainer.functions as F
 from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-
-from chainer_chemistry.utils import save_json
 
 try:
     import matplotlib
@@ -20,19 +17,18 @@ try:
 except ImportError:
     pass
 
-
-
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models.prediction import Regressor
+from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
+from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
-# from sklearn.preprocessing import StandardScaler  # NOQA
-from train_qm9 import GraphConvPredictor  # NOQA
-from train_qm9 import MeanAbsError, RootMeanSqrError  # NOQA
+from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
+from train_qm9 import rmse
 
 
 def parse_arguments():
@@ -113,18 +109,6 @@ def main():
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
     regressor = Regressor.load_pickle(model_path, device=device)
-    scaler = regressor.predictor.scaler
-
-    if scaler is not None:
-        original_t = dataset.get_datasets()[-1]
-        if args.gpu >= 0:
-            scaled_t = cuda.to_cpu(scaler.transform(
-                cuda.to_gpu(original_t)))
-        else:
-            scaled_t = scaler.transform(original_t)
-
-        dataset = NumpyTupleDataset(*(dataset.get_datasets()[:-1] +
-                                      (scaled_t,)))
 
     # Split the dataset into training and testing.
     train_data_size = int(len(dataset) * args.train_data_ratio)
@@ -134,22 +118,13 @@ def main():
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 
-    def postprocess_fn(x):
-        if scaler is not None:
-            scaled_x = scaler.inverse_transform(x)
-            return scaled_x
-        else:
-            return x
-
     # Predict the output labels.
     print('Predicting...')
     y_pred = regressor.predict(
-        test, converter=extract_inputs,
-        postprocess_fn=postprocess_fn)
+        test, converter=extract_inputs)
 
-    # Extract the ground-truth labels.
-    t = concat_mols(test, device=device)[-1]
-    original_t = cuda.to_cpu(scaler.inverse_transform(t))
+    # Extract the ground-truth labels as numpy array.
+    original_t = concat_mols(test, device=-1)[-1]
 
     # Construct dataframe.
     df_dict = {}

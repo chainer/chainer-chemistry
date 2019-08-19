@@ -12,13 +12,14 @@ from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPrepro
 from chainer_chemistry.dataset.preprocessors.gnnfilm_preprocessor import GNNFiLMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.ggnn_gwm_preprocessor import GGNNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.gin_preprocessor import GINPreprocessor  # NOQA
-from chainer_chemistry.dataset.preprocessors.gin_gwm_preprocessor import GINGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import GGNNGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import GINGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import NFPGWMPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import RSGCNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.nfp_preprocessor import NFPPreprocessor  # NOQA
-from chainer_chemistry.dataset.preprocessors.nfp_gwm_preprocessor import NFPGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.relgcn_preprocessor import RelGCNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
-from chainer_chemistry.dataset.preprocessors.rsgcn_gwm_preprocessor import RSGCNGWMPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.weavenet_preprocessor import WeaveNetPreprocessor  # NOQA
 
