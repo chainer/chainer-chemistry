@@ -1,0 +1,55 @@
+configs {
+  key: "chainerchem.py27"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command:
+        "bash .flexci/pytest_script.sh py27"
+  }
+}
+
+configs {
+  key: "chainerchem.py35"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command:
+        "bash .flexci/pytest_script.sh py35"
+  }
+}
+
+configs {
+  key: "chainerchem.py36"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command:
+        "bash .flexci/pytest_script.sh py36"
+  }
+}
+
+configs {
+  key: "chainerchem.py37"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command:
+        "bash .flexci/pytest_script.sh py37"
+  }
+}
