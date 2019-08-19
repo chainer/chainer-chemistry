@@ -136,8 +136,8 @@ def set_up_predictor(
         conv = GNNFiLM(
             out_dim=n_unit,
             hidden_dim=n_unit,
-            n_layers=conv_layers,
-            num_edge_type = 5,
+            n_update_layers=conv_layers,
+            n_edge_types=5,
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))

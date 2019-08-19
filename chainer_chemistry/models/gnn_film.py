@@ -5,11 +5,7 @@ from chainer import functions
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
-from chainer_chemistry.links.readout.nfp_readout import NFPReadout
-from chainer_chemistry.links.readout.general_readout import GeneralReadout
-from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gnn_film_update import GNNFiLMUpdate
-from chainer_chemistry.utils import convert_sparse_with_edge_type
 
 
 class GNNFiLM(chainer.Chain):
@@ -23,7 +19,7 @@ class GNNFiLM(chainer.Chain):
         out_dim (int): dimension of output feature vector
         hidden_dim (int): dimension of feature vector
             associated to each atom
-        n_layers (int): number of layers
+        n_update_layers (int): number of layers
         n_atom_types (int): number of types of atoms
         concat_hidden (bool): If set to True, readout is executed in each layer
             and the result is concatenated
@@ -34,13 +30,13 @@ class GNNFiLM(chainer.Chain):
             Defaults to 4 for single, double, triple and aromatic bond.
     """
 
-    def __init__(self, out_dim, hidden_dim=16, n_layers=4,
+    def __init__(self, out_dim, hidden_dim=16, n_update_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True, activation=functions.identity,
                  num_edge_type=5):
         super(GNNFiLM, self).__init__()
-        n_readout_layer = n_layers if concat_hidden else 1
-        n_message_layer = 1 if weight_tying else n_layers
+        n_readout_layer = n_update_layers if concat_hidden else 1
+        n_message_layer = 1 if weight_tying else n_update_layers
         with self.init_scope():
             # Update
             self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
@@ -58,7 +54,7 @@ class GNNFiLM(chainer.Chain):
                 for _ in range(n_readout_layer)])
         self.out_dim = out_dim
         self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
+        self.n_update_layers = n_update_layers
         self.num_edge_type = num_edge_type
         self.activation = activation
         self.concat_hidden = concat_hidden
@@ -89,7 +85,7 @@ class GNNFiLM(chainer.Chain):
             h = atom_array
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
         g_list = []
-        for step in range(self.n_layers):
+        for step in range(self.n_update_layers):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if self.concat_hidden:
