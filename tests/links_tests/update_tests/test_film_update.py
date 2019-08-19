@@ -22,7 +22,7 @@ n_edge_types = 5
 @pytest.fixture
 def update():
     return GNNFiLMUpdate(hidden_channels=hidden_channels,
-                         num_edge_types=n_edge_types)
+                         n_edge_types=n_edge_types)
 
 
 @pytest.fixture
