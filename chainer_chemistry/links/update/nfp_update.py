@@ -43,11 +43,7 @@ class NFPUpdate(chainer.Chain):
         if self.xp is numpy:
             zero_array = numpy.zeros(fv.shape, dtype=numpy.float32)
         else:
-<<<<<<< HEAD
-            zero_array = self.xp.zeros_like(fv.data)
-=======
             zero_array = self.xp.zeros_like(fv.array)
->>>>>>> master
 
         fvds = [functions.where(cond, fv, zero_array) for cond in deg_conds]
 
