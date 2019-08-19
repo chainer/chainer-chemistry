@@ -111,6 +111,7 @@ The following graph convolutional neural networks are currently supported:
 - GIN: Graph Isomorphism Networks [17]
 - MPNN: Message Passing Neural Networks [3]
 - Set2Set [19]
+- GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation [20]
 
 We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
 - NFP ('nfp_gwm')
@@ -201,3 +202,5 @@ papers. Use the library at your own risk.
 [18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019.
 
 [19] Oriol Vinyals, Samy Bengio, Manjunath Kudlur. Order Matters: Sequence to sequence for sets. *arXiv preprint arXiv:1511.06391*, 2015.
+. 
+[20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.
