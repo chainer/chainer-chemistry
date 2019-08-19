@@ -32,7 +32,6 @@ class GNNFiLMUpdate(chainer.Chain):
         mb, atom, ch = h.shape
         newshape = adj.shape + (ch, )
         adj = xp.broadcast_to(adj[:, :, :, :, xp.newaxis], newshape)
-        print(h.shape, self.W_linear(h).shape)
         messages = functions.reshape(self.W_linear(h),
                                      (mb, atom, ch, self.num_edge_types))
         messages = functions.transpose(messages, (3, 0, 1, 2))
