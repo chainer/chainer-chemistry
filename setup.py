@@ -7,7 +7,7 @@ setup_requires = []
 install_requires = [
     'chainer >=6.0.0',
     'joblib',
-    'matplotlib',
+    'matplotlib >=3.0.0',
     'pandas',
     'scikit-learn',
     'scipy',
