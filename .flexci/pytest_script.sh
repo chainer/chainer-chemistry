@@ -12,31 +12,31 @@ if [ ${CHAINERX} -gt 0 ]; then
     if [ ${GPU} -gt 0 ]; then
         case ${CHAINER} in
             stable)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-gpu-stable:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-gpu-stable:latest
                 ;;
             latest)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-gpu-latest:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-gpu-latest:latest
                 ;;
             base)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-gpu-base:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-gpu-base:latest
                 ;;
         esac
     else
         case ${CHAINER} in
             stable)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-cpu-stable:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-cpu-stable:latest
                 ;;
             latest)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-cpu-latest:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-cpu-latest:latest
                 ;;
             base)
-                DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON-chx-cpu-base:latest
+                DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chx-cpu-base:latest
                 ;;
         esac
     fi
     echo "Use installed chainer in Docker image"
 else
-    DOCKER_IMAGE=asia.gcr.io/pfn-private-ci/chainer-chem-py$PYTHON:latest
+    DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON:latest
     case ${CHAINER} in
         stable)
             echo pip install chainer >> install.sh
