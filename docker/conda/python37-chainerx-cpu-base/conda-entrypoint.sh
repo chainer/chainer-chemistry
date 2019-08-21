@@ -1,4 +1,4 @@
 #!/bin/bash
 . /opt/conda/etc/profile.d/conda.sh
-conda activate py27
+conda activate py37
 exec "$@"
