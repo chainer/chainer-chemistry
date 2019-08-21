@@ -2,6 +2,8 @@ import os
 
 import argparse
 import json
+
+import chainer
 import numpy
 
 from chainer import cuda
@@ -31,9 +33,11 @@ def main():
                         'script.')
     parser.add_argument('--batchsize', '-b', type=int, default=128,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='GPU ID to use. Negative value indicates '
-                        'not to use GPU and to run the code in CPU.')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--model-filename', type=str, default='classifier.pkl',
                         help='file name for pickled model')
     parser.add_argument('--num-data', type=int, default=-1,
@@ -50,10 +54,11 @@ def main():
     _, test, _ = data.load_dataset(method, labels, num_data=args.num_data)
     y_test = test.get_datasets()[-1]
 
+    device = chainer.get_device(args.device)
     # Load pretrained model
     clf = Classifier.load_pickle(
         os.path.join(args.in_dir, args.model_filename),
-        device=args.gpu)  # type: Classifier
+        device=device)  # type: Classifier
 
     # ---- predict ---
     print('Predicting...')
@@ -112,10 +117,10 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(
-        test_iterator, clf, converter=concat_mols, device=args.gpu)()
+        test_iterator, clf, converter=concat_mols, device=device)()
     print('Evaluation result: ', eval_result)
     rocauc_result = ROCAUCEvaluator(
-        test_iterator, clf, converter=concat_mols, device=args.gpu,
+        test_iterator, clf, converter=concat_mols, device=device,
         eval_func=clf.predictor, name='test', ignore_labels=-1)()
     print('ROCAUC Evaluation result: ', rocauc_result)
     with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:

@@ -35,8 +35,7 @@ def _test_save_load_pickle(device, tmpdir):
     # --- check model attribute is same ---
     assert model_load.dummy_str == model.dummy_str
     assert model_load.dummy_str == 'hoge'
-    assert model_load.get_device() == model.get_device()
-    assert model_load.get_device() == device
+    assert model_load.device == chainer.get_device(device)
 
     # --- check model parameter is same ---
     params = model.namedparams()
@@ -54,6 +53,7 @@ def test_save_load_pickle_cpu(tmpdir):
 @pytest.mark.gpu
 def test_save_load_pickle_gpu(tmpdir):
     _test_save_load_pickle(device=0, tmpdir=tmpdir)
+
 
 if __name__ == '__main__':
     pytest.main([__file__, '-v', '-s'])

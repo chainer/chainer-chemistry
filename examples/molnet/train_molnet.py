@@ -6,6 +6,7 @@ import numpy
 import os
 import types
 
+import chainer
 from chainer import iterators
 from chainer import optimizers
 from chainer import training
@@ -41,9 +42,11 @@ def parse_arguments():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to save the computed model to')
     parser.add_argument('--epoch', '-e', type=int, default=20,
@@ -201,12 +204,13 @@ def main():
                    if isinstance(v, types.FunctionType)}
     loss_fun = molnet_default_config[dataset_name]['loss']
 
+    device = chainer.get_device(args.device)
     if task_type == 'regression':
         model = Regressor(predictor, lossfun=loss_fun,
-                          metrics_fun=metrics_fun, device=args.gpu)
+                          metrics_fun=metrics_fun, device=device)
     elif task_type == 'classification':
         model = Classifier(predictor, lossfun=loss_fun,
-                           metrics_fun=metrics_fun, device=args.gpu)
+                           metrics_fun=metrics_fun, device=device)
     else:
         raise ValueError('Invalid task type ({}) encountered when processing '
                          'dataset ({}).'.format(task_type, dataset_name))
@@ -221,12 +225,12 @@ def main():
         os.makedirs(model_dir)
 
     # Set up the updater.
-    updater = training.StandardUpdater(train_iter, optimizer, device=args.gpu,
+    updater = training.StandardUpdater(train_iter, optimizer, device=device,
                                        converter=concat_mols)
 
     # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=model_dir)
-    trainer.extend(E.Evaluator(valid_iter, model, device=args.gpu,
+    trainer.extend(E.Evaluator(valid_iter, model, device=device,
                                converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
@@ -238,7 +242,7 @@ def main():
             print_report_targets.append('main/' + metric_name)
             print_report_targets.append('validation/main/' + metric_name)
         elif issubclass(metric_fun, BatchEvaluator):
-            trainer.extend(metric_fun(valid_iter, model, device=args.gpu,
+            trainer.extend(metric_fun(valid_iter, model, device=device,
                                       eval_func=predictor,
                                       converter=concat_mols, name='val',
                                       raise_value_error=False))

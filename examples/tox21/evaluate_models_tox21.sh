@@ -1,13 +1,13 @@
 set -eu
 
-gpu=-1
+device=-1
 methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
 prefix=eval_
 
 for method in ${methods[@]}
 do
     result_dir=${prefix}${method}
-    python train_tox21.py --method ${method} --gpu ${gpu} --out ${result_dir}
+    python train_tox21.py --method ${method} --device ${device} --out ${result_dir}
     python predict_tox21_with_classifier.py --in-dir ${result_dir}
 done
 
