@@ -30,7 +30,6 @@ RUN conda create -n py37 python=3.7 conda && \
     . /opt/conda/etc/profile.d/conda.sh && \
     conda init bash && \
     conda activate py37 && \
-    pip install chainer cupy-cuda101 && \
     conda install -c rdkit rdkit && \
     pip install pytest mock
 
