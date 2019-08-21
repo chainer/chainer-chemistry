@@ -26,12 +26,13 @@ RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-4.5.11-Linux-x86
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc
 RUN conda update -n base -c defaults conda
+ENV MAKEFLAGS -j4
 RUN conda create -n py37 python=3.7 conda && \
     . /opt/conda/etc/profile.d/conda.sh && \
     conda init bash && \
     conda activate py37 && \
-    conda install -c rdkit rdkit && \
-    pip install pytest mock
+    CHAINER_BUILD_CHAINERX=1 CHAINERX_BUILD_CUDA=1 pip install -vvvv --no-cache-dir cupy-cuda101==6.2.0 chainer==6.2.0 && \
+    conda install -c rdkit rdkit==2019.03.4.0
 
 ADD conda-entrypoint.sh /conda-entrypoint.sh
 ENTRYPOINT [ "/conda-entrypoint.sh" ]
