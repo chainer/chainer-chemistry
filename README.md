@@ -30,7 +30,7 @@ These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -38,35 +38,28 @@ for more information regarding the installation steps.
 Note that only the following versions of Chainer Chemistry's dependencies are
 currently supported:
 
-| Chainer Chemistry   | Chainer         | RDKit          |
-| ------------------: | --------------: | -------------: |
-| v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    |
-| v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    |
-| v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    |
-| master branch       | v6.0 ~      *2,3| 2019.03.2.0    |
-| v0.6.0 release plan | v6.0 ~      *3  | 2019.03.2.0    |
+| Chainer Chemistry   | Chainer         | RDKit          | Python           |
+| ------------------: | --------------: | -------------: | ---------------: |
+| v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| v0.6.0 release plan | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
+
 
 [Footnote]
 
 *1: We used `FunctionNode` in [this PR](https://github.com/pfnet-research/chainer-chemistry/pull/190),
 which is introduced after chainer v3. See [this issue](https://github.com/pfnet-research/chainer-chemistry/issues/192) for details.
 
-*2: Saliency modules only work with chainer v5.
+*2: Saliency modules only work after chainer v5.
 
 *3: Chainer v6 is released and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
     In order to support this new feature & API, we are going to break backward compatibility for chainer chemistry v0.6.0 release.
     See [ChainerX Documentation](https://chainer.org/announcement/2018/12/03/chainerx.html) for details.
 
-## Recent Development Plan
-
-Current master branch is unstable, please consider using [v0.5.0 release](https://github.com/pfnet-research/chainer-chemistry/tree/v0.5.0) if you are new to this library.
-
-We will proceed following implementation & refactoring.
-These design are not finalized yet and we may introduce big change to the library structure/API.
-
- - Graph Warp Module support for each graph convolution network.
- - Sparse matrix support for graph convolution network.
- - [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) support for coming chainer v6.
+*4: We are going to drop python 2.x support in the near future.
 
 ## Installation
 
