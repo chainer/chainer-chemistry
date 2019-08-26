@@ -3,6 +3,7 @@ import numpy
 import pytest
 from chainer import links
 import chainerx
+from chainer.iterators import SerialIterator
 
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import Regressor
@@ -41,6 +42,14 @@ def valid_data():
 
 def test_run_train_cpu(model, train_data, valid_data):
     run_train(model, train_data, valid=valid_data, epoch=1, batch_size=8)
+
+
+def test_run_train_cpu_iterator(model, train_data, valid_data):
+    train_iter = SerialIterator(train_data, batch_size=4)
+    valid_iter = SerialIterator(valid_data, batch_size=4,
+                                shuffle=False, repeat=False)
+    run_train(model, train_iter, valid=valid_iter, epoch=1, batch_size=8,
+              extensions_list=[lambda t: None])
 
 
 @pytest.mark.gpu
