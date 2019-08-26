@@ -26,6 +26,9 @@ from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
 import data
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
+from chainer_chemistry.training.extensions.auto_print_report import \
+    AutoPrintReport
+
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 # show INFO level log from chainer chemistry
@@ -150,10 +153,11 @@ def main():
             val_iter, classifier, eval_func=predictor_,
             device=device, converter=concat_mols, name='val',
             pos_labels=1, ignore_labels=-1))
-        trainer.extend(E.PrintReport([
-            'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',
-            'validation/main/loss', 'validation/main/accuracy',
-            'val/main/roc_auc', 'elapsed_time']))
+        # trainer.extend(E.PrintReport([
+        #     'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',
+        #     'validation/main/loss', 'validation/main/accuracy',
+        #     'val/main/roc_auc', 'elapsed_time']))
+        trainer.extend(AutoPrintReport())
     else:
         raise ValueError('Invalid accfun_mode {}'.format(eval_mode))
     trainer.extend(E.ProgressBar(update_interval=10))
