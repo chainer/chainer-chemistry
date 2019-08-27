@@ -155,7 +155,7 @@ def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
     # numerical differentiation
     gradient_check.check_backward(gwm, (embed_atom_data, new_embed_atom_data,
                                         supernode), (y_grad, supernode_grad),
-                                  eps=0.1, rtol=1e-0)
+                                  eps=0.1, rtol=1e1)
 
 
 def test_backward_cpu(gwm, data):

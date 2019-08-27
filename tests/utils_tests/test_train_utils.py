@@ -52,6 +52,11 @@ def test_run_train_cpu_iterator(model, train_data, valid_data):
               extensions_list=[lambda t: None])
 
 
+def test_run_train_invalid(model, train_data):
+    with pytest.raises(ValueError):
+        run_train(model, train_data, optimizer=1)
+
+
 @pytest.mark.gpu
 def test_run_train_gpu(model, train_data, valid_data):
     device = 0

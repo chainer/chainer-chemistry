@@ -1,9 +1,8 @@
 import chainer
-from chainer import optimizers, training
+from chainer import optimizers, training, Optimizer
 from chainer.dataset import convert, Iterator
 from chainer.iterators import SerialIterator
 from chainer.training import extensions
-from chainer.training.extensions import ProgressBar
 
 from chainer_chemistry.training.extensions.auto_print_report import AutoPrintReport  # NOQA
 
@@ -41,6 +40,10 @@ def run_train(model, train, valid=None,
     if optimizer is None:
         # Use Adam optimizer as default
         optimizer = optimizers.Adam()
+    elif not isinstance(optimizer, Optimizer):
+        raise ValueError("[ERROR] optimizer must be instance of Optimizer, "
+                         "but passed {}".format(type(Optimizer)))
+
     optimizer.setup(model)
 
     if isinstance(train, Iterator):
@@ -66,9 +69,9 @@ def run_train(model, train, valid=None,
 
         trainer.extend(extensions.LogReport())
         trainer.extend(AutoPrintReport())
-        trainer.extend(ProgressBar(update_interval=10))
+        trainer.extend(extensions.ProgressBar(update_interval=10))
         # TODO: consider to include snapshot as default extension.
-        # trainer.extend(E.snapshot(), trigger=(frequency, 'epoch'))
+        # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
 
     if extensions_list is not None:
         for e in extensions_list:
