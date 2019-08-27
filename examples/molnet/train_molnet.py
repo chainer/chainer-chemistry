@@ -22,6 +22,7 @@ from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.training.extensions import BatchEvaluator, ROCAUCEvaluator  # NOQA
+from chainer_chemistry.training.extensions.auto_print_report import AutoPrintReport  # NOQA
 
 
 def parse_arguments():
@@ -235,23 +236,6 @@ def main():
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
 
-    # Report various metrics.
-    print_report_targets = ['epoch', 'main/loss', 'validation/main/loss']
-    for metric_name, metric_fun in metrics.items():
-        if isinstance(metric_fun, types.FunctionType):
-            print_report_targets.append('main/' + metric_name)
-            print_report_targets.append('validation/main/' + metric_name)
-        elif issubclass(metric_fun, BatchEvaluator):
-            trainer.extend(metric_fun(valid_iter, model, device=device,
-                                      eval_func=predictor,
-                                      converter=concat_mols, name='val',
-                                      raise_value_error=False))
-            print_report_targets.append('val/main/' + metric_name)
-        else:
-            raise TypeError('{} is not a supported metrics function.'
-                            .format(type(metrics_fun)))
-    print_report_targets.append('elapsed_time')
-
     # TODO: consider go/no-go of the following block
     # # (i) more reporting for val/evalutaion
     # # (ii) best validation score snapshot
@@ -279,9 +263,6 @@ def main():
     #         valid_iter, predictor, eval_func=predictor,
     #         device=args.gpu, converter=concat_mols, name='val',
     #         pos_labels=1, ignore_labels=-1, raise_value_error=False))
-    #     print_report_targets.append('train/main/roc_auc')
-    #     print_report_targets.append('validation/main/loss')
-    #     print_report_targets.append('val/main/roc_auc')
     #
     #     trainer.extend(E.snapshot_object(
     #         model, "best_val_" + model_filename[task_type]),
@@ -290,7 +271,7 @@ def main():
     #     raise NotImplementedError(
     #         'Not implemented task_type = {}'.format(task_type))
 
-    trainer.extend(E.PrintReport(print_report_targets))
+    trainer.extend(AutoPrintReport())
     trainer.extend(E.ProgressBar())
     trainer.run()
 
