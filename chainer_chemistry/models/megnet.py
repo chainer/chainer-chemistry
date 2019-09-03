@@ -9,8 +9,12 @@ from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
 class MEGNet(chainer.Chain):
     """MEGNet
 
+    See Chi Chen et al, \
+        Graph Networks as a Universal Machine Learning Framework for Molecules
+        and Crystals. \
+        `arXiv:1812.05055 <https://arxiv.org/abs/1812.05055>`_
+
     Args:
-        out_dim (int): dimension of output feature vector
         n_update_layers (int): number of MEGNet layers
     """
     def __init__(self, n_update_layers=3):

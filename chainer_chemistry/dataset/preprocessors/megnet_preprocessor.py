@@ -131,7 +131,6 @@ def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None, include_
 
     Args:
         mol (Mol): mol instance
-        num_max_atoms (int): number of max atoms
         atom_list (list): list of atoms to extract feature. If None, default
             `ATOM` is used as `atom_list`
         include_unknown_atom (bool): If False, when the `mol` includes atom

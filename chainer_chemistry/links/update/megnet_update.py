@@ -77,25 +77,18 @@ def get_concated_edge_vec(atom_feat, pair_feat, global_feat, bond_num, bond_idx,
     p0, p1, p2 = pair_feat.shape
     g0, g1 = global_feat.shape
 
-    # GraphLinearを参考にした
-    # (batch * ノードの数, nodeの次元) (batch * エッジの数, エッジの次元)に直してConcatする
-    # (batch * ノードの数, ノードの次元)
     reshaped_atom_feat = functions.reshape(atom_feat, (a0 * a1, a2))
-    # (batch * エッジの数, エッジの次元)
     reshaped_pair_feat = functions.reshape(pair_feat, (p0 * p1, p2))
 
-    # (batch * エッジの数, ノードの次元)
+    # get source and target nodes of all edges
     base_idx = xp.broadcast_to(xp.arange(0, p0 * a1, a1).reshape(-1, 1), (p0, p1))
     start_idx = (bond_idx[:, 0, :] + base_idx).reshape(-1)
     end_idx = (bond_idx[:, 1, :] + base_idx).reshape(-1)
     start_node = reshaped_atom_feat[start_idx]
     end_node = reshaped_atom_feat[end_idx]
 
-    # globalについても以下の分用意する
-    # (batch, * エッジの数, globalの次元)
+    # concating
     reshaped_global_feat = functions.tile(global_feat, (p1, 1))
-
-    # concat
     concated_vec = functions.concat((reshaped_pair_feat, 
                                      start_node, end_node, reshaped_global_feat))
 
@@ -104,7 +97,6 @@ def get_concated_edge_vec(atom_feat, pair_feat, global_feat, bond_num, bond_idx,
     for i in range(p0): mask[xp.arange(p1 * i, (p1 * i + bond_num[i]))] = True
     mask = xp.broadcast_to(mask.reshape(-1, 1), concated_vec.shape)
     mask_val = xp.zeros(concated_vec.shape, dtype=xp.float32)
-    # get masked vec
     masked_vec = functions.where(mask, concated_vec, mask_val)
     reshaped_masked_vec = masked_vec.reshape(p0, p1, -1)
 
@@ -116,53 +108,43 @@ def get_concated_node_vec(atom_feat, pair_feat, global_feat, atom_num, bond_num,
     p0, p1, p2 = pair_feat.shape
     g0, g1 = global_feat.shape
 
-    # (batch * ノードの数, ノードの次元)
     reshaped_atom_feat = functions.reshape(atom_feat, (a0 * a1, a2))
-    # (batch * エッジの数, エッジの次元)
     reshaped_pair_feat = functions.reshape(pair_feat, (p0 * p1, p2))
 
-    # (batch * エッジの数, ノードの次元)
+    # get mean edge feature of all nodes
+    ## 1. get source and target node idx masked with -1 
     base_idx = xp.broadcast_to(xp.arange(0, p0 * a1, a1).reshape(-1, 1), (p0, p1))
     start_idx = (bond_idx[:, 0, :] + base_idx).reshape(-1)
     end_idx = (bond_idx[:, 1, :] + base_idx).reshape(-1)
-
-    # get masked idx
     mask = xp.ones((p0 * p1), dtype=xp.bool)
     for i in range(p0): mask[xp.arange(p1 * i, (p1 * i + bond_num[i]))] = False
     start_idx[mask] = -1
     end_idx[mask] = -1
-
-    # scatter add
+    ## 2. get sum edge feature of all nodes using scatter_add method
     zero = xp.zeros((a0 * a1 + 1, p2), dtype=xp.float32)
     sum_edeg_vec = functions.scatter_add(zero, start_idx, reshaped_pair_feat) + \
                 functions.scatter_add(zero, end_idx, reshaped_pair_feat)
-
-    # calculate degree
+    ## 3. get degree of all nodes using scatter_add method
     degree_zero = xp.zeros((a0 * a1 + 1), dtype=xp.float32)
     degree_one = xp.ones((p0 * p1), dtype=xp.float32)
     degree = functions.scatter_add(degree_zero, start_idx, degree_one) + \
                  functions.scatter_add(degree_zero, end_idx, degree_one)
-
-    # get edge mean feature
-    # 0割りを防ぐ為に足している
+    ## 4. get mean edge feature of all nodes
     degree = degree[:-1] + 1e-10
     sum_edeg_vec = sum_edeg_vec[:-1]
-    mean_edge_vec = sum_edeg_vec / functions.broadcast_to(degree.reshape(-1, 1), sum_edeg_vec.shape) 
-
-    # globalについても以下の分用意する
-    # (batch, * ノードの数, globalの次元)
-    reshaped_global_feat = functions.tile(global_feat, (a1, 1))
+    mean_edge_vec = sum_edeg_vec / functions.broadcast_to(degree.reshape(-1, 1), 
+                                                          sum_edeg_vec.shape)
 
     # concat
+    reshaped_global_feat = functions.tile(global_feat, (a1, 1))
     concated_vec = functions.concat((reshaped_atom_feat,
                                      mean_edge_vec, reshaped_global_feat))
 
-    # masking
+    # concating
     mask = xp.zeros((a0 * a1), dtype=xp.bool)
     for i in range(a0): mask[xp.arange(a1 * i, (a1 * i + atom_num[i]))] = True
     mask = xp.broadcast_to(mask.reshape(-1, 1), concated_vec.shape)
     mask_val = xp.zeros(concated_vec.shape, dtype=xp.float32)
-    # get masked vec
     masked_vec = functions.where(mask, concated_vec, mask_val)
     reshaped_masked_vec = masked_vec.reshape(a0, a1, -1)
 
@@ -196,11 +178,6 @@ class MEGNetUpdate(chainer.Chain):
             self.update_for_global = UpdateLayerWithLinear(hidden_dim=hidden_dim_for_update)
 
     def __call__(self, atoms_feat, pair_feat, global_feat, atom_num, bond_num, bond_idx):
-        # get all shape
-        a0, a1, a2 = atoms_feat.shape
-        p0, p1, p2 = pair_feat.shape
-        g0, g1 = global_feat.shape
-
         # 1) Pass the Dense layer
         a_f_d = self.dense_for_atom(atoms_feat)
         p_f_d = self.dense_for_pair(pair_feat)
@@ -208,22 +185,19 @@ class MEGNetUpdate(chainer.Chain):
 
         # 2) Update the edge vector
         concat_p_v = get_concated_edge_vec(a_f_d, p_f_d, g_f_d, bond_num, bond_idx, self.xp)
-        # pass update layer
         update_p = self.update_for_atom(concat_p_v)
 
         # 3) Update the node vector
         concat_a_v = get_concated_node_vec(a_f_d, update_p, g_f_d, atom_num, bond_num, bond_idx, self.xp)
-        # pass update layer
         update_a = self.update_for_pair(concat_a_v)
 
         # 4) Update the global vector
         ave_p = functions.mean(update_p, axis=1)
         ave_a = functions.mean(update_a, axis=1)
         concat_g_v = functions.concat((ave_a, ave_p, g_f_d), axis=1)
-        # pass update layer
         update_g = self.update_for_global(concat_g_v)
 
-        # 5) Skip connnection
+        # 5) Skip connection
         new_a_f = functions.add(a_f_d, update_a)
         new_p_f = functions.add(p_f_d, update_p)
         new_g_f = functions.add(g_f_d, update_g)
