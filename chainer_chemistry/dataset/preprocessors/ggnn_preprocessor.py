@@ -1,3 +1,7 @@
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
+    PaddingGraphData
+from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
+    PaddingGraphDataset
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array, construct_discrete_edge_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
@@ -45,4 +49,16 @@ class GGNNPreprocessor(MolPreprocessor):
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
+
         return atom_array, adj_array
+
+    def create_dataset(self, *args, **kwargs):
+        atom_array, adj_array, label_array = args
+
+        data_list = [
+            PaddingGraphData(
+                x=atom_array[i],
+                adj=adj_array[i],
+                y=label_array[i])
+            for i in range(len(atom_array))]
+        return PaddingGraphDataset(data_list)

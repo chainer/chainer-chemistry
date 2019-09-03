@@ -55,7 +55,7 @@ class GGNN(chainer.Chain):
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying
 
-    def __call__(self, atom_array, adj, is_real_node=None):
+    def __call__(self, dataset):
         """Forward propagation
 
         Args:
@@ -71,6 +71,8 @@ class GGNN(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
+        atom_array, adj = dataset.x, dataset.adj
+        is_real_node = None  # TODO: support this
         # reset state
         self.reset_state()
         if atom_array.dtype == self.xp.int32:

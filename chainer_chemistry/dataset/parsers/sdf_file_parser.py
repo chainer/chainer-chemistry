@@ -159,11 +159,11 @@ class SDFFileParser(BaseFileParser):
         if isinstance(result, tuple):
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(*result)
-            dataset = NumpyTupleDataset(*result)
+            dataset = pp.create_dataset(*result)
         else:
             if self.postprocess_fn is not None:
                 result = self.postprocess_fn(result)
-            dataset = NumpyTupleDataset(result)
+            dataset = pp.create_dataset(*result)
         return {"dataset": dataset,
                 "smiles": smileses,
                 "is_successful": is_successful}

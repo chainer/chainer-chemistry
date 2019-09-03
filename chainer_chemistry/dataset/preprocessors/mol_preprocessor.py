@@ -93,6 +93,9 @@ class MolPreprocessor(BasePreprocessor):
         """
         raise NotImplementedError
 
+    def create_dataset(self, *args, **kwargs):
+        raise NotImplementedError
+
     def process(self, filepath):
         # Not used now...
         pass
