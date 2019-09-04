@@ -79,7 +79,7 @@ class Regressor(BaseForwardModel):
             value = cuda.to_cpu(value)
         return numpy.asscalar(value)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, batch, **kwargs):
         """Computes the loss value for an input and label pair.
 
         It also computes metrics and stores it to the attribute.
@@ -100,13 +100,11 @@ class Regressor(BaseForwardModel):
             ~chainer.Variable: Loss value.
 
         """
-        dataset = args[0]
-
         self.y = None
         self.loss = None
         self.metrics = None
-        self.y = self.predictor(dataset)
-        t = dataset.y
+        self.y = self.predictor(batch)
+        t = batch.y
         self.loss = self.lossfun(self.y, t)
 
         # When the reported data is a numpy array, the loss and metrics values
