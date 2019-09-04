@@ -53,5 +53,5 @@ class RelGCNSparsePreprocessor(GGNNPreprocessor):
         # args: (atom_array, adj_array, label_array)
         data_list = [
             self.construct_sparse_data(x, adj, y) for (x, adj, y) in zip(*args)
-            ]
+        ]
         return SparseGraphDataset(data_list)
