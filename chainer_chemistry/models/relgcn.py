@@ -157,7 +157,7 @@ class RelGCNSparse(chainer.Chain):
         self.input_type = input_type
         self.scale_adj = scale_adj
 
-    def __call__(self, graph):
+    def __call__(self, sparse_batch):
         """
         Args:
             x: (batchsize, num_nodes, in_channels)
@@ -165,14 +165,15 @@ class RelGCNSparse(chainer.Chain):
 
         Returns: (batchsize, hidden_channels)
         """
-        if graph.x.dtype == self.xp.int32:
+        if sparse_batch.x.dtype == self.xp.int32:
             assert self.input_type == 'int'
         else:
             assert self.input_type == 'float'
-        h = self.embed(graph.x)  # (minibatch, max_num_atoms)
+        h = self.embed(sparse_batch.x)  # (minibatch, max_num_atoms)
         if self.scale_adj:
             raise NotImplementedError
         for rgcn_conv in self.rgcn_convs:
-            h = functions.tanh(rgcn_conv(h, graph))
-        h = self.rgcn_readout(h, graph.batch)
+            h = functions.tanh(rgcn_conv(
+                h, sparse_batch.edge_index, sparse_batch.edge_attr))
+        h = self.rgcn_readout(h, sparse_batch.batch)
         return h

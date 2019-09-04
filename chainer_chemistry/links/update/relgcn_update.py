@@ -65,9 +65,9 @@ class RelGCNSparseUpdate(chainer.Chain):
             self.edge_weight = chainer.links.Linear(
                 in_channels, n_edge_types * out_channels)
 
-    def __call__(self, h, graph):
+    def __call__(self, h, edge_index, edge_attr):
         next_h = self.root_weight(h)
         features = self.edge_weight(
             h) .reshape(-1, self.n_edge_types, self.out_channels)
-        messages = features[graph.edge_index[0], graph.edge_attr, :]
-        return functions.scatter_add(next_h, graph.edge_index[1], messages)
+        messages = features[edge_index[0], edge_attr, :]
+        return functions.scatter_add(next_h, edge_index[1], messages)
