@@ -1,7 +1,9 @@
+import numpy
+
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
-    PaddingGraphData
+    PaddingGraphData, SparseGraphData
 from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
-    PaddingGraphDataset
+    PaddingGraphDataset, SparseGraphDataset
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array, construct_discrete_edge_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
@@ -58,3 +60,36 @@ class GGNNPreprocessor(MolPreprocessor):
             PaddingGraphData(x=x, adj=adj, y=y) for (x, adj, y) in zip(*args)
         ]
         return PaddingGraphDataset(data_list)
+
+
+class GGNNSparsePreprocessor(GGNNPreprocessor):
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
+                 kekulize=False):
+        super(GGNNSparsePreprocessor, self).__init__(
+            max_atoms=max_atoms, out_size=out_size, add_Hs=add_Hs,
+            kekulize=kekulize)
+
+    def construct_sparse_data(self, x, adj, y):
+        edge_index = [[], []]
+        edge_attr = []
+        label_num, n, _ = adj.shape
+        for label in range(label_num):
+            for i in range(n):
+                for j in range(n):
+                    if adj[label, i, j] != 0.:
+                        edge_index[0].append(i)
+                        edge_index[1].append(i)
+                        edge_attr.append(label)
+        return SparseGraphData(
+            x=x,
+            edge_index=numpy.array(edge_index, dtype=numpy.int),
+            edge_attr=numpy.array(edge_attr, dtype=numpy.int),
+            y=y
+        )
+
+    def create_dataset(self, *args, **kwargs):
+        # args: (atom_array, adj_array, label_array)
+        data_list = [
+            self.construct_sparse_data(x, adj, y) for (x, adj, y) in zip(*args)
+        ]
+        return SparseGraphDataset(data_list)

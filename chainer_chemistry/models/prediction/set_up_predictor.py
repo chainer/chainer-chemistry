@@ -10,11 +10,10 @@ from chainer_chemistry.models.mlp import MLP
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from chainer_chemistry.models.relgat import RelGAT
-from chainer_chemistry.models.relgcn import RelGCN
+from chainer_chemistry.models.relgcn import RelGCN, RelGCNSparse
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
-from chainer_chemistry.models.relgcn_sparse import RelGCNSparse
 
 from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
