@@ -135,12 +135,12 @@ def get_concated_node_vec(atom_feat, pair_feat, global_feat, atom_num, bond_num,
     mean_edge_vec = sum_edeg_vec / functions.broadcast_to(degree.reshape(-1, 1), 
                                                           sum_edeg_vec.shape)
 
-    # concat
+    # concating
     reshaped_global_feat = functions.tile(global_feat, (a1, 1))
     concated_vec = functions.concat((reshaped_atom_feat,
                                      mean_edge_vec, reshaped_global_feat))
 
-    # concating
+    # masking
     mask = xp.zeros((a0 * a1), dtype=xp.bool)
     for i in range(a0): mask[xp.arange(a1 * i, (a1 * i + atom_num[i]))] = True
     mask = xp.broadcast_to(mask.reshape(-1, 1), concated_vec.shape)
