@@ -1,3 +1,7 @@
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
+    PaddingGraphData
+from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
+    PaddingGraphDataset
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array, construct_adj_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
@@ -32,7 +36,6 @@ class GINPreprocessor(MolPreprocessor):
         self.max_atoms = max_atoms
         self.out_size = out_size
 
-
     def get_input_features(self, mol):
         """get input features
 
@@ -46,3 +49,10 @@ class GINPreprocessor(MolPreprocessor):
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_adj_matrix(mol, out_size=self.out_size)
         return atom_array, adj_array
+
+    def create_dataset(self, *args, **kwargs):
+        # args: (atom_array, adj_array, label_array)
+        data_list = [
+            PaddingGraphData(x=x, adj=adj, y=y) for (x, adj, y) in zip(*args)
+        ]
+        return PaddingGraphDataset(data_list)
