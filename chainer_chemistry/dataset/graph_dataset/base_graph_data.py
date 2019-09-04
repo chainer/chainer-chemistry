@@ -26,5 +26,4 @@ class SparseGraphData(BaseGraphData):
         self.pos = pos
         self.super_node = super_node
         self.y = y
-        self.batch_index = None
         super(SparseGraphData, self).__init__()

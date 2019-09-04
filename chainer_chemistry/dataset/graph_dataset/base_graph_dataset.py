@@ -1,9 +1,10 @@
 import chainer
+import numpy
 from chainer._backend import Device
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
     BaseGraphData
-from chainer_chemistry.dataset.graph_dataset.feature_converters import padding, \
-    concat, shift_concat
+from chainer_chemistry.dataset.graph_dataset.feature_converters \
+    import batch_with_padding, batch_without_padding, concat, shift_concat
 
 
 class BaseGraphDataset(object):
@@ -31,7 +32,8 @@ class BaseGraphDataset(object):
             device = chainer.get_device(device)
         batch = [method(name, batch, device=device) for name, method in
                  zip(self._feature_entries, self._feature_batch_method)]
-        data = BaseGraphData(**{key: value for key, value in zip(self._feature_entries, batch)})
+        data = BaseGraphData(
+            **{key: value for key, value in zip(self._feature_entries, batch)})
         return data
 
 
@@ -40,11 +42,11 @@ class PaddingGraphDataset(BaseGraphDataset):
 
     def __init__(self, data_list):
         super(PaddingGraphDataset, self).__init__(data_list)
-        self.register_feature('x', padding)
-        self.register_feature('adj', padding)
-        self.register_feature('super_node', padding)
-        self.register_feature('pos', padding)
-        self.register_feature('y', padding)
+        self.register_feature('x', batch_with_padding)
+        self.register_feature('adj', batch_with_padding)
+        self.register_feature('super_node', batch_with_padding)
+        self.register_feature('pos', batch_with_padding)
+        self.register_feature('y', batch_without_padding)
 
 
 class SparseGraphDataset(BaseGraphDataset):
@@ -54,7 +56,18 @@ class SparseGraphDataset(BaseGraphDataset):
         super(SparseGraphDataset, self).__init__(data_list)
         self.register_feature('x', concat)
         self.register_feature('edge_index', shift_concat)
-        self.register_feature('edge_attr', shift_concat)
+        self.register_feature('edge_attr', concat)
         self.register_feature('super_node', concat)
-        self.register_feature('pos', padding)
-        self.register_feature('y', padding)
+        self.register_feature('pos', concat)
+        self.register_feature('y', batch_without_padding)
+
+    def converter(self, batch, device=None):
+        data = super(SparseGraphDataset, self).converter(batch, device=device)
+        if not isinstance(device, Device):
+            device = chainer.get_device(device)
+        data.batch = numpy.concatenate([
+            numpy.full((data.x.shape[0]), i, dtype=numpy.int)
+            for i, data in enumerate(batch)
+        ])
+        data.batch = device.send(data.batch)
+        return data

@@ -20,6 +20,7 @@ from chainer_chemistry.dataset.preprocessors.relgcn_preprocessor import RelGCNPr
 from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.schnet_preprocessor import SchNetPreprocessor  # NOQA
 from chainer_chemistry.dataset.preprocessors.weavenet_preprocessor import WeaveNetPreprocessor  # NOQA
+from chainer_chemistry.dataset.preprocessors.relgcn_sparse_preprocessor import RelGCNSparsePreprocessor  # NOQA
 
 preprocess_method_dict = {
     'ecfp': ECFPPreprocessor,
@@ -35,4 +36,5 @@ preprocess_method_dict = {
     'rsgcn': RSGCNPreprocessor,
     'rsgcn_gwm': RSGCNGWMPreprocessor,
     'relgat': RelGATPreprocessor,
+    'relgcn_sparse': RelGCNSparsePreprocessor,
 }

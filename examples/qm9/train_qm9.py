@@ -10,7 +10,6 @@ import os
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
 
-from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -27,7 +26,7 @@ def rmse(x0, x1):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat']
+                   'relgat', 'relgcn_sparse']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
