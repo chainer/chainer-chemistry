@@ -98,6 +98,8 @@ def main():
     if result is False:
         preprocessor = MPMEGNetPreprocessor()
         dataset.get_mp(args.data_dir, target_list, preprocessor, args.num_data)
+        if not os.path.exists(cache_dir):
+            os.makedirs(cache_dir)
         dataset.save_pickle(dataset_cache_path)
 
     # Use a predictor with scaled output labels.

@@ -150,5 +150,4 @@ class MPDataset(chainer.dataset.DatasetMixin):
         bond_idx = self.data[i][5]
         target = self.data[i][6]
         return atom_feat, nbr_feat, global_feat, atom_num, bond_num, bond_idx, target
-        # return *data
 
