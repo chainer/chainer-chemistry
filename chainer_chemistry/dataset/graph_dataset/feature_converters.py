@@ -16,6 +16,12 @@ def batch_without_padding(name, batch, device=None):
     return device.send(feat)
 
 
+def concat_with_padding(name, batch, device=None, pad=0):
+    feat = batch_with_padding(name, batch, device=device, pad=pad)
+    a, b = feat.shape
+    return feat.reshape((a * b))
+
+
 # not increase dimension
 def concat(name, batch, device=None, axis=0):
     feat = numpy.concatenate([getattr(data, name) for data in batch],
@@ -26,6 +32,15 @@ def concat(name, batch, device=None, axis=0):
 def shift_concat(name, batch, device=None, shift_attr='x', shift_axis=1):
     shift_index_array = numpy.cumsum(
         numpy.array([0] + [getattr(data, shift_attr).shape[0] for data in batch]))
+    feat = numpy.concatenate([
+        getattr(data, name) + shift_index_array[i]
+        for i, data in enumerate(batch)], axis=shift_axis)
+    return device.send(feat)
+
+
+def shift_concat_with_padding(name, batch, device=None, shift_attr='x', shift_axis=1):
+    max_n_nodes = max([data.x.shape[0] for data in batch])
+    shift_index_array = numpy.arange(0, len(batch) * max_n_nodes, max_n_nodes)
     feat = numpy.concatenate([
         getattr(data, name) + shift_index_array[i]
         for i, data in enumerate(batch)], axis=shift_axis)

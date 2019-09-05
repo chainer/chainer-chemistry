@@ -4,7 +4,8 @@ from chainer._backend import Device
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
     BaseGraphData
 from chainer_chemistry.dataset.graph_dataset.feature_converters \
-    import batch_with_padding, batch_without_padding, concat, shift_concat
+    import batch_with_padding, batch_without_padding, concat, shift_concat, \
+    concat_with_padding, shift_concat_with_padding
 
 
 class BaseGraphDataset(object):
@@ -20,6 +21,10 @@ class BaseGraphDataset(object):
             return
         self._feature_entries.append(key)
         self._feature_batch_method.append(batch_method)
+
+    def update_feature(self, key, batch_method):
+        index = self._feature_entries.index(key)
+        self._feature_batch_method[index] = batch_method
 
     def __len__(self):
         return len(self.data_list)
@@ -67,6 +72,20 @@ class SparseGraphDataset(BaseGraphDataset):
             device = chainer.get_device(device)
         data.batch = numpy.concatenate([
             numpy.full((data.x.shape[0]), i, dtype=numpy.int)
+            for i, data in enumerate(batch)
+        ])
+        data.batch = device.send(data.batch)
+        return data
+
+    def converter_with_padding(self, batch, device=None):
+        self.update_feature('x', concat_with_padding)
+        self.update_feature('edge_index', shift_concat_with_padding)
+        data = super(SparseGraphDataset, self).converter(batch, device=device)
+        if not isinstance(device, Device):
+            device = chainer.get_device(device)
+        max_n_nodes = max([data.x.shape[0] for data in batch])
+        data.batch = numpy.concatenate([
+            numpy.full((max_n_nodes), i, dtype=numpy.int)
             for i, data in enumerate(batch)
         ])
         data.batch = device.send(data.batch)
