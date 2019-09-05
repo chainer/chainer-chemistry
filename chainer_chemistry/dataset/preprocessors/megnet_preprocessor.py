@@ -198,7 +198,7 @@ def get_is_in_ring(mol):
     Args:
         mol (Mol): mol instance
 
-    Returns 
+    Returns
         is_in_ring (dict): key is the atom idx, value is the set()
     """
     sssr = Chem.GetSymmSSSR(mol)
@@ -237,12 +237,12 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
     Args:
         mol (Mol): mol instance
 
-    Returns 
-        features (numpy.ndarray): 2 dimensional array. First axis size is 
-                                  the number of the bond, Second axis size 
+    Returns
+        features (numpy.ndarray): 2 dimensional array. First axis size is
+                                  the number of the bond, Second axis size
                                   is the number of the feature.
-        bond_idx (numpy.ndarray): 2 dimensional array. First axis size is 
-                                  the number of the bond, Second axis is 
+        bond_idx (numpy.ndarray): 2 dimensional array. First axis size is
+                                  the number of the bond, Second axis is
                                   the Tuple(BeginAtomIdx, EndAtomIdx).
     """
     converter = GaussianDistance()
@@ -301,7 +301,7 @@ def construct_global_state_feature(mol):
     Args:
         mol (Mol): mol instance
 
-    Returns (numpy.ndarray): 1 dimensional array. 
+    Returns (numpy.ndarray): 1 dimensional array.
 
     """
     n_atom = mol.GetNumAtoms()

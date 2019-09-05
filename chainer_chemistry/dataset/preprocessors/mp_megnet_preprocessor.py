@@ -39,7 +39,7 @@ class MPMEGNetPreprocessor(object):
                 self.max_neighbors, dtype=np.float32) + self.max_radius + 1.
             nbr_feature_idx = np.zeros((self.max_neighbors, 2), dtype=np.int32)
             nbr_feature_idx[:, 0] = start_node_idx
-            nbr_feature_idx[:, 1] = list(
+            nbr_feature_idx[:len(nbrs), 1] = list(
                 map(lambda x: x[2], nbrs[:self.max_neighbors]))
             nbr_feature[:len(nbrs)] = list(
                 map(lambda x: x[1], nbrs[:self.max_neighbors]))

@@ -82,7 +82,7 @@ class MPDataset(chainer.dataset.DatasetMixin):
         """Downloads, caches and preprocesses Material Project dataset.
 
         Args:
-            preprocessor (BasePreprocessor): 
+            preprocessor (BasePreprocessor):
             labels (str or list): List of target labels.
             return_mpid (bool): If set to ``True``,
                 mp-id array is also returned.
