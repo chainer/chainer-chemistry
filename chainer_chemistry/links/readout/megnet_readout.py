@@ -1,5 +1,4 @@
 import chainer
-from chainer import functions
 
 
 from chainer_chemistry.links.readout.set2set import Set2Set

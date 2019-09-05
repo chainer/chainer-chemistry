@@ -60,7 +60,7 @@ def construct_atom_type_vec(mol, num_max_atoms, atom_list=None,
 
 def construct_atom_chirality_vec(mol, num_max_atoms):
     chirality_vec = numpy.zeros((num_max_atoms, 2), dtype=numpy.float32)
-    
+
     # chiral_cc: (atom_index, chirality) : (1, 'S')
     chiral_cc = Chem.FindMolChiralCenters(mol)
     for chiral_dict in chiral_cc:
@@ -126,7 +126,8 @@ def construct_aromaticity_vec(mol, num_max_atoms):
     return aromaticity_vec
 
 
-def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None, include_unknown_atom=False):
+def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None,
+                           include_unknown_atom=False):
     """construct atom feature
 
     Args:
@@ -162,11 +163,12 @@ def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None, include_
     # stack all vector
     if use_fixed_atom_feature:
         feature = numpy.hstack((atom_type_vec, atom_chirality_vec,
-                                atom_ring_vec, hybridization_vec, 
+                                atom_ring_vec, hybridization_vec,
                                 hydrogen_bonding, aromaticity_vec))
     else:
-        feature = construct_atom_type_vec(mol, num_max_atoms, atom_list=atom_list,
-                                          include_unknown_atom=include_unknown_atom)
+        feature = construct_atom_type_vec(
+            mol, num_max_atoms, atom_list=atom_list,
+            include_unknown_atom=include_unknown_atom)
 
     return feature
 
@@ -236,24 +238,25 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
         mol (Mol): mol instance
 
     Returns 
-        features (numpy.ndarray): 2 dimensional array. First axis size is the number of the bond, 
-                                   Second axis size is the number of the feature.
-        bond_idx (numpy.ndarray): 2 dimensional array. First axis size is the number of the bond, 
-                                   Second axis is the Tuple(BeginAtomIdx, EndAtomIdx).
+        features (numpy.ndarray): 2 dimensional array. First axis size is 
+                                  the number of the bond, Second axis size 
+                                  is the number of the feature.
+        bond_idx (numpy.ndarray): 2 dimensional array. First axis size is 
+                                  the number of the bond, Second axis is 
+                                  the Tuple(BeginAtomIdx, EndAtomIdx).
     """
-    num_max_atoms = mol.GetNumAtoms()
     converter = GaussianDistance()
 
     # prepare the data for extracting the pair feature
     bonds = mol.GetBonds()
-    sssr = Chem.GetSymmSSSR(mol)
     graph_distance_matrix = Chem.GetDistanceMatrix(mol)
     is_in_ring = get_is_in_ring(mol)
 
     if use_fixed_atom_feature:
         confid = AllChem.EmbedMolecule(mol)
         try:
-            coordinate_matrix = rdmolops.Get3DDistanceMatrix(mol, confId=confid)
+            coordinate_matrix = rdmolops.Get3DDistanceMatrix(
+                mol, confId=confid)
         except ValueError as e:
             logger = getLogger(__name__)
             logger.info('construct_distance_matrix failed, type: {}, {}'
@@ -268,19 +271,23 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
         end_node = bond.GetEndAtomIdx()
 
         # create pair feature
-        distance_feature = numpy.array(graph_distance_matrix[start_node][end_node], 
-                                       dtype=numpy.float32)
+        distance_feature = numpy.array(
+            graph_distance_matrix[start_node][end_node], dtype=numpy.float32)
         bond_feature = construct_bond_vec(mol, start_node, end_node)
-        ring_feature = construct_ring_feature_vec(is_in_ring, start_node, end_node)
+        ring_feature = construct_ring_feature_vec(
+            is_in_ring, start_node, end_node)
 
         bond_idx.append((start_node, end_node))
         if use_fixed_atom_feature:
-            expanded_distance_feature = construct_expanded_distance_vec(coordinate_matrix, 
-                                                            converter, start_node, end_node)
-            feature.append(numpy.hstack((bond_feature, ring_feature, distance_feature,
+            expanded_distance_feature = \
+                construct_expanded_distance_vec(
+                    coordinate_matrix, converter, start_node, end_node)
+            feature.append(numpy.hstack((bond_feature, ring_feature,
+                                         distance_feature,
                                          expanded_distance_feature)))
         else:
-            feature.append(numpy.hstack((bond_feature, ring_feature, distance_feature)))
+            feature.append(numpy.hstack(
+                (bond_feature, ring_feature, distance_feature)))
 
     bond_idx = numpy.array(bond_idx).T
     bond_num = len(bonds)
@@ -329,6 +336,7 @@ class MEGNetPreprocessor(MolPreprocessor):
             as "unknown" atom.
         kekulize (bool): If True, Kekulizes the molecule.
     """
+
     def __init__(self, max_atoms=-1, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
                  include_unknown_atom=False, kekulize=False):
@@ -353,8 +361,11 @@ class MEGNetPreprocessor(MolPreprocessor):
         type_check_num_atoms(mol, self.max_atoms)
         atom_num = mol.GetNumAtoms()
         atom_array = construct_atom_feature(mol, self.use_fixed_atom_feature,
-                                            self.atom_list, self.include_unknown_atom)
+                                            self.atom_list,
+                                            self.include_unknown_atom)
 
-        pair_feature, bond_idx, bond_num = construct_pair_feature(mol, self.use_fixed_atom_feature)
+        pair_feature, bond_idx, bond_num = construct_pair_feature(
+            mol, self.use_fixed_atom_feature)
         global_feature = construct_global_state_feature(mol)
-        return atom_array, pair_feature, global_feature, atom_num, bond_num, bond_idx
+        return atom_array, pair_feature, global_feature, \
+            atom_num, bond_num, bond_idx

@@ -7,7 +7,6 @@ import numpy
 import pandas
 
 import chainer
-from chainer import cuda
 from chainer import functions as F
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
@@ -23,7 +22,8 @@ except ImportError:
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
-from chainer_chemistry.dataset.preprocessors.mp_megnet_preprocessor import MPMEGNetPreprocessor
+from chainer_chemistry.dataset.preprocessors.mp_megnet_preprocessor \
+    import MPMEGNetPreprocessor
 from chainer_chemistry.datasets.mp import MPDataset
 
 
@@ -39,10 +39,11 @@ def parse_arguments():
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
-    parser = argparse.ArgumentParser(description='Regression on Material Project Data.')
+    parser = argparse.ArgumentParser(
+        description='Regression on Material Project Data.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='megnet')
-    parser.add_argument('--label', '-l', type=str, choices=label_names, 
+    parser.add_argument('--label', '-l', type=str, choices=label_names,
                         default='formation_energy_per_atom',
                         help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
@@ -78,7 +79,6 @@ def main():
     method = args.method
     labels = args.label
     target_list = [labels]
-    class_num = len(labels) if isinstance(labels, list) else 1
     cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
 
     # Get the filename corresponding to the cached dataset, based on the amount
@@ -110,7 +110,7 @@ def main():
     train_data_size = int(len(dataset) * args.train_data_ratio)
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
-   # This callback function extracts only the inputs and discards the labels.
+    # This callback function extracts only the inputs and discards the labels.
     @chainer.dataset.converter()
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]

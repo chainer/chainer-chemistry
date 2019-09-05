@@ -8,21 +8,17 @@ import os
 
 import chainer
 from chainer import functions as F
-from chainer import iterators
-from chainer import optimizers
-from chainer import training
-from chainer.training import extensions as E
 from chainer.datasets import split_dataset_random
 
 
 from chainer_chemistry.dataset.converters import concat_mols
-from chainer_chemistry.dataset.preprocessors.mp_megnet_preprocessor import MPMEGNetPreprocessor
+from chainer_chemistry.dataset.preprocessors.mp_megnet_preprocessor \
+    import MPMEGNetPreprocessor
 from chainer_chemistry.datasets.mp import MPDataset
 from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.utils import run_train
-
 
 
 def rmse(x0, x1):
@@ -36,10 +32,11 @@ def parse_arguments():
     method_list = ['megnet']
     scale_list = ['standardize', 'none']
     # Set up the argument parser.
-    parser = argparse.ArgumentParser(description='Regression on Material Project Data.')
+    parser = argparse.ArgumentParser(
+        description='Regression on Material Project Data.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='megnet', help='method name')
-    parser.add_argument('--label', '-l', type=str, choices=label_names, 
+    parser.add_argument('--label', '-l', type=str, choices=label_names,
                         default='formation_energy_per_atom',
                         help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
