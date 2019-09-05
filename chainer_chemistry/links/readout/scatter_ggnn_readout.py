@@ -19,11 +19,14 @@ class ScatterGGNNReadout(chainer.Chain):
             activate function for aggregation
             `functions.tanh` was suggested in original paper.
     """
-
     def __init__(self, out_dim, in_channels=None, nobias=False,
                  activation=functions.identity,
-                 activation_agg=functions.identity):
+                 activation_agg=functions.identity,
+                 concat_n_info=False):
         super(ScatterGGNNReadout, self).__init__()
+        self.concat_n_info = concat_n_info
+        if self.concat_n_info:
+            out_dim -= 1
         with self.init_scope():
             self.i_layer = chainer.links.Linear(
                 in_channels, out_dim, nobias=nobias)
@@ -47,4 +50,12 @@ class ScatterGGNNReadout(chainer.Chain):
         y = self.xp.zeros((int(batch[-1]) + 1, self.out_dim),
                           dtype=numpy.float32)
         y = functions.scatter_add(y, batch, g)
-        return self.activation_agg(y)
+        y = self.activation_agg(y)
+
+        if self.concat_n_info:
+            n_nodes = self.xp.zeros(y.shape[0], dtype=self.xp.float32)
+            n_nodes = functions.scatter_add(n_nodes, batch,
+                                            self.xp.ones(batch.shape[0]))
+            y = functions.concat((y, n_nodes.reshape((-1, 1))))
+
+        return y
