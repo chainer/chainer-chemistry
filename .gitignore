@@ -113,3 +113,7 @@ examples/own_dataset/eval_*
 *.pyproj
 
 .pytest_cache
+
+# Project cache directory
+input/
+result/
