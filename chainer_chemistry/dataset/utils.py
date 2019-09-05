@@ -1,5 +1,6 @@
 import numpy
 
+
 class GaussianDistance:
     """
     Expand distance with Gaussian basis sit at centers and with width 0.5.
@@ -13,7 +14,8 @@ class GaussianDistance:
         self.centers = centers
         self.width = width
 
-    def convert(self, d):
+
+    def expand1D(self, d):
         """
         expand distance vector d with given parameters
 
@@ -24,3 +26,11 @@ class GaussianDistance:
             (vector) M dimension with M the length of centers
         """
         return numpy.exp(- (d - self.centers) ** 2 / self.width ** 2, dtype=numpy.float32)
+
+
+    def expand2D(self, d):
+        """
+        expand distance vectors with given parameters
+        """
+        return numpy.exp(- (d[..., numpy.newaxis] - self.centers) ** 2 / self.width ** 2, dtype=numpy.float32)
+

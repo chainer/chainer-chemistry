@@ -226,7 +226,7 @@ def construct_expanded_distance_vec(coordinate_matrix, converter, i, j):
     # calculate the bond length
     distance = numpy.linalg.norm(coordinate_matrix[i] - coordinate_matrix[j])
     # convert from the bond length to vector
-    expanded_distance_vec = converter.convert(distance)
+    expanded_distance_vec = converter.expand1D(distance)
     return expanded_distance_vec
 
 
@@ -280,7 +280,6 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
                                                             converter, start_node, end_node)
             feature.append(numpy.hstack((bond_feature, ring_feature, distance_feature,
                                          expanded_distance_feature)))
-            # feature.append(numpy.hstack((bond_feature, ring_feature, distance_feature)))
         else:
             feature.append(numpy.hstack((bond_feature, ring_feature, distance_feature)))
 
