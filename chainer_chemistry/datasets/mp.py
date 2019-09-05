@@ -55,7 +55,6 @@ class MPDataset(chainer.dataset.DatasetMixin):
         """Collect the label
         """
         # TODO: data_dirは今後はURLを指すようになる
-        # load csv
         id_prop_data = pd.read_csv(os.path.join(data_dir, "property_data.csv"), index_col=0)
         stability_data = pd.read_csv(os.path.join(data_dir, "stability_data.csv"),
                                      index_col=0, converters={3: ast.literal_eval})
@@ -67,7 +66,6 @@ class MPDataset(chainer.dataset.DatasetMixin):
             mask = n_warns == 0
             id_prop_data = id_prop_data[mask]
 
-        # TODO: why??
         # drop data which doesn't have fermi energy data
         id_prop_data = id_prop_data[~np.isnan(id_prop_data["efermi"].values)]
 
@@ -75,7 +73,6 @@ class MPDataset(chainer.dataset.DatasetMixin):
             id_prop_data = id_prop_data[id_prop_data["band_gap"].values > 0]
 
         if "K_VRH" in target_list or "G_VRH" in target_list or "poisson_ratio" in target_list:
-            # TODO: why more than 1 ??
             id_prop_data = id_prop_data[id_prop_data["K_VRH"] >= 1]
             id_prop_data = id_prop_data[id_prop_data["G_VRH"] >= 1]
 
@@ -142,12 +139,5 @@ class MPDataset(chainer.dataset.DatasetMixin):
 
 
     def get_example(self, i):
-        atom_feat = self.data[i][0]
-        nbr_feat = self.data[i][1]
-        global_feat = self.data[i][2]
-        atom_num = self.data[i][3]
-        bond_num = self.data[i][4]
-        bond_idx = self.data[i][5]
-        target = self.data[i][6]
-        return atom_feat, nbr_feat, global_feat, atom_num, bond_num, bond_idx, target
+        return tuple(self.data[i])
 
