@@ -9,7 +9,6 @@ class MEGNetReadout(chainer.Chain):
     """MEGNet submodule for readout part.
 
     Args:
-        out_dim (int): dimension of output feature vector
         in_channels (int): dimension of feature vector associated to
             each node. Must not be `None`.
         n_layers (int): number of LSTM layers for set2set

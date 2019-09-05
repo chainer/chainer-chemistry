@@ -3,7 +3,7 @@
 set -e
 
 # List of available graph convolution methods.
-methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat megnet)
 
 # device identifier; set it to -1 to train on the CPU (default).
 device=${1:--1}
