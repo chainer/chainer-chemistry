@@ -32,7 +32,7 @@ class GIN(chainer.Chain):
     def __init__(self, out_dim, hidden_channels=16,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
                  dropout_ratio=0.5, concat_hidden=False,
-                 weight_tying=True, activation=functions.identity,
+                 weight_tying=False, activation=functions.identity,
                  n_edge_types=4):
         super(GIN, self).__init__()
         n_message_layer = 1 if weight_tying else n_update_layers
@@ -109,7 +109,7 @@ class GINSparse(chainer.Chain):
     def __init__(self, out_dim, hidden_channels=16,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
                  dropout_ratio=0.5, concat_hidden=False,
-                 weight_tying=True, activation=functions.identity,
+                 weight_tying=False, activation=functions.identity,
                  n_edge_types=4):
         super(GINSparse, self).__init__()
         n_message_layer = 1 if weight_tying else n_update_layers
