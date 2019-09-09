@@ -95,7 +95,6 @@ class GINSparseUpdate(chainer.Chain):
         new_h = functions.scatter_add(new_h, edge_index[1], messages)
         # apply MLP
         new_h = self.mlp(new_h)
-        new_h = functions.relu(new_h)
         if self.dropout_ratio > 0.0:
             new_h = functions.dropout(new_h, ratio=self.dropout_ratio)
         return new_h

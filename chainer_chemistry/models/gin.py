@@ -94,6 +94,8 @@ class GIN(chainer.Chain):
         for step in range(self.n_message_layers):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
+            if step != self.n_message_layers - 1:
+                h = functions.relu(h)
             if self.concat_hidden:
                 g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
@@ -153,6 +155,8 @@ class GINSparse(chainer.Chain):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](
                 h, sparse_batch.edge_index)
+            if step != self.n_message_layers - 1:
+                h = functions.relu(h)
             if self.concat_hidden:
                 g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
