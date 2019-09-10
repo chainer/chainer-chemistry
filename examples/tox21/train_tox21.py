@@ -10,10 +10,6 @@ import argparse
 import chainer
 from chainer import functions as F
 from chainer import iterators as I
-from chainer import optimizers as O
-from chainer import training
-from chainer.training import extensions as E
-import json
 from rdkit import RDLogger
 
 from chainer_chemistry.dataset.converters import concat_mols
@@ -22,10 +18,12 @@ from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialI
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.training.extensions import ROCAUCEvaluator  # NOQA
+from chainer_chemistry.utils import run_train, save_json
 
 import data
 
 # Disable errors by RDKit occurred in preprocessing Tox21 dataset.
+
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
 # show INFO level log from chainer chemistry
@@ -60,9 +58,11 @@ def main():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='GPU ID to use. Negative value indicates '
-                        'not to use GPU and to run the code in CPU.')
+    parser.add_argument(
+        '--device', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to output directory')
     parser.add_argument('--epoch', '-e', type=int, default=10,
@@ -110,65 +110,46 @@ def main():
         train_iter.show_label_stats()
     else:
         raise ValueError('Invalid iterator type {}'.format(iterator_type))
-    val_iter = I.SerialIterator(val, args.batchsize,
-                                repeat=False, shuffle=False)
 
+    device = chainer.get_device(args.device)
     classifier = Classifier(predictor_,
                             lossfun=F.sigmoid_cross_entropy,
                             metrics_fun=F.binary_accuracy,
-                            device=args.gpu)
+                            device=device)
 
-    optimizer = O.Adam()
-    optimizer.setup(classifier)
-
-    updater = training.StandardUpdater(
-        train_iter, optimizer, device=args.gpu, converter=concat_mols)
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-
-    trainer.extend(E.Evaluator(val_iter, classifier,
-                               device=args.gpu, converter=concat_mols))
-    trainer.extend(E.LogReport())
-
+    extensions_list = []
     eval_mode = args.eval_mode
-    if eval_mode == 0:
-        trainer.extend(E.PrintReport([
-            'epoch', 'main/loss', 'main/accuracy', 'validation/main/loss',
-            'validation/main/accuracy', 'elapsed_time']))
-    elif eval_mode == 1:
+    if eval_mode == 1:
         train_eval_iter = I.SerialIterator(train, args.batchsize,
                                            repeat=False, shuffle=False)
-        trainer.extend(ROCAUCEvaluator(
+
+        extensions_list.append(ROCAUCEvaluator(
             train_eval_iter, classifier, eval_func=predictor_,
-            device=args.gpu, converter=concat_mols, name='train',
+            device=device, converter=concat_mols, name='train',
             pos_labels=1, ignore_labels=-1, raise_value_error=False))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
-        trainer.extend(ROCAUCEvaluator(
+        val_iter = I.SerialIterator(val, args.batchsize,
+                                    repeat=False, shuffle=False)
+        extensions_list.append(ROCAUCEvaluator(
             val_iter, classifier, eval_func=predictor_,
-            device=args.gpu, converter=concat_mols, name='val',
+            device=device, converter=concat_mols, name='val',
             pos_labels=1, ignore_labels=-1))
-        trainer.extend(E.PrintReport([
-            'epoch', 'main/loss', 'main/accuracy', 'train/main/roc_auc',
-            'validation/main/loss', 'validation/main/accuracy',
-            'val/main/roc_auc', 'elapsed_time']))
-    else:
-        raise ValueError('Invalid accfun_mode {}'.format(eval_mode))
-    trainer.extend(E.ProgressBar(update_interval=10))
-    frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
-    trainer.extend(E.snapshot(), trigger=(frequency, 'epoch'))
 
-    if args.resume:
-        chainer.serializers.load_npz(args.resume, trainer)
+    run_train(classifier, train_iter, valid=val,
+              batch_size=args.batchsize, epoch=args.epoch, out=args.out,
+              device=device, converter=concat_mols,
+              extensions_list=extensions_list, resume_path=args.resume)
 
-    trainer.run()
+    # frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
+    # trainer.extend(E.snapshot(), trigger=(frequency, 'epoch'))
+    # trainer.run()
 
     config = {'method': args.method,
               'conv_layers': args.conv_layers,
               'unit_num': args.unit_num,
               'labels': args.label}
-
-    with open(os.path.join(args.out, 'config.json'), 'w') as o:
-        o.write(json.dumps(config))
+    save_json(os.path.join(args.out, 'config.json'), config)
 
     classifier.save_pickle(os.path.join(args.out, args.model_filename),
                            protocol=args.protocol)

@@ -39,6 +39,7 @@ class NFPUpdate(chainer.Chain):
         fv = chainer_chemistry.functions.matmul(adj, h)
 
         # --- Update part ---
+        # TODO(nakago): self.xp is chainerx
         if self.xp is numpy:
             zero_array = numpy.zeros(fv.shape, dtype=numpy.float32)
         else:

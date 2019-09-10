@@ -2,15 +2,13 @@
 from __future__ import print_function
 
 import argparse
+
+import chainer
 import numpy
 import os
 
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
-from chainer import iterators
-from chainer import optimizers
-from chainer import training
-from chainer.training import extensions as E
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
@@ -19,6 +17,7 @@ from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
+from chainer_chemistry.utils import run_train
 
 
 def rmse(x0, x1):
@@ -47,9 +46,11 @@ def parse_arguments():
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', '-d', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--out', '-o', type=str, default='result',
                         help='path to save the computed model to')
     parser.add_argument('--epoch', '-e', type=int, default=20,
@@ -135,36 +136,18 @@ def main():
     predictor = set_up_predictor(method, args.unit_num, args.conv_layers,
                                  class_num, scaler)
 
-    # Set up the iterators.
-    train_iter = iterators.SerialIterator(train, args.batchsize)
-    valid_iter = iterators.SerialIterator(valid, args.batchsize, repeat=False,
-                                          shuffle=False)
-
     # Set up the regressor.
-    device = args.gpu
+    device = chainer.get_device(args.device)
     metrics_fun = {'mae': F.mean_absolute_error, 'rmse': rmse}
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
                           metrics_fun=metrics_fun, device=device)
 
-    # Set up the optimizer.
-    optimizer = optimizers.Adam()
-    optimizer.setup(regressor)
-
-    # Set up the updater.
-    updater = training.StandardUpdater(train_iter, optimizer, device=device,
-                                       converter=concat_mols)
-
-    # Set up the trainer.
-    trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=args.out)
-    trainer.extend(E.Evaluator(valid_iter, regressor, device=device,
-                               converter=concat_mols))
-    trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
-    trainer.extend(E.LogReport())
-    trainer.extend(E.PrintReport([
-        'epoch', 'main/loss', 'main/mae', 'main/rmse', 'validation/main/loss',
-        'validation/main/mae', 'validation/main/rmse', 'elapsed_time']))
-    trainer.extend(E.ProgressBar())
-    trainer.run()
+    print('Training...')
+    run_train(regressor, train, valid=valid,
+              batch_size=args.batchsize, epoch=args.epoch,
+              out=args.out, extensions_list=None,
+              device=device, converter=concat_mols,
+              resume_path=None)
 
     # Save the regressor's parameters.
     model_path = os.path.join(args.out, args.model_filename)

@@ -3,6 +3,8 @@ from __future__ import print_function
 
 import argparse
 import os
+
+import chainer
 import numpy
 import pandas
 
@@ -10,12 +12,6 @@ from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
-
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
 
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
@@ -49,9 +45,11 @@ def parse_arguments():
                         'predicting all properties at once')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         help='label scaling method', default='standardize')
-    parser.add_argument('--gpu', '-g', type=int, default=-1,
-                        help='id of gpu to use; negative value means running'
-                        'the code on cpu')
+    parser.add_argument(
+        '--device', '-d', type=str, default='-1',
+        help='Device specifier. Either ChainerX device specifier or an '
+             'integer. If non-negative integer, CuPy arrays with specified '
+             'device id are used. If negative integer, NumPy arrays are used')
     parser.add_argument('--seed', '-s', type=int, default=777,
                         help='random seed value')
     parser.add_argument('--train-data-ratio', '-r', type=float, default=0.7,
@@ -69,7 +67,7 @@ def parse_arguments():
 def main():
     # Parse the arguments.
     args = parse_arguments()
-    device = args.gpu
+    device = chainer.get_device(args.device)
 
     # Set up some useful variables that will be used later on.
     method = args.method
@@ -115,6 +113,7 @@ def main():
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
     # This callback function extracts only the inputs and discards the labels.
+    @chainer.dataset.converter()
     def extract_inputs(batch, device=None):
         return concat_mols(batch, device=device)[:-1]
 

@@ -30,7 +30,6 @@ RUN conda create -n py36 python=3.6 conda && \
     . /opt/conda/etc/profile.d/conda.sh && \
     conda init bash && \
     conda activate py36 && \
-    pip install chainer cupy-cuda101 && \
     conda install -c rdkit rdkit && \
     pip install pytest mock
 
