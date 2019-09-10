@@ -15,12 +15,13 @@ class MPDataset(chainer.dataset.DatasetMixin):
     """
     """
 
-    def __init__(self):
+    def __init__(self, preprocessor):
         """
         """
         self.id_prop_data = None
         self.data = None
         self.mpid = []
+        self.preprocessor = preprocessor
 
     def __len__(self):
         """
@@ -77,21 +78,19 @@ class MPDataset(chainer.dataset.DatasetMixin):
 
         self.id_prop_data = id_prop_data
 
-    def get_mp(self, data_dir, target_list, preprocessor=None, num_data=None,
-               is_stable=True):
-        """Downloads, caches and preprocesses Material Project dataset.
+    def get_mp(self, data_dir, target_list, num_data=None, is_stable=True):
+        """Download dataaset from Material Project dataset.
 
         Args:
-            preprocessor (BasePreprocessor):
-            labels (str or list): List of target labels.
-            return_mpid (bool): If set to ``True``,
-                mp-id array is also returned.
+            target_list (List): List of target labels.
+            num_data (int): the number of data that we want to get
+            is_stable (bool): If this value is true, load data that do not
+                                have calculation warnings
 
         Returns:
-            dataset, which is composed of `features`, which depends on
-            `preprocess_method`.
-
+            dataset, which is composed of `crystal object` and `target`
         """
+
         print("loading mp dataset from {}".format(data_dir))
         # TODO: is_stableは外で受け取る
         self._load_data_list(data_dir, target_list, is_stable)
@@ -128,12 +127,12 @@ class MPDataset(chainer.dataset.DatasetMixin):
             if "G_VRH" in target:
                 target["G_VRH"] = np.log10(target["G_VRH"])
 
-            # get input feature from crystal object
-            features = preprocessor.get_input_feature(crystal)
-            self.data.append((*features, target))
+            self.data.append((crystal, target))
             self.mpid.append(properties["material_id"])
 
         return True
 
     def get_example(self, i):
-        return tuple(self.data[i])
+        features = self.preprocessor.get_input_feature_from_crystal(
+            self.data[i][0])
+        return tuple((*features, self.data[i][1]))

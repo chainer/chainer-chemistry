@@ -15,7 +15,7 @@ class MEGNet(chainer.Chain):
         `arXiv:1812.05055 <https://arxiv.org/abs/1812.05055>`_
 
     Args:
-        n_update_layers (int): number of MEGNet layers
+        n_update_layers (int): number of MEGNetUpdate layers
     """
 
     def __init__(self, n_update_layers=3):

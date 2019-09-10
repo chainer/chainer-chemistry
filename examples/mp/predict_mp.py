@@ -22,8 +22,7 @@ except ImportError:
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
-from chainer_chemistry.dataset.preprocessors.mp_megnet_preprocessor \
-    import MPMEGNetPreprocessor
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets.mp import MPDataset
 
 
@@ -90,13 +89,13 @@ def main():
         dataset_filename = 'data.npz'
 
     # Load the cached dataset.
-    dataset = MPDataset()
+    preprocessor = preprocess_method_dict[method]()
+    dataset = MPDataset(preprocessor=preprocessor)
     dataset_cache_path = os.path.join(cache_dir, dataset_filename)
     result = dataset.load_pickle(dataset_cache_path)
 
     # load datasets from Material Project Database
     if result is False:
-        preprocessor = MPMEGNetPreprocessor()
         dataset.get_mp(args.data_dir, target_list, preprocessor, args.num_data)
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
