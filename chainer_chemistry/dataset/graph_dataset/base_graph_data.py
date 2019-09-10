@@ -14,6 +14,7 @@ class PaddingGraphData(BaseGraphData):
         self.super_node = super_node
         self.pos = pos
         self.y = y
+        self.n_nodes = x.shape[0]
         super(PaddingGraphData, self).__init__(**kwargs)
 
 
@@ -26,4 +27,5 @@ class SparseGraphData(BaseGraphData):
         self.pos = pos
         self.super_node = super_node
         self.y = y
+        self.n_nodes = x.shape[0]
         super(SparseGraphData, self).__init__()

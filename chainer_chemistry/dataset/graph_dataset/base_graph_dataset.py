@@ -52,6 +52,7 @@ class PaddingGraphDataset(BaseGraphDataset):
         self.register_feature('super_node', batch_with_padding)
         self.register_feature('pos', batch_with_padding)
         self.register_feature('y', batch_without_padding)
+        self.register_feature('n_nodes', batch_without_padding)
 
 
 class SparseGraphDataset(BaseGraphDataset):
@@ -65,6 +66,7 @@ class SparseGraphDataset(BaseGraphDataset):
         self.register_feature('super_node', concat)
         self.register_feature('pos', concat)
         self.register_feature('y', batch_without_padding)
+        self.register_feature('n_nodes', batch_without_padding)
 
     def converter(self, batch, device=None):
         data = super(SparseGraphDataset, self).converter(batch, device=device)
