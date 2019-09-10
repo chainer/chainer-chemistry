@@ -29,6 +29,7 @@ class GIN(chainer.Chain):
         n_edge_types (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
     """
+
     def __init__(self, out_dim, hidden_channels=16,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
                  dropout_ratio=0.5, concat_hidden=False,
@@ -108,7 +109,8 @@ class GIN(chainer.Chain):
 
 
 class GINSparse(chainer.Chain):
-    def __init__(self, out_dim, hidden_channels=16,
+    def __init__(self, out_dim, node_embedding=False, hidden_channels=16,
+                 out_channels=None,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
                  dropout_ratio=0.5, concat_hidden=False,
                  weight_tying=False, activation=functions.identity,
@@ -122,8 +124,11 @@ class GINSparse(chainer.Chain):
                                      in_size=n_atom_types)
 
             # two non-linear MLP part
+            if out_channels is None:
+                out_channels = hidden_channels
             self.update_layers = chainer.ChainList(*[GINSparseUpdate(
-                hidden_channels=hidden_channels, dropout_ratio=dropout_ratio)
+                hidden_channels=hidden_channels, dropout_ratio=dropout_ratio,
+                out_channels=out_channels)
                 for _ in range(n_message_layer)])
 
             # Readout
@@ -133,6 +138,7 @@ class GINSparse(chainer.Chain):
                 for _ in range(n_readout_layer)])
         # end with
 
+        self.node_embedding = node_embedding
         self.out_dim = out_dim
         self.hidden_channels = hidden_channels
         self.n_message_layers = n_message_layer
@@ -160,6 +166,9 @@ class GINSparse(chainer.Chain):
             if self.concat_hidden:
                 g = self.readout_layers[step](h, h0, is_real_node)
                 g_list.append(g)
+
+        if self.node_embedding:
+            return h
 
         if self.concat_hidden:
             return functions.concat(g_list, axis=1)
