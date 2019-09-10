@@ -1,6 +1,6 @@
 import numpy
 from chainer import optimizers, functions
-from chainer_chemistry.datasets.citation_network.citation import cora_to_networkx  # NOQA
+from chainer_chemistry.datasets.citation_network.citation import cora_to_networkx, citeseer_to_network  # NOQA
 from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BaseSparseNetworkx  # NOQA
 from chainer_chemistry.dataset.networkx_preprocessors.gin_networkx import GINSparseNetworkx  # NOQA
 from chainer_chemistry.models.gin import GINSparse
@@ -15,7 +15,8 @@ def generate_random_mask(n, train_num, seed=0):
 
 
 if __name__ == '__main__':
-    networkx_graph = cora_to_networkx()
+    # networkx_graph = cora_to_networkx()
+    networkx_graph = citeseer_to_network()
     data = GINSparseNetworkx().construct_sparse_data(networkx_graph)
     print('label num: {}'.format(data.label_num))
     gin = GINSparse(out_dim=None, node_embedding=True,
