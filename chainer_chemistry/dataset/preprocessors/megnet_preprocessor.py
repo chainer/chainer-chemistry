@@ -16,6 +16,7 @@ from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
 from chainer_chemistry.dataset.utils import GaussianDistance
 
 
+MAX_ATOM_ELEMENT = 94
 ATOM = ['H', 'C', 'N', 'O', 'F']
 
 
@@ -319,6 +320,7 @@ class MEGNetPreprocessor(MolPreprocessor):
      is always set to True.
 
     Args:
+    For Molecule
         max_atoms (int): Max number of atoms for each molecule, if the
             number of atoms is more than this value, this data is simply
             ignored.
@@ -335,11 +337,17 @@ class MEGNetPreprocessor(MolPreprocessor):
             If True, even the atom is not in `atom_list`, `atom_type` is set
             as "unknown" atom.
         kekulize (bool): If True, Kekulizes the molecule.
+
+    For Crystal
+        max_neighbors (int): Max number of atom considered as neighbors
+        max_radius (float): Cutoff radius (angstrom)
+        exapand_dim (int): This value is equal to pair feature dimension
     """
 
     def __init__(self, max_atoms=-1, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
-                 include_unknown_atom=False, kekulize=False):
+                 include_unknown_atom=False, kekulize=False,
+                 max_neighbors=12, max_radius=8, exapand_dim=100):
         super(MEGNetPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
 
@@ -348,9 +356,13 @@ class MEGNetPreprocessor(MolPreprocessor):
         self.use_fixed_atom_feature = use_fixed_atom_feature
         self.atom_list = atom_list
         self.include_unknown_atom = include_unknown_atom
+        self.max_neighbors = max_neighbors
+        self.max_radius = max_radius
+        self.exapand_dim = exapand_dim
+        self.rbf = GaussianDistance(centers=numpy.linspace(0, 5, exapand_dim))
 
     def get_input_features(self, mol):
-        """get input features for MEGNet
+        """get input features from mol object
 
         MEGNetPreprocessor automatically add `H` to `mol`
 
@@ -368,4 +380,52 @@ class MEGNetPreprocessor(MolPreprocessor):
             mol, self.use_fixed_atom_feature)
         global_feature = construct_global_state_feature(mol)
         return atom_array, pair_feature, global_feature, \
+            atom_num, bond_num, bond_idx
+
+    def get_input_feature_from_crystal(self, crystal):
+        """get input features from crystal object
+
+        Args:
+            crystal (Crystal):
+
+        """
+        atom_num = len(crystal)
+        atom_feature = numpy.zeros(
+            (atom_num, MAX_ATOM_ELEMENT), dtype=numpy.float32)
+        for i in range(atom_num):
+            if crystal[i].specie.number < MAX_ATOM_ELEMENT:
+                atom_feature[i][crystal[i].specie.number] = 1
+
+        # get edge feture vector & bond idx
+        neighbor_indexes = []
+        neighbor_features = []
+        all_neighbors = crystal.get_all_neighbors(
+            self.max_radius, include_index=True)
+        all_neighbors = [sorted(nbrs, key=lambda x: x[1])
+                         for nbrs in all_neighbors]
+        bond_num = len(all_neighbors)
+        for i in range(bond_num):
+            nbrs = all_neighbors[i]
+            start_node_idx = i
+            nbr_feature = numpy.zeros(
+                self.max_neighbors, dtype=numpy.float32) + self.max_radius + 1.
+            nbr_feature_idx = numpy.zeros(
+                (self.max_neighbors, 2), dtype=numpy.int32)
+            nbr_feature_idx[:, 0] = start_node_idx
+            nbr_feature_idx[:len(nbrs), 1] = list(
+                map(lambda x: x[2], nbrs[:self.max_neighbors]))
+            nbr_feature[:len(nbrs)] = list(
+                map(lambda x: x[1], nbrs[:self.max_neighbors]))
+            neighbor_indexes.append(nbr_feature_idx)
+            neighbor_features.append(nbr_feature)
+
+        bond_idx = numpy.array(neighbor_indexes).reshape(-1, 2).T
+        neighbor_features = numpy.array(neighbor_features)
+        # apply gaussian filter to neighbor distance
+        neighbor_features = self.rbf.expand2D(
+            neighbor_features).reshape(-1, self.exapand_dim)
+        # get global feature vector
+        global_feature = numpy.array([0, 0], dtype=numpy.float32)
+
+        return atom_feature, neighbor_features, global_feature, \
             atom_num, bond_num, bond_idx
