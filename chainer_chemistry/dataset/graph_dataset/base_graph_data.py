@@ -28,4 +28,4 @@ class SparseGraphData(BaseGraphData):
         self.super_node = super_node
         self.y = y
         self.n_nodes = x.shape[0]
-        super(SparseGraphData, self).__init__()
+        super(SparseGraphData, self).__init__(**kwargs)
