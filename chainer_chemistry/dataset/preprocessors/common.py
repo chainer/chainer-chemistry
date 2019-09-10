@@ -129,6 +129,9 @@ def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
             in the input molecules. In that case, the adjacent
             matrix is expanded and zeros are padded to right
             columns and bottom rows.
+        self_connection (bool): Add self connection or not.
+            If True, adjacency matrix whose diagonal element filled with 1
+            is added to last channel.
 
     Returns:
         adj_array (numpy.ndarray): The adjacent matrix of the input molecule.

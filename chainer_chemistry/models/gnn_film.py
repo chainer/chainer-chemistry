@@ -9,7 +9,7 @@ from chainer_chemistry.links.update.gnn_film_update import GNNFiLMUpdate
 
 
 class GNNFiLM(chainer.Chain):
-    """Graph Neural Networks with Feature-wise Linear Modulation (GGNN_FiLM)
+    """Graph Neural Networks with Feature-wise Linear Modulation (GNN_FiLM)
 
     Marc Brockschmidt (2019).\
         GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation \
@@ -17,7 +17,7 @@ class GNNFiLM(chainer.Chain):
 
     Args:
         out_dim (int): dimension of output feature vector
-        hidden_dim (int): dimension of feature vector
+        hidden_channels (int): dimension of feature vector
             associated to each atom
         n_update_layers (int): number of layers
         n_atom_types (int): number of types of atoms
@@ -26,36 +26,37 @@ class GNNFiLM(chainer.Chain):
         weight_tying (bool): enable weight_tying or not
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
-        num_edge_type (int): number of edge type.
+        n_edge_types (int): number of edge type.
             Defaults to 4 for single, double, triple and aromatic bond.
     """
 
-    def __init__(self, out_dim, hidden_dim=16, n_update_layers=4,
+    def __init__(self, out_dim, hidden_channels=16, n_update_layers=4,
                  n_atom_types=MAX_ATOMIC_NUM, concat_hidden=False,
                  weight_tying=True, activation=functions.identity,
-                 num_edge_type=5):
+                 n_edge_types=5):
         super(GNNFiLM, self).__init__()
         n_readout_layer = n_update_layers if concat_hidden else 1
         n_message_layer = 1 if weight_tying else n_update_layers
         with self.init_scope():
             # Update
-            self.embed = EmbedAtomID(out_size=hidden_dim, in_size=n_atom_types)
+            self.embed = EmbedAtomID(out_size=hidden_channels,
+                                     in_size=n_atom_types)
             self.update_layers = chainer.ChainList(*[GNNFiLMUpdate(
-                hidden_dim=hidden_dim, num_edge_type=num_edge_type)
+                hidden_channels=hidden_channels, n_edge_types=n_edge_types)
                 for _ in range(n_message_layer)])
             # Readout
             # self.readout_layers = chainer.ChainList(*[GeneralReadout(
-            #     out_dim=out_dim, hidden_dim=hidden_dim,
+            #     out_dim=out_dim, hidden_channels=hidden_channels,
             #     activation=activation, activation_agg=activation)
             #     for _ in range(n_readout_layer)])
             self.readout_layers = chainer.ChainList(*[GGNNReadout(
-                out_dim=out_dim, hidden_dim=hidden_dim,
+                out_dim=out_dim, in_channels=hidden_channels * 2,
                 activation=activation, activation_agg=activation)
                 for _ in range(n_readout_layer)])
         self.out_dim = out_dim
-        self.hidden_dim = hidden_dim
+        self.hidden_channels = hidden_channels
         self.n_update_layers = n_update_layers
-        self.num_edge_type = num_edge_type
+        self.n_edge_types = n_edge_types
         self.activation = activation
         self.concat_hidden = concat_hidden
         self.weight_tying = weight_tying

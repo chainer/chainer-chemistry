@@ -6,7 +6,7 @@ from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
 
 
 class GNNFiLMPreprocessor(MolPreprocessor):
-    """GGNN Preprocessor
+    """GNNFiLM Preprocessor
 
     Args:
         max_atoms (int): Max number of atoms for each molecule, if the
