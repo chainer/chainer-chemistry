@@ -40,8 +40,9 @@ def test_smiles_visualizer(tmpdir):
     assert os.path.exists(save_filepath)
     assert isinstance(svg, str)
     save_filepath = os.path.join(str(tmpdir), 'tmp.png')
-    visualizer.visualize(saliency, smiles, save_filepath=save_filepath,
-                         add_Hs=False)
+    svg = visualizer.visualize(saliency, smiles, save_filepath=save_filepath,
+                               add_Hs=False)
+    assert isinstance(svg, str)
     # TODO(nakago): support png save test.
     # Do not test for now (cairosvg is necessary)
     # assert os.path.exists(save_filepath)
