@@ -46,7 +46,7 @@ class MolVisualizer(BaseVisualizer):
 
     def visualize(self, saliency, mol, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
-                  scaler=abs_max_scaler, legend='', raise_import_error=True
+                  scaler=abs_max_scaler, legend='', raise_import_error=False
                   ):
         """Visualize or save `saliency` with molecule
 
@@ -153,7 +153,7 @@ class SmilesVisualizer(MolVisualizer):
     def visualize(self, saliency, smiles, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
                   scaler=abs_max_scaler, legend='', add_Hs=False,
-                  use_canonical_smiles=True, raise_import_error=True):
+                  use_canonical_smiles=True, raise_import_error=False):
         """Visualize or save `saliency` with molecule
 
         See parent `MolVisualizer` class for further usage.
