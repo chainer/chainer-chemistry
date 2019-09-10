@@ -66,7 +66,7 @@ class MPDataset(chainer.dataset.DatasetMixin):
             id_prop_data = id_prop_data[mask]
 
         # drop data which doesn't have fermi energy data
-        id_prop_data = id_prop_data[~np.isnan(id_prop_data["efermi"].values)]
+        # id_prop_data = id_prop_data[~np.isnan(id_prop_data["efermi"].values)]
 
         if "band_gap" in target_list:
             id_prop_data = id_prop_data[id_prop_data["band_gap"].values > 0]
