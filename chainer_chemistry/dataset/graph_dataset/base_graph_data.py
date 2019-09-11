@@ -5,6 +5,11 @@ class BaseGraphData(object):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def to_device(self, device):
+        for k, v in self.__dict__.items():
+            setattr(self, k, device.send(v))
+        return self
+
 
 class PaddingGraphData(BaseGraphData):
     def __init__(self, x=None, adj=None, super_node=None, pos=None, y=None,
