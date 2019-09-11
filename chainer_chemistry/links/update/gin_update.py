@@ -90,6 +90,7 @@ class GINSparseUpdate(chainer.Chain):
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, h, edge_index):
+        # add self node feature
         new_h = h
         messages = h[edge_index[0]]
         new_h = functions.scatter_add(new_h, edge_index[1], messages)

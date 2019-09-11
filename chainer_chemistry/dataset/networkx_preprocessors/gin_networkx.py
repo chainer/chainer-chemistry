@@ -8,5 +8,6 @@ class GINSparseNetworkx(BaseSparseNetworkx):
         pass
 
     def construct_sparse_data(self, graph):
-        return super(GINSparseNetworkx, self).construct_sparse_data(
-            self.add_self_loop(graph))
+        # self node feature is added in GINSParseUpdate
+        # no need to add self loop
+        return super(GINSparseNetworkx, self).construct_sparse_data(graph)
