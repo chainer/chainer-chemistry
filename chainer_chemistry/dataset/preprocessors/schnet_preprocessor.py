@@ -13,12 +13,13 @@ from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
     import MolPreprocessor
 
 
-def construct_distance_matrix(mol, out_size=-1):
+def construct_distance_matrix(mol, out_size=-1, contain_Hs=False):
     """Construct distance matrix
 
     Args:
         mol (Chem.Mol):
         out_size (int):
+        contain_Hs (bool):
 
     Returns (numpy.ndarray): 2 dimensional array which represents distance
         between atoms
@@ -26,8 +27,8 @@ def construct_distance_matrix(mol, out_size=-1):
     """
     if mol is None:
         raise MolFeatureExtractionError('mol is None')
-    N = mol.GetNumAtoms()
 
+    N = mol.GetNumAtoms()
     if out_size < 0:
         size = N
     elif out_size >= N:
@@ -37,9 +38,17 @@ def construct_distance_matrix(mol, out_size=-1):
                                         'of atoms in mol {}'
                                         .format(out_size, N))
 
-    confid = AllChem.EmbedMolecule(mol)
+    if contain_Hs:
+        mol2 = mol
+    else:
+        mol2 = AllChem.AddHs(mol)
+
+    conf_id = AllChem.EmbedMolecule(mol2)
+    if not contain_Hs:
+        mol2 = AllChem.RemoveHs(mol2)
+
     try:
-        dist_matrix = rdmolops.Get3DDistanceMatrix(mol, confId=confid)
+        dist_matrix = rdmolops.Get3DDistanceMatrix(mol2, confId=conf_id)
     except ValueError as e:
         logger = getLogger(__name__)
         logger.info('construct_distance_matrix failed, type: {}, {}'
@@ -95,5 +104,6 @@ class SchNetPreprocessor(MolPreprocessor):
         """
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        dist_array = construct_distance_matrix(mol, out_size=self.out_size)
+        dist_array = construct_distance_matrix(mol, out_size=self.out_size,
+                                               contain_Hs=self.add_Hs)
         return atom_array, dist_array

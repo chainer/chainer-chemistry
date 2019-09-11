@@ -2,14 +2,12 @@
 from __future__ import print_function
 
 import argparse
-import json
 import os
 
 import chainer
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
-from chainer import cuda
 # Proposed by Ishiguro
 # ToDo: consider go/no-go with following modification
 # Re-load the best-validation score snapshot using serializers
@@ -30,11 +28,11 @@ from train_molnet import dataset_part_filename
 from train_molnet import download_entire_dataset
 
 
-
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'gin', 'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm', 'megnet']
+                   'relgat', 'gin', 'gnnfilm', 'megnet'
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
 #    scale_list = ['standardize', 'none']
     dataset_names = list(molnet_default_config.keys())
 
