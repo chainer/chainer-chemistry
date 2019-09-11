@@ -118,7 +118,8 @@ def check_backward_ignore_nan(inputs):
     def func(x0, x1):
         return chainer_chemistry.functions.mean_absolute_error(x0, x1,
                                                                ignore_nan=True)
-    gradient_check.check_backward(func, (x0_data, x2_data), None, eps=1e-2)
+    gradient_check.check_backward(func, (x0_data, x2_data), None, eps=1e-2,
+                                  atol=1e-3, rtol=1e-3)
 
 
 def check_backward_ignore_nan_with_nonnan_value(inputs):
