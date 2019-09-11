@@ -28,7 +28,7 @@ from chainer_chemistry.training.extensions.auto_print_report import AutoPrintRep
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin',
+                   'relgat', 'gin', 'gnnfilm',
                    'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     dataset_names = list(molnet_default_config.keys())
     scale_list = ['standardize', 'none']

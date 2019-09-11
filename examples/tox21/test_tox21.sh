@@ -8,7 +8,7 @@ device=${1:--1}
 # Preprocessor parse result must contain both pos/neg samples
 tox21_num_data=100
 
-for method in nfp ggnn schnet weavenet rsgcn relgcn relgat
+for method in nfp ggnn
 do
     if [ ! -f "input" ]; then
         rm -rf input
