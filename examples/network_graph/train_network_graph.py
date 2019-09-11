@@ -78,4 +78,5 @@ if __name__ == '__main__':
     train_mask, valid_mask = generate_random_mask(
         data.n_nodes, int(data.n_nodes * args.train_data_ratio))
     run_node_classification_train(
-        predictor, data, train_mask, valid_mask, epoch=args.epoch)
+        predictor, data, train_mask, valid_mask,
+        epoch=args.epoch, device=args.device)
