@@ -1,3 +1,4 @@
+import numpy
 
 
 class BaseGraphData(object):
@@ -7,7 +8,8 @@ class BaseGraphData(object):
 
     def to_device(self, device):
         for k, v in self.__dict__.items():
-            setattr(self, k, device.send(v))
+            if isinstance(v, numpy.ndarray):
+                setattr(self, k, device.send(v))
         return self
 
 
