@@ -118,7 +118,8 @@ def construct_adj_matrix(mol, out_size=-1, self_connection=True):
     return adj_array
 
 
-def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
+def construct_discrete_edge_matrix(mol, out_size=-1,
+                                   add_self_connection_channel=False):
     """Returns the edge-type dependent adjacency matrix of the given molecule.
 
     Args:
@@ -129,7 +130,7 @@ def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
             in the input molecules. In that case, the adjacent
             matrix is expanded and zeros are padded to right
             columns and bottom rows.
-        self_connection (bool): Add self connection or not.
+        add_self_connection_channel (bool): Add self connection or not.
             If True, adjacency matrix whose diagonal element filled with 1
             is added to last channel.
 
@@ -153,7 +154,7 @@ def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
         raise ValueError(
             'out_size {} is smaller than number of atoms in mol {}'
             .format(out_size, N))
-    if self_connection:
+    if add_self_connection_channel:
         adjs = numpy.zeros((5, size, size), dtype=numpy.float32)
     else:
         adjs = numpy.zeros((4, size, size), dtype=numpy.float32)
@@ -171,7 +172,7 @@ def construct_discrete_edge_matrix(mol, out_size=-1, self_connection=False):
         j = bond.GetEndAtomIdx()
         adjs[ch, i, j] = 1.0
         adjs[ch, j, i] = 1.0
-    if self_connection:
+    if add_self_connection_channel:
         adjs[-1] = numpy.eye(N)
     return adjs
 

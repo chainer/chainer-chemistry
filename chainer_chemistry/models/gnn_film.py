@@ -27,7 +27,8 @@ class GNNFiLM(chainer.Chain):
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function
         n_edge_types (int): number of edge type.
-            Defaults to 4 for single, double, triple and aromatic bond.
+            Defaults to 5 for single, double, triple, aromatic bond
+            and self-connection.
     """
 
     def __init__(self, out_dim, hidden_channels=16, n_update_layers=4,
