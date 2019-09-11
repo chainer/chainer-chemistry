@@ -372,15 +372,16 @@ class MEGNetPreprocessor(MolPreprocessor):
         """
         type_check_num_atoms(mol, self.max_atoms)
         atom_num = mol.GetNumAtoms()
-        atom_array = construct_atom_feature(mol, self.use_fixed_atom_feature,
+        atom_feature = construct_atom_feature(mol, self.use_fixed_atom_feature,
                                             self.atom_list,
                                             self.include_unknown_atom)
 
         pair_feature, bond_idx, bond_num = construct_pair_feature(
             mol, self.use_fixed_atom_feature)
         global_feature = construct_global_state_feature(mol)
-        return atom_array, pair_feature, global_feature, \
-            atom_num, bond_num, bond_idx
+        # return atom_array, pair_feature, global_feature, \
+        #     atom_num, bond_num, bond_idx
+        return atom_feature, pair_feature, global_feature, bond_idx
 
     def get_input_feature_from_crystal(self, crystal):
         """get input features from crystal object
@@ -420,12 +421,14 @@ class MEGNetPreprocessor(MolPreprocessor):
             neighbor_features.append(nbr_feature)
 
         bond_idx = numpy.array(neighbor_indexes).reshape(-1, 2).T
-        neighbor_features = numpy.array(neighbor_features)
+        pair_features = numpy.array(neighbor_features)
         # apply gaussian filter to neighbor distance
         neighbor_features = self.rbf.expand2D(
             neighbor_features).reshape(-1, self.exapand_dim)
         # get global feature vector
         global_feature = numpy.array([0, 0], dtype=numpy.float32)
 
-        return atom_feature, neighbor_features, global_feature, \
-            atom_num, bond_num, bond_idx
+        # return atom_feature, neighbor_features, global_feature, \
+        #     atom_num, bond_num, bond_idx
+
+        return atom_feature, neighbor_features, global_feature, bond_idx

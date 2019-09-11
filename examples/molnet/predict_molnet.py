@@ -15,7 +15,7 @@ from chainer import cuda
 # Re-load the best-validation score snapshot using serializers
 from chainer import serializers
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.models.prediction import Classifier
@@ -115,8 +115,9 @@ def main():
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
+    converter = converter_method_dict[method]
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
-    eval_result = Evaluator(test_iterator, model, converter=concat_mols,
+    eval_result = Evaluator(test_iterator, model, converter=converter,
                             device=device)()
     print('Evaluation result: ', eval_result)
 
@@ -133,7 +134,7 @@ def main():
         # For Classifier, we do not equip the model with ROC-AUC evalation
         # function. use separate ROC-AUC Evaluator
         rocauc_result = ROCAUCEvaluator(
-            test_iterator, model, converter=concat_mols, device=device,
+            test_iterator, model, converter=converter, device=device,
             eval_func=model.predictor, name='test', ignore_labels=-1)()
         print('ROCAUC Evaluation result: ', rocauc_result)
         save_json(os.path.join(model_dir, 'rocauc_result.json'), rocauc_result)

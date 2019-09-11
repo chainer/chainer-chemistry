@@ -14,8 +14,9 @@ from chainer import training
 from chainer.iterators import SerialIterator
 from chainer.training import extensions as E
 
-from chainer_chemistry.dataset.converters import concat_mols
+
 from chainer_chemistry.dataset.parsers import CSVFileParser
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 from chainer_chemistry.models import Regressor
@@ -117,10 +118,11 @@ def main():
                           metrics_fun=metrics_fun, device=device)
 
     print('Training...')
+    converter = converter_method_dict[method]
     run_train(regressor, train, valid=None,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-              device=device, converter=concat_mols,
+              device=device, converter=converter,
               resume_path=None)
 
     # Save the regressor's parameters.
