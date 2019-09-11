@@ -6,6 +6,12 @@ from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
 
 
+def reshaped_feat(feat, idx):
+    max_idx = max(idx)
+    vec_list = [feat[idx == i] for i in range(max_idx+1)]
+    return functions.pad_sequence(vec_list)
+
+
 class MEGNet(chainer.Chain):
     """MEGNet
 
@@ -43,6 +49,11 @@ class MEGNet(chainer.Chain):
         # --- MGENet update ---
         for i in range(self.n_update_layers):
             a_f, p_f, g_f = self.update_layers[i](a_f, p_f, g_f, *args)
+        # --- reshape ---
+        atom_idx = args[0]
+        pair_idx = args[1]
+        a_f = reshaped_feat(a_f, atom_idx)
+        p_f = reshaped_feat(p_f, pair_idx)
         # --- MGENet readout ---
         a_f_r = self.readout_for_atom(a_f)
         p_f_r = self.readout_for_pair(p_f)

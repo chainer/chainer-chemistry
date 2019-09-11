@@ -9,19 +9,14 @@ import os
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
-from chainer import optimizers
-from chainer import training
-from chainer.iterators import SerialIterator
-from chainer.training import extensions as E
 
-from chainer_chemistry.dataset.converters import concat_mols
+
 from chainer_chemistry.dataset.parsers import CSVFileParser
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 from chainer_chemistry.models import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
-from chainer_chemistry.training.extensions.auto_print_report import \
-    AutoPrintReport
 from chainer_chemistry.utils import run_train
 
 
@@ -32,7 +27,7 @@ def rmse(x0, x1):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'megnet']
+                   'relgat', 'mpnn', 'gnnfilm', 'megnet']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
@@ -117,10 +112,11 @@ def main():
                           metrics_fun=metrics_fun, device=device)
 
     print('Training...')
+    converter = converter_method_dict[args.method]
     run_train(regressor, train, valid=None,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-              device=device, converter=concat_mols,
+              device=device, converter=converter,
               resume_path=None)
 
     # Save the regressor's parameters.

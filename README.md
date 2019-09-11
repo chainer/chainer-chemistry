@@ -43,8 +43,8 @@ currently supported:
 | v0.1.0 ~ v0.3.0     | v2.0 ~ v3.0     | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| v0.6.0 release plan | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
 
 
@@ -111,6 +111,7 @@ The following graph convolutional neural networks are currently supported:
 - GIN: Graph Isomorphism Networks [17]
 - MPNN: Message Passing Neural Networks [3]
 - Set2Set [19]
+- GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation [20]
 
 We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
 - NFP ('nfp_gwm')
@@ -202,3 +203,6 @@ papers. Use the library at your own risk.
 [18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019.
 
 [19] Oriol Vinyals, Samy Bengio, Manjunath Kudlur. Order Matters: Sequence to sequence for sets. *arXiv preprint arXiv:1511.06391*, 2015.
+. 
+
+[20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.

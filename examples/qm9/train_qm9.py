@@ -10,7 +10,7 @@ import os
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -27,7 +27,8 @@ def rmse(x0, x1):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'megnet']
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -143,10 +144,11 @@ def main():
                           metrics_fun=metrics_fun, device=device)
 
     print('Training...')
+    converter = converter_method_dict[method]
     run_train(regressor, train, valid=valid,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-              device=device, converter=concat_mols,
+              device=device, converter=converter,
               resume_path=None)
 
     # Save the regressor's parameters.

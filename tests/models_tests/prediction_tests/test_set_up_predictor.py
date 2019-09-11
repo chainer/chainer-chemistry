@@ -5,6 +5,7 @@ import pytest
 
 from chainer_chemistry.models.ggnn import GGNN
 from chainer_chemistry.models.gin import GIN
+from chainer_chemistry.models.gnn_film import GNNFiLM
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from chainer_chemistry.models.prediction.set_up_predictor import set_up_predictor  # NOQA
@@ -39,7 +40,8 @@ def models_dict():
         'nfp_gwm': NFP_GWM,
         'ggnn_gwm': GGNN_GWM,
         'rsgcn_gwm': RSGCN_GWM,
-        'gin_gwm': GIN_GWM
+        'gin_gwm': GIN_GWM,
+        'gnnfilm': GNNFiLM
     }
 
 

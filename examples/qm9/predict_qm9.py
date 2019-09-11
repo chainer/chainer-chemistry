@@ -8,12 +8,11 @@ import chainer
 import numpy
 import pandas
 
-from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -21,7 +20,6 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
-from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from train_qm9 import rmse
@@ -30,7 +28,8 @@ from train_qm9 import rmse
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'megnet']
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -113,9 +112,10 @@ def main():
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
     # This callback function extracts only the inputs and discards the labels.
+    converter = converter_method_dict[method]
     @chainer.dataset.converter()
     def extract_inputs(batch, device=None):
-        return concat_mols(batch, device=device)[:-1]
+        return converter(batch, device=device)[:-1]
 
     # Predict the output labels.
     print('Predicting...')
@@ -123,9 +123,7 @@ def main():
         test, converter=extract_inputs)
 
     # Extract the ground-truth labels as numpy array.
-    original_t = concat_mols(test, device=-1)[-1]
-
-    # Construct dataframe.
+    original_t = converter(test, device=-1)[-1]
     df_dict = {}
     for i, l in enumerate(labels):
         df_dict.update({'y_pred_{}'.format(l): y_pred[:, i],
@@ -147,7 +145,7 @@ def main():
     # Run an evaluator on the test dataset.
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
-    eval_result = Evaluator(test_iterator, regressor, converter=concat_mols,
+    eval_result = Evaluator(test_iterator, regressor, converter=converter,
                             device=device)()
     print('Evaluation result: ', eval_result)
     # Save the evaluation results.

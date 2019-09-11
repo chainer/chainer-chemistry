@@ -1,4 +1,3 @@
-import chainer
 from chainer import cuda
 from chainer import gradient_check
 import numpy
@@ -31,10 +30,10 @@ def data():
     numpy.random.seed(0)
     atom_data = numpy.random.randint(
         0, high=MAX_ATOMIC_NUM, size=(batch_size, atom_size)
-        ).astype('i')
+    ).astype('i')
     adj_data = numpy.random.uniform(
         0, high=2, size=(batch_size, n_edge_types, atom_size, atom_size)
-        ).astype('f')
+    ).astype('f')
     y_grad = numpy.random.uniform(
         -1, 1, (batch_size, atom_size, hidden_channels)).astype('f')
 

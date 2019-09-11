@@ -12,7 +12,7 @@ from chainer import functions as F
 from chainer import iterators as I
 from rdkit import RDLogger
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.iterators.balanced_serial_iterator import BalancedSerialIterator  # NOQA
 from chainer_chemistry.models.prediction import Classifier
@@ -119,13 +119,14 @@ def main():
 
     extensions_list = []
     eval_mode = args.eval_mode
+    converter = converter_method_dict[method]
     if eval_mode == 1:
         train_eval_iter = I.SerialIterator(train, args.batchsize,
                                            repeat=False, shuffle=False)
 
         extensions_list.append(ROCAUCEvaluator(
             train_eval_iter, classifier, eval_func=predictor_,
-            device=device, converter=concat_mols, name='train',
+            device=device, converter=converter, name='train',
             pos_labels=1, ignore_labels=-1, raise_value_error=False))
         # extension name='validation' is already used by `Evaluator`,
         # instead extension name `val` is used.
@@ -133,12 +134,12 @@ def main():
                                     repeat=False, shuffle=False)
         extensions_list.append(ROCAUCEvaluator(
             val_iter, classifier, eval_func=predictor_,
-            device=device, converter=concat_mols, name='val',
+            device=device, converter=converter, name='val',
             pos_labels=1, ignore_labels=-1))
 
     run_train(classifier, train_iter, valid=val,
               batch_size=args.batchsize, epoch=args.epoch, out=args.out,
-              device=device, converter=concat_mols,
+              device=device, converter=converter,
               extensions_list=extensions_list, resume_path=args.resume)
 
     # frequency = args.epoch if args.frequency == -1 else max(1, args.frequency)
