@@ -8,7 +8,6 @@ import chainer
 import numpy
 import pandas
 
-from chainer import cuda
 from chainer.datasets import split_dataset_random
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
@@ -21,7 +20,6 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
-from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from train_qm9 import rmse
@@ -30,7 +28,7 @@ from train_qm9 import rmse
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet'
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
                    'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']

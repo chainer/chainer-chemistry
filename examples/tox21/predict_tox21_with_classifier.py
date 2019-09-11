@@ -67,6 +67,7 @@ def main():
     # This converter extracts only inputs (x1, x2, ...) from the features which
     # consist of input `x` and label `t` (x1, x2, ..., t).
     converter = converter_method_dict[method]
+
     def extract_inputs(batch, device=None):
         return converter(batch, device=device)[:-1]
 

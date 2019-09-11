@@ -15,5 +15,6 @@ converter_method_dict = {
     'rsgcn': concat_mols,
     'rsgcn_gwm': concat_mols,
     'relgat': concat_mols,
+    'gnnfilm': concat_mols,
     'megnet': megnet_converter,
 }

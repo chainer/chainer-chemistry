@@ -1,7 +1,6 @@
 import chainer
 from chainer import functions
 
-import numpy
 
 from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
@@ -9,7 +8,7 @@ from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
 
 def reshaped_feat(feat, idx):
     max_idx = max(idx)
-    vec_list = [feat[idx==i] for i in range(max_idx+1)]
+    vec_list = [feat[idx == i] for i in range(max_idx+1)]
     return functions.pad_sequence(vec_list)
 
 
@@ -60,4 +59,3 @@ class MEGNet(chainer.Chain):
         p_f_r = self.readout_for_pair(p_f)
         concated_v = functions.concat((a_f_r, p_f_r, g_f), axis=1)
         return concated_v
-

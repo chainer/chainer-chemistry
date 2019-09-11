@@ -11,7 +11,7 @@ from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvalua
 # Proposed by Ishiguro
 # ToDo: consider go/no-go with following modification
 # Re-load the best-validation score snapshot using serializers
-from chainer import serializers
+# from chainer import serializers
 
 from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -21,7 +21,6 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
-from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from train_molnet import dataset_part_filename
@@ -31,7 +30,7 @@ from train_molnet import download_entire_dataset
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet'
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
                    'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
 #    scale_list = ['standardize', 'none']
     dataset_names = list(molnet_default_config.keys())

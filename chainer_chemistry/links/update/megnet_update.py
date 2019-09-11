@@ -68,18 +68,18 @@ class MEGNetUpdate(chainer.Chain):
         with self.init_scope():
             # for dense layer
             self.dense_for_atom = DenseLayer(
-                    hidden_dim=hidden_dim_for_dense)
+                hidden_dim=hidden_dim_for_dense)
             self.dense_for_pair = DenseLayer(
-                    hidden_dim=hidden_dim_for_dense)
+                hidden_dim=hidden_dim_for_dense)
             self.dense_for_global = DenseLayer(
-                    hidden_dim=hidden_dim_for_dense)
+                hidden_dim=hidden_dim_for_dense)
             # for update layer
             self.update_for_atom = UpdateLayer(
-                    hidden_dim=hidden_dim_for_update)
+                hidden_dim=hidden_dim_for_update)
             self.update_for_pair = UpdateLayer(
-                    hidden_dim=hidden_dim_for_update)
+                hidden_dim=hidden_dim_for_update)
             self.update_for_global = UpdateLayer(
-                    hidden_dim=hidden_dim_for_update)
+                hidden_dim=hidden_dim_for_update)
 
     def __call__(self, atoms_feat, pair_feat, global_feat,
                  atom_idx, pair_idx, start_idx, end_idx):
@@ -109,8 +109,8 @@ class MEGNetUpdate(chainer.Chain):
         mean_edge_vec = sum_edeg_vec / degree
         # 4. concating
         g_f_extend_with_atom_idx = g_f_d[atom_idx]
-        concat_a_v = functions.concat((a_f_d, mean_edge_vec, 
-                                         g_f_extend_with_atom_idx))
+        concat_a_v = functions.concat((a_f_d, mean_edge_vec,
+                                       g_f_extend_with_atom_idx))
         update_a = self.update_for_pair(concat_a_v)
 
         # 4) Update the global vector

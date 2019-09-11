@@ -9,10 +9,6 @@ import os
 from argparse import ArgumentParser
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
-from chainer import optimizers
-from chainer import training
-from chainer.iterators import SerialIterator
-from chainer.training import extensions as E
 
 
 from chainer_chemistry.dataset.parsers import CSVFileParser

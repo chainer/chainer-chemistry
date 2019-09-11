@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import json
 
 import chainer
 import numpy
@@ -95,7 +94,7 @@ def main():
 
     # Perform the prediction.
     print('Evaluating...')
-    converter = converter_method_list[method]
+    converter = converter_method_dict[args.method]
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(test_iterator, regressor, converter=converter,
                             device=device)()

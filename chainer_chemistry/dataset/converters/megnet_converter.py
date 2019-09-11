@@ -1,8 +1,4 @@
-import numpy
-
-
 import chainer
-from chainer import functions
 from chainer.dataset.convert import to_device
 
 
@@ -40,7 +36,7 @@ def megnet_converter(batch, device=None, padding=0):
     start_idx = to_device(device, xp.asarray(start_idx))
     end_idx = to_device(device, xp.asarray(end_idx))
     target = to_device(device, xp.asarray(target))
-    result = (atom_feat, pair_feat, global_feat, atom_idx, pair_idx, \
-        start_idx, end_idx, target)
+    result = (atom_feat, pair_feat, global_feat, atom_idx, pair_idx,
+              start_idx, end_idx, target)
 
     return result
