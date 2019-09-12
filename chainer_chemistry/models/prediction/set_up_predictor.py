@@ -16,6 +16,7 @@ from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
 from chainer_chemistry.models.megnet import MEGNet
 from chainer_chemistry.models.gnn_film import GNNFiLM
+from chainer_chemistry.models.cgcnn import CGCNN
 
 
 from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
@@ -145,7 +146,13 @@ def set_up_predictor(
         print('Set up MEGNet predictor...')
         conv = MEGNet(
             n_update_layers=conv_layers,
-            ** conv_kwargs)
+            **conv_kwargs)
+    elif method == 'cgcnn':
+        print('Set up CGCNN predictor...')
+        conv = CGCNN(
+            out_dim=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))
 

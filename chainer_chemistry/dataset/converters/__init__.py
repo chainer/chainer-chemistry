@@ -1,5 +1,6 @@
 from chainer_chemistry.dataset.converters.concat_mols import concat_mols  # NOQA
 from chainer_chemistry.dataset.converters.megnet_converter import megnet_converter  # NOQA
+from chainer_chemistry.dataset.converters.cgcnn_converter import cgcnn_converter  # NOQA
 
 converter_method_dict = {
     'ecfp': concat_mols,
@@ -17,4 +18,5 @@ converter_method_dict = {
     'relgat': concat_mols,
     'gnnfilm': concat_mols,
     'megnet': megnet_converter,
+    'cgcnn': cgcnn_converter
 }

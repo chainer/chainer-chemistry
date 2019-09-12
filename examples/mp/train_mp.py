@@ -11,7 +11,7 @@ from chainer import functions as F
 from chainer.datasets import split_dataset_random
 
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets.mp import MPDataset
 from chainer_chemistry.links import StandardScaler
@@ -28,7 +28,7 @@ def parse_arguments():
     # Lists of supported preprocessing methods/models.
     label_names = ['formation_energy_per_atom', 'energy', 'band_gap', 'efermi',
                    'K_VRH', 'G_VRH', 'poisson_ratio']
-    method_list = ['megnet']
+    method_list = ['megnet', 'cgcnn']
     scale_list = ['standardize', 'none']
     # Set up the argument parser.
     parser = argparse.ArgumentParser(
@@ -129,10 +129,11 @@ def main():
                           metrics_fun=metrics_fun, device=device)
 
     print('Training...')
+    converter = converter_method_dict[method]
     run_train(regressor, train, valid=valid,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-              device=device, converter=concat_mols,
+              device=device, converter=converter,
               resume_path=None)
 
     # Save the regressor's parameters.
