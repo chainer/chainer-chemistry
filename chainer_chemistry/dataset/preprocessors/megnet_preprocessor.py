@@ -358,7 +358,7 @@ class MEGNetPreprocessor(MolPreprocessor):
         self.max_neighbors = max_neighbors
         self.max_radius = max_radius
         self.exapand_dim = exapand_dim
-        self.rbf = GaussianDistance(centers=numpy.linspace(0, 5, exapand_dim))
+        self.gdf = GaussianDistance(centers=numpy.linspace(0, 5, exapand_dim))
 
     def get_input_features(self, mol):
         """get input features from mol object
@@ -418,9 +418,8 @@ class MEGNetPreprocessor(MolPreprocessor):
 
         bond_idx = numpy.array(neighbor_indexes).reshape(-1, 2).T
         pair_feature = numpy.array(neighbor_features)
-        # apply gaussian filter to neighbor distance
-        neighbor_features = self.rbf.expand2D(
-            neighbor_features).reshape(-1, self.exapand_dim)
+        pair_feature = self.gdf.expand2D(
+            pair_feature).reshape(-1, self.exapand_dim)
         # get global feature vector
         global_feature = numpy.array([0, 0], dtype=numpy.float32)
 
