@@ -55,6 +55,10 @@ class GINUpdate(chainer.Chain):
         Returns:
             updated h
         """
+        # Support for one graph (node classification task)
+        if h.ndim == 2:
+            h = h[None]
+
         # (minibatch, atom, ch)
         mb, atom, ch = h.shape
 

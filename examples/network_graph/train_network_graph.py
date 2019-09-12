@@ -2,11 +2,10 @@ import argparse
 import numpy
 from chainer_chemistry.datasets.citation_network.citation import cora_to_networkx, citeseer_to_network  # NOQA
 from chainer_chemistry.datasets.reddit.reddit import reddit_to_networkx
-from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BaseSparseNetworkx  # NOQA
-from chainer_chemistry.dataset.networkx_preprocessors.gin_networkx import GINSparseNetworkx  # NOQA
+from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BasePaddingNetworkxPreprocessor, BaseSparseNetworkxPreprocessor  # NOQA
 from chainer_chemistry.utils.train_utils import run_node_classification_train
 from chainer_chemistry.models.prediction.node_classifier import NodeClassifier
-from chainer_chemistry.models.gin import GINSparse
+from chainer_chemistry.models.gin import GINSparse, GIN
 
 
 dataset_dict = {
@@ -15,17 +14,19 @@ dataset_dict = {
     'reddit': reddit_to_networkx,
 }
 method_dict = {
+    'gin': GIN,
     'gin_sparse': GINSparse,
 }
 preprocessor_dict = {
-    'gin_sparse': GINSparseNetworkx,
+    'gin': BasePaddingNetworkxPreprocessor,
+    'gin_sparse': BaseSparseNetworkxPreprocessor,
 }
 
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     dataset_list = ['cora', 'citeseer', 'reddit']
-    method_list = ['gin_sparse']
+    method_list = ['gin', 'gin_sparse']
 
     # Set up the argument parser.
     parser = argparse.ArgumentParser(
@@ -68,7 +69,7 @@ if __name__ == '__main__':
     args = parse_arguments()
     networkx_graph = dataset_dict[args.dataset]()
     preprocessor = preprocessor_dict[args.method]()
-    data = preprocessor.construct_sparse_data(networkx_graph)
+    data = preprocessor.construct_data(networkx_graph)
     print('label num: {}'.format(data.label_num))
 
     gnn = method_dict[args.method](out_dim=None, node_embedding=True,

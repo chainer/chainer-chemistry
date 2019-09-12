@@ -12,6 +12,10 @@ class NodeClassifier(Classifier):
         """
         self.metrics = None
         self.y = self.predictor(data)
+        # Support for padding pattern
+        if self.y.ndim == 3:
+            assert self.y.shape[0] == 1
+            self.y = self.y[0]
         self.train_loss = self.lossfun(self.y[train_mask], data.y[train_mask])
         self.valid_loss = self.lossfun(self.y[valid_mask], data.y[valid_mask])
         reporter.report(
