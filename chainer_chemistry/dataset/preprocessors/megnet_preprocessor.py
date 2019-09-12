@@ -340,13 +340,13 @@ class MEGNetPreprocessor(MolPreprocessor):
     For Crystal
         max_neighbors (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
-        exapand_dim (int): This value is equal to pair feature dimension
+        expand_dim (int): dimension converting from distance to vector
     """
 
     def __init__(self, max_atoms=-1, add_Hs=True,
                  use_fixed_atom_feature=False, atom_list=None,
                  include_unknown_atom=False, kekulize=False,
-                 max_neighbors=12, max_radius=8, exapand_dim=100):
+                 max_neighbors=12, max_radius=8, expand_dim=100):
         super(MEGNetPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
 
@@ -357,8 +357,7 @@ class MEGNetPreprocessor(MolPreprocessor):
         self.include_unknown_atom = include_unknown_atom
         self.max_neighbors = max_neighbors
         self.max_radius = max_radius
-        self.exapand_dim = exapand_dim
-        self.gdf = GaussianDistance(centers=numpy.linspace(0, 5, exapand_dim))
+        self.gdf = GaussianDistance(centers=numpy.linspace(0, 5, expand_dim))
 
     def get_input_features(self, mol):
         """get input features from mol object

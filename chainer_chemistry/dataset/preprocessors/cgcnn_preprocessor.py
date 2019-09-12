@@ -16,16 +16,15 @@ class CGCNNPreprocessor(MolPreprocessor):
     For Crystal
         max_neighbors (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
-        exapand_dim (int): This value is equal to pair feature dimension
+        expand_dim (int): dimension converting from distance to vector
     """
 
-    def __init__(self, max_neighbors=12, max_radius=8, exapand_dim=40):
+    def __init__(self, max_neighbors=12, max_radius=8, expand_dim=40):
         super(CGCNNPreprocessor, self).__init__()
 
         self.max_neighbors = max_neighbors
         self.max_radius = max_radius
-        self.exapand_dim = exapand_dim
-        self.gdf = GaussianDistance(centers=numpy.linspace(0, 8, exapand_dim))
+        self.gdf = GaussianDistance(centers=numpy.linspace(0, 8, expand_dim))
 
     def get_input_feature_from_crystal(self, crystal):
         """get input features from crystal object
