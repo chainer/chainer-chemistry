@@ -122,14 +122,18 @@ class GINSparse(chainer.Chain):
             # embedding
             self.embed = EmbedAtomID(out_size=hidden_channels,
                                      in_size=n_atom_types)
+            self.first_mlp = GINSparseUpdate(
+                hidden_channels=hidden_channels, dropout_ratio=dropout_ratio,
+                out_channels=hidden_channels).mlp
 
             # two non-linear MLP part
             if out_channels is None:
                 out_channels = hidden_channels
             self.update_layers = chainer.ChainList(*[GINSparseUpdate(
                 hidden_channels=hidden_channels, dropout_ratio=dropout_ratio,
-                out_channels=out_channels)
-                for _ in range(n_message_layer)])
+                out_channels=(out_channels if i == n_message_layer - 1 else
+                              hidden_channels))
+                for i in range(n_message_layer)])
 
             # Readout
             self.readout_layers = chainer.ChainList(*[ScatterGGNNReadout(
@@ -152,7 +156,7 @@ class GINSparse(chainer.Chain):
         if sparse_batch.x.dtype == self.xp.int32:
             h = self.embed(sparse_batch.x)  # (minibatch, max_num_atoms)
         else:
-            h = sparse_batch.x
+            h = self.first_mlp(sparse_batch.x)
 
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
 
