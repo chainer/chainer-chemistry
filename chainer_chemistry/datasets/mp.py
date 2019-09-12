@@ -89,7 +89,6 @@ class MPDataset(chainer.dataset.DatasetMixin):
         """
 
         print("loading mp dataset from {}".format(data_dir))
-        # TODO: is_stableは外で受け取る
         self._load_data_list(data_dir, target_list, is_stable)
 
         # TODO: data_dirはURLを指すようにする
