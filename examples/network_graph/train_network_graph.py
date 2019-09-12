@@ -51,6 +51,8 @@ def parse_arguments():
                         help='random seed value')
     parser.add_argument('--train-data-ratio', '-r', type=float, default=0.3,
                         help='ratio of training data w.r.t the dataset')
+    parser.add_argument('--dropout', type=float, default=0.5,
+                        help='dropout ratio')
     return parser.parse_args()
 
 
@@ -72,7 +74,8 @@ if __name__ == '__main__':
     gnn = method_dict[args.method](out_dim=None, node_embedding=True,
                                    out_channels=data.label_num,
                                    hidden_channels=args.unit_num,
-                                   n_update_layers=args.conv_layers)
+                                   n_update_layers=args.conv_layers,
+                                   dropout_ratio=args.dropout)
 
     predictor = NodeClassifier(gnn, device=args.device)
     train_mask, valid_mask = generate_random_mask(
