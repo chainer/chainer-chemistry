@@ -44,6 +44,7 @@ class RSGCNPreprocessor(MolPreprocessor):
         Returns:
 
         """
+        _, mol = self.prepare_smiles_and_mol(mol)
         type_check_num_atoms(mol, self.max_atoms)
         num_atoms = mol.GetNumAtoms()
 
