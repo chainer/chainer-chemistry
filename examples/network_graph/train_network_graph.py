@@ -35,7 +35,7 @@ def parse_arguments():
                         default='cora', help='dataset name')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         default='gin_sparse', help='method name')
-    parser.add_argument('--conv-layers', '-c', type=int, default=4,
+    parser.add_argument('--conv-layers', '-c', type=int, default=2,
                         help='number of convolution layers')
     parser.add_argument(
         '--device', '-d', type=str, default='-1',
@@ -46,13 +46,13 @@ def parse_arguments():
                         help='path to save the computed model to')
     parser.add_argument('--epoch', '-e', type=int, default=20,
                         help='number of epochs')
-    parser.add_argument('--unit-num', '-u', type=int, default=16,
+    parser.add_argument('--unit-num', '-u', type=int, default=32,
                         help='number of units in one layer of the model')
     parser.add_argument('--seed', '-s', type=int, default=777,
                         help='random seed value')
-    parser.add_argument('--train-data-ratio', '-r', type=float, default=0.3,
+    parser.add_argument('--train-data-ratio', '-r', type=float, default=0.2,
                         help='ratio of training data w.r.t the dataset')
-    parser.add_argument('--dropout', type=float, default=0.5,
+    parser.add_argument('--dropout', type=float, default=0.0,
                         help='dropout ratio')
     return parser.parse_args()
 
