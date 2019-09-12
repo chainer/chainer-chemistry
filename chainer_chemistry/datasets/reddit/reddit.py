@@ -11,8 +11,8 @@ def _to_networkx(filepath):
     print("Loading node feature and label")
     # 頂点feature, 頂点label
     reddit_data = numpy.load(filepath + "reddit_data.npz")
-    G.graph['x'] = reddit_data['feature']
-    G.graph['y'] = reddit_data['label']
+    G.graph['x'] = reddit_data['feature'].astype(numpy.float32)
+    G.graph['y'] = reddit_data['label'].astype(numpy.int32)
 
     G.graph['label_num'] = 41
     # G = nx.convert_node_labels_to_integers(G)
