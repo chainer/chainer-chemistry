@@ -321,6 +321,7 @@ class WeaveNetPreprocessor(MolPreprocessor):
             mol (Mol):
 
         """
+        _, mol = self.prepare_smiles_and_mol(mol)
         type_check_num_atoms(mol, self.max_atoms)
         if self.use_fixed_atom_feature:
             # original paper feature extraction

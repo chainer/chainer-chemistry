@@ -42,6 +42,7 @@ class GGNNPreprocessor(MolPreprocessor):
         Returns:
 
         """
+        _, mol = self.prepare_smiles_and_mol(mol)
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
