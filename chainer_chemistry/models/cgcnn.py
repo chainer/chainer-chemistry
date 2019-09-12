@@ -15,10 +15,9 @@ class CGCNN(chainer.Chain):
         `arXiv:1710.10324 <https://arxiv.org/abs/1710.10324>`_
 
     Args:
-        n_update_layers (int): number of MEGNetUpdate layers
         out_dim (int): dimension of output feature vector
+        n_update_layers (int): number of CGCNNUpdate layers
         n_atom_features (int): hidden dimension of atom feature vector
-        n_neighbor_features (int): hidden dimension of neighbor feature vector
     """
 
     def __init__(self, out_dim=128, n_update_layers=3, n_atom_features=64):
