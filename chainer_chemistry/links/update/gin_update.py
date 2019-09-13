@@ -63,10 +63,20 @@ class GINUpdate(chainer.Chain):
         mb, atom, ch = h.shape
 
         # --- Message part ---
-        # adj (mb, atom, atom)
-        # fv   (minibatch, atom, ch)
-        fv = chainer_chemistry.functions.matmul(adj, h)
-        assert (fv.shape == (mb, atom, ch))
+        if isinstance(adj, chainer.utils.CooMatrix):
+            # coo pattern
+            # Support for one graph
+            if adj.data.ndim == 1:
+                adj.data = adj.data[None]
+                adj.col = adj.col[None]
+                adj.row = adj.row[None]
+            fv = functions.sparse_matmul(adj, h)
+        else:
+            # padding pattern
+            # adj (mb, atom, atom)
+            # fv   (minibatch, atom, ch)
+            fv = chainer_chemistry.functions.matmul(adj, h)
+            assert (fv.shape == (mb, atom, ch))
 
         # sum myself
         sum_h = fv + h

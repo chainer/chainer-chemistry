@@ -54,6 +54,7 @@ def parse_arguments():
                         help='ratio of training data w.r.t the dataset')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='dropout ratio')
+    parser.add_argument('--coo', action='store_true', help='use Coo matrix')
     return parser.parse_args()
 
 
@@ -68,7 +69,7 @@ def generate_random_mask(n, train_num, seed=777):
 if __name__ == '__main__':
     args = parse_arguments()
     networkx_graph = dataset_dict[args.dataset]()
-    preprocessor = preprocessor_dict[args.method]()
+    preprocessor = preprocessor_dict[args.method](use_coo=args.coo)
     data = preprocessor.construct_data(networkx_graph)
     print('label num: {}'.format(data.label_num))
 
