@@ -6,6 +6,7 @@ from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BaseP
 from chainer_chemistry.utils.train_utils import run_node_classification_train
 from chainer_chemistry.models.prediction.node_classifier import NodeClassifier
 from chainer_chemistry.models.gin import GINSparse, GIN
+from chainer_chemistry.dataset.networkx_preprocessors.gin_reddit import get_reddit_coo_data  # NOQA
 
 
 dataset_dict = {
@@ -68,9 +69,12 @@ def generate_random_mask(n, train_num, seed=777):
 
 if __name__ == '__main__':
     args = parse_arguments()
-    networkx_graph = dataset_dict[args.dataset]()
-    preprocessor = preprocessor_dict[args.method](use_coo=args.coo)
-    data = preprocessor.construct_data(networkx_graph)
+    if args.dataset == 'reddit' and args.coo:
+        data = get_reddit_coo_data()
+    else:
+        networkx_graph = dataset_dict[args.dataset]()
+        preprocessor = preprocessor_dict[args.method](use_coo=args.coo)
+        data = preprocessor.construct_data(networkx_graph)
     print('label num: {}'.format(data.label_num))
 
     gnn = method_dict[args.method](out_dim=None, node_embedding=True,
