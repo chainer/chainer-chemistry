@@ -55,11 +55,15 @@ class BaseSparseNetworkxPreprocessor(BaseNetworkxPreprocessor):
     """
     Preprocess NetworkX::Graph into SparseGraphData for each model's input
     """
+
     def construct_data(self, graph):
-        edge_index = numpy.empty((2, graph.number_of_edges()), dtype=numpy.int)
+        edge_index = numpy.empty((2, graph.number_of_edges() * 2),
+                                 dtype=numpy.int)
         for i, edge in enumerate(graph.edges):
-            edge_index[0][i] = edge[0]
-            edge_index[1][i] = edge[1]
+            edge_index[0][2 * i] = edge[0]
+            edge_index[0][2 * i + 1] = edge[1]
+            edge_index[1][2 * i] = edge[1]
+            edge_index[1][2 * i + 1] = edge[0]
 
         return SparseGraphData(
             x=self.get_x(graph),
