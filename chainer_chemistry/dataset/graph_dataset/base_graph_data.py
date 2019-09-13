@@ -1,4 +1,5 @@
 import numpy
+import chainer
 
 
 class BaseGraphData(object):
@@ -8,8 +9,15 @@ class BaseGraphData(object):
 
     def to_device(self, device):
         for k, v in self.__dict__.items():
-            if isinstance(v, numpy.ndarray):
+            if isinstance(v, (numpy.ndarray)):
                 setattr(self, k, device.send(v))
+            elif isinstance(v, (chainer.utils.CooMatrix)):
+                data = device.send(v.data.array)
+                row = device.send(v.row)
+                col = device.send(v.col)
+                gpu_coo_matrix = chainer.utils.CooMatrix(
+                    data, row, col, v.shape, order=v.order)
+                setattr(self, k, gpu_coo_matrix)
         return self
 
 
