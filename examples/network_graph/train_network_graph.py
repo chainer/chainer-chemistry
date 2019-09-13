@@ -80,8 +80,11 @@ if __name__ == '__main__':
                                    dropout_ratio=args.dropout)
 
     predictor = NodeClassifier(gnn, device=args.device)
+    train_label_num = int(data.n_nodes * args.train_data_ratio)
     train_mask, valid_mask = generate_random_mask(
-        data.n_nodes, int(data.n_nodes * args.train_data_ratio))
+        data.n_nodes, train_label_num)
+    print("train label: {}, validation label: {}".format(
+        train_label_num, data.n_nodes - train_label_num))
     run_node_classification_train(
         predictor, data, train_mask, valid_mask,
         epoch=args.epoch, device=args.device)
