@@ -20,8 +20,6 @@ def _to_networkx(filepath, name):
             G.add_node(key,
                        x=numpy.array(lis[1:-1], dtype=numpy.float32),
                        y=val)
-            # G.nodes[key]['x'] = numpy.array(lis[1:-1], dtype=numpy.float32)
-            # G.nodes[key]['y'] = val
         G.graph['label_num'] = acc
 
     # edge
