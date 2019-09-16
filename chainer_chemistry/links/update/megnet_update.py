@@ -54,10 +54,12 @@ class MEGNetUpdate(chainer.Chain):
     Args:
         hidden_dim_for_dense (list): dimension list of dense layer
         hidden_dim_for_update (list): dimension list of update layer
+        dropout_ratio (float): ratio of dropout
     """
 
     def __init__(self, hidden_dim_for_dense=[64, 32],
-                 hidden_dim_for_update=[64, 64, 32]):
+                 hidden_dim_for_update=[64, 64, 32],
+                 dropout_ratio=-1):
         super(MEGNetUpdate, self).__init__()
         if len(hidden_dim_for_dense) != 2:
             raise ValueError('hidden_dim_for_dense must have 2 elements')
@@ -65,6 +67,7 @@ class MEGNetUpdate(chainer.Chain):
         if len(hidden_dim_for_update) != 3:
             raise ValueError('hidden_dim_for_dense must have 3 elements')
 
+        self.dropout_ratio = dropout_ratio
         with self.init_scope():
             # for dense layer
             self.dense_for_atom = DenseLayer(hidden_dim_for_dense)
@@ -118,5 +121,11 @@ class MEGNetUpdate(chainer.Chain):
         new_a_f = functions.add(a_f_d, update_a)
         new_p_f = functions.add(p_f_d, update_p)
         new_g_f = functions.add(g_f_d, update_g)
+
+        # 6) dropout
+        if self.dropout_ratio > 0.0:
+            new_a_f = functions.dropout(new_a_f, ratio=self.dropout_ratio)
+            new_p_f = functions.dropout(new_p_f, ratio=self.dropout_ratio)
+            new_g_f = functions.dropout(new_g_f, ratio=self.dropout_ratio)
 
         return new_a_f, new_p_f, new_g_f
