@@ -145,6 +145,7 @@ def set_up_predictor(
     elif method == 'megnet':
         print('Set up MEGNet predictor...')
         conv = MEGNet(
+            out_dim=n_unit,
             n_update_layers=conv_layers,
             **conv_kwargs)
     elif method == 'cgcnn':

@@ -2,7 +2,7 @@ import chainer
 from chainer import functions, links
 
 
-from chainer_chemistry.functions.activation.softplus import improved_softplus
+from chainer_chemistry.functions import improved_softplus
 
 
 class DenseLayer(chainer.Chain):

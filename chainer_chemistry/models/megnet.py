@@ -1,7 +1,8 @@
 import chainer
-from chainer import functions
+from chainer import functions, links
 
 
+from chainer_chemistry.functions import improved_softplus
 from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
 
@@ -21,28 +22,30 @@ class MEGNet(chainer.Chain):
         `arXiv:1812.05055 <https://arxiv.org/abs/1812.05055>`_
 
     Args:
-        n_update_layers (int): number of MEGNetUpdate layers
-        dropout_ratio (float): drop ratio
+        out_dim (int): dimension of output feature vector
+        n_update_layers (int): the number of MEGNetUpdate layers
+        dropout_ratio (float): ratio of dropout
     """
 
-    def __init__(self, n_update_layers=3, dropout_ratio=-1):
+    def __init__(self, out_dim=32, n_update_layers=3, dropout_ratio=-1):
         super(MEGNet, self).__init__()
         if n_update_layers <= 0:
             raise ValueError('n_update_layers must be a positive integer, '
                              'but it was set to {}'.format(n_update_layers))
 
         self.n_update_layers = n_update_layers
+        self.dropout_ratio = dropout_ratio
         with self.init_scope():
             self.update_layers = chainer.ChainList(
                 *[MEGNetUpdate(
                     hidden_dim_for_dense=[64, 32],
                     hidden_dim_for_update=[64, 64, 32]
                 ) for _ in range(n_update_layers)])
-            self.readout_for_atom = MEGNetReadout(
-                in_channels=32, n_layers=16, processing_steps=3)
-            self.readout_for_pair = MEGNetReadout(
-                in_channels=32, n_layers=16, processing_steps=3)
-            self.dropout_ratio = dropout_ratio
+            self.readout_for_atom = MEGNetReadout(in_channels=32, n_layers=16,
+                                                  processing_steps=3)
+            self.readout_for_pair = MEGNetReadout(in_channels=32, n_layers=16,
+                                                  processing_steps=3)
+            self.linear = links.Linear(None, out_dim)
 
     def __call__(self, atoms_feat, pair_feat, global_feat, *args):
         a_f = atoms_feat
@@ -67,4 +70,6 @@ class MEGNet(chainer.Chain):
         if self.dropout_ratio > 0.0:
             concated_v = functions.dropout(concated_v,
                                            ratio=self.dropout_ratio)
-        return concated_v
+        # --- convert feature's dim to out_dim ---
+        out = improved_softplus(self.linear(concated_v))
+        return out
