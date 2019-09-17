@@ -15,9 +15,9 @@ class BaseGraphData(object):
                 data = device.send(v.data.array)
                 row = device.send(v.row)
                 col = device.send(v.col)
-                gpu_coo_matrix = chainer.utils.CooMatrix(
+                device_coo_matrix = chainer.utils.CooMatrix(
                     data, row, col, v.shape, order=v.order)
-                setattr(self, k, gpu_coo_matrix)
+                setattr(self, k, device_coo_matrix)
         return self
 
 
