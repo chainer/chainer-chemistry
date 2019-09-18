@@ -16,9 +16,9 @@ def shifted_softplus(x, beta=1, shift=0.5, threshold=20):
     """
     xp = chainer.cuda.get_array_module(x)
     if isinstance(x, chainer.Variable):
-        cond = x.array > 20
+        cond = x.array > threshold
     else:
-        cond = x > 20
+        cond = x > threshold
     x = functions.where(cond, x,
                         functions.softplus(x, beta=beta))
     x += xp.log(shift)
