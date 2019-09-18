@@ -1,0 +1,9 @@
+[
+    {
+        "main/loss": 0.34406228363513947,
+        "validation/main/loss": 0.3792259097099304,
+        "epoch": 1,
+        "iteration": 2,
+        "elapsed_time": 0.010565152391791344
+    }
+]

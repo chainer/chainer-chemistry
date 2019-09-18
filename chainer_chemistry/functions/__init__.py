@@ -1,4 +1,5 @@
 from chainer_chemistry.functions.activation.softmax import softmax  # NOQA
+from chainer_chemistry.functions.activation.shifted_softplus import shifted_softplus  # NOQA
 
 from chainer_chemistry.functions.evaluation.r2_score import r2_score  # NOQA
 from chainer_chemistry.functions.evaluation.r2_score import R2Score  # NOQA
