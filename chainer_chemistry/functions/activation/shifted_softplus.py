@@ -15,10 +15,7 @@ def shifted_softplus(x, beta=1, shift=0.5, threshold=20):
         output (Variable): Output variable whose shape is same with `x`
     """
     xp = chainer.cuda.get_array_module(x)
-    if isinstance(x, chainer.Variable):
-        cond = x.array > threshold
-    else:
-        cond = x > threshold
+    cond = chainer.as_variable(x).array > threshold
     x = functions.where(cond, x,
                         functions.softplus(x, beta=beta))
     x += xp.log(shift)
