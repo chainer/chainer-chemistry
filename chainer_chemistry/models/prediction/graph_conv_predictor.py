@@ -41,8 +41,8 @@ class GraphConvPredictor(chainer.Chain):
             self.label_scaler = label_scaler
         self.postprocess_fn = postprocess_fn or chainer.functions.identity
 
-    def __call__(self, dataset):
-        x = self.graph_conv(dataset)
+    def __call__(self, *args, **kwargs):
+        x = self.graph_conv(*args, **kwargs)
 
         if self.mlp:
             x = self.mlp(x)

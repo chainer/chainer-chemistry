@@ -1,6 +1,7 @@
 from rdkit import Chem
 
 from chainer_chemistry.dataset.preprocessors.base_preprocessor import BasePreprocessor  # NOQA
+from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset  # NOQA
 
 
 class MolPreprocessor(BasePreprocessor):
@@ -94,7 +95,7 @@ class MolPreprocessor(BasePreprocessor):
         raise NotImplementedError
 
     def create_dataset(self, *args, **kwargs):
-        raise NotImplementedError
+        return NumpyTupleDataset(*args)
 
     def process(self, filepath):
         # Not used now...

@@ -73,7 +73,7 @@ class GIN(chainer.Chain):
         self.weight_tying = weight_tying
         self.n_edge_types = n_edge_types
 
-    def __call__(self, batch, is_real_node=None):
+    def __call__(self, atom_array, adj, is_real_node=None):
         """forward propagation
 
         Args:
@@ -91,8 +91,6 @@ class GIN(chainer.Chain):
         Returns:
             numpy.ndarray: final molecule representation
         """
-        atom_array, adj = batch.x, batch.adj
-
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)  # (minibatch, max_num_atoms)
         else:

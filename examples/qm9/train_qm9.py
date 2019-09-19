@@ -14,7 +14,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
-from chainer_chemistry.models.prediction.regressor2 import Regressor
+from chainer_chemistry.models.prediction.regressor import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.utils import run_train
 
@@ -122,9 +122,11 @@ def main():
     if args.scale == 'standardize':
         print('Fit StandardScaler to the labels.')
         scaler = StandardScaler()
-        y = numpy.array([data.y for data in dataset])
-        print('y', y.shape)
-        scaler.fit(y)
+        if isinstance(dataset, NumpyTupleDataset):
+            scaler.fit(dataset.get_datasets()[-1])
+        else:
+            y = numpy.array([data.y for data in dataset])
+            scaler.fit(y)
     else:
         print('No standard scaling was selected.')
         scaler = None

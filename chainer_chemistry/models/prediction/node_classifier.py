@@ -1,5 +1,6 @@
 from chainer import reporter
 from chainer_chemistry.models.prediction.classifier import Classifier
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
 
 
 class NodeClassifier(Classifier):
@@ -11,7 +12,10 @@ class NodeClassifier(Classifier):
         """Computes the loss value for an input and label pair.
         """
         self.metrics = None
-        self.y = self.predictor(data)
+        if isinstance(data, PaddingGraphData):
+            self.y = self.predictor(data.x, data.adj)
+        else:
+            self.y = self.predictor(data)
         # Support for padding pattern
         if self.y.ndim == 3:
             assert self.y.shape[0] == 1
