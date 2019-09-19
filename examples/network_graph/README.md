@@ -12,6 +12,15 @@ Before running the example, the following packages also need to be installed:
 
 ## How to run the code
 
+### Dataset
+
+Please download the dataset to use, unzip and place it under each directory.
+
+- [Cora](https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz)
+- [Citeseer](https://linqs-data.soe.ucsc.edu/public/lbc/citeseer.tgz)
+- [Reddit](https://s3.us-east-2.amazonaws.com/dgl.ai/dataset/reddit.zip)
+
+
 ### Train a model
 
 To train a model, run the following:
