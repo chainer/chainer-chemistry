@@ -54,13 +54,6 @@ class GGNNPreprocessor(MolPreprocessor):
 
         return atom_array, adj_array
 
-    def create_dataset(self, *args, **kwargs):
-        # args: (atom_array, adj_array, label_array)
-        data_list = [
-            PaddingGraphData(x=x, adj=adj, y=y) for (x, adj, y) in zip(*args)
-        ]
-        return PaddingGraphDataset(data_list)
-
 
 class GGNNSparsePreprocessor(GGNNPreprocessor):
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,

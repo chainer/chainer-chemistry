@@ -82,7 +82,7 @@ class RelGCN(chainer.Chain):
         self.input_type = input_type
         self.scale_adj = scale_adj
 
-    def __call__(self, batch):
+    def __call__(self, x, adj):
         """
         Args:
             x: (batchsize, num_nodes, in_channels)
@@ -90,8 +90,6 @@ class RelGCN(chainer.Chain):
 
         Returns: (batchsize, hidden_channels)
         """
-        x, adj = batch.x, batch.adj
-
         if x.dtype == self.xp.int32:
             assert self.input_type == 'int'
         else:
