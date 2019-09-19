@@ -1,6 +1,6 @@
 import argparse
 import numpy
-from chainer_chemistry.datasets.citation_network.citation import cora_to_networkx, citeseer_to_network  # NOQA
+from chainer_chemistry.datasets.citation_network.citation import citation_to_networkx  # NOQA
 from chainer_chemistry.datasets.reddit.reddit import reddit_to_networkx
 from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BasePaddingNetworkxPreprocessor, BaseSparseNetworkxPreprocessor  # NOQA
 from chainer_chemistry.utils.train_utils import run_node_classification_train
@@ -9,10 +9,30 @@ from chainer_chemistry.models.gin import GINSparse, GIN
 from chainer_chemistry.dataset.networkx_preprocessors.gin_reddit import get_reddit_coo_data  # NOQA
 
 
+def get_cora():
+    return citation_to_networkx(
+        "examples/network_graph/cora/",
+        "cora"
+    )
+
+
+def get_citeseer():
+    return citation_to_networkx(
+        "examples/network_graph/citeseer/",
+        "citeseer"
+    )
+
+
+def get_reddit():
+    return reddit_to_networkx(
+        "examples/network_graph/reddit/"
+    )
+
+
 dataset_dict = {
-    'cora': cora_to_networkx,
-    'citeseer': citeseer_to_network,
-    'reddit': reddit_to_networkx,
+    'cora': get_cora,
+    'citeseer': get_citeseer,
+    'reddit': get_reddit,
 }
 method_dict = {
     'gin': GIN,
@@ -70,7 +90,8 @@ def generate_random_mask(n, train_num, seed=777):
 if __name__ == '__main__':
     args = parse_arguments()
     if args.dataset == 'reddit' and args.coo:
-        data = get_reddit_coo_data()
+        # because it takes time to load reddit coo data via networkx
+        data = get_reddit_coo_data("examples/network_graph/reddit/")
     else:
         networkx_graph = dataset_dict[args.dataset]()
         preprocessor = preprocessor_dict[args.method](use_coo=args.coo)

@@ -4,7 +4,7 @@ import chainer
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
 
 
-def get_reddit_coo_data():
+def get_reddit_coo_data(dirpath):
     """Temporary function to obtain reddit coo data for GIN
     (because it takes to much time to convert it to networkx)
 
@@ -12,12 +12,11 @@ def get_reddit_coo_data():
         PaddingGraphData: `PaddingGraphData` of reddit
     """
 
-    filepath = "chainer_chemistry/datasets/reddit/"
     print("Loading node feature and label")
-    reddit_data = numpy.load(filepath + "reddit_data.npz")
+    reddit_data = numpy.load(dirpath + "reddit_data.npz")
 
     print("Loading edge data")
-    coo_adj = scipy.sparse.load_npz(filepath + "reddit_graph.npz")
+    coo_adj = scipy.sparse.load_npz(dirpath + "reddit_graph.npz")
     row = coo_adj.row.astype(numpy.int32)
     col = coo_adj.col.astype(numpy.int32)
     data = coo_adj.data.astype(numpy.float32)
