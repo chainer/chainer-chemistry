@@ -18,7 +18,10 @@ class ScatterGGNNReadout(chainer.Chain):
         activation_agg (~chainer.Function or ~chainer.FunctionNode):
             activate function for aggregation
             `functions.tanh` was suggested in original paper.
+        concat_n_info (bool): If ``True``, node information is concated
+            to the result.
     """
+
     def __init__(self, out_dim, in_channels=None, nobias=False,
                  activation=functions.identity,
                  activation_agg=functions.identity,

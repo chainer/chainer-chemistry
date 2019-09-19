@@ -91,6 +91,8 @@ class GINUpdate(chainer.Chain):
 
 
 class GINSparseUpdate(chainer.Chain):
+    """sparse GIN submodule for update part"""
+
     def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
                  dropout_ratio=0.5, n_layers=2, **kwargs):
         if out_channels is None:

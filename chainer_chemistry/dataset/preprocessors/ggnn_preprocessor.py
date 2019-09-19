@@ -56,6 +56,8 @@ class GGNNPreprocessor(MolPreprocessor):
 
 
 class GGNNSparsePreprocessor(GGNNPreprocessor):
+    """Sparse GGNN Preprocessor"""
+
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
                  kekulize=False):
         super(GGNNSparsePreprocessor, self).__init__(
@@ -63,6 +65,16 @@ class GGNNSparsePreprocessor(GGNNPreprocessor):
             kekulize=kekulize)
 
     def construct_sparse_data(self, x, adj, y):
+        """Construct `SparseGraphData` from `x`, `adj`, `y`
+
+        Args:
+            x (numpy.ndarray): input feature
+            adj (numpy.ndarray): adjacency matrix
+            y (numpy.ndarray): output label
+
+        Returns:
+            SparseGraphData: graph data object for sparse pattern
+        """
         edge_index = [[], []]
         edge_attr = []
         label_num, n, _ = adj.shape
@@ -81,6 +93,11 @@ class GGNNSparsePreprocessor(GGNNPreprocessor):
         )
 
     def create_dataset(self, *args, **kwargs):
+        """Create `SparseGraphData` from list of `(x, adj, y)`
+
+        Returns:
+            SparseGraphDataset: graph dataset object for sparse pattern
+        """
         # args: (atom_array, adj_array, label_array)
         data_list = [
             self.construct_sparse_data(x, adj, y) for (x, adj, y) in zip(*args)

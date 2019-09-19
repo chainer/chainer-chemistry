@@ -7,6 +7,8 @@ from chainer_chemistry.dataset.graph_dataset.feature_converters import batch_wit
 
 
 class BaseNetworkxPreprocessor():
+    """Base class to preprocess `Networkx::Graph` object"""
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -32,14 +34,22 @@ class BaseNetworkxPreprocessor():
 
 
 class BasePaddingNetworkxPreprocessor(BaseNetworkxPreprocessor):
-    """
-    Preprocess Networkx::Graph into GraphData for each model's input
+    """Base class to preprocess `Networkx::Graph` object into
+    `PaddingGraphDataset`
     """
 
     def __init__(self, use_coo=False, *args, **kwargs):
         self.use_coo = use_coo
 
     def construct_data(self, graph):
+        """Construct `PaddingGraphData` from `Networkx::Graph`
+
+        Args:
+            graph (Networkx::Graph): graph
+
+        Returns:
+            PaddingGraphData: graph data of padding pattern
+        """
         if not self.use_coo:
             return PaddingGraphData(
                 x=self.get_x(graph),
@@ -78,6 +88,14 @@ class BasePaddingNetworkxPreprocessor(BaseNetworkxPreprocessor):
         )
 
     def create_dataset(self, graph_list):
+        """Create `PaddingGraphDataset` from list of `Networkx::Graph`
+
+        Args:
+            graph_list (list[Networkx::Graph]): list of graphs
+
+        Returns:
+            PaddingGraphDataset: graph dataset of padding pattern
+        """
         data_list = [
             self.construct_data(graph) for graph in graph_list
         ]
@@ -87,11 +105,19 @@ class BasePaddingNetworkxPreprocessor(BaseNetworkxPreprocessor):
 
 
 class BaseSparseNetworkxPreprocessor(BaseNetworkxPreprocessor):
-    """
-    Preprocess NetworkX::Graph into SparseGraphData for each model's input
+    """Base class to preprocess `Networkx::Graph` object into
+    `SparseGraphDataset`
     """
 
     def construct_data(self, graph):
+        """Construct `SparseGraphData` from `Networkx::Graph`
+
+        Args:
+            graph (Networkx::Graph): graph
+
+        Returns:
+            SparseGraphData: graph data of sparse pattern
+        """
         edge_index = numpy.empty((2, graph.number_of_edges() * 2),
                                  dtype=numpy.int)
         for i, edge in enumerate(graph.edges):
@@ -113,6 +139,14 @@ class BaseSparseNetworkxPreprocessor(BaseNetworkxPreprocessor):
         return graph
 
     def create_dataset(self, graph_list):
+        """Create `SparseGraphDataset` from list of `Networkx::Graph`
+
+        Args:
+            graph_list (list[Networkx::Graph]): list of graphs
+
+        Returns:
+            SparseGraphDataset: graph dataset of sparse pattern
+        """
         data_list = [
             self.construct_data(graph) for graph in graph_list
         ]

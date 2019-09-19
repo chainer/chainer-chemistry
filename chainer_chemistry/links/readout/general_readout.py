@@ -41,6 +41,15 @@ class GeneralReadout(chainer.Link):
 
 
 class ScatterGeneralReadout(chainer.Link):
+    """General submodule for readout part by scatter operation.
+
+    This class is used in sparse pattern.
+
+    Args:
+        mode (str):
+        activation (callable): activation function
+    """
+
     def __init__(self, mode='sum', activation=None, **kwargs):
         super(ScatterGeneralReadout, self).__init__()
         self.mode = mode

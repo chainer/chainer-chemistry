@@ -56,6 +56,8 @@ class RelGCNUpdate(chainer.Chain):
 
 
 class RelGCNSparseUpdate(chainer.Chain):
+    """sparse RelGCN submodule for update part"""
+
     def __init__(self, in_channels, out_channels, n_edge_types):
         super(RelGCNSparseUpdate, self).__init__()
         self.out_channels = out_channels

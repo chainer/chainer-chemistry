@@ -5,9 +5,11 @@ from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraph
 
 
 def get_reddit_coo_data():
-    """
-    temporary function to obtain reddit coo data for GIN
+    """Temporary function to obtain reddit coo data for GIN
     (because it takes to much time to convert it to networkx)
+
+    Returns:
+        PaddingGraphData: `PaddingGraphData` of reddit
     """
 
     filepath = "chainer_chemistry/datasets/reddit/"

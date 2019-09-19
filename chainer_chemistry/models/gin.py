@@ -119,6 +119,8 @@ class GIN(chainer.Chain):
 
 
 class GINSparse(chainer.Chain):
+    """Simple implementation of sparseGraph Isomorphism Network (GIN)"""
+
     def __init__(self, out_dim, node_embedding=False, hidden_channels=16,
                  out_channels=None,
                  n_update_layers=4, n_atom_types=MAX_ATOMIC_NUM,
