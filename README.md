@@ -25,6 +25,8 @@ Chainer Chemistry depends on the following packages:
  - [`pandas`](https://pandas.pydata.org)
  - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
+ - [`pymatgen`](https://pypi.python.org/pypi/pymatgen)
+ - [`h5py`](https://pypi.python.org/pypi/h5py)
 
 These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
@@ -112,6 +114,8 @@ The following graph convolutional neural networks are currently supported:
 - MPNN: Message Passing Neural Networks [3]
 - Set2Set [19]
 - GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation [20]
+- MEGNet: MatErials Graph Network [21]
+- CGCNN: Crystal Graph Convolutional Neural Networks [22]
 
 We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
 - NFP ('nfp_gwm')
@@ -127,6 +131,7 @@ The following datasets are currently supported:
 - Tox21 [9]
 - MoleculeNet [11]
 - ZINC (only 250k dataset) [12, 13]
+- Material Project (日付を入れる) [23]
 - User (own) dataset
 
 ## Research Projects
@@ -203,6 +208,11 @@ papers. Use the library at your own risk.
 [18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019.
 
 [19] Oriol Vinyals, Samy Bengio, Manjunath Kudlur. Order Matters: Sequence to sequence for sets. *arXiv preprint arXiv:1511.06391*, 2015.
-. 
 
 [20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.
+
+[21] Chi Chen, Weike Ye, Yunxing Zuo, Chen Zheng, and Shyue Ping Ong. Graph networks as a universal machine learning framework for molecules and crystals. *Chemistry of Materials*, 31(9):3564–3572, 2019.
+
+[22] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
+
+[23] Anubhav Jain, Shyue Ping Ong, Geoffroy Hautier, Wei Chen, William Davidson Richards, Stephen Dacek, Shreyas Cholia, Dan Gunter, David Skinner, Gerbrand Ceder, et al. Commentary: The materials project: A materials genome approach to accelerating materials innovation. Apl Materials, 1(1):011002, 2013.
