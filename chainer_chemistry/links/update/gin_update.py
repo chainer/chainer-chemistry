@@ -3,7 +3,6 @@ from chainer import functions
 
 import chainer_chemistry
 from chainer_chemistry.links import GraphMLP
-from chainer_chemistry.links import MLP
 
 
 class GINUpdate(chainer.Chain):
@@ -95,14 +94,17 @@ class GINSparseUpdate(chainer.Chain):
 
     def __init__(self, in_channels=None, hidden_channels=16, out_channels=None,
                  dropout_ratio=0.5, n_layers=2, **kwargs):
+        # To avoid circular reference
+        from chainer_chemistry.models.mlp import MLP
+
         if out_channels is None:
             out_channels = hidden_channels
         super(GINSparseUpdate, self).__init__()
-        channels = [hidden_channels] * (n_layers - 1) + [out_channels]
         with self.init_scope():
             self.mlp = MLP(
-                channels=channels, in_channels=in_channels,
-                activation=functions.relu)
+                out_dim=out_channels, hidden_dim=hidden_channels,
+                n_layers=n_layers, activation=functions.relu
+            )
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, h, edge_index):
