@@ -7,8 +7,8 @@ from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraph
 from chainer_chemistry.utils.train_utils import run_node_classification_train
 from chainer_chemistry.models.prediction.node_classifier import NodeClassifier
 from chainer_chemistry.models.gin import GINSparse, GIN
-from chainer_chemistry.models.prediction.padding_model_wrapper import PaddingModelWrapper  # NOQA
 from chainer_chemistry.dataset.networkx_preprocessors.reddit_coo import get_reddit_coo_data  # NOQA
+from examples.network_graph.padding_model_wrapper import PaddingModelWrapper  # NOQA
 
 
 def get_cora():
