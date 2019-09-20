@@ -66,6 +66,7 @@ class GIN(chainer.Chain):
         self.node_embedding = node_embedding
         self.out_dim = out_dim
         self.hidden_channels = hidden_channels
+        self.n_update_layers = n_update_layers
         self.n_message_layers = n_message_layer
         self.n_readout_layer = n_readout_layer
         self.dropout_ratio = dropout_ratio
@@ -99,7 +100,7 @@ class GIN(chainer.Chain):
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)
 
         g_list = []
-        for step in range(self.n_message_layers):
+        for step in range(self.n_update_layers):
             message_layer_index = 0 if self.weight_tying else step
             h = self.update_layers[message_layer_index](h, adj)
             if step != self.n_message_layers - 1:
