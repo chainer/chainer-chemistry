@@ -4,8 +4,7 @@ from chainer.dataset.convert import to_device
 
 @chainer.dataset.converter()
 def megnet_converter(batch, device=None, padding=0):
-    """MEGNet converter
-    """
+    """MEGNet converter"""
     if len(batch) == 0:
         raise ValueError("batch is empty")
 

@@ -293,6 +293,9 @@ def construct_pair_feature(mol, use_all_feature):
                                          distance_feature,
                                          expanded_distance_feature)))
         else:
+            expanded_distance_feature = \
+                construct_expanded_distance_vec(
+                    coordinate_matrix, converter, start_node, end_node)
             feature.append(expanded_distance_feature)
 
     bond_idx = numpy.array(bond_idx).T

@@ -131,7 +131,7 @@ The following datasets are currently supported:
 - Tox21 [9]
 - MoleculeNet [11]
 - ZINC (only 250k dataset) [12, 13]
-- Material Project (日付を入れる) [23]
+- Material Project (TODO: 日付を入れる) [23]
 - User (own) dataset
 
 ## Research Projects

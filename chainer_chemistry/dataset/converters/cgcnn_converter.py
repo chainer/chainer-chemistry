@@ -5,8 +5,7 @@ from chainer.dataset.convert import to_device
 
 @chainer.dataset.converter()
 def cgcnn_converter(batch, device=None, padding=None):
-    """CGCNN converter
-    """
+    """CGCNN converter"""
     if len(batch) == 0:
         raise ValueError("batch is empty")
 

@@ -4,7 +4,7 @@ from chainer import functions
 def megnet_softplus(x):
     """Modified softplus function used by MEGNet
 
-    This function comes from the follwing link.
+    The original implemantation is below.
     https://github.com/materialsvirtuallab/megnet/blob/f91773f0f3fa8402b494638af9ef2ed2807fcba7/megnet/activations.py#L6
 
     Args:

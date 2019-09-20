@@ -51,7 +51,7 @@ class MPDataset(chainer.dataset.DatasetMixin):
         return True
 
     def _load_label_list(self, data_dir, target_list, is_stable=True):
-        """Collect the label
+        """Collect the label.
 
         Args:
             target_list (List): List of target labels.
