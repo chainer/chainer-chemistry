@@ -12,10 +12,7 @@ class NodeClassifier(Classifier):
         """Computes the loss value for an input and label pair.
         """
         self.metrics = None
-        if isinstance(data, PaddingGraphData):
-            self.y = self.predictor(data.x, data.adj)
-        else:
-            self.y = self.predictor(data)
+        self.y = self.predictor(data)
         # Support for padding pattern
         if self.y.ndim == 3:
             assert self.y.shape[0] == 1

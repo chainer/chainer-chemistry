@@ -3,9 +3,11 @@ import numpy
 from chainer_chemistry.datasets.citation_network.citation import citation_to_networkx  # NOQA
 from chainer_chemistry.datasets.reddit.reddit import reddit_to_networkx
 from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BasePaddingNetworkxPreprocessor, BaseSparseNetworkxPreprocessor  # NOQA
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
 from chainer_chemistry.utils.train_utils import run_node_classification_train
 from chainer_chemistry.models.prediction.node_classifier import NodeClassifier
 from chainer_chemistry.models.gin import GINSparse, GIN
+from chainer_chemistry.models.prediction.padding_model_wrapper import PaddingModelWrapper  # NOQA
 from chainer_chemistry.dataset.networkx_preprocessors.reddit_coo import get_reddit_coo_data  # NOQA
 
 
@@ -103,6 +105,9 @@ if __name__ == '__main__':
                                    hidden_channels=args.unit_num,
                                    n_update_layers=args.conv_layers,
                                    dropout_ratio=args.dropout)
+
+    if isinstance(data, PaddingGraphData):
+        gnn = PaddingModelWrapper(gnn)
 
     predictor = NodeClassifier(gnn, device=args.device)
     train_label_num = int(data.n_nodes * args.train_data_ratio)
