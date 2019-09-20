@@ -116,7 +116,8 @@ def main():
         # Cache the laded dataset.
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
-        # NumpyTupleDataset.save(dataset_cache_path, dataset)
+        if isinstance(dataset, NumpyTupleDataset):
+            NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
