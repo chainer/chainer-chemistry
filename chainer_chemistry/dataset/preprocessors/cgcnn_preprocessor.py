@@ -11,12 +11,12 @@ class CGCNNPreprocessor(MolPreprocessor):
     """CGCNNPreprocessor
 
     Args:
-    TODO: For Molecule
+    For Molecule: TODO
 
     For Crystal
         max_neighbors (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
-        expand_dim (int): dimension converting from distance to vector
+        expand_dim (int): Dimension converting from distance to vector
     """
 
     def __init__(self, max_neighbors=12, max_radius=8, expand_dim=40):
@@ -26,11 +26,11 @@ class CGCNNPreprocessor(MolPreprocessor):
         self.max_radius = max_radius
         self.gdf = GaussianDistance(centers=numpy.linspace(0, 8, expand_dim))
 
-    def get_input_feature_from_crystal(self, crystal):
-        """get input features from crystal object
+    def get_input_feature_from_crystal(self, structure):
+        """get input features from structure object
 
         Args:
-            crystal (Crystal):
+            structure (Structure):
 
         """
 
@@ -43,16 +43,17 @@ class CGCNNPreprocessor(MolPreprocessor):
                                                        dtype=numpy.float32)
                                  for key, value in feat_dict.items()}
         atom_feature = numpy.vstack(
-            [initial_atom_features[crystal[i].specie.number]
-             for i in range(len(crystal))]
+            [initial_atom_features[structure[i].specie.number]
+             for i in range(len(structure))]
         )
 
-        # get edge feture vector
-        neighbor_indexes = list()
-        neighbor_features = list()
-        all_neighbors = crystal.get_all_neighbors(
+        # get edge feature vector & bond idx
+        neighbor_indexes = []
+        neighbor_features = []
+        all_neighbors = structure.get_all_neighbors(
             self.max_radius, include_index=True)
-        all_neighbors = [sorted(nbrs, key=lambda x: x[1]) for nbrs in all_neighbors]  # NOQA
+        all_neighbors = [sorted(nbrs, key=lambda x: x[1])
+                         for nbrs in all_neighbors]
 
         for nbrs in all_neighbors:
             nbr_feature_idx = numpy.zeros(
@@ -68,7 +69,6 @@ class CGCNNPreprocessor(MolPreprocessor):
 
         neighbor_indexes = numpy.array(neighbor_indexes)
         neighbor_features = numpy.array(neighbor_features)
-        neighbor_features = self.gdf.expand2D(
-            neighbor_features).astype(numpy.float32)
+        neighbor_features = self.gdf.expand_from_distances(neighbor_features)
 
         return atom_feature, neighbor_features, neighbor_indexes

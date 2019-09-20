@@ -141,7 +141,7 @@ def set_up_predictor(
             hidden_channels=n_unit,
             n_update_layers=conv_layers,
             n_edge_types=5,
-            ** conv_kwargs)
+            **conv_kwargs)
     elif method == 'megnet':
         print('Set up MEGNet predictor...')
         conv = MEGNet(

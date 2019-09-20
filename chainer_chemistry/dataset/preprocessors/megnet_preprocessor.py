@@ -127,12 +127,16 @@ def construct_aromaticity_vec(mol, num_max_atoms):
     return aromaticity_vec
 
 
-def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None,
+def construct_atom_feature(mol, use_all_feature, atom_list=None,
                            include_unknown_atom=False):
     """construct atom feature
 
     Args:
         mol (Mol): mol instance
+        use_all_feature (bool):
+            If True, all atom features are extracted.
+            If False, a part of atom features is extracted.
+            You can confirm the detail in the paper.
         atom_list (list): list of atoms to extract feature. If None, default
             `ATOM` is used as `atom_list`
         include_unknown_atom (bool): If False, when the `mol` includes atom
@@ -141,9 +145,10 @@ def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None,
             If True, even the atom is not in `atom_list`, `atom_type` is set
             as "unknown" atom.
 
-    Returns (numpy.ndarray): 2 dimensional array. First axis size is
-        `num_max_atoms`, representing each atom index.
-        Second axis for feature.
+    Returns:
+        atom_feature (numpy.ndarray): 2 dimensional array.
+            First axis size is `num_max_atoms`, representing each atom index.
+            Second axis size is each atom feature dimension.
 
     """
     num_max_atoms = mol.GetNumAtoms()
@@ -161,8 +166,7 @@ def construct_atom_feature(mol, use_fixed_atom_feature, atom_list=None,
     aromaticity_vec = construct_aromaticity_vec(
         mol, num_max_atoms=num_max_atoms)
 
-    # stack all vector
-    if use_fixed_atom_feature:
+    if use_all_feature:
         feature = numpy.hstack((atom_type_vec, atom_chirality_vec,
                                 atom_ring_vec, hybridization_vec,
                                 hydrogen_bonding, aromaticity_vec))
@@ -228,23 +232,27 @@ def construct_expanded_distance_vec(coordinate_matrix, converter, i, j):
     # calculate the bond length
     distance = numpy.linalg.norm(coordinate_matrix[i] - coordinate_matrix[j])
     # convert from the bond length to vector
-    expanded_distance_vec = converter.expand1D(distance)
+    expanded_distance_vec = converter.expand(distance)
     return expanded_distance_vec
 
 
-def construct_pair_feature(mol, use_fixed_atom_feature):
+def construct_pair_feature(mol, use_all_feature):
     """construct pair feature
 
     Args:
         mol (Mol): mol instance
+        use_all_feature (bool):
+            If True, all pair features are extracted.
+            If False, a part of pair features is extracted.
+            You can confirm the detail in the paper.
 
-    Returns
-        features (numpy.ndarray): 2 dimensional array. First axis size is
-                                  the number of the bond, Second axis size
-                                  is the number of the feature.
-        bond_idx (numpy.ndarray): 2 dimensional array. First axis size is
-                                  the number of the bond, Second axis is
-                                  the Tuple(BeginAtomIdx, EndAtomIdx).
+    Returns:
+        features (numpy.ndarray): 2 dimensional array.
+            First axis size is the number of the bond.
+            Second axis size is each pair feature dimension.
+        bond_idx (numpy.ndarray): 2 dimensional array.
+            First axis size is the number of the bond.
+            Second axis represents tuple(StartNodeIdx, EndNodeIdx).
     """
     converter = GaussianDistance()
 
@@ -252,18 +260,16 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
     bonds = mol.GetBonds()
     graph_distance_matrix = Chem.GetDistanceMatrix(mol)
     is_in_ring = get_is_in_ring(mol)
-
-    if use_fixed_atom_feature:
-        confid = AllChem.EmbedMolecule(mol)
-        try:
-            coordinate_matrix = rdmolops.Get3DDistanceMatrix(
-                mol, confId=confid)
-        except ValueError as e:
-            logger = getLogger(__name__)
-            logger.info('construct_distance_matrix failed, type: {}, {}'
-                        .format(type(e).__name__, e.args))
-            logger.debug(traceback.format_exc())
-            raise MolFeatureExtractionError
+    confid = AllChem.EmbedMolecule(mol)
+    try:
+        coordinate_matrix = rdmolops.Get3DDistanceMatrix(
+            mol, confId=confid)
+    except ValueError as e:
+        logger = getLogger(__name__)
+        logger.info('construct_distance_matrix failed, type: {}, {}'
+                    .format(type(e).__name__, e.args))
+        logger.debug(traceback.format_exc())
+        raise MolFeatureExtractionError
 
     feature = []
     bond_idx = []
@@ -279,7 +285,7 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
             is_in_ring, start_node, end_node)
 
         bond_idx.append((start_node, end_node))
-        if use_fixed_atom_feature:
+        if use_all_feature:
             expanded_distance_feature = \
                 construct_expanded_distance_vec(
                     coordinate_matrix, converter, start_node, end_node)
@@ -287,8 +293,7 @@ def construct_pair_feature(mol, use_fixed_atom_feature):
                                          distance_feature,
                                          expanded_distance_feature)))
         else:
-            feature.append(numpy.hstack(
-                (bond_feature, ring_feature, distance_feature)))
+            feature.append(expanded_distance_feature)
 
     bond_idx = numpy.array(bond_idx).T
     feature = numpy.array(feature)
@@ -301,8 +306,8 @@ def construct_global_state_feature(mol):
     Args:
         mol (Mol): mol instance
 
-    Returns (numpy.ndarray): 1 dimensional array.
-
+    Returns:
+        feature (numpy.ndarray): 1 dimensional array
     """
     n_atom = mol.GetNumAtoms()
     ave_mol_wt = Descriptors.MolWt(mol) / n_atom
@@ -312,11 +317,7 @@ def construct_global_state_feature(mol):
 
 
 class MEGNetPreprocessor(MolPreprocessor):
-
     """MEGNetPreprocessor
-
-     MEGNet must have fixed-size atom list for now, zero_padding option
-     is always set to True.
 
     Args:
     For Molecule
@@ -325,9 +326,10 @@ class MEGNetPreprocessor(MolPreprocessor):
             ignored.
             Setting negative value indicates no limit for max atoms.
         add_Hs (bool): If True, implicit Hs are added.
-        use_fixed_atom_feature (bool):
-            If True, atom feature is extracted used in original paper.
-            If it is False, atomic number is used instead.
+        use_all_feature (bool):
+            If True, all atom and pair features is extracted.
+            If it is False, a part of atom and pair features is extracted.
+            You can confirm the detail in the paper.
         atom_list (list): list of atoms to extract feature. If None, default
             `ATOM` is used as `atom_list`
         include_unknown_atom (bool): If False, when the `mol` includes atom
@@ -340,11 +342,11 @@ class MEGNetPreprocessor(MolPreprocessor):
     For Crystal
         max_neighbors (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
-        expand_dim (int): dimension converting from distance to vector
+        expand_dim (int): Dimension converting from distance to vector
     """
 
     def __init__(self, max_atoms=-1, add_Hs=True,
-                 use_fixed_atom_feature=False, atom_list=None,
+                 use_all_feature=False, atom_list=None,
                  include_unknown_atom=False, kekulize=False,
                  max_neighbors=12, max_radius=8, expand_dim=100):
         super(MEGNetPreprocessor, self).__init__(
@@ -352,51 +354,50 @@ class MEGNetPreprocessor(MolPreprocessor):
 
         self.max_atoms = max_atoms
         self.add_Hs = add_Hs
-        self.use_fixed_atom_feature = use_fixed_atom_feature
+        self.use_all_feature = use_all_feature
         self.atom_list = atom_list
         self.include_unknown_atom = include_unknown_atom
         self.max_neighbors = max_neighbors
         self.max_radius = max_radius
+        self.expand_dim = expand_dim
         self.gdf = GaussianDistance(centers=numpy.linspace(0, 5, expand_dim))
 
     def get_input_features(self, mol):
         """get input features from mol object
 
-        MEGNetPreprocessor automatically add `H` to `mol`
-
         Args:
-            mol (Mol):
+           mol (Mol):
 
         """
         type_check_num_atoms(mol, self.max_atoms)
-        atom_feature = construct_atom_feature(mol, self.use_fixed_atom_feature,
+        atom_feature = construct_atom_feature(mol, self.use_all_feature,
                                               self.atom_list,
                                               self.include_unknown_atom)
 
-        pair_feature, bond_idx = construct_pair_feature(
-            mol, self.use_fixed_atom_feature)
+        pair_feature, bond_idx = construct_pair_feature(mol,
+                                                        self.use_all_feature)
         global_feature = construct_global_state_feature(mol)
         return atom_feature, pair_feature, global_feature, bond_idx
 
-    def get_input_feature_from_crystal(self, crystal):
-        """get input features from crystal object
+    def get_input_feature_from_crystal(self, structure):
+        """get input features from structure object
 
         Args:
-            crystal (Crystal):
+            structure (Structure):
 
         """
-        atom_num = len(crystal)
+        atom_num = len(structure)
         atom_feature = numpy.zeros(
             (atom_num, MAX_ATOM_ELEMENT), dtype=numpy.float32)
         for i in range(atom_num):
-            if crystal[i].specie.number < MAX_ATOM_ELEMENT:
-                atom_feature[i][crystal[i].specie.number] = 1
+            if structure[i].specie.number < MAX_ATOM_ELEMENT:
+                atom_feature[i][structure[i].specie.number] = 1
 
-        # get edge feture vector & bond idx
+        # get edge feature vector & bond idx
         neighbor_indexes = []
         neighbor_features = []
-        all_neighbors = crystal.get_all_neighbors(
-            self.max_radius, include_index=True)
+        all_neighbors = structure.get_all_neighbors(self.max_radius,
+                                                    include_index=True)
         all_neighbors = [sorted(nbrs, key=lambda x: x[1])
                          for nbrs in all_neighbors]
         bond_num = len(all_neighbors)
@@ -405,21 +406,20 @@ class MEGNetPreprocessor(MolPreprocessor):
             start_node_idx = i
             nbr_feature = numpy.zeros(
                 self.max_neighbors, dtype=numpy.float32) + self.max_radius + 1.
-            nbr_feature_idx = numpy.zeros(
-                (self.max_neighbors, 2), dtype=numpy.int32)
+            nbr_feature_idx = numpy.zeros((self.max_neighbors, 2),
+                                          dtype=numpy.int32)
             nbr_feature_idx[:, 0] = start_node_idx
             nbr_feature_idx[:len(nbrs), 1] = list(
                 map(lambda x: x[2], nbrs[:self.max_neighbors]))
-            nbr_feature[:len(nbrs)] = list(
-                map(lambda x: x[1], nbrs[:self.max_neighbors]))
+            nbr_feature[:len(nbrs)] = list(map(lambda x: x[1],
+                                               nbrs[:self.max_neighbors]))
             neighbor_indexes.append(nbr_feature_idx)
             neighbor_features.append(nbr_feature)
 
         bond_idx = numpy.array(neighbor_indexes).reshape(-1, 2).T
         pair_feature = numpy.array(neighbor_features)
-        pair_feature = self.gdf.expand2D(
-            pair_feature).reshape(-1, self.exapand_dim)
-        # get global feature vector
+        pair_feature = self.gdf.expand_from_distances(
+            pair_feature).reshape(-1, self.expand_dim)
         global_feature = numpy.array([0, 0], dtype=numpy.float32)
 
         return atom_feature, pair_feature, global_feature, bond_idx

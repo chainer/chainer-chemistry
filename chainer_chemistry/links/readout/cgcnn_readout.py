@@ -9,7 +9,7 @@ class CGCNNReadout(chainer.Chain):
         out_dim (int): dimension of output feature vector
     """
 
-    def __init__(self, out_dim):
+    def __init__(self, out_dim=128):
         super(CGCNNReadout, self).__init__()
         with self.init_scope():
             self.linear = links.Linear(None, out_dim)

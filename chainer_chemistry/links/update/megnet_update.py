@@ -2,7 +2,7 @@ import chainer
 from chainer import functions, links
 
 
-from chainer_chemistry.functions import improved_softplus
+from chainer_chemistry.functions import megnet_softplus
 
 
 class DenseLayer(chainer.Chain):
@@ -13,7 +13,7 @@ class DenseLayer(chainer.Chain):
             self.update_layer = chainer.ChainList(
                 *[links.Linear(None, hidden_dim[i])
                   for i in range(self.n_layers)])
-        self.activation = improved_softplus
+        self.activation = megnet_softplus
 
     def __call__(self, v):
         for i in range(self.n_layers):
@@ -36,7 +36,7 @@ class UpdateLayer(chainer.Chain):
             v = self.update_layer[i](v)
             # doesn't pass the activation at the last layer
             if i != (self.n_layers-1):
-                v = improved_softplus(v)
+                v = megnet_softplus(v)
         return v
 
 
