@@ -46,8 +46,23 @@ class MolVisualizer(BaseVisualizer):
 
     def visualize(self, saliency, mol, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
-                  scaler=abs_max_scaler, legend=''):
+                  scaler=abs_max_scaler, legend='', raise_import_error=False
+                  ):
         """Visualize or save `saliency` with molecule
+
+        returned value can be used for visualization.
+
+        .. admonition:: Example
+
+           >>> svg = visualizer.visualize(saliency, mol)
+           >>>
+           >>> # For a Jupyter user, it will show figure on notebook.
+           >>> from IPython.core.display import SVG
+           >>> SVG(svg.replace('svg:', ''))
+           >>>
+           >>> # For a user who want to save a file as png
+           >>> import cairosvg
+           >>> cairosvg.svg2png(bytestring=svg, write_to="foo.png")
 
         Args:
             saliency (numpy.ndarray): 1-dim saliency array (num_node,)
@@ -59,6 +74,10 @@ class MolVisualizer(BaseVisualizer):
             scaler (callable): function which takes `x` as input and outputs
                 scaled `x`, for plotting.
             legend (str): legend for the plot
+            raise_import_error (bool): raise error when `ImportError` is raised
+
+        Returns:
+            svg (str): drawed svg text.
         """
         rdDepictor.Compute2DCoords(mol)
         Chem.SanitizeMol(mol)
@@ -115,25 +134,18 @@ class MolVisualizer(BaseVisualizer):
                 try:
                     import cairosvg
                     cairosvg.svg2png(bytestring=svg, write_to=save_filepath)
-                except ImportError:
+                except ImportError as e:
                     self.logger.error(
                         'cairosvg is not installed! '
                         'Please install cairosvg to save by png format.\n'
                         'pip install cairosvg')
-                    return None
+                    if raise_import_error:
+                        raise e
             else:
                 raise ValueError(
                     'Unsupported extention {} for save_filepath {}'
                     .format(extention, save_filepath))
-        else:
-            try:
-                from IPython.core.display import SVG
-                return SVG(svg.replace('svg:', ''))
-            except ImportError:
-                self.logger.error(
-                    'IPython module failed to import, '
-                    'please install by "pip install ipython"')
-                return None
+        return svg
 
 
 class SmilesVisualizer(MolVisualizer):
@@ -141,8 +153,10 @@ class SmilesVisualizer(MolVisualizer):
     def visualize(self, saliency, smiles, save_filepath=None,
                   visualize_ratio=1.0, color_fn=red_blue_cmap,
                   scaler=abs_max_scaler, legend='', add_Hs=False,
-                  use_canonical_smiles=True):
+                  use_canonical_smiles=True, raise_import_error=False):
         """Visualize or save `saliency` with molecule
+
+        See parent `MolVisualizer` class for further usage.
 
         Args:
             saliency (numpy.ndarray): 1-dim saliency array (num_node,)
@@ -157,6 +171,10 @@ class SmilesVisualizer(MolVisualizer):
             add_Hs (bool): Add explicit H or not
             use_canonical_smiles (bool): If `True`, smiles are converted to
                 canonical smiles before constructing `mol`
+            raise_import_error (bool): raise error when `ImportError` is raised
+
+        Returns:
+            svg (str): drawed svg text.
         """
         mol = Chem.MolFromSmiles(smiles)
         if use_canonical_smiles:
@@ -167,4 +185,4 @@ class SmilesVisualizer(MolVisualizer):
         return super(SmilesVisualizer, self).visualize(
             saliency, mol, save_filepath=save_filepath,
             visualize_ratio=visualize_ratio, color_fn=color_fn, scaler=scaler,
-            legend=legend)
+            legend=legend, raise_import_error=raise_import_error)

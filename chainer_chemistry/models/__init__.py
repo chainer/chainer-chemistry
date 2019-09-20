@@ -22,6 +22,7 @@ from chainer_chemistry.models.relgcn import RelGCN  # NOQA
 from chainer_chemistry.models.rsgcn import RSGCN  # NOQA
 from chainer_chemistry.models.schnet import SchNet  # NOQA
 from chainer_chemistry.models.weavenet import WeaveNet  # NOQA
+from chainer_chemistry.models.gnn_film import GNNFiLM  # NOQA
 
 from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA

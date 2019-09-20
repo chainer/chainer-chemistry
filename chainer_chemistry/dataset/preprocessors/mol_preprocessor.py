@@ -40,7 +40,6 @@ class MolPreprocessor(BasePreprocessor):
             Chem.Kekulize(mol)
         return canonical_smiles, mol
 
-
     def get_label(self, mol, label_names=None):
         """Extracts label information from a molecule.
 

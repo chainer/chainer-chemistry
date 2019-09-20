@@ -32,7 +32,7 @@ def rmse(x0, x1):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat']
+                   'relgat', 'mpnn', 'gnnfilm']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
