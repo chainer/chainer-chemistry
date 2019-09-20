@@ -23,6 +23,10 @@ class MPDataset(chainer.dataset.DatasetMixin):
         self.data = None
         self.preprocessor = preprocessor
 
+    def __len__(self):
+        """Return the dataset length."""
+        return len(self.data)
+
     def save_pickle(self, path):
         """Save the dataset to pickle object.
 
