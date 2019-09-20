@@ -5,17 +5,20 @@ class GaussianDistance:
     """Expand distance with Gaussian basis sit at centers and with width 0.5.
 
     Args:
-        centers: (numpy.ndarray)
-        width: (float)
+        centers (numpy.ndarray): 1 dimensional array.
+            The positions of the center of the peak in a gaussian function.
+        width (float): Normal distribution in a gaussian function.
     """
 
-    def __init__(self, centers=numpy.linspace(0, 4, 20), width=0.5):
+    def __init__(self, centers=None, width=0.5):
+        if centers is None:
+            centers = numpy.linspace(0, 4, 20)
+
         self.centers = centers
         self.width = width
 
     def expand(self, d):
-        """
-        expand distance value d with given parameters
+        """Expand distance with given parameters.
 
         Args:
             d (float): distance
@@ -28,9 +31,9 @@ class GaussianDistance:
                          dtype=numpy.float32)
 
     def expand_from_distances(self, distances):
-        """
-        expand distance vectors with given parameters
-        original implemantation is below
+        """Expand distances with given parameters.
+
+        The original implemantation is below.
         https://github.com/txie-93/cgcnn/blob/fdcd7eec8771e223e60e1b0abf7e6c7bc7d006bf/cgcnn/data.py#L152
 
         Args:
