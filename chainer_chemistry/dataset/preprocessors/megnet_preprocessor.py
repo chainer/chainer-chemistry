@@ -146,10 +146,8 @@ def construct_atom_feature(mol, use_all_feature, atom_list=None,
             as "unknown" atom.
 
     Returns:
-        atom_feature (numpy.ndarray): 2 dimensional array.
-            First axis size is `num_max_atoms`, representing each atom index.
-            Second axis size is each atom feature dimension.
-
+        atom_feature (numpy.ndarray):
+            The shape is (num_nodes, num_node_features).
     """
     num_max_atoms = mol.GetNumAtoms()
     atom_type_vec = construct_atom_type_vec(
@@ -247,12 +245,10 @@ def construct_pair_feature(mol, use_all_feature):
             You can confirm the detail in the paper.
 
     Returns:
-        features (numpy.ndarray): 2 dimensional array.
-            First axis size is the number of the bond.
-            Second axis size is each pair feature dimension.
-        bond_idx (numpy.ndarray): 2 dimensional array.
-            First axis size is the number of the bond.
-            Second axis represents tuple(StartNodeIdx, EndNodeIdx).
+        features (numpy.ndarray): The shape is (num_edges, num_edge_features)
+        bond_idx (numpy.ndarray): The shape is (2, num_edges)
+            bond_idx[0] represents the list of StartNodeIdx and bond_idx[1]
+            represents the list of EndNodeIdx.
     """
     converter = GaussianDistance()
 
@@ -343,7 +339,7 @@ class MEGNetPreprocessor(MolPreprocessor):
         kekulize (bool): If True, Kekulizes the molecule.
 
     For Crystal
-        max_neighbors (int): Max number of atom considered as neighbors
+        max_num_nbr (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
         expand_dim (int): Dimension converting from distance to vector
     """
@@ -351,7 +347,7 @@ class MEGNetPreprocessor(MolPreprocessor):
     def __init__(self, max_atoms=-1, add_Hs=True,
                  use_all_feature=False, atom_list=None,
                  include_unknown_atom=False, kekulize=False,
-                 max_neighbors=12, max_radius=8, expand_dim=100):
+                 max_num_nbr=12, max_radius=8, expand_dim=100):
         super(MEGNetPreprocessor, self).__init__(
             add_Hs=add_Hs, kekulize=kekulize)
 
@@ -360,7 +356,7 @@ class MEGNetPreprocessor(MolPreprocessor):
         self.use_all_feature = use_all_feature
         self.atom_list = atom_list
         self.include_unknown_atom = include_unknown_atom
-        self.max_neighbors = max_neighbors
+        self.max_num_nbr = max_num_nbr
         self.max_radius = max_radius
         self.expand_dim = expand_dim
         self.gdf = GaussianDistance(centers=numpy.linspace(0, 5, expand_dim))
@@ -397,8 +393,8 @@ class MEGNetPreprocessor(MolPreprocessor):
                 atom_feature[i][structure[i].specie.number] = 1
 
         # get edge feature vector & bond idx
-        neighbor_indexes = []
-        neighbor_features = []
+        bond_idx = []
+        pair_feature = []
         all_neighbors = structure.get_all_neighbors(self.max_radius,
                                                     include_index=True)
         all_neighbors = [sorted(nbrs, key=lambda x: x[1])
@@ -406,23 +402,21 @@ class MEGNetPreprocessor(MolPreprocessor):
         bond_num = len(all_neighbors)
         for i in range(bond_num):
             nbrs = all_neighbors[i]
-            start_node_idx = i
-            nbr_feature = numpy.zeros(
-                self.max_neighbors, dtype=numpy.float32) + self.max_radius + 1.
-            nbr_feature_idx = numpy.zeros((self.max_neighbors, 2),
+            num_nbr = len(nbrs)
+            nbr_feature = numpy.zeros(self.max_num_nbr, dtype=numpy.float32) \
+                + self.max_radius + 1.
+            nbr_feature_idx = numpy.zeros((self.max_num_nbr, 2),
                                           dtype=numpy.int32)
-            nbr_feature_idx[:, 0] = start_node_idx
-            nbr_feature_idx[:len(nbrs), 1] = list(
-                map(lambda x: x[2], nbrs[:self.max_neighbors]))
-            nbr_feature[:len(nbrs)] = list(map(lambda x: x[1],
-                                               nbrs[:self.max_neighbors]))
-            neighbor_indexes.append(nbr_feature_idx)
-            neighbor_features.append(nbr_feature)
+            nbr_feature_idx[:, 0] = i
+            nbr_feature_idx[:num_nbr, 1] = [x[2]
+                                            for x in nbrs[:self.max_num_nbr]]
+            nbr_feature[:num_nbr] = [x[1] for x in nbrs[:self.max_num_nbr]]
+            bond_idx.append(nbr_feature_idx)
+            pair_feature.append(nbr_feature)
 
-        bond_idx = numpy.array(neighbor_indexes).reshape(-1, 2).T
-        pair_feature = numpy.array(neighbor_features)
+        bond_idx = numpy.array(bond_idx).reshape(-1, 2).T
         pair_feature = self.gdf.expand_from_distances(
-            pair_feature).reshape(-1, self.expand_dim)
+            numpy.array(pair_feature)).reshape(-1, self.expand_dim)
         global_feature = numpy.array([0, 0], dtype=numpy.float32)
 
         return atom_feature, pair_feature, global_feature, bond_idx
