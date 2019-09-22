@@ -2,6 +2,7 @@ import chainer
 from chainer import functions
 
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
+from chainer_chemistry.functions import shifted_softplus
 
 
 class SchNetReadout(chainer.Chain):
@@ -24,7 +25,7 @@ class SchNetReadout(chainer.Chain):
 
     def __call__(self, h, **kwargs):
         h = self.linear1(h)
-        h = functions.softplus(h)
+        h = shifted_softplus(h)
         h = self.linear2(h)
         h = functions.sum(h, axis=1)
         return h
