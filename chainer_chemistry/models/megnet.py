@@ -2,11 +2,18 @@ import chainer
 from chainer import functions
 
 
+from chainer_chemistry.functions import megnet_softplus
 from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
 
 
 def reshaped_feat(feat, idx):
+    """Convert node stack pattern into pad pattern
+
+    This method is converting from node stack pattern to pad pattern
+    about node and edge feature. This is because the current set2set
+    implementation is only focus on pad pattern feature.
+    """
     max_idx = max(idx)
     vec_list = [feat[idx == i] for i in range(max_idx+1)]
     return functions.pad_sequence(vec_list)
@@ -24,9 +31,13 @@ class MEGNet(chainer.Chain):
         out_dim (int): dimension of output feature vector
         n_update_layers (int): the number of MEGNetUpdate layers
         dropout_ratio (float): ratio of dropout
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function for megnet model
+            `megnet_softplus` was used in original paper.
     """
 
-    def __init__(self, out_dim=32, n_update_layers=3, dropout_ratio=-1):
+    def __init__(self, out_dim=32, n_update_layers=3, dropout_ratio=-1,
+                 activation=megnet_softplus):
         super(MEGNet, self).__init__()
         if n_update_layers <= 0:
             raise ValueError('n_update_layers must be a positive integer, '
@@ -36,13 +47,13 @@ class MEGNet(chainer.Chain):
         with self.init_scope():
             self.update_layers = chainer.ChainList(
                 *[MEGNetUpdate(
-                    hidden_dim_for_dense=[64, 32],
-                    hidden_dim_for_update=[64, 64, 32],
-                    dropout_ratio=dropout_ratio
+                    dim_for_dense=[64, 32], dim_for_update=[64, 64, 32],
+                    dropout_ratio=dropout_ratio, activation=activation
                 ) for _ in range(n_update_layers)])
             self.readout = MEGNetReadout(out_dim=out_dim, in_channels=32,
                                          n_layers=16, processing_steps=3,
-                                         dropout_ratio=dropout_ratio)
+                                         dropout_ratio=dropout_ratio,
+                                         activation=activation)
 
     def __call__(self, atoms_feat, pair_feat, global_feat, *args):
         a_f = atoms_feat

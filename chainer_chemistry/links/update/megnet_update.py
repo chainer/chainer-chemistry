@@ -6,14 +6,14 @@ from chainer_chemistry.functions import megnet_softplus
 
 
 class DenseLayer(chainer.Chain):
-    def __init__(self, hidden_dim=[64, 32]):
+    def __init__(self, hidden_dim=[64, 32], activation=megnet_softplus):
         super(DenseLayer, self).__init__()
         self.n_layers = len(hidden_dim)
+        self.activation = activation
         with self.init_scope():
             self.update_layer = chainer.ChainList(
                 *[links.Linear(None, hidden_dim[i])
                   for i in range(self.n_layers)])
-        self.activation = megnet_softplus
 
     def __call__(self, v):
         for i in range(self.n_layers):
@@ -22,25 +22,30 @@ class DenseLayer(chainer.Chain):
 
 
 class UpdateLayer(chainer.Chain):
-    def __init__(self, hidden_dim=[64, 64, 32]):
+    def __init__(self, hidden_dim=[64, 64, 32], activation=megnet_softplus):
         super(UpdateLayer, self).__init__()
         self.n_layers = len(hidden_dim)
+        self.activation = activation
         with self.init_scope():
             self.update_layer = chainer.ChainList(
                 *[links.Linear(None, hidden_dim[i])
                     for i in range(self.n_layers)])
 
-    def __call__(self, concated_vector):
-        v = concated_vector
+    def __call__(self, v):
         for i in range(self.n_layers):
             v = self.update_layer[i](v)
             # doesn't pass the activation at the last layer
             if i != (self.n_layers-1):
-                v = megnet_softplus(v)
+                v = self.activation(v)
         return v
 
 
 def get_mean_feat(feat, idx, out_shape, xp):
+    """Return mean node or edge feature in each graph.
+
+    This method is the same as average pooling
+    about node or edge feature in each graph.
+    """
     zero = xp.zeros(out_shape, dtype=xp.float32)
     sum_vec = functions.scatter_add(zero, idx, feat)
     one = xp.ones(feat.shape, dtype=xp.float32)
@@ -52,31 +57,33 @@ class MEGNetUpdate(chainer.Chain):
     """Update submodule for MEGNet
 
     Args:
-        hidden_dim_for_dense (list): dimension list of dense layer
-        hidden_dim_for_update (list): dimension list of update layer
+        dim_for_dense (list): dimension list of dense layer
+        dim_for_update (list): dimension list of update layer
         dropout_ratio (float): ratio of dropout
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function for megnet model
+            `megnet_softplus` was used in original paper.
     """
 
-    def __init__(self, hidden_dim_for_dense=[64, 32],
-                 hidden_dim_for_update=[64, 64, 32],
-                 dropout_ratio=-1):
+    def __init__(self, dim_for_dense=[64, 32], dim_for_update=[64, 64, 32],
+                 dropout_ratio=-1, activation=megnet_softplus):
         super(MEGNetUpdate, self).__init__()
-        if len(hidden_dim_for_dense) != 2:
+        if len(dim_for_dense) != 2:
             raise ValueError('hidden_dim_for_dense must have 2 elements')
 
-        if len(hidden_dim_for_update) != 3:
+        if len(dim_for_update) != 3:
             raise ValueError('hidden_dim_for_dense must have 3 elements')
 
         self.dropout_ratio = dropout_ratio
         with self.init_scope():
             # for dense layer
-            self.dense_for_atom = DenseLayer(hidden_dim_for_dense)
-            self.dense_for_pair = DenseLayer(hidden_dim_for_dense)
-            self.dense_for_global = DenseLayer(hidden_dim_for_dense)
+            self.dense_for_atom = DenseLayer(dim_for_dense, activation)
+            self.dense_for_pair = DenseLayer(dim_for_dense, activation)
+            self.dense_for_global = DenseLayer(dim_for_dense, activation)
             # for update layer
-            self.update_for_atom = UpdateLayer(hidden_dim_for_update)
-            self.update_for_pair = UpdateLayer(hidden_dim_for_update)
-            self.update_for_global = UpdateLayer(hidden_dim_for_update)
+            self.update_for_atom = UpdateLayer(dim_for_update, activation)
+            self.update_for_pair = UpdateLayer(dim_for_update, activation)
+            self.update_for_global = UpdateLayer(dim_for_update, activation)
 
     def __call__(self, atoms_feat, pair_feat, global_feat,
                  atom_idx, pair_idx, start_idx, end_idx):

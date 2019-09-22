@@ -16,10 +16,14 @@ class MEGNetReadout(chainer.Chain):
         n_layers (int): number of LSTM layers for set2set
         processing_steps (int): number of processing for set2set
         dropout_ratio (float): ratio of dropout
+        activation (~chainer.Function or ~chainer.FunctionNode):
+            activate function for megnet model
+            `megnet_softplus` was used in original paper.
     """
 
     def __init__(self, out_dim=32, in_channels=32, n_layers=1,
-                 processing_steps=3, dropout_ratio=-1):
+                 processing_steps=3, dropout_ratio=-1,
+                 activation=megnet_softplus):
         super(MEGNetReadout, self).__init__()
         if processing_steps <= 0:
             raise ValueError("[ERROR] Unexpected value processing_steps={}"
@@ -27,6 +31,7 @@ class MEGNetReadout(chainer.Chain):
 
         self.processing_steps = processing_steps
         self.dropout_ratio = dropout_ratio
+        self.activation = activation
         with self.init_scope():
             self.set2set_for_atom = Set2Set(
                 in_channels=in_channels, n_layers=n_layers)
@@ -50,5 +55,5 @@ class MEGNetReadout(chainer.Chain):
         h = functions.concat((a_f_r, p_f_r, g_f), axis=1)
         if self.dropout_ratio > 0.0:
             h = functions.dropout(h, ratio=self.dropout_ratio)
-        out = megnet_softplus(self.linear(h))
+        out = self.activation(self.linear(h))
         return out
