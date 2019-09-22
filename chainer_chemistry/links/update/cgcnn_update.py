@@ -6,7 +6,8 @@ class CGCNNUpdate(chainer.Chain):
     """Update submodule for CGCNN
 
     Args:
-        n_site_features (int): hidden dimension of atom feature vector
+        n_site_features (int): hidden dimension of atom feature vector.
+            This value must be the same as n_site_feat.
     """
 
     def __init__(self, n_site_features=64):
