@@ -25,9 +25,9 @@ def rmse(x0, x1):
 
 
 def parse_arguments():
-    # Lists of supported preprocessing methods/models.
     label_names = ['formation_energy_per_atom', 'energy', 'band_gap', 'efermi',
                    'K_VRH', 'G_VRH', 'poisson_ratio']
+    # Lists of supported preprocessing methods/models.
     method_list = ['megnet', 'cgcnn']
     scale_list = ['standardize', 'none']
     # Set up the argument parser.

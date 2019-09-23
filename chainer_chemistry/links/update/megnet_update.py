@@ -69,10 +69,10 @@ class MEGNetUpdate(chainer.Chain):
                  dropout_ratio=-1, activation=megnet_softplus):
         super(MEGNetUpdate, self).__init__()
         if len(dim_for_dense) != 2:
-            raise ValueError('hidden_dim_for_dense must have 2 elements')
+            raise ValueError('dim_for_dense must have 2 elements')
 
         if len(dim_for_update) != 3:
-            raise ValueError('hidden_dim_for_dense must have 3 elements')
+            raise ValueError('dim_for_update must have 3 elements')
 
         self.dropout_ratio = dropout_ratio
         with self.init_scope():
