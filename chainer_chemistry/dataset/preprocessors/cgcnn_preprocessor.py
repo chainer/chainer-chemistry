@@ -35,9 +35,8 @@ class CGCNNPreprocessor(MolPreprocessor):
         """
 
         # get atom feature vector
-        # TODO: ここも適当なPATHに置き換える
-        path = '/Users/i19_nissy/code/github.com/nd-02110114/' + \
-            'chainer-chemistry/examples/mp/assets/atom_init.json'
+        # TODO: fix me
+        path = '/Users/nishikawadaiki/code/github.com/nd-02110114/chainer-chemistry/examples/mp/assets/atom_init.json'
         feat_dict = json.load(open(path))
         initial_atom_features = {int(key): numpy.array(value,
                                                        dtype=numpy.float32)
