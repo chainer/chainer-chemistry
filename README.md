@@ -123,11 +123,17 @@ We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models fo
 
 The following datasets are currently supported:
 
+### Chemical
 - QM9 [7, 8]
 - Tox21 [9]
 - MoleculeNet [11]
 - ZINC (only 250k dataset) [12, 13]
 - User (own) dataset
+
+### Network
+- cora [21]
+- citeseer [22]
+- reddit [23]
 
 ## Research Projects
 
@@ -206,3 +212,9 @@ papers. Use the library at your own risk.
 . 
 
 [20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.
+
+[21] McCallum, Andrew Kachites and Nigam, Kamal and Rennie, Jason and Seymore, Kristie, Automating the Construction of Internet Portals with Machine Learning. *Information Retrieval*, 2000.
+
+[22] C. Lee Giles and Kurt D. Bollacker and Steve Lawrence, CiteSeer: An Automatic Citation Indexing System. *Proceedings of the Third ACM Conference on Digital Libraries*, 1998.
+
+[23] William L. Hamilton and Zhitao Ying and Jure Leskovec, Inductive Representation Learning on Large Graphs. *Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, 4-9 December 2017*

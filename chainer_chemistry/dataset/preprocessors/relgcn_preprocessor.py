@@ -1,5 +1,5 @@
 from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor \
-    import GGNNPreprocessor
+    import GGNNPreprocessor, GGNNSparsePreprocessor
 
 
 class RelGCNPreprocessor(GGNNPreprocessor):
@@ -36,3 +36,7 @@ class RelGCNPreprocessor(GGNNPreprocessor):
 
         """
         return super(RelGCNPreprocessor, self).get_input_features(mol)
+
+
+class RelGCNSparsePreprocessor(GGNNSparsePreprocessor):
+    pass

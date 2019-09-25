@@ -1,3 +1,9 @@
+import numpy
+
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
+    PaddingGraphData, SparseGraphData
+from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
+    PaddingGraphDataset, SparseGraphDataset
 from chainer_chemistry.dataset.preprocessors.common \
     import construct_atomic_number_array, construct_discrete_edge_matrix
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
@@ -45,4 +51,55 @@ class GGNNPreprocessor(MolPreprocessor):
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
         adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size)
+
         return atom_array, adj_array
+
+
+class GGNNSparsePreprocessor(GGNNPreprocessor):
+    """Sparse GGNN Preprocessor"""
+
+    def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False,
+                 kekulize=False):
+        super(GGNNSparsePreprocessor, self).__init__(
+            max_atoms=max_atoms, out_size=out_size, add_Hs=add_Hs,
+            kekulize=kekulize)
+
+    def construct_sparse_data(self, x, adj, y):
+        """Construct `SparseGraphData` from `x`, `adj`, `y`
+
+        Args:
+            x (numpy.ndarray): input feature
+            adj (numpy.ndarray): adjacency matrix
+            y (numpy.ndarray): output label
+
+        Returns:
+            SparseGraphData: graph data object for sparse pattern
+        """
+        edge_index = [[], []]
+        edge_attr = []
+        label_num, n, _ = adj.shape
+        for label in range(label_num):
+            for i in range(n):
+                for j in range(n):
+                    if adj[label, i, j] != 0.:
+                        edge_index[0].append(i)
+                        edge_index[1].append(i)
+                        edge_attr.append(label)
+        return SparseGraphData(
+            x=x,
+            edge_index=numpy.array(edge_index, dtype=numpy.int),
+            edge_attr=numpy.array(edge_attr, dtype=numpy.int),
+            y=y
+        )
+
+    def create_dataset(self, *args, **kwargs):
+        """Create `SparseGraphData` from list of `(x, adj, y)`
+
+        Returns:
+            SparseGraphDataset: graph dataset object for sparse pattern
+        """
+        # args: (atom_array, adj_array, label_array)
+        data_list = [
+            self.construct_sparse_data(x, adj, y) for (x, adj, y) in zip(*args)
+        ]
+        return SparseGraphDataset(data_list)

@@ -5,12 +5,12 @@ from typing import Optional  # NOQA
 import chainer  # NOQA
 
 from chainer_chemistry.models.ggnn import GGNN
-from chainer_chemistry.models.gin import GIN
+from chainer_chemistry.models.gin import GIN, GINSparse
 from chainer_chemistry.models.mlp import MLP
 from chainer_chemistry.models.nfp import NFP
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from chainer_chemistry.models.relgat import RelGAT
-from chainer_chemistry.models.relgcn import RelGCN
+from chainer_chemistry.models.relgcn import RelGCN, RelGCNSparse
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
@@ -127,6 +127,20 @@ def set_up_predictor(
     elif method == 'gin_gwm':
         print('Set up GIN_GWM predictor...')
         conv = GIN_GWM(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'relgcn_sparse':
+        print('Set up RelGCNSparse predictor...')
+        conv = RelGCNSparse(
+            out_dim=n_unit,
+            hidden_channels=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'gin_sparse':
+        print('Set up GIN predictor...')
+        conv = GINSparse(
             out_dim=n_unit,
             hidden_channels=n_unit,
             n_update_layers=conv_layers,

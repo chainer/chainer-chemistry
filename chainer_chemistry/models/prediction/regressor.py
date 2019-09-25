@@ -5,6 +5,7 @@ from chainer.dataset.convert import concat_examples
 from chainer import cuda, Variable  # NOQA
 from chainer import reporter
 from chainer_chemistry.models.prediction.base import BaseForwardModel
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import BaseGraphData  # NOQA
 
 
 class Regressor(BaseForwardModel):
@@ -102,7 +103,10 @@ class Regressor(BaseForwardModel):
         """
 
         # --- Separate `args` and `t` ---
-        if isinstance(self.label_key, int):
+        if isinstance(args[0], BaseGraphData):
+            # for graph dataset
+            t = args[0].y
+        elif isinstance(self.label_key, int):
             if not (-len(args) <= self.label_key < len(args)):
                 msg = 'Label key %d is out of bounds' % self.label_key
                 raise ValueError(msg)
