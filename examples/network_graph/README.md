@@ -32,5 +32,5 @@ PYTHONPATH=. python examples/network_graph/train_network_graph.py --dataset cora
 
 On the GPU:
 ```angular2html
-PYTHONPATH=. python examples/network_graph/train_network_graph.py --dataset cora
+PYTHONPATH=. python examples/network_graph/train_network_graph.py --dataset cora --device 0
 ```
