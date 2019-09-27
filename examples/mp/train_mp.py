@@ -92,7 +92,10 @@ def main():
         dataset_filename = 'data.npz'
 
     # Load the cached dataset.
-    preprocessor = preprocess_method_dict[method]()
+    if method == 'cgcnn':
+        preprocessor = preprocess_method_dict[method](data_dir=args.data_dir)
+    else:
+        preprocessor = preprocess_method_dict[method]()
     dataset = MPDataset(preprocessor=preprocessor)
     dataset_cache_path = os.path.join(cache_dir, dataset_filename)
     result = dataset.load_pickle(dataset_cache_path)

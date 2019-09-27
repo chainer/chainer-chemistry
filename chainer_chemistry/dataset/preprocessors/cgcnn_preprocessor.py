@@ -1,3 +1,4 @@
+import os
 import numpy
 import json
 
@@ -14,17 +15,22 @@ class CGCNNPreprocessor(MolPreprocessor):
     For Molecule: TODO
 
     For Crystal
+        data_dir : TODO (directory path which includes atom_init.json)
         max_num_nbr (int): Max number of atom considered as neighbors
         max_radius (float): Cutoff radius (angstrom)
         expand_dim (int): Dimension converting from distance to vector
     """
 
-    def __init__(self, max_num_nbr=12, max_radius=8, expand_dim=40):
+    def __init__(self, data_dir, max_num_nbr=12, max_radius=8, expand_dim=40):
         super(CGCNNPreprocessor, self).__init__()
 
         self.max_num_nbr = max_num_nbr
         self.max_radius = max_radius
         self.gdf = GaussianDistance(centers=numpy.linspace(0, 8, expand_dim))
+        feat_dict = json.load(open(os.path.join(data_dir, "atom_init.json")))
+        self.atom_features = {int(key): numpy.array(value,
+                                                    dtype=numpy.float32)
+                              for key, value in feat_dict.items()}
 
     def get_input_feature_from_crystal(self, structure):
         """get input features from structure object
@@ -35,14 +41,8 @@ class CGCNNPreprocessor(MolPreprocessor):
         """
 
         # get atom feature vector
-        # TODO: fix me
-        path = '/Users/nishikawadaiki/code/github.com/nd-02110114/chainer-chemistry/examples/mp/assets/atom_init.json'
-        feat_dict = json.load(open(path))
-        initial_atom_features = {int(key): numpy.array(value,
-                                                       dtype=numpy.float32)
-                                 for key, value in feat_dict.items()}
         atom_feature = numpy.vstack(
-            [initial_atom_features[structure[i].specie.number]
+            [self.atom_features[structure[i].specie.number]
              for i in range(len(structure))]
         )
 
