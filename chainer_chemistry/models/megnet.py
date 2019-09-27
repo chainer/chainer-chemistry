@@ -1,6 +1,6 @@
 import chainer
 from chainer import functions
-
+from chainer.backend import get_array_module
 
 from chainer_chemistry.functions import megnet_softplus
 from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
@@ -14,7 +14,8 @@ def reshaped_feat(feat, idx):
     about node and edge feature. This is because the current set2set
     implementation is only focus on pad pattern feature.
     """
-    max_idx = max(idx)
+    xp = get_array_module(idx)
+    max_idx = int(xp.max(idx))
     vec_list = [feat[idx == i] for i in range(max_idx+1)]
     return functions.pad_sequence(vec_list)
 
