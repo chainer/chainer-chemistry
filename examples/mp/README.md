@@ -22,7 +22,7 @@ python train_mp.py
 
 On the GPU:
 ```angular2html
-python train_mp.py -g 0
+python train_mp.py --device 0
 ```
 
 ### Inference using a pretrained model
@@ -41,5 +41,5 @@ python predict_mp.py [-i /path/to/training/result/directory]
 
 On the GPU:
 ```
-python predict_mp.py -g 0 [-i /path/to/training/result/directory]
+python predict_mp.py --device 0 [-i /path/to/training/result/directory]
 ```
