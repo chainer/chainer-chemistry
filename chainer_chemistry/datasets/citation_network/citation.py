@@ -1,3 +1,5 @@
+import os
+
 import numpy
 import networkx as nx
 from tqdm import tqdm
@@ -6,7 +8,7 @@ from tqdm import tqdm
 def citation_to_networkx(dirpath, name):
     G = nx.Graph()
     # node feature, node label
-    with open("{}{}.content".format(dirpath, name)) as f:
+    with open(os.path.join(dirpath, "{}.content".format(name))) as f:
         lines = f.readlines()
         compressor = {}
         acc = 0
@@ -25,7 +27,7 @@ def citation_to_networkx(dirpath, name):
         G.graph['label_num'] = acc
 
     # edge
-    with open("{}{}.cites".format(dirpath, name)) as f:
+    with open(os.path.join(dirpath, "{}.cites".format(name))) as f:
         lines = f.readlines()
         for line in tqdm(lines):
             u, v = line.split()

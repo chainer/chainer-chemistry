@@ -1,3 +1,5 @@
+import os
+
 import numpy
 import scipy
 import chainer
@@ -14,10 +16,10 @@ def get_reddit_coo_data(dirpath):
     """
 
     print("Loading node feature and label")
-    reddit_data = numpy.load(dirpath + "reddit_data.npz")
+    reddit_data = numpy.load(os.path.join(dirpath, "reddit_data.npz"))
 
     print("Loading edge data")
-    coo_adj = scipy.sparse.load_npz(dirpath + "reddit_graph.npz")
+    coo_adj = scipy.sparse.load_npz(os.path.join(dirpath, "reddit_graph.npz"))
     row = coo_adj.row.astype(numpy.int32)
     col = coo_adj.col.astype(numpy.int32)
     data = coo_adj.data.astype(numpy.float32)
