@@ -13,7 +13,7 @@ from chainer.training.extensions import Evaluator
 from rdkit import RDLogger
 import six
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
 
@@ -66,8 +66,10 @@ def main():
     # We need to feed only input features `x` to `predict`/`predict_proba`.
     # This converter extracts only inputs (x1, x2, ...) from the features which
     # consist of input `x` and label `t` (x1, x2, ..., t).
+    converter = converter_method_dict[method]
+
     def extract_inputs(batch, device=None):
-        return concat_mols(batch, device=device)[:-1]
+        return converter(batch, device=device)[:-1]
 
     def postprocess_pred(x):
         x_array = cuda.to_cpu(x.data)
@@ -117,10 +119,10 @@ def main():
     print('Evaluating...')
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
     eval_result = Evaluator(
-        test_iterator, clf, converter=concat_mols, device=device)()
+        test_iterator, clf, converter=converter, device=device)()
     print('Evaluation result: ', eval_result)
     rocauc_result = ROCAUCEvaluator(
-        test_iterator, clf, converter=concat_mols, device=device,
+        test_iterator, clf, converter=converter, device=device,
         eval_func=clf.predictor, name='test', ignore_labels=-1)()
     print('ROCAUC Evaluation result: ', rocauc_result)
     with open(os.path.join(args.in_dir, 'eval_result.json'), 'w') as f:

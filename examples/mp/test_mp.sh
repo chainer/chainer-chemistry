@@ -3,7 +3,7 @@
 set -e
 
 # List of available graph convolution methods.
-methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat gin gnnfilm megnet nfp_gwm ggnn_gwm rsgcn_gwm gin_gwm)
+methods=(megnet)
 
 # device identifier; set it to -1 to train on the CPU (default).
 device=${1:--1}
@@ -16,9 +16,9 @@ do
     [ -d "input" ] && rm -rf input
 
     # Train with the current method (one label).
-    python train_qm9.py \
+    python train_mp.py \
         --method ${method} \
-        --label A \
+        --label band_gap \
         --conv-layers 1 \
         --device ${device} \
         --epoch ${epoch} \
@@ -26,24 +26,10 @@ do
         --num-data 100
 
     # Predict with the current method (one label).
-    python predict_qm9.py \
+    python predict_mp.py \
         --method ${method} \
-        --label A \
+        --label band_gap \
         --device ${device} \
         --num-data 100
 
-    # Train with the current method (all labels).
-    python train_qm9.py \
-        --method ${method} \
-        --conv-layers 1 \
-        --device ${device} \
-        --epoch ${epoch} \
-        --unit-num 10 \
-        --num-data 100
-
-    # Predict with the current method (all labels).
-    python predict_qm9.py \
-        --method ${method} \
-        --device ${device} \
-        --num-data 100
 done

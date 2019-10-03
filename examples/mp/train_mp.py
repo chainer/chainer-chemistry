@@ -2,19 +2,19 @@
 from __future__ import print_function
 
 import argparse
-
-import chainer
 import numpy
 import os
 
-from chainer.datasets import split_dataset_random
+
+import chainer
 from chainer import functions as F
+from chainer.datasets import split_dataset_random
+
 
 from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry import datasets as D
-from chainer_chemistry.datasets import NumpyTupleDataset
-from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
+from chainer_chemistry.datasets.mp import MPDataset
+from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.utils import run_train
@@ -25,25 +25,22 @@ def rmse(x0, x1):
 
 
 def parse_arguments():
+    label_names = ['formation_energy_per_atom', 'energy', 'band_gap', 'efermi',
+                   'K_VRH', 'G_VRH', 'poisson_ratio']
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet',
-                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
-    label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
-                   'zpve', 'U0', 'U', 'H', 'G', 'Cv']
+    method_list = ['megnet', 'cgcnn']
     scale_list = ['standardize', 'none']
-
     # Set up the argument parser.
-    parser = argparse.ArgumentParser(description='Regression on QM9.')
+    parser = argparse.ArgumentParser(
+        description='Regression on Material Project Data.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
-                        default='nfp', help='method name')
-    parser.add_argument('--label', '-l', type=str,
-                        choices=label_names + ['all'], default='all',
-                        help='target label for regression; all means '
-                        'predicting all properties at once')
+                        default='megnet', help='method name')
+    parser.add_argument('--label', '-l', type=str, choices=label_names,
+                        default='formation_energy_per_atom',
+                        help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         default='standardize', help='label scaling method')
-    parser.add_argument('--conv-layers', '-c', type=int, default=4,
+    parser.add_argument('--conv-layers', '-c', type=int, default=3,
                         help='number of convolution layers')
     parser.add_argument('--batchsize', '-b', type=int, default=32,
                         help='batch size')
@@ -69,6 +66,9 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
+    # TODO : 今後不要になる
+    parser.add_argument("--data_dir", "-dd", type=str, default="",
+                        help="path to data dir")
     return parser.parse_args()
 
 
@@ -78,14 +78,10 @@ def main():
 
     # Set up some useful variables that will be used later on.
     method = args.method
-    if args.label != 'all':
-        labels = args.label
-        cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
-        class_num = len(labels) if isinstance(labels, list) else 1
-    else:
-        labels = None
-        cache_dir = os.path.join('input', '{}_all'.format(method))
-        class_num = len(D.get_qm9_label_names())
+    labels = args.label
+    target_list = [labels]
+    class_num = len(labels) if isinstance(labels, list) else 1
+    cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
 
     # Get the filename corresponding to the cached dataset, based on the amount
     # of data samples that need to be parsed from the original dataset.
@@ -96,35 +92,27 @@ def main():
         dataset_filename = 'data.npz'
 
     # Load the cached dataset.
-    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
-
-    dataset = None
-    if os.path.exists(dataset_cache_path):
-        print('Loading cached dataset from {}.'.format(dataset_cache_path))
-        dataset = NumpyTupleDataset.load(dataset_cache_path)
-    if dataset is None:
-        print('Preprocessing dataset...')
+    if method == 'cgcnn':
+        preprocessor = preprocess_method_dict[method](data_dir=args.data_dir)
+    else:
         preprocessor = preprocess_method_dict[method]()
+    dataset = MPDataset(preprocessor=preprocessor)
+    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
+    result = dataset.load_pickle(dataset_cache_path)
 
-        if num_data >= 0:
-            # Select the first `num_data` samples from the dataset.
-            target_index = numpy.arange(num_data)
-            dataset = D.get_qm9(preprocessor, labels=labels,
-                                target_index=target_index)
-        else:
-            # Load the entire dataset.
-            dataset = D.get_qm9(preprocessor, labels=labels)
-
-        # Cache the laded dataset.
+    # load datasets from Material Project Database
+    if result is False:
+        dataset.get_mp(args.data_dir, target_list, args.num_data)
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
-        NumpyTupleDataset.save(dataset_cache_path, dataset)
+        dataset.save_pickle(dataset_cache_path)
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
         print('Fit StandardScaler to the labels.')
+        targets = numpy.concatenate([d[-1] for d in dataset.data], axis=0)
         scaler = StandardScaler()
-        scaler.fit(dataset.get_datasets()[-1])
+        scaler.fit(targets)
     else:
         print('No standard scaling was selected.')
         scaler = None

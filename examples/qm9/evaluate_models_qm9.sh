@@ -1,7 +1,7 @@
 set -eu
 
 # List of available graph convolution methods.
-methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat megnet)
 
 prefix=eval_
 

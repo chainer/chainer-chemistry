@@ -11,7 +11,9 @@ import chainer
 from chainer import functions
 from chainer import links
 
+
 from chainer_chemistry.links.connection.graph_linear import GraphLinear
+from chainer_chemistry.functions import shifted_softplus
 
 
 class CFConv(chainer.Chain):
@@ -57,9 +59,9 @@ class CFConv(chainer.Chain):
         dist = functions.exp(- self.gamma * (dist - embedlist) ** 2)
         dist = functions.reshape(dist, (-1, self.num_rbf))
         dist = self.dense1(dist)
-        dist = functions.softplus(dist)
+        dist = shifted_softplus(dist)
         dist = self.dense2(dist)
-        dist = functions.softplus(dist)
+        dist = shifted_softplus(dist)
         dist = functions.reshape(dist, (mb, atom, atom, self.hidden_dim))
         h = functions.reshape(h, (mb, atom, 1, self.hidden_dim))
         h = functions.broadcast_to(h, (mb, atom, atom, self.hidden_dim))
@@ -95,6 +97,6 @@ class SchNetUpdate(chainer.Chain):
         v = self.linear[0](h)
         v = self.cfconv(v, adj)
         v = self.linear[1](v)
-        v = functions.softplus(v)
+        v = shifted_softplus(v)
         v = self.linear[2](v)
         return h + v

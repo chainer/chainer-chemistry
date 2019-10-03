@@ -1,7 +1,7 @@
 set -eu
 
 device=-1
-methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat)
+methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat megnet)
 prefix=eval_
 
 for method in ${methods[@]}

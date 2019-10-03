@@ -12,7 +12,7 @@ from chainer import optimizers
 from chainer import training
 
 from chainer.training import extensions as E
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
@@ -28,7 +28,7 @@ from chainer_chemistry.training.extensions.auto_print_report import AutoPrintRep
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm',
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
                    'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
     dataset_names = list(molnet_default_config.keys())
     scale_list = ['standardize', 'none']
@@ -226,13 +226,14 @@ def main():
         os.makedirs(model_dir)
 
     # Set up the updater.
+    converter = converter_method_dict[method]
     updater = training.StandardUpdater(train_iter, optimizer, device=device,
-                                       converter=concat_mols)
+                                       converter=converter)
 
     # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=model_dir)
     trainer.extend(E.Evaluator(valid_iter, model, device=device,
-                               converter=concat_mols))
+                               converter=converter))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
 

@@ -3,45 +3,48 @@ from __future__ import print_function
 
 import argparse
 import os
-
-import chainer
 import numpy
 import pandas
 
-from chainer.datasets import split_dataset_random
+import chainer
+from chainer import functions as F
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
+from chainer.datasets import split_dataset_random
+
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+except ImportError:
+    pass
+
 
 from chainer_chemistry.dataset.converters import converter_method_dict
-from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
-from chainer_chemistry import datasets as D
-from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry.datasets.mp import MPDataset
 
-# These import is necessary for pickle to work
-from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
-from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
-from train_qm9 import rmse
+
+def rmse(x0, x1):
+    return F.sqrt(F.mean_squared_error(x0, x1))
 
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
-    method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet',
-                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
-    label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
-                   'zpve', 'U0', 'U', 'H', 'G', 'Cv']
+    label_names = ['formation_energy_per_atom', 'energy', 'band_gap', 'efermi',
+                   'K_VRH', 'G_VRH', 'poisson_ratio']
+    method_list = ['megnet', 'cgcnn']
     scale_list = ['standardize', 'none']
 
     # Set up the argument parser.
-    parser = argparse.ArgumentParser(description='Regression on QM9.')
+    parser = argparse.ArgumentParser(
+        description='Regression on Material Project Data.')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
-                        help='method name', default='nfp')
-    parser.add_argument('--label', '-l', type=str,
-                        choices=label_names + ['all'], default='all',
-                        help='target label for regression; all means '
-                        'predicting all properties at once')
+                        help='method name', default='megnet')
+    parser.add_argument('--label', '-l', type=str, choices=label_names,
+                        default='formation_energy_per_atom',
+                        help='target label for regression')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         help='label scaling method', default='standardize')
     parser.add_argument(
@@ -60,6 +63,9 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
+    # TODO : 今後不要になる
+    parser.add_argument("--data_dir", "-dd", type=str, default="",
+                        help="path to data dir")
     return parser.parse_args()
 
 
@@ -70,13 +76,9 @@ def main():
 
     # Set up some useful variables that will be used later on.
     method = args.method
-    if args.label != 'all':
-        label = args.label
-        cache_dir = os.path.join('input', '{}_{}'.format(method, label))
-        labels = [label]
-    else:
-        labels = D.get_qm9_label_names()
-        cache_dir = os.path.join('input', '{}_all'.format(method))
+    labels = args.label
+    target_list = [labels]
+    cache_dir = os.path.join('input', '{}_{}'.format(method, labels))
 
     # Get the filename corresponding to the cached dataset, based on the amount
     # of data samples that need to be parsed from the original dataset.
@@ -87,21 +89,20 @@ def main():
         dataset_filename = 'data.npz'
 
     # Load the cached dataset.
-    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
-
-    dataset = None
-    if os.path.exists(dataset_cache_path):
-        print('Loading cached data from {}.'.format(dataset_cache_path))
-        dataset = NumpyTupleDataset.load(dataset_cache_path)
-    if dataset is None:
-        print('Preprocessing dataset...')
+    if method == 'cgcnn':
+        preprocessor = preprocess_method_dict[method](data_dir=args.data_dir)
+    else:
         preprocessor = preprocess_method_dict[method]()
-        dataset = D.get_qm9(preprocessor, labels=labels)
+    dataset = MPDataset(preprocessor=preprocessor)
+    dataset_cache_path = os.path.join(cache_dir, dataset_filename)
+    result = dataset.load_pickle(dataset_cache_path)
 
-        # Cache the newly preprocessed dataset.
+    # load datasets from Material Project Database
+    if result is False:
+        dataset.get_mp(args.data_dir, target_list, preprocessor, args.num_data)
         if not os.path.exists(cache_dir):
-            os.mkdir(cache_dir)
-        NumpyTupleDataset.save(dataset_cache_path, dataset)
+            os.makedirs(cache_dir)
+        dataset.save_pickle(dataset_cache_path)
 
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
@@ -124,8 +125,10 @@ def main():
 
     # Extract the ground-truth labels as numpy array.
     original_t = converter(test, device=-1)[-1]
+
+    # Construct dataframe.
     df_dict = {}
-    for i, l in enumerate(labels):
+    for i, l in enumerate(target_list):
         df_dict.update({'y_pred_{}'.format(l): y_pred[:, i],
                         't_{}'.format(l): original_t[:, i], })
     df = pandas.DataFrame(df_dict)
@@ -154,7 +157,7 @@ def main():
     # Calculate mean abs error for each label
     mae = numpy.mean(numpy.abs(y_pred - original_t), axis=0)
     eval_result = {}
-    for i, l in enumerate(labels):
+    for i, l in enumerate(target_list):
         eval_result.update({l: mae[i]})
     save_json(os.path.join(args.in_dir, 'eval_result_mae.json'), eval_result)
 
