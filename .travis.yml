@@ -5,7 +5,6 @@ os: linux
 dist: trusty
 python:
   - 3.6
-  - 3.7
 env:
 env:
   - CHAINER_VERSION="chainer<7"
