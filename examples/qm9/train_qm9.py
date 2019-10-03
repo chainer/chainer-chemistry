@@ -10,6 +10,7 @@ import os
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
 
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -148,11 +149,17 @@ def main():
     regressor = Regressor(predictor, lossfun=F.mean_squared_error,
                           metrics_fun=metrics_fun, device=device)
 
+    # TODO(nakago): consider how to switch which `converter` to use.
+    if isinstance(dataset, NumpyTupleDataset):
+        converter = converter_method_dict[method]
+    else:
+        converter = dataset.converter
+
     print('Training...')
     run_train(regressor, train, valid=valid,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-              device=device, converter=dataset.converter,
+              device=device, converter=converter,
               resume_path=None)
 
     # Save the regressor's parameters.
