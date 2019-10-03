@@ -25,6 +25,8 @@ install:
   - source activate test-environment
   - pip install codecov
   - pip install mock
+  - pip install h5py
+  - pip install pymatgen
   - conda install pip pytest pytest-cov
   - conda install -c rdkit rdkit==2017.09.3.0
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then

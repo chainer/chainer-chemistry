@@ -1,4 +1,3 @@
-import numpy
 import pandas
 import pytest
 
@@ -14,7 +13,7 @@ class DummyPreprocessor:
 @pytest.mark.parametrize('filename', filename_list)
 def test_get_mp_filepath(filename):
     filepath = get_mp_filepath(filename)
-    print('filepath', filepath)
+    # print('filepath', filepath)
     assert isinstance(filepath, str)
 
 

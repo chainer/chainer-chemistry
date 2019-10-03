@@ -4,15 +4,14 @@ import ast
 import shutil
 from logging import getLogger
 
-import numpy as np
-import pandas as pd
-
+import numpy
+import pandas
 
 import chainer
-import h5py
 from chainer.dataset import download
-from tqdm import tqdm
+import h5py
 from pymatgen.core.structure import Structure
+from tqdm import tqdm
 
 
 download_root_url = 'https://chainer-assets.preferred.jp/chainerchem/mp/'
@@ -100,15 +99,15 @@ class MPDataset(chainer.dataset.DatasetMixin):
             is_stable (bool): If this value is true,
                 load data that do not have calculation warnings.
         """
-        id_prop_data = pd.read_csv(
+        id_prop_data = pandas.read_csv(
             get_mp_filepath("property_data.csv"), index_col=0)
-        stability_data = pd.read_csv(
+        stability_data = pandas.read_csv(
             get_mp_filepath("stability_data.csv"),
             index_col=0, converters={3: ast.literal_eval})
         id_prop_data = id_prop_data.merge(stability_data, on="material_id")
         # drop data which has warnings
         if is_stable:
-            n_warns = np.array([len(d) for d in id_prop_data["warnings"]])
+            n_warns = numpy.array([len(d) for d in id_prop_data["warnings"]])
             mask = n_warns == 0
             id_prop_data = id_prop_data[mask]
 
@@ -151,8 +150,8 @@ class MPDataset(chainer.dataset.DatasetMixin):
             structure = Structure.from_str(cif_data[cif_id].value, "yaml")
 
             # prepare label
-            target = properties[target_list].astype(np.float32)
-            if np.isnan(target).any():
+            target = properties[target_list].astype(numpy.float32)
+            if numpy.isnan(target).any():
                 continue
             # convert unit into /atom
             if "energy" in target:
@@ -160,10 +159,10 @@ class MPDataset(chainer.dataset.DatasetMixin):
                 target["energy"] = target["energy"] / n_atom
             # convert to log10
             if "K_VRH" in target:
-                target["K_VRH"] = np.log10(target["K_VRH"])
+                target["K_VRH"] = numpy.log10(target["K_VRH"])
             # convert to log10
             if "G_VRH" in target:
-                target["G_VRH"] = np.log10(target["G_VRH"])
+                target["G_VRH"] = numpy.log10(target["G_VRH"])
 
             self.data.append((structure, target))
 
