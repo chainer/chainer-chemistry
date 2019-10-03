@@ -1,18 +1,56 @@
 import os
 import pickle
 import ast
+import shutil
+from logging import getLogger
+
 import numpy as np
 import pandas as pd
 
 
 import chainer
 import h5py
+from chainer.dataset import download
 from tqdm import tqdm
 from pymatgen.core.structure import Structure
 
 
+download_root_url = 'https://chainer-assets.preferred.jp/chainerchem/mp/'
+filename_list = ['property_data.csv', 'stability_data.csv', 'cif_data.h5']
+_root = 'pfnet/chainer/mp'
+
+
+def get_mp_filepath(filename, download_if_not_exist=True):
+    """Construct a filepath which stores atom_init_json
+
+    This method check whether the file exist or not,  and downloaded it if
+    necessary.
+
+    Args:
+        filename (str): file name of target file to download.
+            See `filename_list` for supported files.
+        download_if_not_exist (bool): If `True` download dataset
+            if it is not downloaded yet.
+
+    Returns (str): file path for atom_init_json
+    """
+    if filename not in filename_list:
+        raise ValueError('filename {} is not supported!'.format(filename))
+    cache_root = download.get_dataset_directory(_root)
+    cache_path = os.path.join(cache_root, filename)
+    if not os.path.exists(cache_path) and download_if_not_exist:
+        logger = getLogger(__name__)
+        logger.info('Downloading atom_init.json...')
+        download_url = download_root_url + filename
+        download_file_path = download.cached_download(download_url)
+        shutil.copy(download_file_path, cache_path)
+    return cache_path
+
+
 class MPDataset(chainer.dataset.DatasetMixin):
     """Class for collecting Material Project dataset.
+
+    Refer https://materialsproject.org/ for details.
 
     Args:
         preprocessor (BasePreprocessor): preprocessor instance
@@ -54,7 +92,7 @@ class MPDataset(chainer.dataset.DatasetMixin):
 
         return True
 
-    def _load_label_list(self, data_dir, target_list, is_stable=True):
+    def _load_label_list(self, target_list, is_stable=True):
         """Collect the label.
 
         Args:
@@ -62,14 +100,11 @@ class MPDataset(chainer.dataset.DatasetMixin):
             is_stable (bool): If this value is true,
                 load data that do not have calculation warnings.
         """
-        # TODO: data_dirは今後はURLを指すようになる
-        id_prop_data = pd.read_csv(os.path.join(
-            data_dir, "property_data.csv"), index_col=0)
-        stability_data = pd.read_csv(os.path.join(data_dir,
-                                                  "stability_data.csv"),
-                                     index_col=0,
-                                     converters={3: ast.literal_eval})
-
+        id_prop_data = pd.read_csv(
+            get_mp_filepath("property_data.csv"), index_col=0)
+        stability_data = pd.read_csv(
+            get_mp_filepath("stability_data.csv"),
+            index_col=0, converters={3: ast.literal_eval})
         id_prop_data = id_prop_data.merge(stability_data, on="material_id")
         # drop data which has warnings
         if is_stable:
@@ -88,7 +123,7 @@ class MPDataset(chainer.dataset.DatasetMixin):
         self.id_prop_data = id_prop_data
         return True
 
-    def get_mp(self, data_dir, target_list, num_data=None, is_stable=True):
+    def get_mp(self, target_list, num_data=None, is_stable=True):
         """Download dataset from Material Project dataset.
 
         Args:
@@ -97,11 +132,9 @@ class MPDataset(chainer.dataset.DatasetMixin):
             is_stable (bool): If this value is true,
                 load data that do not have calculation warnings
         """
-        print("loading mp dataset from {}".format(data_dir))
-        self._load_label_list(data_dir, target_list, is_stable)
-
-        # TODO: data_dirはURLを指すようにする
-        cif_data = h5py.File(os.path.join(data_dir, "cif_data.h5"), "r")
+        print("loading mp dataset...")
+        self._load_label_list(target_list, is_stable)
+        cif_data = h5py.File(get_mp_filepath("cif_data.h5"), "r")
 
         data = self.id_prop_data
         if num_data is not None and num_data >= 0:
