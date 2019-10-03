@@ -15,7 +15,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
-from chainer_chemistry.models.prediction import Regressor
+from chainer_chemistry.models.prediction.regressor import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.utils import run_train
 
@@ -27,8 +27,8 @@ def rmse(x0, x1):
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet',
-                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
+                   'relgat', 'gin', 'gnnfilm', 'relgcn_sparse', 'gin_sparse',
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm', 'megnet']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -118,13 +118,18 @@ def main():
         # Cache the laded dataset.
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
-        NumpyTupleDataset.save(dataset_cache_path, dataset)
+        if isinstance(dataset, NumpyTupleDataset):
+            NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
         print('Fit StandardScaler to the labels.')
         scaler = StandardScaler()
-        scaler.fit(dataset.get_datasets()[-1])
+        if isinstance(dataset, NumpyTupleDataset):
+            scaler.fit(dataset.get_datasets()[-1])
+        else:
+            y = numpy.array([data.y for data in dataset])
+            scaler.fit(y)
     else:
         print('No standard scaling was selected.')
         scaler = None
@@ -148,7 +153,11 @@ def main():
     run_train(regressor, train, valid=valid,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
+<<<<<<< HEAD
               device=device, converter=converter,
+=======
+              device=device, converter=dataset.converter,
+>>>>>>> master
               resume_path=None)
 
     # Save the regressor's parameters.

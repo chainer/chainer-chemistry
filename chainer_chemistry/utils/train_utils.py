@@ -1,5 +1,6 @@
 import chainer
 from chainer import optimizers, training, Optimizer
+from chainer._backend import Device
 from chainer.dataset import convert, Iterator
 from chainer.iterators import SerialIterator
 from chainer.training import extensions
@@ -67,6 +68,55 @@ def run_train(model, train, valid=None,
             trainer.extend(extensions.Evaluator(
                 valid_iter, model, device=device, converter=converter))
 
+        trainer.extend(extensions.LogReport())
+        trainer.extend(AutoPrintReport())
+        trainer.extend(extensions.ProgressBar(update_interval=10))
+        # TODO: consider to include snapshot as default extension.
+        # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
+
+    if extensions_list is not None:
+        for e in extensions_list:
+            trainer.extend(e)
+
+    if resume_path:
+        chainer.serializers.load_npz(resume_path, trainer)
+    trainer.run()
+
+    return
+
+
+def run_node_classification_train(model, data,
+                                  train_mask, valid_mask,
+                                  epoch=10,
+                                  optimizer=None,
+                                  out='result',
+                                  extensions_list=None,
+                                  device=-1,
+                                  converter=None,
+                                  use_default_extensions=True,
+                                  resume_path=None):
+    if optimizer is None:
+        # Use Adam optimizer as default
+        optimizer = optimizers.Adam()
+    elif not isinstance(optimizer, Optimizer):
+        raise ValueError("[ERROR] optimizer must be instance of Optimizer, "
+                         "but passed {}".format(type(Optimizer)))
+
+    optimizer.setup(model)
+
+    def one_batch_converter(batch, device):
+        if not isinstance(device, Device):
+            device = chainer.get_device(device)
+        data, train_mask, valid_mask = batch[0]
+        return (data.to_device(device),
+                device.send(train_mask), device.send(valid_mask))
+
+    data_iter = SerialIterator([(data, train_mask, valid_mask)], batch_size=1)
+    updater = training.StandardUpdater(
+        data_iter, optimizer, device=device,
+        converter=one_batch_converter)
+    trainer = training.Trainer(updater, (epoch, 'epoch'), out=out)
+    if use_default_extensions:
         trainer.extend(extensions.LogReport())
         trainer.extend(AutoPrintReport())
         trainer.extend(extensions.ProgressBar(update_interval=10))
