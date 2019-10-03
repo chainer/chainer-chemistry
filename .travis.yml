@@ -1,0 +1,46 @@
+sudo: false
+language: python
+
+os: linux
+dist: trusty
+python:
+  - 2.7
+  - 3.5
+  - 3.6
+env:
+env:
+  - CHAINER_VERSION="chainer<7"
+  - CHAINER_VERSION="chainer"
+  - CHAINER_VERSION="prerelease"
+
+install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes
+  - conda update -q conda
+  - conda info -a
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+  - source activate test-environment
+  - pip install codecov
+  - pip install mock
+  - conda install pip pytest pytest-cov
+  - conda install -c rdkit rdkit==2017.09.3.0
+  - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
+      pip install --pre chainer;
+    else
+      pip install "${CHAINER_VERSION}";
+    fi
+  - pip install --no-cache-dir -e .
+
+script:
+  - if [ "${TRAVIS_EVENT_TYPE}" = "cron" ]; then
+      pytest --cov=./ -m "not gpu" tests;
+      (cd examples && bash -x test_examples.sh -1);
+    else
+      pytest --cov=./ -m "not (gpu or slow)" tests;
+    fi
+
+after_success:
+  - codecov
