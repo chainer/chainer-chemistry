@@ -12,12 +12,13 @@ from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer.datasets import split_dataset_random
 
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets.mp import MPDataset
 
-from train_mp import converter_method_dict, rmse
+from train_mp import rmse
 
 
 def parse_arguments():
@@ -53,9 +54,6 @@ def parse_arguments():
     parser.add_argument('--num-data', type=int, default=-1,
                         help='amount of data to be parsed; -1 indicates '
                         'parsing all data.')
-    # TODO : 今後不要になる
-    parser.add_argument("--data_dir", "-dd", type=str, default="",
-                        help="path to data dir")
     return parser.parse_args()
 
 
@@ -79,17 +77,14 @@ def main():
         dataset_filename = 'data.npz'
 
     # Load the cached dataset.
-    if method == 'cgcnn':
-        preprocessor = preprocess_method_dict[method](data_dir=args.data_dir)
-    else:
-        preprocessor = preprocess_method_dict[method]()
+    preprocessor = preprocess_method_dict[method]()
     dataset = MPDataset(preprocessor=preprocessor)
     dataset_cache_path = os.path.join(cache_dir, dataset_filename)
     result = dataset.load_pickle(dataset_cache_path)
 
     # load datasets from Material Project Database
     if result is False:
-        dataset.get_mp(args.data_dir, target_list, preprocessor, args.num_data)
+        dataset.get_mp(target_list, preprocessor, args.num_data)
         if not os.path.exists(cache_dir):
             os.makedirs(cache_dir)
         dataset.save_pickle(dataset_cache_path)

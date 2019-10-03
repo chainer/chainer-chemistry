@@ -3,7 +3,7 @@
 set -e
 
 # List of available graph convolution methods.
-methods=(megnet)
+methods=(megnet cgcnn)
 
 # device identifier; set it to -1 to train on the CPU (default).
 device=${1:--1}
@@ -31,5 +31,4 @@ do
         --label band_gap \
         --device ${device} \
         --num-data 100
-
 done

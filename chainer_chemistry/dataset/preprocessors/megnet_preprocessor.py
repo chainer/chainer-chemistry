@@ -6,8 +6,6 @@ import numpy
 from rdkit import Chem, RDConfig
 from rdkit.Chem import AllChem, ChemicalFeatures, Descriptors, rdmolops
 
-
-from chainer_chemistry.dataset.converters.megnet_converter import megnet_converter  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
@@ -375,13 +373,6 @@ class MEGNetPreprocessor(MolPreprocessor):
                                                         self.use_all_feature)
         global_feature = construct_global_state_feature(mol)
         return atom_feature, pair_feature, global_feature, bond_idx
-
-    def create_dataset(self, *args, **kwargs):
-        # TODO (nakago): HACKING. override `converter` for megnet for now...
-        dataset = super(MEGNetPreprocessor, self).create_dataset(
-            *args, **kwargs)
-        dataset.converter = megnet_converter
-        return dataset
 
     def get_input_feature_from_crystal(self, structure):
         """get input features from structure object
