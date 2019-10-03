@@ -11,13 +11,21 @@ from chainer import functions as F
 from chainer.datasets import split_dataset_random
 
 
-from chainer_chemistry.dataset.converters import converter_method_dict
+from chainer_chemistry.dataset.converters.cgcnn_converter import cgcnn_converter  # NOQA
+from chainer_chemistry.dataset.converters.megnet_converter import megnet_converter  # NOQA
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets.mp import MPDataset
 from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.utils import run_train
+
+
+# TODO: consider how to switch converter in `MPDataset`.
+converter_method_dict = {
+    'cgcnn': cgcnn_converter,
+    'megnet': megnet_converter,
+}
 
 
 def rmse(x0, x1):

@@ -12,22 +12,12 @@ from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer.datasets import split_dataset_random
 
-try:
-    import matplotlib
-    matplotlib.use('Agg')
-except ImportError:
-    pass
-
-
-from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry.datasets.mp import MPDataset
 
-
-def rmse(x0, x1):
-    return F.sqrt(F.mean_squared_error(x0, x1))
+from train_mp import converter_method_dict, rmse
 
 
 def parse_arguments():

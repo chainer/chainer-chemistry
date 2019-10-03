@@ -3,9 +3,9 @@ import numpy
 import json
 
 
+from chainer_chemistry.dataset.converters.cgcnn_converter import cgcnn_converter  # NOQA
 from chainer_chemistry.dataset.utils import GaussianDistance
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
 class CGCNNPreprocessor(MolPreprocessor):
@@ -69,3 +69,10 @@ class CGCNNPreprocessor(MolPreprocessor):
         neighbor_features = self.gdf.expand_from_distances(neighbor_features)
 
         return atom_feature, neighbor_features, neighbor_indexes
+
+    def create_dataset(self, *args, **kwargs):
+        # TODO (nakago): HACKING. override `converter` for cgcnn for now...
+        dataset = super(CGCNNPreprocessor, self).create_dataset(
+            *args, **kwargs)
+        dataset.converter = cgcnn_converter
+        return dataset

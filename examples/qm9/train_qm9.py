@@ -10,7 +10,6 @@ import os
 from chainer.datasets import split_dataset_random
 from chainer import functions as F
 
-from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -120,6 +119,7 @@ def main():
             os.makedirs(cache_dir)
         if isinstance(dataset, NumpyTupleDataset):
             NumpyTupleDataset.save(dataset_cache_path, dataset)
+        # TODO: support caching of other dataset type...
 
     # Scale the label values, if necessary.
     if args.scale == 'standardize':
@@ -149,15 +149,10 @@ def main():
                           metrics_fun=metrics_fun, device=device)
 
     print('Training...')
-    converter = converter_method_dict[method]
     run_train(regressor, train, valid=valid,
               batch_size=args.batchsize, epoch=args.epoch,
               out=args.out, extensions_list=None,
-<<<<<<< HEAD
-              device=device, converter=converter,
-=======
               device=device, converter=dataset.converter,
->>>>>>> master
               resume_path=None)
 
     # Save the regressor's parameters.
