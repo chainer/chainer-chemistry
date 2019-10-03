@@ -64,7 +64,10 @@ def test_forward_cpu(model, data):
 
 @pytest.mark.gpu
 def test_forward_gpu(model, data):
-    input_data = [cuda.to_gpu(d) for d in data[:-1]]
+    atom_feat, nbr_feat, atom_idx, nbr_idx = data[:-1]
+    # atom_idx is list format... use numpy array
+    input_data = (cuda.to_gpu(atom_feat), cuda.to_gpu(nbr_feat),
+                  atom_idx, cuda.to_gpu(nbr_idx))
     model.to_gpu()
     check_forward(model, tuple(input_data))
 

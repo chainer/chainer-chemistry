@@ -94,7 +94,6 @@ ENV/
 examples/tox21/input/
 examples/qm9/input/
 examples/molnet/input/
-examples/mp/input/
 
 # Trained models and plots
 examples/tox21/eval_*

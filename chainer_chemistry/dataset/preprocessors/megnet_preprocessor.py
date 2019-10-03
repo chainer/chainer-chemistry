@@ -6,13 +6,9 @@ import numpy
 from rdkit import Chem, RDConfig
 from rdkit.Chem import AllChem, ChemicalFeatures, Descriptors, rdmolops
 
-
-from chainer_chemistry.dataset.preprocessors.common \
-    import MolFeatureExtractionError
-from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
-
+from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
+from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 from chainer_chemistry.dataset.utils import GaussianDistance
 
 
@@ -337,11 +333,6 @@ class MEGNetPreprocessor(MolPreprocessor):
             If True, even the atom is not in `atom_list`, `atom_type` is set
             as "unknown" atom.
         kekulize (bool): If True, Kekulizes the molecule.
-
-    For Crystal
-        max_num_nbr (int): Max number of atom considered as neighbors
-        max_radius (float): Cutoff radius (angstrom)
-        expand_dim (int): Dimension converting from distance to vector
     """
 
     def __init__(self, max_atoms=-1, add_Hs=True,
@@ -376,47 +367,4 @@ class MEGNetPreprocessor(MolPreprocessor):
         pair_feature, bond_idx = construct_pair_feature(mol,
                                                         self.use_all_feature)
         global_feature = construct_global_state_feature(mol)
-        return atom_feature, pair_feature, global_feature, bond_idx
-
-    def get_input_feature_from_crystal(self, structure):
-        """get input features from structure object
-
-        Args:
-            structure (Structure):
-
-        """
-        atom_num = len(structure)
-        atom_feature = numpy.zeros(
-            (atom_num, MAX_ATOM_ELEMENT), dtype=numpy.float32)
-        for i in range(atom_num):
-            if structure[i].specie.number < MAX_ATOM_ELEMENT:
-                atom_feature[i][structure[i].specie.number] = 1
-
-        # get edge feature vector & bond idx
-        bond_idx = []
-        pair_feature = []
-        all_neighbors = structure.get_all_neighbors(self.max_radius,
-                                                    include_index=True)
-        all_neighbors = [sorted(nbrs, key=lambda x: x[1])
-                         for nbrs in all_neighbors]
-        bond_num = len(all_neighbors)
-        for i in range(bond_num):
-            nbrs = all_neighbors[i]
-            num_nbr = len(nbrs)
-            nbr_feature = numpy.zeros(self.max_num_nbr, dtype=numpy.float32) \
-                + self.max_radius + 1.
-            nbr_feature_idx = numpy.zeros((self.max_num_nbr, 2),
-                                          dtype=numpy.int32)
-            nbr_feature_idx[:, 0] = i
-            nbr_feature_idx[:num_nbr, 1] = [x[2]
-                                            for x in nbrs[:self.max_num_nbr]]
-            nbr_feature[:num_nbr] = [x[1] for x in nbrs[:self.max_num_nbr]]
-            bond_idx.append(nbr_feature_idx)
-            pair_feature.append(nbr_feature)
-
-        bond_idx = numpy.array(bond_idx).reshape(-1, 2).T
-        pair_feature = self.gdf.expand_from_distances(
-            numpy.array(pair_feature)).reshape(-1, self.expand_dim)
-        global_feature = numpy.array([0, 0], dtype=numpy.float32)
-
         return atom_feature, pair_feature, global_feature, bond_idx

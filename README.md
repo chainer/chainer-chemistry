@@ -25,14 +25,13 @@ Chainer Chemistry depends on the following packages:
  - [`pandas`](https://pandas.pydata.org)
  - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
- - [`pymatgen`](https://pypi.python.org/pypi/pymatgen)
  - [`h5py`](https://pypi.python.org/pypi/h5py)
 
 These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -46,7 +45,7 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| master branch       | v6.0 ~      *3  | 2019.03.2.0    | 3.6, 3.7         |
 | v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
 
 
@@ -132,9 +131,6 @@ The following datasets are currently supported:
 - Tox21 [9]
 - MoleculeNet [11]
 - ZINC (only 250k dataset) [12, 13]
-- Material Project [26]
-  - We provide own collected data from [material project](https://materialsproject.org/).
-  - Refer [Terms of Service](https://discuss.materialsproject.org/tos) and [this question](https://discuss.materialsproject.org/t/about-sharing-collected-data-from-software-library/2616) for license.
 - User (own) dataset
 
 ### Network
@@ -228,5 +224,3 @@ papers. Use the library at your own risk.
 [24] Chi Chen, Weike Ye, Yunxing Zuo, Chen Zheng, and Shyue Ping Ong. Graph networks as a universal machine learning framework for molecules and crystals. *Chemistry of Materials*, 31(9):3564–3572, 2019.
 
 [25] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
-
-[26] Anubhav Jain, Shyue Ping Ong, Geoffroy Hautier, Wei Chen, William Davidson Richards, Stephen Dacek, Shreyas Cholia, Dan Gunter, David Skinner, Gerbrand Ceder, et al. Commentary: The materials project: A materials genome approach to accelerating materials innovation. *Apl Materials*, 1(1):011002, 2013.

@@ -3,7 +3,8 @@
 set -e
 
 # List of available graph convolution methods.
-methods=(nfp ggnn schnet weavenet rsgcn relgcn relgat gin gnnfilm megnet nfp_gwm ggnn_gwm rsgcn_gwm gin_gwm)
+# schnet test is skipped, since it takes long time to preprocess...
+methods=(nfp ggnn weavenet rsgcn relgcn relgat gin gnnfilm megnet nfp_gwm ggnn_gwm rsgcn_gwm gin_gwm relgcn_sparse gin_sparse megnet)
 
 # device identifier; set it to -1 to train on the CPU (default).
 device=${1:--1}

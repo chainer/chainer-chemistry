@@ -28,8 +28,8 @@ from train_qm9 import rmse
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm', 'megnet',
-                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
+                   'relgat', 'gin', 'gnnfilm', 'relgcn_sparse', 'gin_sparse',
+                   'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm', 'megnet']
     label_names = ['A', 'B', 'C', 'mu', 'alpha', 'homo', 'lumo', 'gap', 'r2',
                    'zpve', 'U0', 'U', 'H', 'G', 'Cv']
     scale_list = ['standardize', 'none']
@@ -96,12 +96,20 @@ def main():
     if dataset is None:
         print('Preprocessing dataset...')
         preprocessor = preprocess_method_dict[method]()
-        dataset = D.get_qm9(preprocessor, labels=labels)
+        if num_data >= 0:
+            # Select the first `num_data` samples from the dataset.
+            target_index = numpy.arange(num_data)
+            dataset = D.get_qm9(preprocessor, labels=labels,
+                                target_index=target_index)
+        else:
+            # Load the entire dataset.
+            dataset = D.get_qm9(preprocessor, labels=labels)
 
         # Cache the newly preprocessed dataset.
         if not os.path.exists(cache_dir):
             os.mkdir(cache_dir)
-        NumpyTupleDataset.save(dataset_cache_path, dataset)
+        if isinstance(dataset, NumpyTupleDataset):
+            NumpyTupleDataset.save(dataset_cache_path, dataset)
 
     # Use a predictor with scaled output labels.
     model_path = os.path.join(args.in_dir, args.model_filename)
@@ -112,18 +120,28 @@ def main():
     _, test = split_dataset_random(dataset, train_data_size, args.seed)
 
     # This callback function extracts only the inputs and discards the labels.
-    converter = converter_method_dict[method]
-    @chainer.dataset.converter()
-    def extract_inputs(batch, device=None):
-        return converter(batch, device=device)[:-1]
+    # TODO(nakago): consider how to switch which `converter` to use.
+    if isinstance(dataset, NumpyTupleDataset):
+        converter = converter_method_dict[method]
+
+        @chainer.dataset.converter()
+        def extract_inputs(batch, device=None):
+            return converter(batch, device=device)[:-1]
+
+        # Extract the ground-truth labels as numpy array.
+        original_t = converter(test, device=-1)[-1]
+    else:
+        converter = dataset.converter
+        extract_inputs = converter
+
+        # Extract the ground-truth labels as numpy array.
+        original_t = converter(test, device=-1).y
 
     # Predict the output labels.
     print('Predicting...')
     y_pred = regressor.predict(
         test, converter=extract_inputs)
 
-    # Extract the ground-truth labels as numpy array.
-    original_t = converter(test, device=-1)[-1]
     df_dict = {}
     for i, l in enumerate(labels):
         df_dict.update({'y_pred_{}'.format(l): y_pred[:, i],
