@@ -32,7 +32,7 @@ These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -46,7 +46,7 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| master branch       | v6.0 ~      *3  | 2019.03.2.0    | 3.6, 3.7         |
 | v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
 
 

@@ -6,9 +6,11 @@ from setuptools import find_packages
 setup_requires = []
 install_requires = [
     'chainer >=6.0.0',
+    'h5py'
     'joblib',
     'matplotlib',
     'pandas',
+    'pymatgen',
     'scikit-learn',
     'scipy',
     'tqdm',

@@ -4,9 +4,8 @@ language: python
 os: linux
 dist: trusty
 python:
-  - 2.7
-  - 3.5
   - 3.6
+  - 3.7
 env:
 env:
   - CHAINER_VERSION="chainer<7"
@@ -25,10 +24,8 @@ install:
   - source activate test-environment
   - pip install codecov
   - pip install mock
-  - pip install h5py
-  - pip install pymatgen
   - conda install pip pytest pytest-cov
-  - conda install -c rdkit rdkit==2017.09.3.0
+  - conda install -c rdkit rdkit==2019.03.2.0
   - if [ "${CHAINER_VERSION}" = "prerelease" ]; then
       pip install --pre chainer;
     else
