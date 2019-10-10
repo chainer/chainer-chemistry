@@ -158,6 +158,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
     else:
         raise ValueError('dataset_type={} is not supported'
                          .format(dataset_config['dataset_type']))
+
     return result
 
 

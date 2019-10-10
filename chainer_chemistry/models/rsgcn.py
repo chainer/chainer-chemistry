@@ -67,6 +67,7 @@ class RSGCN(chainer.Chain):
         self.n_update_layers = n_update_layers
         self.dropout_ratio = dropout_ratio
 
+
     def __call__(self, atom_array, adj, **kwargs):
         """Forward propagation
 
@@ -81,6 +82,7 @@ class RSGCN(chainer.Chain):
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """
+
         if atom_array.dtype == self.xp.int32:
             # atom_array: (minibatch, nodes)
             h = self.embed(atom_array)
@@ -97,6 +99,8 @@ class RSGCN(chainer.Chain):
         # --- RSGCN update ---
         for i, (gconv, bnorm) in enumerate(zip(self.gconvs,
                                                self.bnorms)):
+            #print(h.shape)
+
             h = gconv(h, w_adj)
             if bnorm is not None:
                 h = bnorm(h)

@@ -13,7 +13,8 @@ from chainer import training
 
 from chainer.training import extensions as E
 from chainer_chemistry.dataset.converters import converter_method_dict
-from chainer_chemistry.dataset.preprocessors import preprocess_method_dict
+from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.preprocessors import preprocess_method_dict, neighbor_node_expansion
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
@@ -65,6 +66,7 @@ def parse_arguments():
                         'parsing all data.')
     parser.add_argument('--scale', type=str, choices=scale_list,
                         help='label scaling method', default='standardize')
+    parser.add_argument('--apply-nne-flag', action='store_true', help="Enable to apply neighbor node expansion")
     return parser.parse_args()
 
 
@@ -81,7 +83,7 @@ def dataset_part_filename(dataset_part, num_data):
     return '{}_data.npz'.format(dataset_part)
 
 
-def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
+def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, apply_nne_flag=False):
     """Downloads the train/valid/test parts of a dataset and stores them in the
     cache directory.
     Args:
@@ -90,6 +92,7 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
         labels: Target labels for regression.
         method: Method name. See `parse_arguments`.
         cache_dir: Directory to store the dataset to.
+        apply_nne_flag: boolean, set True if you apply neighbor node expansion (NNE)
     """
 
     print('Downloading {}...'.format(dataset_name))
@@ -102,6 +105,16 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
                                                 target_index=target_index)
     dataset_parts = dataset_parts['dataset']
 
+    # apply Neighboring Node Expansion
+    if apply_nne_flag:
+        print("type(dataset_parts)="  + str(dataset_parts)) # should be list
+        dataset_parts_expand, labels_expanded = neighbor_node_expansion.apply_nne_for_datasets(dataset_parts)
+        dataset_parts = dataset_parts_expand
+        print("Neighbor Node Expansion Applied to datasets: vocab=", len(labels_expanded))
+        print(labels_expanded)
+    else:
+        labels_expanded = []
+
     # Cache the downloaded dataset.
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -109,6 +122,18 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir):
     for i, part in enumerate(['train', 'valid', 'test']):
         filename = dataset_part_filename(part, num_data)
         path = os.path.join(cache_dir, filename)
+        if True:
+            print(type(dataset_parts[i]))
+            print(type(dataset_parts[i][0]))
+            print(type(dataset_parts[i][0][0]))
+            print(type(dataset_parts[i][0][1]))
+            print(type(dataset_parts[i][0][2]))
+            print(dataset_parts[i][0][0].shape)
+            print(dataset_parts[i][0][1].shape)
+            print(dataset_parts[i][0][2].shape)
+            print(dataset_parts[i][0][0].dtype)
+            print(dataset_parts[i][0][1].dtype)
+            print(dataset_parts[i][0][2].dtype)
         NumpyTupleDataset.save(path, dataset_parts[i])
     return dataset_parts
 
@@ -139,6 +164,7 @@ def fit_scaler(datasets):
 
 def main():
     args = parse_arguments()
+    print(args)
 
     # Set up some useful variables that will be used later on.
     dataset_name = args.dataset
@@ -146,6 +172,8 @@ def main():
     num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
+    apply_nne_flag = args.apply_nne_flag
+
 
     task_type = molnet_default_config[dataset_name]['task_type']
     model_filename = {'classification': 'classifier.pkl',
@@ -177,7 +205,7 @@ def main():
             dataset_parts.append(NumpyTupleDataset.load(path))
     else:
         dataset_parts = download_entire_dataset(dataset_name, num_data, labels,
-                                                method, cache_dir)
+                                                method, cache_dir, apply_nne_flag)
     train, valid = dataset_parts[0], dataset_parts[1]
 
     # Scale the label values, if necessary.
