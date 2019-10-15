@@ -47,8 +47,7 @@ class RSGCN(chainer.Chain):
         if readout is None:
             readout = GeneralReadout()
         with self.init_scope():
-            self.embed = chainer_chemistry.links.EmbedAtomID(
-                in_size=n_atom_types, out_size=hidden_channels)
+            self.embed = chainer_chemistry.links.EmbedAtomID(out_size=hidden_channels, in_size=n_atom_types)
             self.gconvs = chainer.ChainList(
                 *[RSGCNUpdate(in_dims[i], out_dims[i])
                   for i in range(n_update_layers)])
