@@ -2,20 +2,18 @@
 from __future__ import print_function
 
 import argparse
-import json
 import os
 
 import chainer
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
-from chainer import cuda
 # Proposed by Ishiguro
 # ToDo: consider go/no-go with following modification
 # Re-load the best-validation score snapshot using serializers
-from chainer import serializers
+# from chainer import serializers
 
-from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.models.prediction import Classifier
@@ -23,18 +21,16 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.utils import save_json
 
 # These import is necessary for pickle to work
-from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
 from train_molnet import dataset_part_filename
 from train_molnet import download_entire_dataset
 
 
-
 def parse_arguments():
     # Lists of supported preprocessing methods/models.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
-                   'relgat', 'gin', 'gnnfilm',
+                   'relgat', 'gin', 'gnnfilm', 'megnet',
                    'nfp_gwm', 'ggnn_gwm', 'rsgcn_gwm', 'gin_gwm']
 #    scale_list = ['standardize', 'none']
     dataset_names = list(molnet_default_config.keys())
@@ -116,8 +112,9 @@ def main():
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
+    converter = converter_method_dict[method]
     test_iterator = SerialIterator(test, 16, repeat=False, shuffle=False)
-    eval_result = Evaluator(test_iterator, model, converter=concat_mols,
+    eval_result = Evaluator(test_iterator, model, converter=converter,
                             device=device)()
     print('Evaluation result: ', eval_result)
 
@@ -134,7 +131,7 @@ def main():
         # For Classifier, we do not equip the model with ROC-AUC evalation
         # function. use separate ROC-AUC Evaluator
         rocauc_result = ROCAUCEvaluator(
-            test_iterator, model, converter=concat_mols, device=device,
+            test_iterator, model, converter=converter, device=device,
             eval_func=model.predictor, name='test', ignore_labels=-1)()
         print('ROCAUC Evaluation result: ', rocauc_result)
         save_json(os.path.join(model_dir, 'rocauc_result.json'), rocauc_result)

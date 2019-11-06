@@ -43,7 +43,6 @@ class GraphConvPredictor(chainer.Chain):
 
     def __call__(self, *args, **kwargs):
         x = self.graph_conv(*args, **kwargs)
-
         if self.mlp:
             x = self.mlp(x)
         if self.label_scaler is not None:

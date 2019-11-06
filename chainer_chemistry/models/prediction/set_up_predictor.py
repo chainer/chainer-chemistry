@@ -14,7 +14,10 @@ from chainer_chemistry.models.relgcn import RelGCN, RelGCNSparse
 from chainer_chemistry.models.rsgcn import RSGCN
 from chainer_chemistry.models.schnet import SchNet
 from chainer_chemistry.models.weavenet import WeaveNet
+from chainer_chemistry.models.megnet import MEGNet
 from chainer_chemistry.models.gnn_film import GNNFiLM
+from chainer_chemistry.models.cgcnn import CGCNN
+
 
 from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
@@ -152,6 +155,18 @@ def set_up_predictor(
             hidden_channels=n_unit,
             n_update_layers=conv_layers,
             n_edge_types=5,
+            **conv_kwargs)
+    elif method == 'megnet':
+        print('Set up MEGNet predictor...')
+        conv = MEGNet(
+            out_dim=n_unit,
+            n_update_layers=conv_layers,
+            **conv_kwargs)
+    elif method == 'cgcnn':
+        print('Set up CGCNN predictor...')
+        conv = CGCNN(
+            out_dim=n_unit,
+            n_update_layers=conv_layers,
             **conv_kwargs)
     else:
         raise ValueError('[ERROR] Invalid method: {}'.format(method))

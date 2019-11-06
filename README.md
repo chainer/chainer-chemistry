@@ -25,12 +25,13 @@ Chainer Chemistry depends on the following packages:
  - [`pandas`](https://pandas.pydata.org)
  - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
+ - [`h5py`](https://pypi.python.org/pypi/h5py)
 
 These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -44,7 +45,7 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
+| master branch       | v6.0 ~      *3  | 2019.03.2.0    | 3.6, 3.7         |
 | v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
 
 
@@ -112,6 +113,8 @@ The following graph convolutional neural networks are currently supported:
 - MPNN: Message Passing Neural Networks [3]
 - Set2Set [19]
 - GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation [20]
+- MEGNet: MatErials Graph Network [24]
+- CGCNN: Crystal Graph Convolutional Neural Networks [25]
 
 We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
 - NFP ('nfp_gwm')
@@ -209,7 +212,6 @@ papers. Use the library at your own risk.
 [18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019.
 
 [19] Oriol Vinyals, Samy Bengio, Manjunath Kudlur. Order Matters: Sequence to sequence for sets. *arXiv preprint arXiv:1511.06391*, 2015.
-. 
 
 [20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.
 
@@ -218,3 +220,7 @@ papers. Use the library at your own risk.
 [22] C. Lee Giles and Kurt D. Bollacker and Steve Lawrence, CiteSeer: An Automatic Citation Indexing System. *Proceedings of the Third ACM Conference on Digital Libraries*, 1998.
 
 [23] William L. Hamilton and Zhitao Ying and Jure Leskovec, Inductive Representation Learning on Large Graphs. *Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, 4-9 December 2017*
+
+[24] Chi Chen, Weike Ye, Yunxing Zuo, Chen Zheng, and Shyue Ping Ong. Graph networks as a universal machine learning framework for molecules and crystals. *Chemistry of Materials*, 31(9):3564–3572, 2019.
+
+[25] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
