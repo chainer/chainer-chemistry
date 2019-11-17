@@ -63,10 +63,16 @@ class MEGNetUpdate(chainer.Chain):
         activation (~chainer.Function or ~chainer.FunctionNode):
             activate function for megnet model
             `megnet_softplus` was used in original paper.
+        skip_intermediate (bool): When `True`, intermediate feature after dense
+            calculation is used for skip connection. When `False`, input
+            feature is used for skip connection.
+            It is `True` for first layer, and `False` for other layer in the
+            original paper.
     """
 
     def __init__(self, dim_for_dense=[64, 32], dim_for_update=[64, 64, 32],
-                 dropout_ratio=-1, activation=megnet_softplus):
+                 dropout_ratio=-1, activation=megnet_softplus,
+                 skip_intermediate=True):
         super(MEGNetUpdate, self).__init__()
         if len(dim_for_dense) != 2:
             raise ValueError('dim_for_dense must have 2 elements')
@@ -84,6 +90,7 @@ class MEGNetUpdate(chainer.Chain):
             self.update_for_atom = UpdateLayer(dim_for_update, activation)
             self.update_for_pair = UpdateLayer(dim_for_update, activation)
             self.update_for_global = UpdateLayer(dim_for_update, activation)
+        self.skip_intermediate = skip_intermediate
 
     def __call__(self, atoms_feat, pair_feat, global_feat,
                  atom_idx, pair_idx, start_idx, end_idx):
@@ -98,7 +105,7 @@ class MEGNetUpdate(chainer.Chain):
         g_f_extend_with_pair_idx = g_f_d[pair_idx]
         concat_p_v = functions.concat((p_f_d, start_node, end_node,
                                        g_f_extend_with_pair_idx))
-        update_p = self.update_for_atom(concat_p_v)
+        update_p = self.update_for_pair(concat_p_v)
 
         # 3) Update the node vector
         # 1. get sum edge feature of all nodes using scatter_add method
@@ -115,7 +122,7 @@ class MEGNetUpdate(chainer.Chain):
         g_f_extend_with_atom_idx = g_f_d[atom_idx]
         concat_a_v = functions.concat((a_f_d, mean_edge_vec,
                                        g_f_extend_with_atom_idx))
-        update_a = self.update_for_pair(concat_a_v)
+        update_a = self.update_for_atom(concat_a_v)
 
         # 4) Update the global vector
         out_shape = g_f_d.shape
@@ -125,9 +132,17 @@ class MEGNetUpdate(chainer.Chain):
         update_g = self.update_for_global(concat_g_v)
 
         # 5) Skip connection
-        new_a_f = functions.add(a_f_d, update_a)
-        new_p_f = functions.add(p_f_d, update_p)
-        new_g_f = functions.add(g_f_d, update_g)
+        if self.skip_intermediate:
+            # Skip intermediate feature, used for first layer.
+            new_a_f = update_a + a_f_d
+            new_p_f = update_p + p_f_d
+            new_g_f = update_g + g_f_d
+        else:
+            # Skip input feature, used all layer except first layer.
+            # input feature must be same dimension with updated feature.
+            new_a_f = update_a + atoms_feat
+            new_p_f = update_p + pair_feat
+            new_g_f = update_g + global_feat
 
         # 6) dropout
         if self.dropout_ratio > 0.0:

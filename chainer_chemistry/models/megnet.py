@@ -49,8 +49,9 @@ class MEGNet(chainer.Chain):
             self.update_layers = chainer.ChainList(
                 *[MEGNetUpdate(
                     dim_for_dense=[64, 32], dim_for_update=[64, 64, 32],
-                    dropout_ratio=dropout_ratio, activation=activation
-                ) for _ in range(n_update_layers)])
+                    dropout_ratio=dropout_ratio, activation=activation,
+                    skip_intermediate=(i == 0)
+                ) for i in range(n_update_layers)])
             self.readout = MEGNetReadout(out_dim=out_dim, in_channels=32,
                                          n_layers=16, processing_steps=3,
                                          dropout_ratio=dropout_ratio,

@@ -23,6 +23,7 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.training.extensions import BatchEvaluator, ROCAUCEvaluator  # NOQA
 from chainer_chemistry.training.extensions.auto_print_report import AutoPrintReport  # NOQA
+from chainer_chemistry.utils import save_json
 
 
 def parse_arguments():
@@ -221,6 +222,7 @@ def main():
     optimizer.setup(model)
 
     # Save model-related output to this directory.
+    save_json(os.path.join(args.out, 'args.json'), vars(args))
     model_dir = os.path.join(args.out, os.path.basename(cache_dir))
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
