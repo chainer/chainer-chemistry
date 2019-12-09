@@ -44,7 +44,7 @@ class IntegratedGradientsCalculator(GradientCalculator):
         total_grads = 0.
         self.model.cleargrads()
         # Need to forward once to get target_var
-        outputs = self.eval_fun(*inputs)
+        outputs = self.eval_fun(*inputs)  # NOQA
         target_var = self.get_target_var(inputs)
         # output_var = self.get_output_var(outputs)
 

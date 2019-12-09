@@ -1,16 +1,12 @@
 from chainer import reporter
 from chainer_chemistry.models.prediction.classifier import Classifier
-from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
 
 
 class NodeClassifier(Classifier):
-
-    """A simple node classifier model.
-    """
+    """A simple node classifier model."""
 
     def __call__(self, data, train_mask, valid_mask, *args, **kwargs):
-        """Computes the loss value for an input and label pair.
-        """
+        """Computes the loss value for an input and label pair."""
         self.metrics = None
         self.y = self.predictor(data)
         # Support for padding pattern

@@ -1,9 +1,10 @@
 import chainer
 import numpy
 import pytest
+
+from chainer.iterators import SerialIterator
 from chainer import links
 import chainerx
-from chainer.iterators import SerialIterator
 
 from chainer_chemistry.datasets import NumpyTupleDataset
 from chainer_chemistry.models import Regressor

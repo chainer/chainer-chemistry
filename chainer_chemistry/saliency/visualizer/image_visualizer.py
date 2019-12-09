@@ -1,8 +1,8 @@
 from logging import getLogger
 
-import numpy
-import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy
 
 from chainer import cuda
 

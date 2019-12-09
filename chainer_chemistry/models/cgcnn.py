@@ -1,9 +1,8 @@
 import chainer
 from chainer import links
 
-
-from chainer_chemistry.links.update.cgcnn_update import CGCNNUpdate
 from chainer_chemistry.links.readout.cgcnn_readout import CGCNNReadout
+from chainer_chemistry.links.update.cgcnn_update import CGCNNUpdate
 
 
 class CGCNN(chainer.Chain):

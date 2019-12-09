@@ -11,8 +11,8 @@ from chainer_chemistry.links.readout.nfp_readout import NFPReadout  # NOQA
 from chainer_chemistry.links.readout.schnet_readout import SchNetReadout  # NOQA
 from chainer_chemistry.links.readout.set2set import Set2Set  # NOQA
 
-from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.links.scaler.flow_scaler import FlowScaler  # NOQA
+from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate  # NOQA
 from chainer_chemistry.links.update.gin_update import GINUpdate  # NOQA

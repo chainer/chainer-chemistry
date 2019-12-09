@@ -1,11 +1,11 @@
-import chainer
 import numpy
+
+import chainer
 from chainer._backend import Device
-from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
-    BaseGraphData
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import BaseGraphData  # NOQA
 from chainer_chemistry.dataset.graph_dataset.feature_converters \
     import batch_with_padding, batch_without_padding, concat, shift_concat, \
-    concat_with_padding, shift_concat_with_padding
+    concat_with_padding, shift_concat_with_padding  # NOQA
 
 
 class BaseGraphDataset(object):
@@ -33,6 +33,7 @@ class BaseGraphDataset(object):
 
     def update_feature(self, key, batch_method):
         """Update batch method of the feature
+
         Args:
             key (str): name of the feature
             batch_method (function): batch method

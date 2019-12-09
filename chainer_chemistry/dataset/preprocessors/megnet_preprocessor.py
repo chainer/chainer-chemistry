@@ -1,10 +1,10 @@
-import os
 from logging import getLogger
+import os
 import traceback
 
 import numpy
-from rdkit import Chem, RDConfig
-from rdkit.Chem import AllChem, ChemicalFeatures, Descriptors, rdmolops
+from rdkit import Chem, RDConfig  # NOQA
+from rdkit.Chem import AllChem, ChemicalFeatures, Descriptors, rdmolops  # NOQA
 
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
@@ -17,7 +17,7 @@ ATOM = ['H', 'C', 'N', 'O', 'F']
 
 
 # create singleton class
-class ChemicalFeaturesFactory:
+class ChemicalFeaturesFactory(object):
     _instance = None
 
     @classmethod

@@ -5,8 +5,8 @@ import shutil
 
 from chainer.dataset import download
 
-from chainer_chemistry.dataset.utils import GaussianDistance
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
+from chainer_chemistry.dataset.utils import GaussianDistance
 from chainer_chemistry.utils import load_json
 
 download_url = 'https://raw.githubusercontent.com/txie-93/cgcnn/master/data/sample-regression/atom_init.json'  # NOQA

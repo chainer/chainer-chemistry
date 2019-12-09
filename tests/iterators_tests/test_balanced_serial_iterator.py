@@ -103,7 +103,7 @@ def _test_balanced_serial_iterator_serialization_no_batch_balancing():
     iterator = BalancedSerialIterator(NumpyTupleDataset(x, t), batch_size=9,
                                       labels=t, ignore_labels=-1,
                                       batch_balancing=False)
-    batch = iterator.next()
+    batch = iterator.next()  # NOQA
 
     assert iterator.current_position == 0
     assert iterator.epoch == 1
@@ -138,9 +138,9 @@ def _test_balanced_serial_iterator_serialization_with_batch_balancing():
     iterator = BalancedSerialIterator(NumpyTupleDataset(x, t), batch_size=3,
                                       labels=t, ignore_labels=-1,
                                       batch_balancing=True)
-    batch1 = iterator.next()
-    batch2 = iterator.next()
-    batch3 = iterator.next()
+    batch1 = iterator.next()  # NOQA
+    batch2 = iterator.next()  # NOQA
+    batch3 = iterator.next()  # NOQA
 
     assert iterator.current_position == 0
     assert iterator.epoch == 1

@@ -1,5 +1,5 @@
 import chainer
-from chainer import functions, links
+from chainer import functions, links  # NOQA
 
 
 class CGCNNReadout(chainer.Chain):

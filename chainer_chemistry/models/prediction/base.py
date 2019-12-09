@@ -1,12 +1,13 @@
 import pickle
 
+import numpy
+
 import chainer
 from chainer import cuda
 from chainer.dataset.convert import concat_examples
 from chainer.iterators import SerialIterator
 from chainer import link
-import chainerx
-import numpy
+import chainerx  # NOQA
 
 
 def _to_tuple(x):
@@ -194,8 +195,8 @@ class BaseForwardModel(link.Chain):
 
         Args:
             filepath (str): file path of pickle file.
-            device (int or chainerx.Device): GPU device id of this model to be used.
-                -1 indicates to use in CPU.
+            device (int or chainerx.Device): GPU device id of this model to be
+                used. -1 indicates to use in CPU.
 
         """
         with open(filepath, mode='rb') as f:

@@ -1,5 +1,5 @@
 import chainer
-from chainer import links, functions
+from chainer import links, functions  # NOQA
 
 
 class CGCNNUpdate(chainer.Chain):

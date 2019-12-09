@@ -1,10 +1,10 @@
 from typing import Tuple  # NOQA
 
-import chainer
-from chainer import cuda
-from chainer import gradient_check
 import numpy
 import pytest
+
+from chainer import cuda
+from chainer import gradient_check
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.readout.set2set import Set2Set

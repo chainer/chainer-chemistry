@@ -3,6 +3,7 @@ import tempfile
 import pytest
 
 import mock
+
 from chainer import testing
 from chainer.training import extensions
 

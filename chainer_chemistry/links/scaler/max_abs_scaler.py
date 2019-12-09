@@ -1,7 +1,8 @@
 from logging import getLogger
 
 import numpy
-from chainer import cuda, Variable
+
+from chainer import cuda, Variable  # NOQA
 
 from chainer_chemistry.links.scaler.base import BaseScaler, to_array  # NOQA
 from chainer_chemistry.links.array.shape_transformer_to_2d import ShapeTransformerTo2D  # NOQA

@@ -1,5 +1,4 @@
 from chainer import cuda
-from chainer import gradient_check
 import numpy
 import pytest
 

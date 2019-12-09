@@ -11,9 +11,8 @@ import chainer
 from chainer import functions
 from chainer import links
 
-
-from chainer_chemistry.links.connection.graph_linear import GraphLinear
 from chainer_chemistry.functions import shifted_softplus
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class CFConv(chainer.Chain):
@@ -39,14 +38,14 @@ class CFConv(chainer.Chain):
         self.gamma = gamma
 
     def __call__(self, h, dist):
-        """
+        """main calculation
+
         Args:
             h (numpy.ndarray): axis 0 represents minibatch index,
                 axis 1 represents atom_index and axis2 represents
                 feature dimension.
             dist (numpy.ndarray): axis 0 represents minibatch index,
                 axis 1 and 2 represent distance between atoms.
-
         """
         mb, atom, ch = h.shape
         if ch != self.hidden_dim:

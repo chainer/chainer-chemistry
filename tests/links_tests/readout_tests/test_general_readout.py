@@ -74,7 +74,7 @@ def test_backward_gpu(readouts, data):
         readout.to_gpu()
         if readout.mode == 'summax':
             y_grad = functions.concat((y_grad, y_grad), axis=1).data
-        # TODO (nakago): check why tolerance is so high.
+        # TODO(nakago): check why tolerance is so high.
         gradient_check.check_backward(
             readout, atom_data, y_grad, atol=1e-1, rtol=1e-1)
 

@@ -27,7 +27,7 @@ def test_weave_preprocessor(max_atoms, use_fixed_atom_feature):
     assert adjs.shape[0] == max_atoms * max_atoms
     assert adjs.dtype == numpy.float32
 
-    # TODO (nakago): test feature extraction behavior...
+    # TODO(nakago): test feature extraction behavior...
     atoms0, adjs0 = dataset[0]
 
 

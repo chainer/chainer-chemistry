@@ -2,7 +2,7 @@ from functools import partial
 from typing import Optional  # NOQA
 
 import chainer
-from chainer import cuda, functions
+from chainer import cuda, functions  # NOQA
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
@@ -10,7 +10,6 @@ from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
 from chainer_chemistry.links.readout.mpnn_readout import MPNNReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
-from chainer_chemistry.models.gwm.gwm_graph_conv_model import GWMGraphConvModel
 
 
 class MPNN(chainer.Chain):
@@ -100,6 +99,7 @@ class MPNN(chainer.Chain):
     def __call__(self, atom_array, adj):
         # type: (numpy.ndarray, numpy.ndarray) -> chainer.Variable
         """Forward propagation.
+
         Args:
             atom_array (numpy.ndarray): minibatch of molecular which is
                 represented with atom IDs (representing C, O, S, ...)

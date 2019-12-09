@@ -1,10 +1,10 @@
 import chainer
-from chainer import functions
 from chainer.backend import get_array_module
+from chainer import functions
 
 from chainer_chemistry.functions import megnet_softplus
-from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 from chainer_chemistry.links.readout.megnet_readout import MEGNetReadout
+from chainer_chemistry.links.update.megnet_update import MEGNetUpdate
 
 
 def reshaped_feat(feat, idx):

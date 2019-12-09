@@ -1,8 +1,8 @@
 import chainer
 from chainer import functions
 
-from chainer_chemistry.links.connection.graph_linear import GraphLinear
 from chainer_chemistry.functions import shifted_softplus
+from chainer_chemistry.links.connection.graph_linear import GraphLinear
 
 
 class SchNetReadout(chainer.Chain):

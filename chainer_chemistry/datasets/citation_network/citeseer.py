@@ -1,7 +1,7 @@
+from logging import getLogger
 import os
 import tarfile
-from logging import getLogger
-from typing import List, Tuple
+from typing import List, Tuple  # NOQA
 
 from chainer.dataset import download
 
@@ -70,6 +70,7 @@ def get_citeseer_filepath(download_if_not_exist=True):
 def _get_citeseer_filepath():
     # type: () -> Tuple[str, str]
     """Construct a filepath which stores citeseer dataset.
+
     This method does not check if the file is already downloaded or not.
     Returns:
         feat_cache_path (str): file path for citeseer dataset (features).

@@ -1,6 +1,6 @@
 from logging import getLogger
+import numpy  # NOQA
 
-import numpy
 from chainer import cuda
 
 

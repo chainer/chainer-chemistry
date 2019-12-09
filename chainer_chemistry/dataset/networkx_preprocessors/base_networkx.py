@@ -1,12 +1,13 @@
-import numpy
 import networkx
+import numpy
+
 import chainer
 from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import PaddingGraphDataset, SparseGraphDataset  # NOQA
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData, SparseGraphData  # NOQA
 from chainer_chemistry.dataset.graph_dataset.feature_converters import batch_without_padding  # NOQA
 
 
-class BaseNetworkxPreprocessor():
+class BaseNetworkxPreprocessor(object):
     """Base class to preprocess `Networkx::Graph` object"""
 
     def __init__(self, *args, **kwargs):
@@ -34,9 +35,9 @@ class BaseNetworkxPreprocessor():
 
 
 class BasePaddingNetworkxPreprocessor(BaseNetworkxPreprocessor):
-    """Base class to preprocess `Networkx::Graph` object into
-    `PaddingGraphDataset`
-    """
+    """Base class to preprocess `Networkx::Graph` into `PaddingGraphDataset`
+    
+    """  # NOQA
 
     def __init__(self, use_coo=False, *args, **kwargs):
         self.use_coo = use_coo
@@ -105,8 +106,8 @@ class BasePaddingNetworkxPreprocessor(BaseNetworkxPreprocessor):
 
 
 class BaseSparseNetworkxPreprocessor(BaseNetworkxPreprocessor):
-    """Base class to preprocess `Networkx::Graph` object into
-    `SparseGraphDataset`
+    """Base class to preprocess `Networkx::Graph` into `SparseGraphDataset`
+
     """
 
     def construct_data(self, graph):

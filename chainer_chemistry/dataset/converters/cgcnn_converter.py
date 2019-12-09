@@ -1,8 +1,8 @@
 import numpy
 
 import chainer
-from chainer import functions
 from chainer.dataset.convert import to_device
+from chainer import functions
 
 
 @chainer.dataset.converter()
