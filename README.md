@@ -45,8 +45,8 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| master branch       | v6.0 ~      *3  | 2019.03.2.0    | 3.6, 3.7         |
-| v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
+| v0.7.0              | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
+| master branch    *5 | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7         |
 
 
 [Footnote]
@@ -57,10 +57,13 @@ which is introduced after chainer v3. See [this issue](https://github.com/pfnet-
 *2: Saliency modules only work after chainer v5.
 
 *3: Chainer v6 is released and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
-    In order to support this new feature & API, we are going to break backward compatibility for chainer chemistry v0.6.0 release.
+    In order to support this new feature & API, we broke backward compatibility for chainer chemistry v0.6.0 release.
     See [ChainerX Documentation](https://chainer.org/announcement/2018/12/03/chainerx.html) for details.
 
-*4: We are going to drop python 2.x support in the near future.
+*4: python 2.x support is dropped, following the same policy with `chainer` and `rdkit`.
+
+*5: As [announced in chainer blog](https://chainer.org/announcement/2019/12/05/released-v7.html),
+    further development will be limited to only serious bug-fixes and maintenance.
 
 ## Installation
 
@@ -145,6 +148,8 @@ pull request and add the name of your project to this list:
 
  - BayesGrad: Explaining Predictions of Graph Convolutional Networks ([paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad))
  - Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks ([paper](https://arxiv.org/abs/1902.01020), [code](https://github.com/k-ishiguro/chainer-chemistry/tree/gwm_for_CC))
+ - GraphNVP: An Invertible Flow Model for Generating Molecular Graphs ([paper](https://arxiv.org/abs/1905.11600), [code](https://github.com/pfnet-research/graph-nvp))
+ - Graph Residual Flow for Molecular Graph Generation ([paper](https://arxiv.org/abs/1909.13521))
 
 ## Useful Links
 
