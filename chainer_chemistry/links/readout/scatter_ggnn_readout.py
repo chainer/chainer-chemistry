@@ -1,4 +1,5 @@
 import numpy
+
 import chainer
 from chainer import functions
 

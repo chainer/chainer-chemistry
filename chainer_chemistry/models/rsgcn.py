@@ -1,5 +1,5 @@
 import chainer
-from chainer import functions, Variable
+from chainer import functions, Variable  # NOQA
 
 import chainer_chemistry
 from chainer_chemistry.config import MAX_ATOMIC_NUM
@@ -69,6 +69,7 @@ class RSGCN(chainer.Chain):
 
     def __call__(self, atom_array, adj, **kwargs):
         """Forward propagation
+
         Args:
             atom_array (numpy.ndarray): minibatch of molecular which is
                 represented with atom IDs (representing C, O, S, ...)

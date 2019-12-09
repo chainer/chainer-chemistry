@@ -7,6 +7,7 @@ from chainer_chemistry.training.extensions.batch_evaluator import BatchEvaluator
 class R2ScoreEvaluator(BatchEvaluator):
 
     """Evaluator with calculates R^2 (coefficient of determination)
+
     regression score.
 
     Args:
@@ -54,7 +55,6 @@ class R2ScoreEvaluator(BatchEvaluator):
         eval_func: Evaluation function called at each iteration.
         pos_labels (list): labels of the positive class
         ignore_labels (list): labels to be ignored.
-
     """
 
     def __init__(self, iterator, target, converter=convert.concat_examples,

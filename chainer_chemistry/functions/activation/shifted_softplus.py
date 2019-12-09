@@ -8,7 +8,7 @@ def shifted_softplus(x, beta=1, shift=0.5, threshold=20):
      Args:
         x (Variable): Input variable
         beta (float): Parameter :math:`\\beta`.
-        shift (float): Shift Parameter 
+        shift (float): Shift Parameter
         threshold (float): threshold to avoid overflow
 
     Returns:

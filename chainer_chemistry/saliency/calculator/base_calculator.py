@@ -38,7 +38,7 @@ def _extract_numpy(x):
 def _concat(batch_list):
     try:
         return numpy.concatenate(batch_list)
-    except Exception as e:
+    except Exception as e:  # NOQA
         # Thre is a case that each input has different shape,
         # we cannot concatenate into array in this case.
 

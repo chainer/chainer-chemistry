@@ -1,11 +1,11 @@
 import chainer
-from chainer import functions, cuda
+from chainer import functions, cuda  # NOQA
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
-from chainer_chemistry.links.readout.scatter_ggnn_readout import ScatterGGNNReadout
-from chainer_chemistry.links.update.gin_update import GINUpdate, GINSparseUpdate
+from chainer_chemistry.links.readout.scatter_ggnn_readout import ScatterGGNNReadout  # NOQA
+from chainer_chemistry.links.update.gin_update import GINUpdate, GINSparseUpdate  # NOQA
 
 
 class GIN(chainer.Chain):

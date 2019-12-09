@@ -1,7 +1,7 @@
 import os
 
-import numpy
 import networkx as nx
+import numpy
 from tqdm import tqdm
 
 

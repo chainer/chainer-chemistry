@@ -21,7 +21,7 @@ def create_header_and_templates(entries):
 
 def filter_and_sort_entries(all_entries, unit='epoch'):
     entries = deepcopy(all_entries)
-    # TODO: sort other entries if necessary
+    # TODO(nakago): sort other entries if necessary
 
     if 'iteration' in entries:
         # move iteration to head

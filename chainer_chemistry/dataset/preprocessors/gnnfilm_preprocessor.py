@@ -1,8 +1,7 @@
 from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array, construct_discrete_edge_matrix
-from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
+    import construct_atomic_number_array, construct_discrete_edge_matrix  # NOQA
+from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
 class GNNFiLMPreprocessor(MolPreprocessor):
@@ -44,5 +43,6 @@ class GNNFiLMPreprocessor(MolPreprocessor):
         """
         type_check_num_atoms(mol, self.max_atoms)
         atom_array = construct_atomic_number_array(mol, out_size=self.out_size)
-        adj_array = construct_discrete_edge_matrix(mol, out_size=self.out_size, add_self_connection_channel=True)
+        adj_array = construct_discrete_edge_matrix(
+            mol, out_size=self.out_size, add_self_connection_channel=True)
         return atom_array, adj_array

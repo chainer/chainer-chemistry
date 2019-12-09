@@ -1,4 +1,5 @@
 import numpy
+
 import chainer
 
 from chainer_chemistry.links.scaler.base import BaseScaler, to_array  # NOQA

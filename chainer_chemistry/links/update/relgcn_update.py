@@ -25,7 +25,7 @@ class RelGCNUpdate(chainer.Chain):
         self.out_channels = out_channels
 
     def __call__(self, h, adj, **kwargs):
-        """
+        """main calculation
 
         Args:
             h: (batchsize, num_nodes, in_channels)
@@ -33,7 +33,6 @@ class RelGCNUpdate(chainer.Chain):
 
         Returns:
             (batchsize, num_nodes, ch)
-
         """
         mb, node, ch = h.shape
 

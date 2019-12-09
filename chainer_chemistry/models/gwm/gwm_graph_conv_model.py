@@ -1,12 +1,12 @@
 import chainer
 from chainer import cuda
-from chainer import links
 from chainer import functions
+from chainer import links
 
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.connection.embed_atom_id import EmbedAtomID
 from chainer_chemistry.links.normalization.graph_batch_normalization import GraphBatchNormalization  # NOQA
 from chainer_chemistry.links.readout.general_readout import GeneralReadout
-from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.gwm.gwm import GWM
 from chainer_chemistry.models.relgcn import rescale_adj
 
@@ -109,8 +109,8 @@ class GWMGraphConvModel(chainer.Chain):
         assert len(out_channels_list) == n_update_layers
 
         n_use_update_layers = 1 if weight_tying else n_update_layers
-        n_readout_layers = n_use_update_layers if concat_hidden or sum_hidden else 1
-        n_activation = n_use_update_layers if n_activation is None else n_activation
+        n_readout_layers = n_use_update_layers if concat_hidden or sum_hidden else 1  # NOQA
+        n_activation = n_use_update_layers if n_activation is None else n_activation  # NOQA
 
         if update_kwargs is None:
             update_kwargs = {}
@@ -127,7 +127,8 @@ class GWMGraphConvModel(chainer.Chain):
                                out_channels=out_channels_list[i],
                                n_edge_types=n_edge_types, **update_kwargs)
                   for i in range(n_use_update_layers)])
-            # when use weight_tying option, hidden_channels must be same. So we can use -1 index
+            # when use weight_tying option, hidden_channels must be same.
+            # So we can use -1 index
             self.readout_layers = chainer.ChainList(
                 *[readout_layer(out_dim=out_dim,
                                 # in_channels=hidden_channels[-1],
@@ -144,7 +145,8 @@ class GWMGraphConvModel(chainer.Chain):
             if use_batchnorm:
                 self.bnorms = chainer.ChainList(
                     *[GraphBatchNormalization(
-                        out_channels_list[i]) for i in range(n_use_update_layers)])
+                        out_channels_list[i]) for i in
+                        range(n_use_update_layers)])
 
         self.readout_layer = readout_layer
         self.update_layer = update_layer
@@ -166,7 +168,7 @@ class GWMGraphConvModel(chainer.Chain):
         if atom_array.dtype == self.xp.int32:
             h = self.embed(atom_array)
         else:
-            # TODO: GraphLinear or GraphMLP can be used.
+            # TODO(nakago): GraphLinear or GraphMLP can be used.
             h = atom_array
 
         h0 = functions.copy(h, cuda.get_device_from_array(h.data).id)

@@ -1,7 +1,7 @@
+from logging import getLogger
 import os
 import tarfile
-from logging import getLogger
-from typing import List, Tuple
+from typing import List, Tuple  # NOQA
 
 from chainer.dataset import download
 
@@ -49,11 +49,14 @@ def get_cora_dirpath(download_if_not_exist=True):
 def get_cora_filepath(download_if_not_exist=True):
     # type: (bool) -> Tuple[str, str]
     """Construct a filepath which stores Cora dataset.
+
     This method check whether the file exist or not, and downloaded it
     if necessary.
+
     Args:
         download_if_not_exist (bool): If ``True``, download dataset
             if it is not downloaded yet.
+
     Returns:
         feat_cache_path (str): file path for Cora dataset (features).
         edge_cache_path (str): file path for Cora dataset (edge index).
@@ -72,7 +75,9 @@ def get_cora_filepath(download_if_not_exist=True):
 def _get_cora_filepath():
     # type: () -> Tuple[str, str]
     """Construct a filepath which stores Cora dataset.
+
     This method does not check if the file is already downloaded or not.
+
     Returns:
         feat_cache_path (str): file path for Cora dataset (features).
         edge_cache_path (str): file path for Cora dataset (edge index).

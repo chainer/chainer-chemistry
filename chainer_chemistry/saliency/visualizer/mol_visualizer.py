@@ -3,8 +3,8 @@ from logging import getLogger
 import numpy
 
 from rdkit import Chem
-from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Chem import rdDepictor
 
 
 from chainer_chemistry.saliency.visualizer.base_visualizer import BaseVisualizer  # NOQA
@@ -130,7 +130,7 @@ class MolVisualizer(BaseVisualizer):
                 with open(save_filepath, 'w') as f:
                     f.write(svg)
             elif extention == 'png':
-                # TODO (nakago): check it is possible without cairosvg or not
+                # TODO(nakago): check it is possible without cairosvg or not
                 try:
                     import cairosvg
                     cairosvg.svg2png(bytestring=svg, write_to=save_filepath)

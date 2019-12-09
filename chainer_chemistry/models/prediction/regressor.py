@@ -4,8 +4,9 @@ import chainer
 from chainer.dataset.convert import concat_examples
 from chainer import cuda, Variable  # NOQA
 from chainer import reporter
-from chainer_chemistry.models.prediction.base import BaseForwardModel
+
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import BaseGraphData  # NOQA
+from chainer_chemistry.models.prediction.base import BaseForwardModel
 
 
 class Regressor(BaseForwardModel):
@@ -70,6 +71,7 @@ class Regressor(BaseForwardModel):
 
     def _convert_to_scalar(self, value):
         """Converts an input value to a scalar if its type is a Variable,
+
         numpy or cupy array, otherwise it returns the value as it is.
         """
         if isinstance(value, Variable):

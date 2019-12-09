@@ -14,15 +14,18 @@ class GNNFiLMUpdate(chainer.Chain):
         n_edge_types (int): number of types of edge
     """
 
-    def __init__(self, hidden_channels=16, n_edge_types=5, activation=functions.relu):
+    def __init__(self, hidden_channels=16, n_edge_types=5,
+                 activation=functions.relu):
         super(GNNFiLMUpdate, self).__init__()
         self.n_edge_types = n_edge_types
         self.activation = activation
         with self.init_scope():
             self.W_linear = GraphLinear(
-                in_size=None, out_size=self.n_edge_types * hidden_channels, nobias=True)  # W_l in eq. (6)
+                in_size=None, out_size=self.n_edge_types * hidden_channels,
+                nobias=True)  # W_l in eq. (6)
             self.W_g = GraphLinear(
-                in_size=None, out_size=self.n_edge_types * hidden_channels * 2, nobias=True)  # g in eq. (6)
+                in_size=None, out_size=self.n_edge_types * hidden_channels * 2,
+                nobias=True)  # g in eq. (6)
             self.norm_layer = links.LayerNormalization()  # l in eq. (6)
 
     def forward(self, h, adj):
@@ -45,7 +48,8 @@ class GNNFiLMUpdate(chainer.Chain):
 
         # --- Update part ---
 
-        messages = functions.expand_dims(gamma, axis=3) * functions.expand_dims(
+        messages = functions.expand_dims(
+            gamma, axis=3) * functions.expand_dims(
             messages, axis=2) + functions.expand_dims(beta, axis=3)
         messages = self.activation(messages)
         # (minibatch, n_edge_types, atom, atom, out_ch)

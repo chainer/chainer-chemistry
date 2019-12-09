@@ -151,7 +151,7 @@ def check_backward(gwm, embed_atom_data, new_embed_atom_data, supernode,
                    y_grad, supernode_grad):
     gwm.reset_state()
 
-    # TODO: rtol is too high! GWM is too large to calculate
+    # TODO(nakago): rtol is too high! GWM is too large to calculate
     # numerical differentiation
     gradient_check.check_backward(gwm, (embed_atom_data, new_embed_atom_data,
                                         supernode), (y_grad, supernode_grad),

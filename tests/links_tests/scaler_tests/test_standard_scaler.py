@@ -3,7 +3,7 @@ import os
 import chainer
 import numpy
 import pytest
-from chainer import serializers, Variable, cuda
+from chainer import serializers, Variable, cuda  # NOQA
 
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler
 

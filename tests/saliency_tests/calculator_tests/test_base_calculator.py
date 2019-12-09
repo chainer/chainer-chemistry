@@ -7,8 +7,8 @@ from chainer.links import Linear
 from chainer_chemistry.link_hooks import is_link_hooks_available
 if is_link_hooks_available:
     from chainer_chemistry.link_hooks import VariableMonitorLinkHook
-    from chainer_chemistry.saliency.calculator import GaussianNoiseSampler
     from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
+    from chainer_chemistry.saliency.calculator import GaussianNoiseSampler
 
     class DummyCalculator(BaseCalculator):
         """Dummy calculator which returns target_var"""

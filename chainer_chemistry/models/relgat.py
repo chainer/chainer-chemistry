@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import chainer
-from chainer import functions, cuda
+from chainer import functions, cuda  # NOQA
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
@@ -89,6 +89,7 @@ class RelGAT(chainer.Chain):
 
     def __call__(self, atom_array, adj):
         """Forward propagation
+
         Args:
             atom_array (numpy.ndarray): minibatch of molecular which is
                 represented with atom IDs (representing C, O, S, ...)
@@ -96,6 +97,7 @@ class RelGAT(chainer.Chain):
                 molecule's `atom_index`-th atomic number
             adj (numpy.ndarray): minibatch of adjancency matrix with edge-type
                 information
+
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """

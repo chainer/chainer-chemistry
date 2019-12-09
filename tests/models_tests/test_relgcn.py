@@ -4,8 +4,8 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
+from chainer_chemistry.models.gwm.gwm_graph_conv_model import rescale_adj  # NOQA
 from chainer_chemistry.models.relgcn import RelGCN
-from chainer_chemistry.models.gwm.gwm_graph_conv_model import rescale_adj
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 

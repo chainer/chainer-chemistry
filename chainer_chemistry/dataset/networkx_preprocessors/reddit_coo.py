@@ -2,6 +2,7 @@ import os
 
 import numpy
 import scipy
+
 import chainer
 
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
@@ -9,6 +10,7 @@ from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraph
 
 def get_reddit_coo_data(dirpath):
     """Temporary function to obtain reddit coo data for GIN
+
     (because it takes to much time to convert it to networkx)
 
     Returns:

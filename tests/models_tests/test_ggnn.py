@@ -6,7 +6,7 @@ import pytest
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.ggnn import GGNN
 from chainer_chemistry.models.ggnn import SparseGGNN
-from chainer_chemistry.utils.extend import extend_node, extend_adj
+from chainer_chemistry.utils.extend import extend_node, extend_adj  # NOQA
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 from chainer_chemistry.utils.sparse_utils import _convert_to_sparse

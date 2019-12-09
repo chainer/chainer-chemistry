@@ -1,7 +1,7 @@
 import numpy
 
 
-class GaussianDistance:
+class GaussianDistance(object):
     """Expand distance with Gaussian basis sit at centers and with width 0.5.
 
     Args:

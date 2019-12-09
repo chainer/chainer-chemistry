@@ -1,10 +1,11 @@
-import os
 from logging import getLogger
+import os
 from zipfile import ZipFile
 
-import numpy
 import networkx as nx
+import numpy
 import scipy
+
 from chainer.dataset import download
 
 download_url = 'https://s3.us-east-2.amazonaws.com/dgl.ai/dataset/reddit.zip'
@@ -81,7 +82,9 @@ def get_reddit_filepath(download_if_not_exist=True):
 def _get_reddit_filepath():
     # type: () -> Tuple[str, str]
     """Construct a filepath which stores reddit dataset.
+
     This method does not check if the file is already downloaded or not.
+
     Returns:
         feat_cache_path (str): file path for reddit dataset (features).
         edge_cache_path (str): file path for reddit dataset (edge index).

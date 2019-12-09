@@ -1,7 +1,7 @@
-from chainer import cuda
-from chainer import gradient_check
 import numpy
 import pytest
+
+from chainer import cuda
 
 from chainer_chemistry.links.readout.cgcnn_readout import CGCNNReadout
 

@@ -1,5 +1,6 @@
-import chainer
 import numpy
+
+import chainer
 from chainer.functions import relu
 
 from chainer_chemistry.links.connection.graph_linear import GraphLinear

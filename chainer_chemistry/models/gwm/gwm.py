@@ -43,8 +43,8 @@ class WarpGateUnit(chainer.Chain):
         self.activation = activation
 
     def __call__(self, h, g):
-        # TODO: more efficient computation. Maybe we can calculate self.G(g)
-        # as Linear layer followed by broadcast to each atom.
+        # TODO(nakago): more efficient computation. Maybe we can calculate
+        # self.G(g) as Linear layer followed by broadcast to each atom.
         z = self.H(h) + self.G(g)
 
         if self.dropout_ratio > 0.0:
@@ -75,7 +75,7 @@ class SuperNodeTransmitterUnit(chainer.Chain):
         self.dropout_ratio = dropout_ratio
 
     def __call__(self, g, n_nodes):
-        """
+        """main calculation
 
         Args:
             g: super node feature. shape (bs, hidden_dim_super)
@@ -257,7 +257,8 @@ class GWM(chainer.Chain):
         self.wgu_activation = wgu_activation
 
     def __call__(self, h, h_new, g, step=0):
-        """
+        """main calculation
+
         Note: Do not forget to reset GRU for each batch.
 
         Args:

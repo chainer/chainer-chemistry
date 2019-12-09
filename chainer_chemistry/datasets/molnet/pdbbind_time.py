@@ -39,7 +39,8 @@ def get_pdbbind_time_filepath(download_if_not_exist=True):
     cache_path = _get_pdbbind_time_filepath(file_name)
     if not os.path.exists(cache_path):
         if download_if_not_exist:
-            is_successful = download_pdbbind_time(url, save_filepath=cache_path)
+            is_successful = download_pdbbind_time(url,
+                                                  save_filepath=cache_path)
             if not is_successful:
                 logger = getLogger(__name__)
                 logger.warning('Download failed.')
