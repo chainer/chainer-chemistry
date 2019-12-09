@@ -222,6 +222,8 @@ def main():
     optimizer.setup(model)
 
     # Save model-related output to this directory.
+    if not os.path.exists(args.out):
+        os.makedirs(args.out)
     save_json(os.path.join(args.out, 'args.json'), vars(args))
     model_dir = os.path.join(args.out, os.path.basename(cache_dir))
     if not os.path.exists(model_dir):
