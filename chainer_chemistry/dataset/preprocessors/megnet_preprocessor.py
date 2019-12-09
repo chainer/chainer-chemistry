@@ -222,9 +222,9 @@ def construct_ring_feature_vec(is_in_ring, i, j):
     return ring_feature_vec
 
 
-def construct_expanded_distance_vec(coordinate_matrix, converter, i, j):
+def construct_expanded_distance_vec(distance_matrix_3d, converter, i, j):
     # calculate the bond length
-    distance = numpy.linalg.norm(coordinate_matrix[i] - coordinate_matrix[j])
+    distance = distance_matrix_3d[i, j]
     # convert from the bond length to vector
     expanded_distance_vec = converter.expand(distance)
     return expanded_distance_vec
@@ -250,11 +250,12 @@ def construct_pair_feature(mol, use_all_feature):
 
     # prepare the data for extracting the pair feature
     bonds = mol.GetBonds()
+    # (n_nodes, n_nodes): distance in terms of the graph bond.
     graph_distance_matrix = Chem.GetDistanceMatrix(mol)
     is_in_ring = get_is_in_ring(mol)
     confid = AllChem.EmbedMolecule(mol)
     try:
-        coordinate_matrix = rdmolops.Get3DDistanceMatrix(
+        distance_matrix_3d = rdmolops.Get3DDistanceMatrix(
             mol, confId=confid)
     except ValueError as e:
         logger = getLogger(__name__)
@@ -280,14 +281,14 @@ def construct_pair_feature(mol, use_all_feature):
         if use_all_feature:
             expanded_distance_feature = \
                 construct_expanded_distance_vec(
-                    coordinate_matrix, converter, start_node, end_node)
+                    distance_matrix_3d, converter, start_node, end_node)
             feature.append(numpy.hstack((bond_feature, ring_feature,
                                          distance_feature,
                                          expanded_distance_feature)))
         else:
             expanded_distance_feature = \
                 construct_expanded_distance_vec(
-                    coordinate_matrix, converter, start_node, end_node)
+                    distance_matrix_3d, converter, start_node, end_node)
             feature.append(expanded_distance_feature)
 
     bond_idx = numpy.array(bond_idx).T
