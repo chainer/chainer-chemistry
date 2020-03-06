@@ -1,7 +1,3 @@
-# chainer-chemistry-v6
-works based on chainer chemistry (v0.6 and newer)
-
-
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
 [![PyPI](https://img.shields.io/pypi/v/chainer-chemistry.svg)](https://pypi.python.org/pypi/chainer-chemistry)
