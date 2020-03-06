@@ -55,7 +55,7 @@ class ScatterGeneralReadout(chainer.Link):
         self.mode = mode
         self.activation = activation
 
-    def __call__(self, h, batch, axis=1, **kwargs):
+    def __call__(self, h, batch, **kwargs):
         if self.activation is not None:
             h = self.activation(h)
         else:

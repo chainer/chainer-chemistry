@@ -14,6 +14,7 @@ from chainer_chemistry.models import weavenet  # NOQA
 from chainer_chemistry.models.ggnn import GGNN  # NOQA
 from chainer_chemistry.models.ggnn import SparseGGNN  # NOQA
 from chainer_chemistry.models.gin import GIN  # NOQA
+from chainer_chemistry.models.gnn_film import GNNFiLM  # NOQA
 from chainer_chemistry.models.mlp import MLP  # NOQA
 from chainer_chemistry.models.mpnn import MPNN  # NOQA
 from chainer_chemistry.models.nfp import NFP  # NOQA
@@ -22,7 +23,6 @@ from chainer_chemistry.models.relgcn import RelGCN  # NOQA
 from chainer_chemistry.models.rsgcn import RSGCN  # NOQA
 from chainer_chemistry.models.schnet import SchNet  # NOQA
 from chainer_chemistry.models.weavenet import WeaveNet  # NOQA
-from chainer_chemistry.models.gnn_film import GNNFiLM  # NOQA
 
 from chainer_chemistry.models.gwm.gwm_net import GGNN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA

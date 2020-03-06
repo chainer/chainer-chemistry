@@ -2,7 +2,6 @@
 works based on chainer chemistry (v0.6 and newer)
 
 
-=======
 # Chainer Chemistry: A Library for Deep Learning in Biology and Chemistry
 
 [![PyPI](https://img.shields.io/pypi/v/chainer-chemistry.svg)](https://pypi.python.org/pypi/chainer-chemistry)
@@ -30,12 +29,13 @@ Chainer Chemistry depends on the following packages:
  - [`pandas`](https://pandas.pydata.org)
  - [`scikit-learn`](http://scikit-learn.org/stable/)
  - [`tqdm`](https://pypi.python.org/pypi/tqdm)
+ - [`h5py`](https://pypi.python.org/pypi/h5py)
 
 These are automatically added to the system when installing the library via the
 `pip` command (see _Installation_). However, the following  needs to be
 installed manually:
 
- - [`rdkit (release 2017.09.3.0)`](https://github.com/rdkit/rdkit)
+ - [`rdkit (release 2019.03.2.0)`](https://github.com/rdkit/rdkit)
 
 Please refer to the RDKit [documentation](http://www.rdkit.org/docs/Install.html)
 for more information regarding the installation steps.
@@ -49,8 +49,8 @@ currently supported:
 | v0.4.0              | v3.0 ~ v4.0 *1  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.5.0              | v3.0 ~ v5.0 *2  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
 | v0.6.0              | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| master branch       | v6.0 ~      *3  | 2017.09.3.0    | 2.7, 3.5, 3.6    |
-| v0.7.0 release plan | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
+| v0.7.0              | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7      *4 |
+| master branch    *5 | v7.0 ~          | 2019.03.2.0    | 3.6, 3.7         |
 
 
 [Footnote]
@@ -61,10 +61,13 @@ which is introduced after chainer v3. See [this issue](https://github.com/pfnet-
 *2: Saliency modules only work after chainer v5.
 
 *3: Chainer v6 is released and [ChainerX](https://chainer.org/announcement/2018/12/03/chainerx.html) is newly introduced.
-    In order to support this new feature & API, we are going to break backward compatibility for chainer chemistry v0.6.0 release.
+    In order to support this new feature & API, we broke backward compatibility for chainer chemistry v0.6.0 release.
     See [ChainerX Documentation](https://chainer.org/announcement/2018/12/03/chainerx.html) for details.
 
-*4: We are going to drop python 2.x support in the near future.
+*4: python 2.x support is dropped, following the same policy with `chainer` and `rdkit`.
+
+*5: As [announced in chainer blog](https://chainer.org/announcement/2019/12/05/released-v7.html),
+    further development will be limited to only serious bug-fixes and maintenance.
 
 ## Installation
 
@@ -117,6 +120,8 @@ The following graph convolutional neural networks are currently supported:
 - MPNN: Message Passing Neural Networks [3]
 - Set2Set [19]
 - GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation [20]
+- MEGNet: MatErials Graph Network [24]
+- CGCNN: Crystal Graph Convolutional Neural Networks [25]
 
 We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models for:
 - NFP ('nfp_gwm')
@@ -147,6 +152,8 @@ pull request and add the name of your project to this list:
 
  - BayesGrad: Explaining Predictions of Graph Convolutional Networks ([paper](https://arxiv.org/abs/1807.01985), [code](https://github.com/pfnet-research/bayesgrad))
  - Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks ([paper](https://arxiv.org/abs/1902.01020), [code](https://github.com/k-ishiguro/chainer-chemistry/tree/gwm_for_CC))
+ - GraphNVP: An Invertible Flow Model for Generating Molecular Graphs ([paper](https://arxiv.org/abs/1905.11600), [code](https://github.com/pfnet-research/graph-nvp))
+ - Graph Residual Flow for Molecular Graph Generation ([paper](https://arxiv.org/abs/1909.13521))
 
 ## Useful Links
 
@@ -214,7 +221,6 @@ papers. Use the library at your own risk.
 [18] K. Ishiguro, S. Maeda, and M. Koyama, ``Graph Warp Module: an Auxiliary Module for Boosting the Power of Graph Neural Networks'', arXiv:1902.01020 [cs.LG], 2019.
 
 [19] Oriol Vinyals, Samy Bengio, Manjunath Kudlur. Order Matters: Sequence to sequence for sets. *arXiv preprint arXiv:1511.06391*, 2015.
-. 
 
 [20] Marc Brockschmidt, ``GNN-FiLM: Graph Neural Networks with Feature-wise Linear Modulation'', arXiv:1906.12192 [cs.ML], 2019.
 
@@ -223,4 +229,8 @@ papers. Use the library at your own risk.
 [22] C. Lee Giles and Kurt D. Bollacker and Steve Lawrence, CiteSeer: An Automatic Citation Indexing System. *Proceedings of the Third ACM Conference on Digital Libraries*, 1998.
 
 [23] William L. Hamilton and Zhitao Ying and Jure Leskovec, Inductive Representation Learning on Large Graphs. *Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, 4-9 December 2017*
->>>>>>> upstream/master
+
+[24] Chi Chen, Weike Ye, Yunxing Zuo, Chen Zheng, and Shyue Ping Ong. Graph networks as a universal machine learning framework for molecules and crystals. *Chemistry of Materials*, 31(9):3564–3572, 2019.
+
+[25] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
+

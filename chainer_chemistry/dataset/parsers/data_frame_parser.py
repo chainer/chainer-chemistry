@@ -7,7 +7,6 @@ from tqdm import tqdm
 from chainer_chemistry.dataset.parsers.base_parser import BaseFileParser
 from chainer_chemistry.dataset.preprocessors.common import MolFeatureExtractionError  # NOQA
 from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
-from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 
 import traceback
 
@@ -110,7 +109,7 @@ class DataFrameParser(BaseFileParser):
 
                     if return_smiles:
                         smiles_list.append(canonical_smiles)
-                except MolFeatureExtractionError as e:
+                except MolFeatureExtractionError as e:  # NOQA
                     # This is expected error that extracting feature failed,
                     # skip this molecule.
                     fail_count += 1

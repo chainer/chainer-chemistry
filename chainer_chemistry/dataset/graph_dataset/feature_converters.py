@@ -1,4 +1,5 @@
 import numpy
+
 from chainer.dataset.convert import _concat_arrays
 
 

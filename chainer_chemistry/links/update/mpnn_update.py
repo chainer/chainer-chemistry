@@ -26,7 +26,7 @@ class MPNNUpdate(chainer.Chain):
         if out_channels is None:
             out_channels = hidden_channels
         if in_channels is None:
-            # Current `EdgeNet` hidden_channels must be same with input `h` dim.
+            # Current `EdgeNet` hidden_channels must be same with input `h` dim
             in_channels = out_channels
         super(MPNNUpdate, self).__init__()
         with self.init_scope():

@@ -169,9 +169,10 @@ class BaseFeatureIndexer(BaseIndexer):
                 if isinstance(data_index[0], (bool, numpy.bool, numpy.bool_)):
                     # Access by bool flag list
                     if len(data_index) != self.dataset_length:
-                        raise ValueError('Feature index wrong length {} instead of'
-                                         ' {}'.format(len(data_index),
-                                                      self.dataset_length))
+                        raise ValueError(
+                            'Feature index wrong length {} instead of'
+                            ' {}'.format(len(data_index),
+                                         self.dataset_length))
                     data_index = numpy.argwhere(data_index).ravel()
 
                 res = [self.extract_feature(i, j) for i in data_index]

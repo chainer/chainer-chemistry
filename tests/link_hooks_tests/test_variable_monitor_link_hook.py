@@ -2,7 +2,7 @@ import numpy
 import pytest
 
 import chainer
-from chainer import Variable, cuda
+from chainer import Variable, cuda  # NOQA
 from chainer.links import Linear
 
 from chainer_chemistry.link_hooks import is_link_hooks_available
@@ -86,7 +86,7 @@ def test_variable_monitor_link_hook_assert_raises(model):
 
     with pytest.raises(ValueError):
         # check timing args
-        pre_hook = VariableMonitorLinkHook(target_link=model.l1, timing='hoge')
+        pre_hook = VariableMonitorLinkHook(target_link=model.l1, timing='hoge')  # NOQA
 
     hook = VariableMonitorLinkHook(target_link=model.l1)
 

@@ -1,34 +1,33 @@
 import argparse
+from distutils.util import strtobool
 import numpy
+
 from chainer_chemistry.datasets.citation_network.citation import citation_to_networkx  # NOQA
-from chainer_chemistry.datasets.reddit.reddit import reddit_to_networkx
+from chainer_chemistry.datasets.citation_network.citeseer import \
+    get_citeseer_dirpath
+from chainer_chemistry.datasets.citation_network.cora import get_cora_dirpath
+from chainer_chemistry.datasets.reddit.reddit import reddit_to_networkx, \
+    get_reddit_dirpath
 from chainer_chemistry.dataset.networkx_preprocessors.base_networkx import BasePaddingNetworkxPreprocessor, BaseSparseNetworkxPreprocessor  # NOQA
 from chainer_chemistry.dataset.graph_dataset.base_graph_data import PaddingGraphData  # NOQA
 from chainer_chemistry.utils.train_utils import run_node_classification_train
 from chainer_chemistry.models.prediction.node_classifier import NodeClassifier
 from chainer_chemistry.models.gin import GINSparse, GIN
 from chainer_chemistry.dataset.networkx_preprocessors.reddit_coo import get_reddit_coo_data  # NOQA
-from examples.network_graph.padding_model_wrapper import PaddingModelWrapper  # NOQA
+
+from padding_model_wrapper import PaddingModelWrapper  # NOQA
 
 
 def get_cora():
-    return citation_to_networkx(
-        "examples/network_graph/cora/",
-        "cora"
-    )
+    return citation_to_networkx(get_cora_dirpath(), "cora")
 
 
 def get_citeseer():
-    return citation_to_networkx(
-        "examples/network_graph/citeseer/",
-        "citeseer"
-    )
+    return citation_to_networkx(get_citeseer_dirpath(), "citeseer")
 
 
 def get_reddit():
-    return reddit_to_networkx(
-        "examples/network_graph/reddit/"
-    )
+    return reddit_to_networkx(get_reddit_dirpath())
 
 
 dataset_dict = {
@@ -77,7 +76,8 @@ def parse_arguments():
                         help='ratio of training data w.r.t the dataset')
     parser.add_argument('--dropout', type=float, default=0.0,
                         help='dropout ratio')
-    parser.add_argument('--coo', action='store_true', help='use Coo matrix')
+    parser.add_argument('--coo', type=strtobool, default='false',
+                        help='use Coo matrix')
     return parser.parse_args()
 
 
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     args = parse_arguments()
     if args.dataset == 'reddit' and args.coo:
         # because it takes time to load reddit coo data via networkx
-        data = get_reddit_coo_data("examples/network_graph/reddit/")
+        data = get_reddit_coo_data(get_reddit_dirpath())
     else:
         networkx_graph = dataset_dict[args.dataset]()
         preprocessor = preprocessor_dict[args.method](use_coo=args.coo)

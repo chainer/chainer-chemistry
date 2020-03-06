@@ -1,14 +1,11 @@
 import numpy
 
-from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
-    PaddingGraphData, SparseGraphData
-from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
-    PaddingGraphDataset, SparseGraphDataset
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import SparseGraphData  # NOQA
+from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import SparseGraphDataset  # NOQA
 from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array, construct_discrete_edge_matrix
-from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
+    import construct_atomic_number_array, construct_discrete_edge_matrix  # NOQA
+from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms  # NOQA
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
 class GGNNPreprocessor(MolPreprocessor):

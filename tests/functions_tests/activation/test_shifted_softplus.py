@@ -1,12 +1,9 @@
 import numpy
 import pytest
 
-import chainer
 from chainer import cuda
-from chainer import gradient_check
 
-import chainer_chemistry
-from chainer_chemistry.functions.activation.shifted_softplus import shifted_softplus
+from chainer_chemistry.functions.activation.shifted_softplus import shifted_softplus  # NOQA
 
 
 def test_forward_cpu():

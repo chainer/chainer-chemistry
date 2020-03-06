@@ -1,5 +1,5 @@
 import chainer
-from chainer import Variable, functions
+from chainer import Variable, functions  # NOQA
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID
@@ -49,6 +49,7 @@ class NFP(chainer.Chain):
 
     def __call__(self, atom_array, adj, is_real_node=None):
         """Forward propagation
+
         Args:
             atom_array (numpy.ndarray): minibatch of molecular which is
                 represented with atom IDs (representing C, O, S, ...)
@@ -60,6 +61,7 @@ class NFP(chainer.Chain):
             is_real_node (numpy.ndarray): 2-dim array (minibatch, num_nodes).
                 1 for real node, 0 for virtual node.
                 If `None`, all node is considered as real node.
+
         Returns:
             ~chainer.Variable: minibatch of fingerprint
         """

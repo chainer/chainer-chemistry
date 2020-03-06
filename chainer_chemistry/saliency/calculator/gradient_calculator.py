@@ -1,4 +1,4 @@
-import chainer
+import chainer  # NOQA
 from chainer import functions
 from chainer_chemistry.saliency.calculator.base_calculator import BaseCalculator  # NOQA
 

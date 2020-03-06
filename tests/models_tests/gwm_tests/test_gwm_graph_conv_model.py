@@ -3,19 +3,16 @@ import numpy
 import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.models.gwm.gwm_graph_conv_model import GWMGraphConvModel
+from chainer_chemistry.links.readout.general_readout import GeneralReadout
+from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
+from chainer_chemistry.links.readout.nfp_readout import NFPReadout
+from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
 from chainer_chemistry.links.update.ggnn_update import GGNNUpdate
 from chainer_chemistry.links.update.gin_update import GINUpdate
-from chainer_chemistry.links.update.mpnn_update import MPNNUpdate
 from chainer_chemistry.links.update.relgat_update import RelGATUpdate
 from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate
 from chainer_chemistry.links.update.rsgcn_update import RSGCNUpdate
-from chainer_chemistry.links.update.schnet_update import SchNetUpdate
-from chainer_chemistry.links.readout.general_readout import GeneralReadout
-from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
-from chainer_chemistry.links.readout.mpnn_readout import MPNNReadout
-from chainer_chemistry.links.readout.nfp_readout import NFPReadout
-from chainer_chemistry.links.readout.schnet_readout import SchNetReadout
+from chainer_chemistry.models.gwm.gwm_graph_conv_model import GWMGraphConvModel
 
 
 atom_size = 5
@@ -25,9 +22,9 @@ out_dim = 4
 batch_size = 2
 n_edge_types = 3
 
-# TODO (nakago): SchNetUpdate need `in_channels` kwargs, not supported.
+# TODO(nakago): SchNetUpdate need `in_channels` kwargs, not supported.
 updates_2dim = [GINUpdate, RSGCNUpdate]
-# TODO (nakago): Support MPNNUpdate.
+# TODO(nakago): Support MPNNUpdate.
 updates_3dim = [GGNNUpdate, RelGATUpdate, RelGCNUpdate]
 updates = updates_2dim + updates_3dim
 
@@ -229,7 +226,7 @@ def test_model_forward_general_weight_tying(update, readout, gwm):
                                   with_gwm=gwm)
         atom_array = data[0]
         adj = data[1]
-        super_node = data[2]
+        super_node = data[2]  # NOQA
         y_actual = model(atom_array, adj)
         assert y_actual.shape == (batch_size, out_dim)
 

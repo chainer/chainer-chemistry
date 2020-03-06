@@ -43,7 +43,7 @@ def test_shape_transformer_2d_error():
     x = numpy.arange(6).reshape(2, 3)
     with pytest.raises(AttributeError):
         # call `inverse_transform` before `transform`
-        xt = st.inverse_transform(x)
+        xt = st.inverse_transform(x)  # NOQA
 
 
 if __name__ == '__main__':

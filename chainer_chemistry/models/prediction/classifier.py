@@ -115,6 +115,7 @@ class Classifier(BaseForwardModel):
 
     def _convert_to_scalar(self, value):
         """Converts an input value to a scalar if its type is a Variable,
+
         numpy or cupy array, otherwise it returns the value as it is.
         """
         if isinstance(value, Variable):

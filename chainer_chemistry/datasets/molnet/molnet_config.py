@@ -138,12 +138,11 @@ molnet_default_config = {
                   'NK1', 'OX1', 'OX2', 'PGP', 'PPB', 'RAT_F', 'TDI', 'THROMBIN'
                   ],
         "test_url": molnet_base + 'KAGGLE_test2_'
-                        'disguised_combined_full.csv.gz',
+                                  'disguised_combined_full.csv.gz',
         "train_url": molnet_base + 'KAGGLE_training_'
-                        'disguised_combined_full.csv.gz',
-
+                                   'disguised_combined_full.csv.gz',
         "valid_url": molnet_base + 'KAGGLE_test1_'
-                        'disguised_combined_full.csv.gz',
+                                   'disguised_combined_full.csv.gz',
     },
 
     "lipo": {

@@ -2,9 +2,10 @@ import numpy
 import pytest
 from rdkit import Chem
 
+from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.dataset.preprocessors import common
 from chainer_chemistry.utils.extend import extend_adj
-from chainer_chemistry.config import MAX_ATOMIC_NUM
+
 
 @pytest.fixture
 def sample_molecule():
@@ -88,7 +89,7 @@ class TestGetAdjMatrix(object):
 
     def test_normal_truncated(self, sample_molecule_2):
         with pytest.raises(ValueError):
-            adj = common.construct_adj_matrix(sample_molecule_2, 6)
+            adj = common.construct_adj_matrix(sample_molecule_2, 6)  # NOQA
 
 
 class TestConstructDiscreteEdgeMatrix(object):
@@ -178,8 +179,8 @@ def test_construct_super_node_feature_adj_ndim3(sample_molecule):
     assert s[3] == 1
     assert s[4] == 0
     assert s[5] == 0
-    assert pytest.approx(s[6], 1 * 2 / adj.sum()) # symmetric
-    assert pytest.approx(s[7], 2 * 2 / adj.sum()) # symmetric
+    assert pytest.approx(s[6], 1 * 2 / adj.sum())  # symmetric
+    assert pytest.approx(s[7], 2 * 2 / adj.sum())  # symmetric
     assert s[8] == 0
     assert s[9] == 0
     assert s[9 + 6] == 1  # C

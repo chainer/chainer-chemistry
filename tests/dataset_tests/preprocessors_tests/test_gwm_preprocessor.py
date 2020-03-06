@@ -2,7 +2,7 @@ import pytest
 from rdkit import Chem
 
 from chainer_chemistry.dataset.preprocessors.gwm_preprocessor import (
-    NFPGWMPreprocessor, GGNNGWMPreprocessor, GINGWMPreprocessor, \
+    NFPGWMPreprocessor, GGNNGWMPreprocessor, GINGWMPreprocessor,
     RSGCNGWMPreprocessor)  # NOQA
 
 

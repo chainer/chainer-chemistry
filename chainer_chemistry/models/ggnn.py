@@ -1,5 +1,5 @@
 import chainer
-from chainer import functions, cuda
+from chainer import functions, cuda  # NOQA
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links import EmbedAtomID

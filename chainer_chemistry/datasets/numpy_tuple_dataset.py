@@ -3,8 +3,8 @@ import six
 
 import numpy
 
-from chainer_chemistry.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
 from chainer_chemistry.dataset.converters import concat_mols
+from chainer_chemistry.dataset.indexers.numpy_tuple_dataset_feature_indexer import NumpyTupleDatasetFeatureIndexer  # NOQA
 
 
 class NumpyTupleDataset(object):

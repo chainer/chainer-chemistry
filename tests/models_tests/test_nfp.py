@@ -5,7 +5,7 @@ import pytest
 
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.models.nfp import NFP
-from chainer_chemistry.utils.extend import extend_adj, extend_node
+from chainer_chemistry.utils.extend import extend_adj, extend_node  # NOQA
 from chainer_chemistry.utils.permutation import permute_adj
 from chainer_chemistry.utils.permutation import permute_node
 

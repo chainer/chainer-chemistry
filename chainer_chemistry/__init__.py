@@ -9,7 +9,7 @@ except ImportError as e:
             'A module chainer_chemistry.datasets was not imported, '
             'probably because RDKit is not installed. '
             'To install RDKit, please follow instruction in '
-            'https://github.com/pfnet-research/chainer-chemistry#installation.',
+            'https://github.com/pfnet-research/chainer-chemistry#installation.',  # NOQA
             UserWarning)
     else:
         raise(e)

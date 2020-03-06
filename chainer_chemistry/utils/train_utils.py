@@ -1,7 +1,7 @@
 import chainer
-from chainer import optimizers, training, Optimizer
+from chainer import optimizers, training, Optimizer  # NOQA
 from chainer._backend import Device
-from chainer.dataset import convert, Iterator
+from chainer.dataset import convert, Iterator  # NOQA
 from chainer.iterators import SerialIterator
 from chainer.training import extensions
 
@@ -71,7 +71,7 @@ def run_train(model, train, valid=None,
         trainer.extend(extensions.LogReport())
         trainer.extend(AutoPrintReport())
         trainer.extend(extensions.ProgressBar(update_interval=10))
-        # TODO: consider to include snapshot as default extension.
+        # TODO(nakago): consider to include snapshot as default extension.
         # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
 
     if extensions_list is not None:
@@ -120,7 +120,7 @@ def run_node_classification_train(model, data,
         trainer.extend(extensions.LogReport())
         trainer.extend(AutoPrintReport())
         trainer.extend(extensions.ProgressBar(update_interval=10))
-        # TODO: consider to include snapshot as default extension.
+        # TODO(nakago): consider to include snapshot as default extension.
         # trainer.extend(extensions.snapshot(), trigger=(frequency, 'epoch'))
 
     if extensions_list is not None:

@@ -61,7 +61,7 @@ def test_backward_cpu(update, data):
     atom_data, adj_data, y_grad = data
     # gradient_check.check_backward(
     #     update, (atom_data, adj_data), y_grad, atol=1e-3, rtol=1e-3)
-    params = tuple(update.params())
+    params = tuple(update.params())  # NOQA
     gradient_check.check_backward(update, (atom_data, adj_data), y_grad,
                                   no_grads=[False, True],
                                   atol=1e-1, rtol=1e-1)

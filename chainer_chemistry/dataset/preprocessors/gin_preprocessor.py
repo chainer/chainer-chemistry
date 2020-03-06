@@ -1,13 +1,11 @@
 import numpy
-from chainer_chemistry.dataset.graph_dataset.base_graph_data import \
-    PaddingGraphData, SparseGraphData
-from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import \
-    PaddingGraphDataset, SparseGraphDataset
+
+from chainer_chemistry.dataset.graph_dataset.base_graph_data import SparseGraphData  # NOQA
+from chainer_chemistry.dataset.graph_dataset.base_graph_dataset import SparseGraphDataset  # NOQA
 from chainer_chemistry.dataset.preprocessors.common \
-    import construct_atomic_number_array, construct_adj_matrix
+    import construct_atomic_number_array, construct_adj_matrix  # NOQA
 from chainer_chemistry.dataset.preprocessors.common import type_check_num_atoms
-from chainer_chemistry.dataset.preprocessors.mol_preprocessor \
-    import MolPreprocessor
+from chainer_chemistry.dataset.preprocessors.mol_preprocessor import MolPreprocessor  # NOQA
 
 
 class GINPreprocessor(MolPreprocessor):
@@ -16,19 +14,19 @@ class GINPreprocessor(MolPreprocessor):
     """
 
     def __init__(self, max_atoms=-1, out_size=-1, add_Hs=False):
-        """
-        initialize the GTN Preprocessor.
+        """initialize the GIN Preprocessor.
 
-        :param max_atoms: integer, Max number of atoms for each molecule,
-            if the number of atoms is more than this value,
-            this data is simply ignored.
-            Setting negative value indicates no limit for max atoms.
-        :param out_size: integer, It specifies the size of array returned by
-            `get_input_features`.
-            If the number of atoms in the molecule is less than this value,
-            the returned arrays is padded to have fixed size.
-            Setting negative value indicates do not pad returned array.
-        :param add_Hs: boolean. if true, add Hydrogens explicitly.
+        Args:
+            max_atoms (int): Max number of atoms for each molecule,
+                if the number of atoms is more than this value,
+                this data is simply ignored.
+                Setting negative value indicates no limit for max atoms.
+            out_size (int): It specifies the size of array returned by
+                `get_input_features`.
+                If the number of atoms in the molecule is less than this value,
+                the returned arrays is padded to have fixed size.
+                Setting negative value indicates do not pad returned array.
+            add_Hs (bool): If true, add Hydrogens explicitly.
         """
         super(GINPreprocessor, self).__init__(add_Hs=add_Hs)
         if max_atoms >= 0 and out_size >= 0 and max_atoms > out_size:

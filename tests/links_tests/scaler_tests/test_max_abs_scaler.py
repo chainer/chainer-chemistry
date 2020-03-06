@@ -2,7 +2,7 @@ import os
 
 import numpy
 import pytest
-from chainer import serializers, Variable, cuda
+from chainer import serializers, Variable, cuda  # NOQA
 
 from chainer_chemistry.links.scaler.max_abs_scaler import MaxAbsScaler
 

@@ -1,23 +1,25 @@
 import chainer
-from chainer import functions, cuda
+from chainer import functions, cuda  # NOQA
 
 from chainer.links import Linear
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.links.readout.scatter_ggnn_readout import ScatterGGNNReadout  # NOQA
-from chainer_chemistry.links import EmbedAtomID, GraphLinear
+from chainer_chemistry.links import EmbedAtomID, GraphLinear  # NOQA
 from chainer_chemistry.links.readout.ggnn_readout import GGNNReadout
-from chainer_chemistry.links.update.relgcn_update \
-    import RelGCNUpdate, RelGCNSparseUpdate
+from chainer_chemistry.links.update.relgcn_update import RelGCNUpdate, RelGCNSparseUpdate  # NOQA
 
 
 def rescale_adj(adj):
     """Normalize adjacency matrix
+
     It ensures that activations are on a similar scale irrespective of
     the number of neighbors
+
     Args:
         adj (:class:`chainer.Variable`, or :class:`numpy.ndarray` \
         or :class:`cupy.ndarray`):
             adjacency matrix
+
     Returns:
         :class:`chainer.Variable`: normalized adjacency matrix
     """
@@ -83,7 +85,8 @@ class RelGCN(chainer.Chain):
         self.scale_adj = scale_adj
 
     def __call__(self, x, adj):
-        """
+        """main calculation
+
         Args:
             x: (batchsize, num_nodes, in_channels)
             adj: (batchsize, num_edge_type, num_nodes, num_nodes)
@@ -156,7 +159,8 @@ class RelGCNSparse(chainer.Chain):
         self.scale_adj = scale_adj
 
     def __call__(self, sparse_batch):
-        """
+        """main calculation
+
         Args:
             x: (batchsize, num_nodes, in_channels)
             adj: (batchsize, num_edge_type, num_nodes, num_nodes)
