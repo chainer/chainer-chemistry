@@ -29,6 +29,20 @@ from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import NFP_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import RSGCN_GWM  # NOQA
 
+from chainer_chemistry.models.cwle.cwle_net import GGNN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RelGAT_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RelGCN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import GIN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import NFP_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RSGCN_CWLE  # NOQA
+
+from chainer_chemistry.models.gwle.gwle_net import GGNN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RelGAT_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RelGCN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import GIN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import NFP_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RSGCN_GWLE  # NOQA
+
 from chainer_chemistry.models.prediction.base import BaseForwardModel  # NOQA
 from chainer_chemistry.models.prediction.classifier import Classifier  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA

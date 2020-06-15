@@ -42,6 +42,7 @@ def main():
                                                               "And each direcotyr should contain {dataset}_{method}_all/eval_result.json. ")
     parser.add_argument('--methods', nargs='+', required=True, help="enumerate methods")
     parser.add_argument('--dataset', required=True)
+    parser.add_argument('--tasktype', type=str, required=True)
     parser.add_argument('--runs', type=int, default=10)
     parser.add_argument('--out_prefix', default="result")
     args = parser.parse_args()
@@ -58,11 +59,11 @@ def main():
     #
 
     dataset_name = args.dataset
-    task_type = molnet_default_config[dataset_name]['task_type']
+    task_type = args.tasktype
     print('task type=\'' + str(task_type) + "\'")
 
     if task_type=='regression':
-        metrics = ['main/MAE', 'main/RMSE']
+        metrics = ['main/MAE', 'main/MSE']
     elif task_type=='classification':
         metrics = ['test/main/roc_auc']
 

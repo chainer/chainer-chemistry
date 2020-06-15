@@ -13,9 +13,10 @@ from chainer import iterators
 from chainer import optimizers
 from chainer import training
 
+import chainer.functions as F
+
 from chainer.training import extensions as E
 
-from chainer_chemistry.dataset.converters import converter_method_dict
 from chainer_chemistry.config import MAX_ATOMIC_NUM
 from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict, wle
@@ -28,9 +29,21 @@ from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
 from chainer_chemistry.training.extensions import BatchEvaluator, ROCAUCEvaluator  # NOQA
 from chainer_chemistry.training.extensions.auto_print_report import AutoPrintReport  # NOQA
-from chainer_chemistry.utils import save_json
 from chainer_chemistry.models.cwle.cwle_graph_conv_model import MAX_WLE_NUM
 
+from chainer_chemistry.functions import mean_absolute_error
+from chainer_chemistry.functions import mean_squared_error
+
+def mae(x, t):
+    return mean_absolute_error(x, t, ignore_nan=True)
+
+
+def mse(x, t):
+    return mean_squared_error(x, t, ignore_nan=True)
+
+
+def rmse(x, t):
+    return F.sqrt(mse(x, t))
 
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
@@ -40,10 +53,11 @@ def parse_arguments():
                    'nfp_wle', 'ggnn_wle',  'relgat_wle', 'relgcn_wle', 'rsgcn_wle', 'gin_wle',
                    'nfp_cwle', 'ggnn_cwle',  'relgat_cwle', 'relgcn_cwle', 'rsgcn_cwle', 'gin_cwle',
                    'nfp_gwle', 'ggnn_gwle',  'relgat_gwle', 'relgcn_gwle', 'rsgcn_gwle', 'gin_gwle']
-    dataset_names = list(molnet_default_config.keys())
-    scale_list = ['standardize', 'none']
 
-    parser = argparse.ArgumentParser(description='molnet example')
+    scale_list = ['standardize', 'none']
+    task_list = ["classification", "regression"]
+
+    parser = argparse.ArgumentParser(description='load generic dataset (pickle of tuple(NumpyTupleDataset X 3)')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
     parser.add_argument('--label', '-l', type=str, default='',
@@ -64,21 +78,22 @@ def parse_arguments():
                         help='number of epochs')
     parser.add_argument('--unit-num', '-u', type=int, default=16,
                         help='number of units in one layer of the model')
-    parser.add_argument('--dataset', '-d', type=str, choices=dataset_names,
-                        default='bbbp',
+    parser.add_argument('--dataset', '-d', type=str, required=True,
                         help='name of the dataset that training is run on')
+    parser.add_argument('--tasktype', '-t', type=str, required=True, choices=task_list,
+                        help='choose the task')
+
     parser.add_argument('--protocol', type=int, default=2,
                         help='pickle protocol version')
-    parser.add_argument('--num-data', type=int, default=-1,
-                        help='amount of data to be parsed; -1 indicates '
-                        'parsing all data.')
+    #parser.add_argument('--num-data', type=int, default=-1,
+    #                    help='amount of data to be parsed; -1 indicates '
+    #                    'parsing all data.')
     parser.add_argument('--scale', type=str, choices=scale_list,
-                        help='label scaling method', default='standardize')
+                        help='label scaling method', default='none')
     parser.add_argument('--adam-alpha', type=float, help='alpha of adam', default=0.001)
 
-    # WLE options
-    parser.add_argument('--cutoff-wle', type=int, default=0, help="set more than zero to cut-off WL expanded labels")
-    parser.add_argument('--hop-num', '-k', type=int, default=1, help="The number of iterations of WLs")
+    #parser.add_argument('--apply-nle', action='store_true', help="Enable to apply Neighbor Label Expansion")
+    #parser.add_argument('--cutoff-nle', type=int, default=0, help="set more than zero to cut-off Neighbor Label Expansion")
 
     return parser.parse_args()
 
@@ -96,30 +111,28 @@ def dataset_part_filename(dataset_part, num_data):
     return '{}_data.npz'.format(dataset_part)
 
 
-def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, apply_wle_flag=False, cutoff_wle=0, apply_cwle_flag=False, apply_gwle_flag=False, n_hop=1):
+def download_dataset(dataset_name, labels, method, cache_dir, apply_wle_flag=False, cutoff_nle=0, apply_cwle_flag=False, apply_gwle_flag=False):
     """Downloads the train/valid/test parts of a dataset and stores them in the
     cache directory.
     Args:
-        dataset_name: Dataset to be downloaded.
-        num_data: Amount of data samples to be parsed from the dataset.
+        dataset_name:
         labels: Target labels for regression.
         method: Method name. See `parse_arguments`.
         cache_dir: Directory to store the dataset to.
-        apply_wle_flag: boolean, set True if you apply the naive WL embeddding
-        cutoff_wle: int set more than zero to cut off WEEs
-        apply_cwle_flag: boolean, set True if you apply Concatenating WLE (CWLE)
-        apply_gwle_flag: boolean, set True if you apply Gated-sum WLE (GWLE)
+        apply_wle_flag: boolean, set True if you apply neighbor label expansion (NLE)
+        cutoff_nle: int set more than zero to cut off NLEs
+        apply_cwle_flag: boolean, set True if you apply Combined neighbor label expansion (CNLE)
     """
 
+    #
+    # load the pickled dataaset
+    #
     print('Downloading {}...'.format(dataset_name))
-    preprocessor = preprocess_method_dict[method]()
 
-    # Select the first `num_data` samples from the dataset.
-    target_index = numpy.arange(num_data) if num_data >= 0 else None
-    dataset_parts = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
-                                                labels=labels,
-                                                target_index=target_index)
-    dataset_parts = dataset_parts['dataset']
+    # we already have the NumpyTupleDataset. so just pickle.load.
+    fin = open(dataset_name + ".pkl", "rb")
+    dataset_parts = pickle.load(fin)
+    fin.close()
 
     # Cache the downloaded dataset.
     if not os.path.exists(cache_dir):
@@ -127,7 +140,8 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
 
     # apply Neighboring Label Expansion
     if apply_wle_flag:
-        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_wle_for_datasets(dataset_parts, cutoff_wle, n_hop)
+
+        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_wle_for_datasets(dataset_parts, cutoff_nle)
         dataset_parts = dataset_parts_expand
         num_expanded_symbols = len(labels_expanded)
         print("WLE Expanded Labels Applied to datasets: vocab=", num_expanded_symbols)
@@ -147,7 +161,10 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
             pickle.dump( (labels_expanded, labels_frequency), fout)
 
     elif apply_cwle_flag:
-        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_cwle_for_datasets(dataset_parts, n_hop)
+        # ToDo; extend eac hdataset with (atom array, nle array, adjacency tensor).
+
+        # print("type(dataset_parts)="  + str(dataset_parts)) # should be list
+        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_cwle_for_datasets(dataset_parts, 1)
         dataset_parts = dataset_parts_expand
         num_expanded_symbols = len(labels_expanded)
         print("Concatenating WLE Expanded Labels Applied to datasets: vocab=", num_expanded_symbols)
@@ -167,7 +184,10 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
             pickle.dump( (labels_expanded, labels_frequency), fout)
 
     elif apply_gwle_flag:
-        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_cwle_for_datasets(dataset_parts, n_hop)
+        # ToDo; extend eac hdataset with (atom array, nle array, adjacency tensor).
+
+        # print("type(dataset_parts)="  + str(dataset_parts)) # should be list
+        dataset_parts_expand, labels_expanded, labels_frequency = wle.apply_cwle_for_datasets(dataset_parts, 1)
         dataset_parts = dataset_parts_expand
         num_expanded_symbols = len(labels_expanded)
         print("Gated-sum WLE Expanded Labels Applied to datasets: vocab=", num_expanded_symbols)
@@ -195,7 +215,7 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
     # ToDo: transform dataset_parts[0-2]
 
     for i, part in enumerate(['train', 'valid', 'test']):
-        filename = dataset_part_filename(part, num_data)
+        filename = dataset_part_filename(part, -1)
         path = os.path.join(cache_dir, filename)
         if False:
             print(type(dataset_parts[i]))
@@ -239,29 +259,37 @@ def fit_scaler(datasets):
 
 
 def main():
+    """
+    Load the designated NumpyTupleDataset binary (.pkl) of an artifical graph dataset and perform classification task.
+
+    :return:
+    """
     args = parse_arguments()
     print(args)
 
     # Set up some useful variables that will be used later on.
     dataset_name = args.dataset
     method = args.method
-    num_data = args.num_data
     n_unit = args.unit_num
     conv_layers = args.conv_layers
     adam_alpha = args.adam_alpha
-
-    cutoff_wle = args.cutoff_wle
-    n_hop = args.hop_num
+    #apply_nle_flag = args.apply_nle
+    #cutoff_nle = args.cutoff_nle
 
     apply_wle_flag = method in ['nfp_wle', 'ggnn_wle',  'relgat_wle', 'relgcn_wle', 'rsgcn_wle', 'gin_wle']
     apply_cwle_flag = method in ['nfp_cwle', 'ggnn_cwle',  'relgat_cwle', 'relgcn_cwle', 'rsgcn_cwle', 'gin_cwle']
     apply_gwle_flag = method in ['nfp_gwle', 'ggnn_gwle',  'relgat_gwle', 'relgcn_gwle', 'rsgcn_gwle', 'gin_gwle']
 
-    task_type = molnet_default_config[dataset_name]['task_type']
+    task_type = args.tasktype
+    #task_type = molnet_default_config[dataset_name]['task_type']
     model_filename = {'classification': 'classifier.pkl',
                       'regression': 'regressor.pkl'}
 
     print('Using dataset: {}...'.format(dataset_name))
+
+    #
+    # Train/Eval
+    #
 
     # Set up some useful variables that will be used later on.
     if args.label:
@@ -273,12 +301,16 @@ def main():
         labels = None
         cache_dir = os.path.join('input', '{}_{}_all'.format(dataset_name,
                                                              method))
-        class_num = len(molnet_default_config[args.dataset]['tasks'])
+        if task_type == "regression":
+            class_num = 1
+        else:
+            #class_num = 1
+            class_num = 3
+        #class_num = len(molnet_default_config[args.dataset]['tasks'])
 
     # Load the train and validation parts of the dataset.
-    filenames = [dataset_part_filename(p, num_data)
-                 for p in ['train', 'valid', 'test']]
-
+    filenames = [dataset_part_filename(p, -1)
+                 for p in ['train', 'valid']]
 
     # ToDo: We need to incoporeat scaler into download_entire_dataset, instead of predictors. 
     paths = [os.path.join(cache_dir, f) for f in filenames]
@@ -288,9 +320,8 @@ def main():
             print('Loading cached dataset from {}.'.format(path))
             dataset_parts.append(NumpyTupleDataset.load(path))
     else:
-        dataset_parts = download_entire_dataset(dataset_name, num_data, labels,
-                                                method, cache_dir,
-                                                apply_wle_flag, cutoff_wle, apply_cwle_flag, apply_gwle_flag, n_hop)
+        dataset_parts = download_dataset(dataset_name, labels,
+                                         method, cache_dir, apply_wle_flag, -1, apply_cwle_flag, apply_gwle_flag)
     train, valid = dataset_parts[0], dataset_parts[1]
 
     # ToDo: scaler must be incorporated into download_entire_datasets. not here
@@ -307,35 +338,20 @@ def main():
 
     # ToDo: set label_scaler always None
     # Set up the predictor.
-
     if apply_wle_flag:
         # find the num_atoms
         max_symbol_index = wle.findmaxidx(dataset_parts)
-        print("number of expanded symbols (WLE) = ", max_symbol_index)
-        predictor = set_up_predictor(
-            method, n_unit, conv_layers, class_num,
-            label_scaler=scaler, n_atom_types=max_symbol_index)
+        max_symbol_index = max(max_symbol_index, MAX_ATOMIC_NUM)
+        print("number of expanded symbols (WLE)=", max_symbol_index)
+        predictor = set_up_predictor(method, n_unit, conv_layers, class_num, label_scaler=scaler, n_atom_types=max_symbol_index)
     elif apply_cwle_flag or apply_gwle_flag:
-        n_wle_types = wle.findmaxidx(
-            dataset_parts, 'wle_label')
-        # Kenta Oono (oono@preferred.jp)
-        # In the previous implementation, we use MAX_WLE_NUM
-        # as the dimension of one-hot vectors for WLE labels
-        # when the model is CWLE or WLNE and hop_num k = 1.
-        # When k >= 2, # of wle labels can be larger than MAX_WLE_NUM,
-        # which causes an error.
-        # Therefore, we have increased the dimension of vectors.
-        # To align with the previous experiments,
-        # we change n_wle_types only if it exceeds MAX_WLE_NUM.
+        # find the num_atoms
+        n_wle_types = wle.findmaxidx(dataset_parts, 'wle_label')
         n_wle_types = max(n_wle_types, MAX_WLE_NUM)
-        print("number of expanded symbols (CWLE/GWLE) = ", n_wle_types)
-        predictor = set_up_predictor(
-            method, n_unit, conv_layers, class_num,
-            label_scaler=scaler, n_wle_types=n_wle_types)
+        print("number of expanded symbols (CWLE/GWLE)=", n_wle_types)
+        predictor = set_up_predictor(method, n_unit, conv_layers, class_num, label_scaler=scaler, n_atom_types=n_wle_types)
     else:
-        predictor = set_up_predictor(
-            method, n_unit, conv_layers, class_num,
-            label_scaler=scaler)
+        predictor = set_up_predictor(method, n_unit, conv_layers, class_num, label_scaler=scaler)
 
     # Set up the iterators.
     train_iter = iterators.SerialIterator(train, args.batchsize)
@@ -343,10 +359,17 @@ def main():
                                           shuffle=False)
 
     # Load metrics for the current dataset.
-    metrics = molnet_default_config[dataset_name]['metrics']
+    if task_type == "classification":
+        metrics = {'binary_accuracy': chainer.functions.binary_accuracy, 'roc_auc': ROCAUCEvaluator}
+        loss_fun = chainer.functions.sigmoid_cross_entropy
+    else:
+        metrics = {'MAE': mean_absolute_error, 'MSE': mean_squared_error}
+        loss_fun = mean_squared_error
+    #metrics = molnet_default_config[dataset_name]['metrics']
+    #loss_fun = molnet_default_config[dataset_name]['loss']
+
     metrics_fun = {k: v for k, v in metrics.items()
                    if isinstance(v, types.FunctionType)}
-    loss_fun = molnet_default_config[dataset_name]['loss']
 
     device = chainer.get_device(args.device)
     if task_type == 'regression':
@@ -364,59 +387,20 @@ def main():
     optimizer.setup(model)
 
     # Save model-related output to this directory.
-    if not os.path.exists(args.out):
-        os.makedirs(args.out)
-    save_json(os.path.join(args.out, 'args.json'), vars(args))
     model_dir = os.path.join(args.out, os.path.basename(cache_dir))
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
     # Set up the updater.
-    converter = converter_method_dict[method]
     updater = training.StandardUpdater(train_iter, optimizer, device=device,
-                                       converter=converter)
+                                       converter=concat_mols)
 
     # Set up the trainer.
     trainer = training.Trainer(updater, (args.epoch, 'epoch'), out=model_dir)
     trainer.extend(E.Evaluator(valid_iter, model, device=device,
-                               converter=converter))
+                               converter=concat_mols))
     trainer.extend(E.snapshot(), trigger=(args.epoch, 'epoch'))
     trainer.extend(E.LogReport())
-
-    # TODO: consider go/no-go of the following block
-    # # (i) more reporting for val/evalutaion
-    # # (ii) best validation score snapshot
-    # if task_type == 'regression':
-    #     metric_name_list = list(metrics.keys())
-    #     if 'RMSE' in metric_name_list:
-    #         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]),
-    #                        trigger=training.triggers.MinValueTrigger('validation/main/RMSE'))
-    #     elif 'MAE' in metric_name_list:
-    #         trainer.extend(E.snapshot_object(model, "best_val_" + model_filename[task_type]),
-    #                        trigger=training.triggers.MinValueTrigger('validation/main/MAE'))
-    #     else:
-    #         print("[WARNING] No validation metric defined?")
-    #
-    # elif task_type == 'classification':
-    #     train_eval_iter = iterators.SerialIterator(
-    #         train, args.batchsize, repeat=False, shuffle=False)
-    #     trainer.extend(ROCAUCEvaluator(
-    #         train_eval_iter, predictor, eval_func=predictor,
-    #         device=args.gpu, converter=concat_mols, name='train',
-    #         pos_labels=1, ignore_labels=-1, raise_value_error=False))
-    #     # extension name='validation' is already used by `Evaluator`,
-    #     # instead extension name `val` is used.
-    #     trainer.extend(ROCAUCEvaluator(
-    #         valid_iter, predictor, eval_func=predictor,
-    #         device=args.gpu, converter=concat_mols, name='val',
-    #         pos_labels=1, ignore_labels=-1, raise_value_error=False))
-    #
-    #     trainer.extend(E.snapshot_object(
-    #         model, "best_val_" + model_filename[task_type]),
-    #         trigger=training.triggers.MaxValueTrigger('val/main/roc_auc'))
-    # else:
-    #     raise NotImplementedError(
-    #         'Not implemented task_type = {}'.format(task_type))
 
     trainer.extend(AutoPrintReport())
     trainer.extend(E.ProgressBar())
@@ -427,41 +411,6 @@ def main():
     print('Saving the trained model to {}...'.format(model_path))
     model.save_pickle(model_path, protocol=args.protocol)
 
-    # dump the parameter, if CWLE
-    #if apply_cwle_flag:
-    #    cwle = predictor.graph_conv
-    #    #print(cwle)
-    #    concatW = cwle.linear_for_concat_wle.W.data
-    #    #print(type(concatW))
-    #
-    #    # dump the raw W
-    #    out_prefix = args.out + "/" + method + "_" + dataset_name +"_learnedW"
-    #    with open(out_prefix + ".dat", 'w') as fout:
-    #        import csv
-    #        writer = csv.writer(fout, lineterminator="\n")
-    #        writer.writerows(concatW)
-    #    # end with
-    #
-    #    import matplotlib
-    #    matplotlib.use('Agg')
-    #    import matplotlib.pyplot as plt
-    #    # visualize
-    #    fig1, ax1 = plt.subplots()
-    #    plt.imshow(concatW, cmap="jet")
-    #    plt.colorbar(ax=ax1)
-    #
-    #    plt.title('Learned W on ' + dataset_name + ' + ' + method)
-    #    plt.savefig(out_prefix + ".png")
-    #    plt.savefig(out_prefix + ".pdf")
-    #
-    #    # visualize the absolute value
-    #    fig2, ax2 = plt.subplots()
-    #    plt.imshow(numpy.abs(concatW), cmap="jet")
-    #    plt.colorbar(ax=ax2)
-    #
-    #    plt.title('Learned abs(W) on ' + dataset_name + ' + ' + method)
-    #    plt.savefig(out_prefix + "_abs.png")
-    #    plt.savefig(out_prefix + "_abs.pdf")
 
 if __name__ == '__main__':
     main()

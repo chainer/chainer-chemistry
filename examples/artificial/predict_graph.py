@@ -5,6 +5,8 @@ import argparse
 import json
 import os
 
+import pandas
+
 import chainer
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
@@ -26,8 +28,8 @@ from chainer_chemistry.utils import save_json
 from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
-from train_molnet import dataset_part_filename
-from train_molnet import download_entire_dataset
+from train_graph import dataset_part_filename
+from train_graph import download_dataset
 
 
 
@@ -40,12 +42,14 @@ def parse_arguments():
                    'nfp_cwle', 'ggnn_cwle', 'relgat_cwle', 'relgcn_cwle', 'rsgcn_cwle', 'gin_cwle',
                    'nfp_gwle', 'ggnn_gwle', 'relgat_gwle', 'relgcn_gwle', 'rsgcn_gwle', 'gin_gwle']
 #    scale_list = ['standardize', 'none']
-    dataset_names = list(molnet_default_config.keys())
+    #dataset_names = list(molnet_default_config.keys())
+    task_type = ["classification", "regression"]
 
     # Set up the argument parser.
     parser = argparse.ArgumentParser(description='Prediction on Molnet.')
-    parser.add_argument('--dataset', '-d', type=str, choices=dataset_names,
-                        default='bbbp',
+    parser.add_argument('--dataset', '-d', type=str, required=True,
+                        help='name of the dataset that training is run on')
+    parser.add_argument('--tasktype', '-t', type=str, required=True, choices=task_type,
                         help='name of the dataset that training is run on')
     parser.add_argument('--method', '-m', type=str, choices=method_list,
                         help='method name', default='nfp')
@@ -85,13 +89,13 @@ def main():
                                                              method))
 
     # Load the cached dataset.
-    filename = dataset_part_filename('test', num_data)
+    filename = dataset_part_filename('test', -1)
     path = os.path.join(cache_dir, filename)
     if os.path.exists(path):
         print('Loading cached dataset from {}.'.format(path))
         test = NumpyTupleDataset.load(path)
     else:
-        _, _, test = download_entire_dataset(dataset_name, num_data, labels,
+        _, _, test = download_dataset(dataset_name, labels,
                                              method, cache_dir)
 
     # Model-related data is stored this directory.
@@ -99,7 +103,9 @@ def main():
 
     model_filename = {'classification': 'classifier.pkl',
                       'regression': 'regressor.pkl'}
-    task_type = molnet_default_config[dataset_name]['task_type']
+    task_type = args.tasktype
+
+    #task_type = molnet_default_config[dataset_name]['task_type']
     model_path = os.path.join(model_dir, model_filename[task_type])
     print("model_path=" + model_path)
     print('Loading model weights from {}...'.format(model_path))
@@ -116,6 +122,36 @@ def main():
     # Re-load the best-validation score snapshot
     # serializers.load_npz(os.path.join(
     #     model_dir, "best_val_" + model_filename[task_type]), model)
+
+    if task_type == "regression":
+        @chainer.dataset.converter()
+        def extract_inputs(batch, device=None):
+            return concat_mols(batch, device=device)[:-1]
+
+        # Predict the output labels.
+        print('Predicting...')
+        #y_pred = model.predict(test, converter=extract_inputs)
+
+        # Extract the ground-truth labels as numpy array.
+        #original_t = concat_mols(test, device=-1)[-1]
+
+        # Construct dataframe.
+        #df_dict = {}
+        #for i, l in enumerate(labels):
+        #    df_dict.update({'y_pred_{}'.format(l): y_pred[:, i], 't_{}'.format(l): original_t[:, i], })
+        #df = pandas.DataFrame(df_dict)
+
+        # Show a prediction/ground truth table with 5 random examples.
+        #print(df.sample(5))
+
+        #n_eval = 10
+        #s_idx = 50
+        #for target_label in range(y_pred.shape[1]):
+         #   label_name = "none" #labels[target_label]
+         #   diff = y_pred[s_idx:s_idx+n_eval, target_label] - original_t[s_idx:s_idx+n_eval, target_label]
+         #   print('label_name = {}, y_pred = {}, t = {}, diff = {}'.format(
+         #       label_name, y_pred[s_idx:s_idx+n_eval, target_label],
+         #       original_t[s_idx:s_idx+n_eval, target_label], diff))
 
     # Run an evaluator on the test dataset.
     print('Evaluating...')
