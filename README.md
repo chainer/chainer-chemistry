@@ -230,4 +230,3 @@ papers. Use the library at your own risk.
 
 [25] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
 
->>>>>>> upstream/master
