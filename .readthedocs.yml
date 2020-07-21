@@ -1,0 +1,5 @@
+name: chainer-chemistry
+type: sphinx
+base: docs/source
+conda:
+  file: docs/source/environment.yml

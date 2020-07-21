@@ -1,0 +1,361 @@
+# DO NOT MODIFY THIS FILE MANUALLY.
+# USE gen_config.py INSTEAD.
+
+configs {
+  key: "chainerch.py37.stable.cpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "stable"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.stable.gpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "stable"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.stable.cpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "stable"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.stable.gpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "stable"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.latest.cpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "latest"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.latest.gpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "latest"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.latest.cpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "latest"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.latest.gpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "latest"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.base.cpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "base"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.base.gpu.chx"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "base"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "1"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.base.cpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "base"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "0"
+    }
+  }
+}
+configs {
+  key: "chainerch.py37.base.gpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "37"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "base"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}
+configs {
+  key: "chainerch.py36.stable.gpu"
+  value {
+    requirement {
+      cpu: 4
+      memory: 16
+      disk: 10
+      gpu: 1
+    }
+    command: "bash .flexci/pytest_script.sh"
+    environment_variables {
+      key: "PYTHON"
+      value: "36"
+    }
+    environment_variables {
+      key: "CHAINER"
+      value: "stable"
+    }
+    environment_variables {
+      key: "CHAINERX"
+      value: "0"
+    }
+    environment_variables {
+      key: "GPU"
+      value: "1"
+    }
+  }
+}

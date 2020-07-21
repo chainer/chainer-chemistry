@@ -1,0 +1,17 @@
+coverage:
+  status:
+    # pull-requests only
+    # Allow to drop coverage
+    project:
+      default:
+        threshold: 5.0%
+    patch:
+      default:
+        threshold: 20.0%
+comment:
+  layout: "header, diff"
+  require_changes: false
+  branches: null
+  behavior: default
+  flags: null
+  paths: null
