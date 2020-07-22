@@ -30,16 +30,3 @@ The paper [1] shows that the use of (C)WLE consistently improves the generalizat
 
 [1] Katsuhiko Ishiguro, Kenta Oono, and Kohei Hayashi, "Weisfeiler-Lehman Embedding for Molecular Graph Neural Networks", arXiv: 2006.06909, 2020. [paper link](https://arxiv.org/abs/2006.06909) 
 
-
-
-For example, if you want to train "bbbp" dataset,
-
-With CPU:
-```angular2html
-python train_molnet.py --dataset=bbbp
-```
-
-With GPU:
-```angular2html
-python train_molnet.py --dataset=bbbp -g 0
-```
