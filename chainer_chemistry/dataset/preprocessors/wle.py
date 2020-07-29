@@ -2,32 +2,30 @@ import collections
 
 import numpy as np
 
-#from chainer_chemistry.datasets.numpy_tuple_dataset import NumpyTupleDataset
 from chainer_chemistry.dataset.preprocessors import wle_io
 from chainer_chemistry.dataset.preprocessors import wle_atom_array_update as wle_update
-#from chainer_chemistry.dataset.preprocessors import wle_util
-
 
 DEBUG = False
-
 
 def apply_wle_for_datasets(datasets, cutoff=0, k=1):
     """
     Apply label Weisfeiler--Lehman Embedding for the tuple of datasets.
 
-    :param datasets: tuple of dataset (usually, train/val/test),
+    Args:
+        datasets: tuple of dataset (usually, train/val/test),
                      each dataset consists of atom_array and
                      adj_array and teach_signal
-    :param cutoff: int, if more than 0, the expanded labels
+        cutoff: int, if more than 0, the expanded labels
                    whose freq <= cutoff will be removed.
-    :param k: int, the number of iterations of neighborhood
+        k: int, the number of iterations of neighborhood
               aggregation.
 
-    :return: - tuple of dataset (usually, train/val/test),
+    Returns:
+        - tuple of dataset (usually, train/val/test),
                each dataest consists of atom_number_array and
                adj_tensor with expanded labels
-             - list of all labels, used in the dataset parts.
-             - dictionary of label frequencies key:label valeu:frequency count
+        - list of all labels, used in the dataset parts.
+        - dictionary of label frequencies key:label valeu:frequency count
     """
 
     atom_arrays, adj_arrays, teach_signals = wle_io.load_dataset_elements(datasets)
@@ -46,18 +44,21 @@ def apply_cwle_for_datasets(datasets, k=1):
     Apply Concatenated Weisfeiler--Lehman embedding for the tuple of datasets.
     This also applicalbe for the Gated-sum Weisfeiler--Lehman embedding.
 
-    :param datasets: tuple of dataset (usually, train/val/test),
+    Args:
+        datasets: tuple of dataset (usually, train/val/test),
                      each dataset consists of atom_array and
                      adj_array and teach_signal
-    :param k: int, the number of iterations of neighborhood
+        k: int, the number of iterations of neighborhood
               aggregation.
 
-    :return: - tuple of dataset (usually, train/val/test),
+    Returns:
+        - tuple of dataset (usually, train/val/test),
                each dataest consists of atom_number_array,
                expanded_label_array, and adj_tensor
-             - list of all expanded labels, used in the dataset parts.
-             - dictionary of label frequencies key:label valeu:frequency count
+        - list of all expanded labels, used in the dataset parts.
+        - dictionary of label frequencies key:label valeu:frequency count
     """
+
     if k <= 0:
         raise ValueError('Iterations should be a positive integer. '
                          'Found k={}'.format(k))
@@ -100,12 +101,16 @@ def findmaxidx(datasets, target='atom_label'):
     Retruns the maximum number of the symbol index in atoma array,
     throughout the datasets.
 
-    :param datasets:
-    :return:
+    Args:
+        datasets: dataset entity
+        target: choice of 'atom_label' of 'wle_label'
+
+    Returns:
+        _findmaxidx(datasets, 0/2)
     """
-    
+
     if target == 'atom_label':
-        return _findmaxidx(datasets, 0)
+        return
     elif target == 'wle_label':
         return _findmaxidx(datasets, 2)
 

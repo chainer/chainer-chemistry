@@ -12,17 +12,19 @@ def create_datasets(atom_arrays, adj_arrays, teach_signals, wle_arrays=None):
     Expand the atomic_num_arrays with the expanded labels,
     then return valid datasets (tuple of NumpyTupleDataset)
 
-    :param atom_arrays: 3-tuple of list of lists.
+    Args:
+        atom_arrays: 3-tuple of list of lists.
                         atom_arrays[i][j][k] is the id of an atom
                         i: train/val/test
                         j: index of a sample (i.e. molcule)
                         k: index of an atom
-    :param adj_arrays: list of list of numpy.array, all mol's adjacnecy tensors
-    :param teach_signals: list of list of numpy.array,
+        adj_arrays: list of list of numpy.array, all mol's adjacnecy tensors
+        teach_signals: list of list of numpy.array,
                           all teacher (supervision) signals
-    :param wle_arrays: None (for WLE) or 3-tuple of list of lists (for CWLE and GWLE).
+        wle_arrays: None (for WLE) or 3-tuple of list of lists (for CWLE and GWLE).
 
-    :return: tuple of valid datasets (train/vel/test) in NumpyTuppleDataset
+    Returns: 3 tuple of valid datasets (train/vel/test) in NumpyTuppleDataset
+
     """
 
     output_datasets = []
@@ -56,8 +58,12 @@ def load_dataset_elements(datasets):
     """
     Load all dataset tuples: atom array, adj. array, and teacher signals.
 
-    :param datasets: tuple of NumpyTupleDataset
-    :return: tuple of lists of atom arrays, adj.arrays, and teacher signals.
+    Args:
+        datasets: tuple of NumpyTupleDataset
+
+    Returns:
+        - tuple of lists of atom arrays, adj.arrays, and teacher signals.
+
     """
 
     if DEBUG:

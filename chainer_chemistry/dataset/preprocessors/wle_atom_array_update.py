@@ -21,14 +21,17 @@ def shrink_expanded_labels(expanded_atom_lists,
                            labels_frequencies,
                            cutoff):
     """
-    :param expanded_atom_lists: tuple of list of expanded labels
-    :param labels_frequencies:
-    :param cutoff:
+    Cut off the few-appearance expanded labels
 
-    :return: 3 (train/val/test) tuple of expanded atom arrays
-    (all nodes are associated with string representations of expanded signals)
-    dictionary of frequencies all labels (key: label, value: frequency)
+    Args:
+        expanded_atom_lists: tuple of list of expanded labels
+        labels_frequencies: list of label apperacne frequencies
+        cutoff: int, frequency cut of expanded labels
 
+    Returns:
+        - 3 (train/val/test) tuple of expanded atom arrays
+          (all nodes are associated with string representations of expanded signals)
+        - dictionary of frequencies all labels (key: label, value: frequency)
     """
 
     # atom_array values are expanded label "STRING", not numbers
@@ -71,16 +74,20 @@ def list_all_expanded_labels(atom_arrays, adj_arrays, with_focus_atom=True):
     """
     Exapnd all nodes into WLE representation. At the same time, return the list of all labels after expansion
 
-    :param atom_arrays: 3 (train/val/test) tuple of atom arrays
-    :param adj_arrays: 3 (train/val/test) tuple of adj.arrays
-    :param with_focus_atom: bool, if True, the expanded label starts from the original atom label ("C-ON-OFN")
+    Args:
+        atom_arrays: 3 (train/val/test) tuple of atom arrays
+        adj_arrays: 3 (train/val/test) tuple of adj.arrays
+        with_focus_atom: bool, if True, the expanded label starts from the original atom label ("C-ON-OFN")
                                    if False, the exnapndd label do not include the original atom albel("-CN-OFN")
 
-    :return: 3 (train/val/test) tuple of expanded atom arrays
+    Returns:
+        - 3 (train/val/test) tuple of expanded atom arrays
              (all nodes are associated with string representations of expanded signals)
-             list of all labels appeared in the expanded atom arrays.
-             dictionary of frequencies all labels (key: label, value: frequency)
+        - list of all labels appeared in the expanded atom arrays.
+        - dictionary of frequencies all labels (key: label, value: frequency)
+
     """
+
     expanded_atom_lists = []  # atom_array values are expanded label "STRING", not numbers
     labels_frequencies = collections.defaultdict(lambda: 0)
 
