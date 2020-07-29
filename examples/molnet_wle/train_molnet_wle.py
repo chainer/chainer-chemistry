@@ -22,6 +22,7 @@ from chainer_chemistry.dataset.preprocessors import preprocess_method_dict, wle
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets import NumpyTupleDataset
+from chainer_chemistry.dataset.splitters.deepchem_scaffold_splitter import DeepChemScaffoldSplitter  # NOQA
 from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
@@ -148,9 +149,18 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
 
     # Select the first `num_data` samples from the dataset.
     target_index = numpy.arange(num_data) if num_data >= 0 else None
+
+    # To force DeepChem scaffold split
+    dc_scaffold_splitter = DeepChemScaffoldSplitter()
     dataset_parts = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
                                                 labels=labels,
+                                                split=dc_scaffold_splitter,
                                                 target_index=target_index)
+    # To use the splitter defined in the config file
+    #dataset_parts = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
+    #                                            labels=labels,
+    #                                            target_index=target_index)
+    
     dataset_parts = dataset_parts['dataset']
 
     # Cache the downloaded dataset.
