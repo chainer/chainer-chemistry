@@ -32,6 +32,38 @@ from chainer_chemistry.utils import save_json
 from chainer_chemistry.models.cwle.cwle_graph_conv_model import MAX_WLE_NUM
 
 
+def dict_for_wles():
+    wle_keys = ['nfp_wle', 'ggnn_wle',  'relgat_wle', 'relgcn_wle', 'rsgcn_wle', 'gin_wle',
+                   'nfp_cwle', 'ggnn_cwle',  'relgat_cwle', 'relgcn_cwle', 'rsgcn_cwle', 'gin_cwle',
+                   'nfp_gwle', 'ggnn_gwle',  'relgat_gwle', 'relgcn_gwle', 'rsgcn_gwle', 'gin_gwle']
+
+    from chainer_chemistry.dataset.converters.concat_mols import concat_mols
+    from chainer_chemistry.dataset.preprocessors.nfp_preprocessor import NFPPreprocessor
+    from chainer_chemistry.dataset.preprocessors.ggnn_preprocessor import GGNNPreprocessor
+    from chainer_chemistry.dataset.preprocessors.gin_preprocessor import GINPreprocessor
+    from chainer_chemistry.dataset.preprocessors.relgat_preprocessor import RelGATPreprocessor
+    from chainer_chemistry.dataset.preprocessors.relgcn_preprocessor import RelGCNPreprocessor
+    from chainer_chemistry.dataset.preprocessors.rsgcn_preprocessor import RSGCNPreprocessor
+
+    for key in wle_keys:
+        converter_method_dict[key] = concat_mols
+
+        if key.startswith('nfp'):
+            preprocess_method_dict[key] = NFPPreprocessor
+        elif key.startswith('ggnn'):
+            preprocess_method_dict[key] = GGNNPreprocessor
+        elif key.startswith('gin'):
+            preprocess_method_dict[key] = GINPreprocessor
+        elif key.startswith('relgcn'):
+            preprocess_method_dict[key] = RelGCNPreprocessor
+        elif key.startswith('rsgcn_wle'):
+            preprocess_method_dict[key] = RSGCNPreprocessor
+        elif key.startswith('relgat'):
+            preprocess_method_dict[key] = RelGATPreprocessor
+        else:
+            assert key in wle_keys # should be die
+dict_for_wles()
+
 def parse_arguments():
     # Lists of supported preprocessing methods/models and datasets.
     method_list = ['nfp', 'ggnn', 'schnet', 'weavenet', 'rsgcn', 'relgcn',
