@@ -125,6 +125,8 @@ We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models fo
 - RSGCN ('rsgcn_gwm')
 - GIN ('gin_gwm')
 
+In the directory (examples/molnet_wle), we have implemented the newly proposed ``Weisfeiler-Lehman Embedding for Molecular Graph Neural Networks'' [26] for several GNN architectures. Please find the Readme in that directory for the usage and the details. 
+
 ## Supported Datasets
 
 The following datasets are currently supported:
@@ -230,3 +232,4 @@ papers. Use the library at your own risk.
 
 [25] Tian Xie and Jeffrey C Grossman. Crystal graph convolutional neural networks for an accurate and interpretable prediction of material properties. *Physical review letters*, 120(14):145301, 2018.
 
+[26] Katsuhiko Ishiguro, Kenta Oono, and Kohei Hayashi, "Weisfeiler-Lehman Embedding for Molecular Graph Neural Networks", arXiv: 2006.06909, 2020. [paper link](https://arxiv.org/abs/2006.06909)
