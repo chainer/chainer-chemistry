@@ -110,7 +110,7 @@ def findmaxidx(datasets, target='atom_label'):
     """
 
     if target == 'atom_label':
-        return
+        return _findmaxidx(datasets, 0)
     elif target == 'wle_label':
         return _findmaxidx(datasets, 2)
 
