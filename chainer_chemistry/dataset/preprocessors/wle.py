@@ -98,7 +98,7 @@ def _findmaxidx(datasets, idx):
 
 def findmaxidx(datasets, target='atom_label'):
     """
-    Retruns the maximum number of the symbol index in atoma array,
+    Retruns the maximum number of the symbol index in an atom array,
     throughout the datasets.
 
     Args:
