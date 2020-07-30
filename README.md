@@ -125,7 +125,7 @@ We test supporting the brand-new Graph Warp Module (GWM) [18]-attached models fo
 - RSGCN ('rsgcn_gwm')
 - GIN ('gin_gwm')
 
-In the directory (examples/molnet_wle), we have implemented the newly proposed ``Weisfeiler-Lehman Embedding for Molecular Graph Neural Networks'' [26] for several GNN architectures. Please find the Readme in that directory for the usage and the details. 
+In the directory `examples/molnet_wle`, we have implemented the new preprocessing ''Weisfeiler-Lehman Embedding for Molecular Graph Neural Networks'' [26] for several GNN architectures. Please find the Readme in that directory for the usage and the details. 
 
 ## Supported Datasets
 
