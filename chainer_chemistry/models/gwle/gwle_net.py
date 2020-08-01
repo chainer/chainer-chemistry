@@ -82,7 +82,7 @@ class GIN_GWLE(GWLEGraphConvModel):
             concat_hidden=concat_hidden, weight_tying=weight_tying,
             n_edge_types=n_edge_types, with_wle=with_wle,
             update_kwargs=update_kwargs, readout_kwargs=readout_kwargs,
-            n_wlle_types=n_wle_types)
+            n_wle_types=n_wle_types)
 
 
 class NFP_GWLE(GWLEGraphConvModel):
