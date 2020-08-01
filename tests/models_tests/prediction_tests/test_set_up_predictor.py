@@ -20,6 +20,21 @@ from chainer_chemistry.models.gwm.gwm_net import GIN_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import NFP_GWM  # NOQA
 from chainer_chemistry.models.gwm.gwm_net import RSGCN_GWM  # NOQA
 
+from chainer_chemistry.models.cwle.cwle_net import GGNN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RelGAT_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RelGCN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import GIN_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import NFP_CWLE  # NOQA
+from chainer_chemistry.models.cwle.cwle_net import RSGCN_CWLE  # NOQA
+
+from chainer_chemistry.models.gwle.gwle_net import GGNN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RelGAT_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RelGCN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import GIN_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import NFP_GWLE  # NOQA
+from chainer_chemistry.models.gwle.gwle_net import RSGCN_GWLE  # NOQA
+
+
 class_num = 7
 n_unit = 11
 conv_layers = 3
@@ -41,7 +56,25 @@ def models_dict():
         'ggnn_gwm': GGNN_GWM,
         'rsgcn_gwm': RSGCN_GWM,
         'gin_gwm': GIN_GWM,
-        'gnnfilm': GNNFiLM
+        'gnnfilm': GNNFiLM,
+        'nfp_wle': NFP_WLE,
+        'ggnn_wle': GGNN_WLE,
+        'relgat_wle': RelGAT_WLE,
+        'relgcn_wle': RelGCN_WLE,
+        'rsgcn_wle': RSGCN_WLE,
+        'gin_wle': GIN_WLE,
+        'nfp_cwle': NFP_CWLE,
+        'ggnn_cwle': GGNN_CWLE,
+        'relgat_cwle': RelGAT_CWLE,
+        'relgcn_cwle': RelGCN_CWLE,
+        'rsgcn_cwle': RSGCN_CWLE,
+        'gin_cwle': GIN_CWLE,
+        'nfp_gwle': NFP_GWLE,
+        'ggnn_gwle': GGNN_GWLE,
+        'relgat_gwle': RelGAT_GWLE,
+        'relgcn_gwle': RelGCN_GWLE,
+        'rsgcn_gwle': RSGCN_GWLE,
+        'gin_gwle': GIN_GWLE
     }
 
 
