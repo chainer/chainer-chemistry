@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-BASE=6.0.0
+BASE=7.0.0
 
 service docker stop
 mount -t tmpfs -o size=100% tmpfs /var/lib/docker
