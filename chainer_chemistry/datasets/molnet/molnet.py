@@ -13,6 +13,7 @@ from chainer_chemistry.dataset.parsers.csv_file_parser import CSVFileParser
 from chainer_chemistry.dataset.preprocessors.atomic_number_preprocessor import AtomicNumberPreprocessor  # NOQA
 from chainer_chemistry.dataset.splitters.base_splitter import BaseSplitter
 from chainer_chemistry.dataset.splitters.scaffold_splitter import ScaffoldSplitter  # NOQA
+from chainer_chemistry.dataset.splitters.deepchem_scaffold_splitter import DeepChemScaffoldSplitter  # NOQA
 from chainer_chemistry.dataset.splitters import split_method_dict
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
 from chainer_chemistry.datasets.molnet.pdbbind_time import get_pdbbind_time
@@ -117,6 +118,11 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
         else:
             get_smiles = return_smiles
 
+        if isinstance(splitter, DeepChemScaffoldSplitter):
+            get_smiles = True
+        else:
+            get_smiles = return_smiles
+
         result = parser.parse(get_molnet_filepath(dataset_name),
                               return_smiles=get_smiles,
                               target_index=target_index, **kwargs)
@@ -158,6 +164,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
     else:
         raise ValueError('dataset_type={} is not supported'
                          .format(dataset_config['dataset_type']))
+
     return result
 
 
