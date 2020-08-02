@@ -13,24 +13,33 @@ if [ ${CHAINERX} -gt 0 ]; then
         case ${CHAINER} in
             stable)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-gpu-stable:latest
+                echo pip install chainer >> install.sh
+                echo pip install cupy-cuda101 >> install.sh
                 ;;
             latest)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-gpu-latest:latest
+                echo pip install --pre chainer >> install.sh
+                echo pip install --pre cupy-cuda101 >> install.sh
                 ;;
             base)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-gpu-base:latest
+                echo pip install chainer==${BASE} >> install.sh
+                echo pip install cupy-cuda101==${BASE} >> install.sh
                 ;;
         esac
     else
         case ${CHAINER} in
             stable)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-cpu-stable:latest
+                echo pip install chainer >> install.sh
                 ;;
             latest)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-cpu-latest:latest
+                echo pip install --pre chainer >> install.sh
                 ;;
             base)
                 DOCKER_IMAGE=asia.gcr.io/pfn-public-ci/chainer-chem-py$PYTHON-chainerx-cpu-base:latest
+                echo pip install chainer==${BASE} >> install.sh
                 ;;
         esac
     fi
