@@ -149,7 +149,8 @@ class SDFFileParser(BaseFileParser):
             # Spec not finalized yet for general case
             result = pp.process(filepath)
 
-        smileses = numpy.array(smiles_list) if return_smiles else None
+        smileses = numpy.array(
+            smiles_list, dtype=object) if return_smiles else None
         if return_is_successful:
             is_successful = numpy.array(is_successful_list)
         else:

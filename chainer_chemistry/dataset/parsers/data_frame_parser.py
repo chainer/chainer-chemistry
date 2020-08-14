@@ -162,7 +162,8 @@ class DataFrameParser(BaseFileParser):
         else:
             raise NotImplementedError
 
-        smileses = numpy.array(smiles_list) if return_smiles else None
+        smileses = numpy.array(
+            smiles_list, dtype=object) if return_smiles else None
         if return_is_successful:
             is_successful = numpy.array(is_successful_list)
         else:
