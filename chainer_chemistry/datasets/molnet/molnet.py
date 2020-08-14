@@ -113,12 +113,7 @@ def get_molnet_dataset(dataset_name, preprocessor=None, labels=None,
             raise TypeError("split must be None, str or instance of"
                             " BaseSplitter, but got {}".format(type(split)))
 
-        if isinstance(splitter, ScaffoldSplitter):
-            get_smiles = True
-        else:
-            get_smiles = return_smiles
-
-        if isinstance(splitter, DeepChemScaffoldSplitter):
+        if isinstance(splitter, (ScaffoldSplitter, DeepChemScaffoldSplitter)):
             get_smiles = True
         else:
             get_smiles = return_smiles

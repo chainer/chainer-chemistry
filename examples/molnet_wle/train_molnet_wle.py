@@ -16,8 +16,6 @@ from chainer import training
 from chainer.training import extensions as E
 
 from chainer_chemistry.dataset.converters import converter_method_dict
-from chainer_chemistry.config import MAX_ATOMIC_NUM
-from chainer_chemistry.dataset.converters import concat_mols
 from chainer_chemistry.dataset.preprocessors import preprocess_method_dict, wle
 from chainer_chemistry import datasets as D
 from chainer_chemistry.datasets.molnet.molnet_config import molnet_default_config  # NOQA
@@ -27,7 +25,6 @@ from chainer_chemistry.links import StandardScaler
 from chainer_chemistry.models.prediction import Classifier
 from chainer_chemistry.models.prediction import Regressor
 from chainer_chemistry.models.prediction import set_up_predictor
-from chainer_chemistry.training.extensions import BatchEvaluator, ROCAUCEvaluator  # NOQA
 from chainer_chemistry.training.extensions.auto_print_report import AutoPrintReport  # NOQA
 from chainer_chemistry.utils import save_json
 from chainer_chemistry.models.cwle.cwle_graph_conv_model import MAX_WLE_NUM
@@ -156,11 +153,7 @@ def download_entire_dataset(dataset_name, num_data, labels, method, cache_dir, a
                                                 labels=labels,
                                                 split=dc_scaffold_splitter,
                                                 target_index=target_index)
-    # To use the splitter defined in the config file
-    #dataset_parts = D.molnet.get_molnet_dataset(dataset_name, preprocessor,
-    #                                            labels=labels,
-    #                                            target_index=target_index)
-    
+
     dataset_parts = dataset_parts['dataset']
 
     # Cache the downloaded dataset.
