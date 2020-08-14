@@ -2,14 +2,12 @@
 from __future__ import print_function
 
 import argparse
-import json
 import os
 
 import chainer
 from chainer.iterators import SerialIterator
 from chainer.training.extensions import Evaluator
 from chainer_chemistry.training.extensions.roc_auc_evaluator import ROCAUCEvaluator  # NOQA
-from chainer import cuda
 # Proposed by Ishiguro
 # ToDo: consider go/no-go with following modification
 # Re-load the best-validation score snapshot using serializers

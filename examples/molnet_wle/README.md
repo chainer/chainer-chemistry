@@ -4,6 +4,16 @@ In this directory, we provide an implementaion of [Weisfeiler-Lehman Embedding (
 
 ## How to run the code
 
+### Test run command
+
+```bash
+# Training tox21 dataset using RSGCN-CWLE model. Short 3 epoch for testing.
+python train_molnet_wle.py --dataset tox21 --method rsgcn_cwle --epoch 3  --device 0
+
+# Prediction with trained model
+python predict_molnet_wle.py --dataset tox21 --method rsgcn_cwle --in-dir result --device 0
+```
+
 ### Train the model by specifying dataset
 
 Basically, no changes from the original molnet examples (examples/molnet/train_molnet.py).
@@ -14,7 +24,7 @@ To test WLE, choose one of 'xxx_wle', 'xxx_cwle', and 'xxx_gwle' where 'xxx' is 
 - xxx_cwle (recommended): apply the Concat WLE to the GNN 'xxx'
 - xxx_gwle: apply the Gated-sum WLE to the GNN 'xxx'
 
-#### additional options
+#### Additional options
 
 Introducing the WLE, we have some more additional options.
 In general you do not need to specify these options (use the default values!).
