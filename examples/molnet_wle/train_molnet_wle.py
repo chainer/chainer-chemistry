@@ -57,7 +57,7 @@ def dict_for_wles():
             preprocess_method_dict[key] = GINPreprocessor
         elif key.startswith('relgcn'):
             preprocess_method_dict[key] = RelGCNPreprocessor
-        elif key.startswith('rsgcn_wle'):
+        elif key.startswith('rsgcn'):
             preprocess_method_dict[key] = RSGCNPreprocessor
         elif key.startswith('relgat'):
             preprocess_method_dict[key] = RelGATPreprocessor

@@ -26,9 +26,9 @@ from chainer_chemistry.utils import save_json
 from chainer import functions as F
 from chainer_chemistry.links.scaler.standard_scaler import StandardScaler  # NOQA
 from chainer_chemistry.models.prediction.graph_conv_predictor import GraphConvPredictor  # NOQA
-from train_molnet import dict_for_wles
-from train_molnet import dataset_part_filename
-from train_molnet import download_entire_dataset
+from train_molnet_wle import dict_for_wles
+from train_molnet_wle import dataset_part_filename
+from train_molnet_wle import download_entire_dataset
 
 dict_for_wles()
 
