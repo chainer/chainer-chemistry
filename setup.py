@@ -12,7 +12,6 @@ install_requires = [
     'scikit-learn',
     'scipy',
     'tqdm',
-    'typing'
 ]
 
 
