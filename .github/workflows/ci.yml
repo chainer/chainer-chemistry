@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        python-version:
+          - '3.6'
+        CHAINER_VERSION:
+          - chainer==7.0.0
+          - chainer
+          - prerelease
+    env:
+      CHAINER_VERSION: ${{ matrix.CHAINER_VERSION }}
+      TRAVIS_PYTHON_VERSION: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: |
+          wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+          bash miniconda.sh -b -p $HOME/miniconda
+          export PATH="$HOME/miniconda/bin:$PATH"
+          hash -r
+          conda config --set always_yes yes
+          conda update -q conda
+          conda info -a
+          conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION
+          source activate test-environment
+          pip install codecov
+          pip install mock
+          conda install pip pytest pytest-cov
+          conda install -c rdkit rdkit==2019.03.2.0
+          if [ "${CHAINER_VERSION}" = "prerelease" ]; then
+            pip install --pre chainer;
+          else
+            pip install "${CHAINER_VERSION}";
+          fi
+          pip install --no-cache-dir -e .
+      - run: |
+          if [ "${TRAVIS_EVENT_TYPE}" = "cron" ]; then
+            pytest --cov=./ -m "not gpu" tests;
+            (cd examples && bash -x test_examples.sh -1);
+          else
+            pytest --cov=./ -m "not (gpu or slow)" tests;
+          fi
+      - run: codecov
